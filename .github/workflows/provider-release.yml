@@ -42,6 +42,8 @@ env:
   repo_name: "terraform-provider-aws"
   deployment_environment_name: "tf-provider-aws-oss"
 
+permissions: {} # explicit deny all scopes; workflow uses `BOB_GITHUB_TOKEN` for promotion actions
+
 jobs:
   release:
     runs-on: ubuntu-latest

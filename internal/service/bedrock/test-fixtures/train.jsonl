@@ -1,1 +1,1 @@
-{"prompt": "what is AWS", "completion": "it's Amazon Web Services"}
+{"schemaVersion":"bedrock-conversation-2024","system":[{"text":"You are a digital assistant with a friendly personality"}],"messages":[{"role":"user","content":[{"text":"What is the capital of Mars?"}]},{"role":"assistant","content":[{"text":"Mars does not have a capital. Perhaps it will one day."}]}]}

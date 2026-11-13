@@ -68,7 +68,7 @@ func TestAddIsErrorRetryables(t *testing.T) {
 				},
 			},
 			f: func(err error) aws.Ternary {
-				if err, ok := errs.As[*smithy.OperationError](err); ok {
+				if err, ok := errors.AsType[*smithy.OperationError](err); ok {
 					switch err.OperationName {
 					case "StartDeployment":
 						if errs.IsA[*appconfigtypes.ConflictException](err) {

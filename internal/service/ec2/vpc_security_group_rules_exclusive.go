@@ -164,8 +164,8 @@ func (r *resourceSecurityGroupRulesExclusive) syncRules(ctx context.Context, dia
 		return err
 	}
 
-	createIngress, removeIngress, _ := intflex.DiffSlices(haveIngress, wantIngress, func(s1, s2 string) bool { return s1 == s2 })
-	createEgress, removeEgress, _ := intflex.DiffSlices(haveEgress, wantEgress, func(s1, s2 string) bool { return s1 == s2 })
+	createIngress, removeIngress, _ := intflex.DiffSlices(haveIngress, wantIngress, intflex.Equal)
+	createEgress, removeEgress, _ := intflex.DiffSlices(haveEgress, wantEgress, intflex.Equal)
 
 	// Emit warnings for rules that need to be created
 	for _, ruleID := range createIngress {

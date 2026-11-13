@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_verifiedaccess_endpoint: Add `policy_document` argument
-```

@@ -38,39 +38,41 @@ func resourceTapePool() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"pool_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"retention_lock_time_in_days": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(0, 36500),
-			},
-			"retention_lock_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.RetentionLockTypeNone,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.RetentionLockType](),
-			},
-			names.AttrStorageClass: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TapeStorageClass](),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"pool_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 100),
+				},
+				"retention_lock_time_in_days": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ForceNew:     true,
+					Default:      0,
+					ValidateFunc: validation.IntBetween(0, 36500),
+				},
+				"retention_lock_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.RetentionLockTypeNone,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.RetentionLockType](),
+				},
+				names.AttrStorageClass: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TapeStorageClass](),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }

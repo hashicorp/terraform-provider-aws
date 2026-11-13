@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -34,56 +33,58 @@ func resourceAccountPasswordPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allow_users_to_change_password": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"expire_passwords": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"hard_expiry": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"max_password_age": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"minimum_password_length": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  6,
-			},
-			"password_reuse_prevention": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"require_lowercase_characters": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"require_numbers": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"require_symbols": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"require_uppercase_characters": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allow_users_to_change_password": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"expire_passwords": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"hard_expiry": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"max_password_age": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"minimum_password_length": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  6,
+				},
+				"password_reuse_prevention": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"require_lowercase_characters": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"require_numbers": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"require_symbols": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"require_uppercase_characters": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -189,9 +190,8 @@ func findAccountPasswordPolicy(ctx context.Context, conn *iam.Client) (*awstypes
 	output, err := conn.GetAccountPasswordPolicy(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchEntityException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

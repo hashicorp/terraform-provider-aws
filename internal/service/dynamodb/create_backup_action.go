@@ -5,7 +5,6 @@ package dynamodb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -19,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/backoff"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -87,16 +88,13 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	conn := a.Meta().DynamoDBClient(ctx)
 
-	timeout := 10 * time.Minute
-	if !config.Timeout.IsNull() {
-		timeout = time.Duration(config.Timeout.ValueInt64()) * time.Minute
-	}
+	timeout := fwactions.TimeoutOr(config.Timeout, 10*time.Minute)
 
-	tableName := config.TableName.ValueString()
-	backupName := config.BackupName.ValueString()
+	tableName := fwflex.StringValueFromFramework(ctx, config.TableName)
+	backupName := fwflex.StringValueFromFramework(ctx, config.BackupName)
 
 	if backupName == "" {
-		backupName = fmt.Sprintf("%s-backup-%s", tableName, id.UniqueId())
+		backupName = fmt.Sprintf("%s-backup-%s", tableName, create.UniqueId(ctx))
 	}
 
 	tflog.Info(ctx, "Starting DynamoDB create backup action", map[string]any{
@@ -104,19 +102,18 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		"backup_name":       backupName,
 	})
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Starting backup creation for DynamoDB table %s...", tableName),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting backup creation for DynamoDB table %s...", tableName)
 
-	input := &dynamodb.CreateBackupInput{
+	input := dynamodb.CreateBackupInput{
 		TableName:  aws.String(tableName),
 		BackupName: aws.String(backupName),
 	}
 
 	var output *dynamodb.CreateBackupOutput
 	var err error
-	for l := backoff.NewLoop(timeout); l.Continue(ctx); {
-		output, err = conn.CreateBackup(ctx, input)
+	for l := backoff.NewLoop(ctx, timeout); l.Continue(ctx); {
+		output, err = conn.CreateBackup(ctx, &input)
 
 		if err != nil {
 			if errs.IsAErrorMessageContains[*awstypes.ContinuousBackupsUnavailableException](err, "Backups are being enabled") {
@@ -138,9 +135,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 
 	backupArn := aws.ToString(output.BackupDetails.BackupArn)
 
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: "Backup started, waiting for completion...",
-	})
+	cb(ctx, "Backup started, waiting for completion...")
 
 	result, err := actionwait.WaitForStatus(ctx, func(ctx context.Context) (actionwait.FetchResult[*awstypes.BackupDescription], error) {
 		input := &dynamodb.DescribeBackupInput{BackupArn: aws.String(backupArn)}
@@ -152,24 +147,21 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		return actionwait.FetchResult[*awstypes.BackupDescription]{Status: actionwait.Status(desc.BackupDetails.BackupStatus), Value: desc}, nil
 	}, actionwait.Options[*awstypes.BackupDescription]{
 		Timeout:            timeout,
-		Interval:           actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay()),
+		Interval:           actionwait.WithBackoffDelay(backoff.DefaultSDKv2HelperRetryCompatibleDelay(ctx)),
 		ProgressInterval:   30 * time.Second,
 		SuccessStates:      []actionwait.Status{actionwait.Status(awstypes.BackupStatusAvailable)},
 		TransitionalStates: []actionwait.Status{actionwait.Status(awstypes.BackupStatusCreating)},
 		FailureStates:      []actionwait.Status{actionwait.Status(awstypes.BackupStatusDeleted)},
 		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
-			resp.SendProgress(action.InvokeProgressEvent{Message: "Backup currently in state: " + string(fr.Status)})
+			cb(ctx, "Backup currently in state: %s", fr.Status)
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var failureErr *actionwait.FailureStateError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError("Backup timeout", "Backup did not complete within the specified timeout")
-		} else if errors.As(err, &failureErr) {
+		} else if errs.IsA[*actionwait.FailureStateError](err) {
 			resp.Diagnostics.AddError("Backup failed", "Backup completed with status: "+err.Error())
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError("Unexpected backup status", err.Error())
 		} else {
 			resp.Diagnostics.AddError("Error waiting for backup", err.Error())
@@ -186,7 +178,7 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		backupDetails.BackupCreationDateTime.Format(time.RFC3339),
 		aws.ToInt64(backupDetails.BackupSizeBytes),
 	)
-	resp.SendProgress(action.InvokeProgressEvent{Message: backupInfo})
+	cb(ctx, backupInfo)
 
 	tflog.Info(ctx, "DynamoDB create backup action completed successfully", map[string]any{
 		names.AttrTableName: tableName,

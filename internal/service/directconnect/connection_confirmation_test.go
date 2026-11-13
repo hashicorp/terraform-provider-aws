@@ -10,7 +10,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +24,7 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 	ownerAccountID := acctest.SkipIfEnvVarNotSet(t, "TEST_AWS_DX_OWNER_ACCOUNT_ID")
 
 	var providers []*schema.Provider
-	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
+	connectionName := fmt.Sprintf("tf-dx-%s", acctest.RandString(t, 5))
 	resourceName := "aws_dx_connection_confirmation.test"
 	providerFunc := testAccConnectionConfirmationProvider(&providers, 0)
 	altProviderFunc := testAccConnectionConfirmationProvider(&providers, 1)

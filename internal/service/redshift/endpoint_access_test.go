@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +21,7 @@ import (
 func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAccess
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -56,7 +56,7 @@ func TestAccRedshiftEndpointAccess_basic(t *testing.T) {
 func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAccess
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -91,7 +91,7 @@ func TestAccRedshiftEndpointAccess_sgs(t *testing.T) {
 func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAccess
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -107,6 +107,14 @@ func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceEndpointAccess(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -115,7 +123,7 @@ func TestAccRedshiftEndpointAccess_disappears(t *testing.T) {
 func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.EndpointAccess
-	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(18))
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 18))
 	resourceName := "aws_redshift_endpoint_access.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -131,6 +139,14 @@ func TestAccRedshiftEndpointAccess_disappears_cluster(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfredshift.ResourceCluster(), "aws_redshift_cluster.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_redshift_cluster.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_redshift_cluster.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

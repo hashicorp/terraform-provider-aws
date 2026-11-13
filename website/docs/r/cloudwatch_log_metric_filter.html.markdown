@@ -59,17 +59,45 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Log Metric Filter using the `log_group_name:name`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_log_metric_filter.test
-  id = "/aws/lambda/function:test"
+  to = aws_cloudwatch_log_metric_filter.example
+  identity = {
+    log_group_name = "example-group"
+    name           = "example-filter"
+  }
+}
+
+resource "aws_cloudwatch_log_metric_filter" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Log Metric Filter using the `log_group_name:name`. For example:
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+* `name` (String) Name of the metric filter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Metric Filters using `log_group_name` and `name` separated by a colon (`:`). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_metric_filter.example
+  id = "example-group:example-filter"
+}
+```
+
+Using `terraform import`, import Metric Filters using `log_group_name` and `name` separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_cloudwatch_log_metric_filter.test /aws/lambda/function:test
+% terraform import aws_cloudwatch_log_metric_filter.example example-group:example-filter
 ```

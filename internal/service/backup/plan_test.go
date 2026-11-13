@@ -6,13 +6,14 @@ package backup_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/aws/aws-sdk-go-v2/service/backup/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -24,7 +25,7 @@ func TestAccBackupPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -46,6 +47,9 @@ func TestAccBackupPlan_basic(t *testing.T) {
 						"schedule_expression_timezone": "Etc/UTC",
 						"lifecycle.#":                  "0",
 					}),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]*regexp.Regexp{
+						"rule_id": regexache.MustCompile(`^[a-f0-9-]+$`),
+					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
 				),
@@ -63,7 +67,7 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -78,6 +82,14 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfbackup.ResourcePlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -87,7 +99,7 @@ func TestAccBackupPlan_withRules(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 	rule1Name := fmt.Sprintf("%s_1", rName)
 	rule2Name := fmt.Sprintf("%s_2", rName)
 	rule3Name := fmt.Sprintf("%s_3", rName)
@@ -174,7 +186,7 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -262,7 +274,7 @@ func TestAccBackupPlan_withRecoveryPointTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -586,7 +598,7 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -626,7 +638,7 @@ func TestAccBackupPlan_upgradeScheduleExpressionTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -660,7 +672,7 @@ func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -709,7 +721,7 @@ func TestAccBackupPlan_targetLogicallyAirGappedVaultARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -738,7 +750,7 @@ func TestAccBackupPlan_malwareScan(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
-	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+	rName := fmt.Sprintf("tf-testacc-backup-%s", acctest.RandString(t, 14))
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },

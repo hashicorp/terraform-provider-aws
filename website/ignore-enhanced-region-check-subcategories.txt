@@ -14,6 +14,7 @@ Invoicing
 Network Manager
 Organizations
 Pricing Calculator
+Pricing Plan Manager
 Roles Anywhere
 Route 53
 Route 53 Domains
@@ -22,6 +23,7 @@ Route 53 Recovery Readiness
 STS (Security Token)
 Savings Plans
 Shield
+User Experience Customization
 User Notifications
 User Notifications Contacts
 WAF Classic

@@ -38,14 +38,6 @@ func (l *listResourceFlow) List(ctx context.Context, request list.ListRequest, s
 	awsClient := l.Meta()
 	conn := awsClient.AppFlowClient(ctx)
 
-	var query listFlowModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing AppFlow Flow")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input appflow.ListFlowsInput
@@ -77,7 +69,7 @@ func (l *listResourceFlow) List(ctx context.Context, request list.ListRequest, s
 
 			result.DisplayName = flowName
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -88,10 +80,6 @@ func (l *listResourceFlow) List(ctx context.Context, request list.ListRequest, s
 			}
 		}
 	}
-}
-
-type listFlowModel struct {
-	framework.WithRegionModel
 }
 
 func listFlows(ctx context.Context, conn *appflow.Client, input *appflow.ListFlowsInput) iter.Seq2[awstypes.FlowDefinition, error] {

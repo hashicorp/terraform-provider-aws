@@ -8,7 +8,6 @@ package rds_test
 import (
 	"testing"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +24,6 @@ import (
 func TestAccRDSIntegration_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.Integration
 	resourceName := "aws_rds_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -45,7 +43,7 @@ func TestAccRDSIntegration_Identity_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
@@ -231,7 +229,6 @@ func TestAccRDSIntegration_Identity_regionOverride(t *testing.T) {
 func TestAccRDSIntegration_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.Integration
 	resourceName := "aws_rds_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -250,7 +247,7 @@ func TestAccRDSIntegration_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),
@@ -264,7 +261,7 @@ func TestAccRDSIntegration_Identity_ExistingResource_basic(t *testing.T) {
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -311,7 +308,6 @@ func TestAccRDSIntegration_Identity_ExistingResource_basic(t *testing.T) {
 func TestAccRDSIntegration_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v awstypes.Integration
 	resourceName := "aws_rds_integration.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -335,7 +331,7 @@ func TestAccRDSIntegration_Identity_ExistingResource_noRefreshNoChange(t *testin
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIntegrationExists(ctx, t, resourceName, &v),
+					testAccCheckIntegrationExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectNoIdentity(resourceName),

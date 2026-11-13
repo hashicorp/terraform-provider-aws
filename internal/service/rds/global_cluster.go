@@ -52,93 +52,95 @@ func resourceGlobalCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDatabaseName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
-			},
-			"engine_lifecycle_support": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrForceDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"global_cluster_identifier": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validIdentifier,
-			},
-			"global_cluster_members": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"db_cluster_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"is_writer": {
-							Type:     schema.TypeBool,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDatabaseName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrDeletionProtection: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(globalClusterEngine_Values(), false),
+				},
+				"engine_lifecycle_support": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(engineLifecycleSupport_Values(), false),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrForceDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"global_cluster_identifier": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validIdentifier,
+				},
+				"global_cluster_members": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"db_cluster_arn": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"is_writer": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"global_cluster_resource_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				RequiredWith: []string{names.AttrForceDestroy},
-			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"global_cluster_resource_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_db_cluster_identifier": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					RequiredWith: []string{names.AttrForceDestroy},
+				},
+				names.AttrStorageEncrypted: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -200,8 +202,17 @@ func resourceGlobalClusterCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.ToString(output.GlobalCluster.GlobalClusterIdentifier))
 
-	if _, err := waitGlobalClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutCreate))
+
+	if _, err := waitGlobalClusterCreated(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) create: %s", d.Id(), err)
+	}
+
+	if v, ok := d.GetOk("source_db_cluster_identifier"); ok {
+		sourceARN := v.(string)
+		if _, err := waitGlobalClusterSourcePromoted(ctx, conn, d.Id(), sourceARN, deadline.Remaining()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Global Cluster (%s) source cluster promotion: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceGlobalClusterRead(ctx, d, meta)...)
@@ -493,6 +504,52 @@ func waitGlobalClusterCreated(ctx context.Context, conn *rds.Client, id string, 
 	return nil, err
 }
 
+func waitGlobalClusterSourcePromoted(ctx context.Context, conn *rds.Client, id, sourceARN string, timeout time.Duration) (*types.GlobalCluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{globalClusterStatusPromoting},
+		Target:     []string{globalClusterStatusAvailable},
+		Refresh:    statusGlobalClusterSourcePromotion(conn, id, sourceARN),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.GlobalCluster); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func statusGlobalClusterSourcePromotion(conn *rds.Client, id, sourceARN string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findGlobalClusterByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		status := aws.ToString(output.Status)
+		if status != globalClusterStatusAvailable {
+			return output, status, nil
+		}
+
+		for _, m := range output.GlobalClusterMembers {
+			if aws.ToString(m.DBClusterArn) == sourceARN && aws.ToBool(m.IsWriter) {
+				return output, globalClusterStatusAvailable, nil
+			}
+		}
+
+		return output, globalClusterStatusPromoting, nil
+	}
+}
+
 func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{globalClusterStatusModifying, globalClusterStatusUpgrading},
@@ -513,11 +570,14 @@ func waitGlobalClusterUpdated(ctx context.Context, conn *rds.Client, id string, 
 
 func waitGlobalClusterDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.GlobalCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:        []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
-		Target:         []string{},
-		Refresh:        statusGlobalCluster(conn, id),
-		Timeout:        timeout,
-		NotFoundChecks: 1,
+		Pending:                   []string{globalClusterStatusAvailable, globalClusterStatusDeleting},
+		Target:                    []string{},
+		Refresh:                   statusGlobalCluster(conn, id),
+		Timeout:                   timeout,
+		Delay:                     1 * time.Second,
+		MinTimeout:                1 * time.Second,
+		ContinuousTargetOccurence: 2,
+		NotFoundChecks:            1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -557,7 +617,12 @@ func globalClusterUpgradeEngineVersion(ctx context.Context, conn *rds.Client, d 
 
 	err := globalClusterUpgradeMajorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), timeout)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
+	// Aurora PostgreSQL:
+	// "ModifyGlobalCluster doesn't support minor version upgrades for Aurora global databases."
+	//
+	// Aurora MySQL:
+	// "Amazon RDS can't perform minor version upgrades through ModifyGlobalCluster for this database engine."
+	if tfawserr.ErrMessageContainsAny(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades", "can't perform minor version upgrades") {
 		if err := globalClusterUpgradeMinorEngineVersion(ctx, conn, d.Id(), d.Get(names.AttrEngineVersion).(string), d.Get("global_cluster_members").(*schema.Set), timeout); err != nil {
 			return fmt.Errorf("upgrading minor version of RDS Global Cluster (%s): %w", d.Id(), err)
 		}
@@ -592,7 +657,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, conn *rds.Clien
 				return false, err
 			}
 
-			if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades") {
+			if tfawserr.ErrMessageContainsAny(err, errCodeInvalidParameterValue, "doesn't support minor version upgrades", "can't perform minor version upgrades") {
 				return false, err // NOT retryable !! AND indicates this should be a minor version upgrade
 			}
 

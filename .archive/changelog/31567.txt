@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_eip: Deprecate `vpc` attribute. Use `domain` instead
-```

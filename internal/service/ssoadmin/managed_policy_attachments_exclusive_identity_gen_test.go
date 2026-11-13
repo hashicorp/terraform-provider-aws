@@ -46,7 +46,7 @@ func TestAccSSOAdminManagedPolicyAttachmentsExclusive_Identity_basic(t *testing.
 					acctest.CtRName: config.StringVariable(rName),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, resourceName),
+					testAccCheckManagedPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),

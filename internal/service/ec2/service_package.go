@@ -38,6 +38,10 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 						return aws.TrueTernary
 					}
 
+					if tfawserr.ErrMessageContains(err, errCodeVPNConcentratorLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConcentrator
+						return aws.TrueTernary
+					}
+
 					if tfawserr.ErrMessageContains(err, errCodeVPNConnectionLimitExceeded, "maximum number of mutating objects has been reached") { // CreateVpnConnection
 						return aws.TrueTernary
 					}

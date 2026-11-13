@@ -46,7 +46,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_basic(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -227,7 +227,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_basic(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx),
+		CheckDestroy: testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
@@ -293,7 +293,7 @@ func testAccEC2EBSEBSSnapshotBlockPublicAccess_Identity_ExistingResource_noRefre
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx),
+		CheckDestroy: testAccCheckEBSSnapshotBlockPublicAccessDestroy(ctx, t),
 		AdditionalCLIOptions: &resource.AdditionalCLIOptions{
 			Plan: resource.PlanOptions{
 				NoRefresh: true,

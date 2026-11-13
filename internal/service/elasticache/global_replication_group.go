@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,6 +49,7 @@ const (
 )
 
 // @SDKResource("aws_elasticache_global_replication_group", name="Global Replication Group")
+// @Tags(identifierAttribute="arn")
 func resourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,
@@ -64,146 +66,149 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"at_rest_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"auth_token_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"automatic_failover_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"cache_node_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"cluster_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: validation.Any(
-					validRedisVersionString,
-					validValkeyVersionString,
-				),
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
-						oldVersion, err := gversion.NewVersion(old)
-						if err != nil {
-							return false
-						}
-						return oldVersion.Segments()[0] >= 6
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"engine_version_actual": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_node_groups": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"global_node_group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"slots": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"at_rest_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"auth_token_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"automatic_failover_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"cache_node_type": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"cluster_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ValidateFunc: validation.Any(
+						validRedisVersionString,
+						validValkeyVersionString,
+					),
+					DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+						if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
+							oldVersion, err := gversion.NewVersion(old)
+							if err != nil {
+								return false
+							}
+							return oldVersion.Segments()[0] >= 6
+						}
+						return false
+					},
+				},
+				"engine_version_actual": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"global_node_groups": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"global_node_group_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"slots": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"global_replication_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"global_replication_group_id_suffix": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"global_replication_group_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
-					if (old == emptyDescription && new == "") || (old == "" && new == emptyDescription) {
-						return true
-					}
-					return false
+				"global_replication_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				StateFunc: func(v any) string {
-					s := v.(string)
-					if s == "" {
-						return emptyDescription
-					}
-					return s
+				"global_replication_group_id_suffix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
-			},
-			// global_replication_group_members cannot be correctly implemented because any secondary
-			// replication groups will be added after this resource completes.
-			// "global_replication_group_members": {
-			// 	Type:     schema.TypeSet,
-			// 	Computed: true,
-			// 	Elem: &schema.Resource{
-			// 		Schema: map[string]*schema.Schema{
-			// 			"replication_group_id": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"replication_group_region": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 			"role": {
-			// 				Type:     schema.TypeString,
-			// 				Computed: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
-			"num_node_groups": {
-				Type:         schema.TypeInt,
-				Computed:     true,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(1),
-			},
-			names.AttrParameterGroupName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"primary_replication_group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateReplicationGroupID,
-			},
-			"transit_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+				"global_replication_group_description": {
+					Type:     schema.TypeString,
+					Optional: true,
+					DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+						if (old == emptyDescription && new == "") || (old == "" && new == emptyDescription) {
+							return true
+						}
+						return false
+					},
+					StateFunc: func(v any) string {
+						s := v.(string)
+						if s == "" {
+							return emptyDescription
+						}
+						return s
+					},
+				},
+				// global_replication_group_members cannot be correctly implemented because any secondary
+				// replication groups will be added after this resource completes.
+				// "global_replication_group_members": {
+				// 	Type:     schema.TypeSet,
+				// 	Computed: true,
+				// 	Elem: &schema.Resource{
+				// 		Schema: map[string]*schema.Schema{
+				// 			"replication_group_id": {
+				// 				Type:     schema.TypeString,
+				// 				Computed: true,
+				// 			},
+				// 			"replication_group_region": {
+				// 				Type:     schema.TypeString,
+				// 				Computed: true,
+				// 			},
+				// 			"role": {
+				// 				Type:     schema.TypeString,
+				// 				Computed: true,
+				// 			},
+				// 		},
+				// 	},
+				// },
+				"num_node_groups": {
+					Type:         schema.TypeInt,
+					Computed:     true,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				names.AttrParameterGroupName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"primary_replication_group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validateReplicationGroupID,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputedOnly(),
+				"transit_encryption_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -283,11 +288,13 @@ func paramGroupNameRequiresEngineOrMajorVersionUpgrade(diff sdkv2.ResourceDiffer
 func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	id := d.Get("global_replication_group_id_suffix").(string)
 	input := &elasticache.CreateGlobalReplicationGroupInput{
 		GlobalReplicationGroupIdSuffix: aws.String(id),
 		PrimaryReplicationGroupId:      aws.String(d.Get("primary_replication_group_id").(string)),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("global_replication_group_description"); ok {
@@ -295,6 +302,13 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	output, err := conn.CreateGlobalReplicationGroup(ctx, input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		input.Tags = nil
+
+		output, err = conn.CreateGlobalReplicationGroup(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Global Replication Group (%s): %s", id, err)
@@ -306,6 +320,20 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Global Replication Group (%s) create: %s", d.Id(), err)
+	}
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.ToString(globalReplicationGroup.ARN), tags)
+
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+			err = nil
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ElastiCache Global Replication Group (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if v, ok := d.GetOk("automatic_failover_enabled"); ok {
@@ -441,9 +469,9 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	if err := d.Set("global_node_groups", flattenGlobalNodeGroups(globalReplicationGroup.GlobalNodeGroups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting global_node_groups: %s", err)
 	}
+
 	d.Set("num_node_groups", len(globalReplicationGroup.GlobalNodeGroups))
 	d.Set("automatic_failover_enabled", flattenGlobalReplicationGroupAutomaticFailoverEnabled(globalReplicationGroup.Members))
-
 	d.Set("primary_replication_group_id", flattenGlobalReplicationGroupPrimaryGroupID(globalReplicationGroup.Members))
 
 	return diags
@@ -521,6 +549,24 @@ func resourceGlobalReplicationGroupUpdate(ctx context.Context, d *schema.Resourc
 					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
+		}
+	}
+
+	if d.HasChange("primary_replication_group_id") {
+		member, err := findGlobalReplicationGroupMemberByID(ctx, conn, d.Id(), d.Get("primary_replication_group_id").(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if _, err := conn.FailoverGlobalReplicationGroup(ctx, &elasticache.FailoverGlobalReplicationGroupInput{
+			GlobalReplicationGroupId:  aws.String(d.Id()),
+			PrimaryRegion:             aws.String(aws.ToString(member.ReplicationGroupRegion)),
+			PrimaryReplicationGroupId: aws.String(d.Get("primary_replication_group_id").(string)),
+		}); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		if _, err := waitGlobalReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Global Replication Group (%s) failover: %s", d.Id(), err)
 		}
 	}
 
@@ -856,8 +902,14 @@ func flattenGlobalReplicationGroupAutomaticFailoverEnabled(members []awstypes.Gl
 		return false
 	}
 
-	member := members[0]
-	return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled
+	for _, member := range members {
+		if aws.ToString(member.Role) == globalReplicationGroupMemberRolePrimary {
+			return member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabled ||
+				member.AutomaticFailover == awstypes.AutomaticFailoverStatusEnabling
+		}
+	}
+
+	return false
 }
 
 func flattenGlobalNodeGroups(nodeGroups []awstypes.GlobalNodeGroup) []any {

@@ -30,14 +30,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -47,7 +47,6 @@ import (
 // @FrameworkResource("aws_vpclattice_resource_configuration", name="Resource Configuration")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/vpclattice;vpclattice.GetResourceConfigurationOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newResourceConfigurationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceConfigurationResource{}
 
@@ -194,10 +193,35 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 								listvalidator.SizeAtMost(1),
 								listvalidator.ExactlyOneOf(
 									path.MatchRelative().AtParent().AtName("arn_resource"),
+									path.MatchRelative().AtParent().AtName("cidr_resource"),
 									path.MatchRelative().AtParent().AtName("dns_resource"),
 									path.MatchRelative().AtParent().AtName("ip_resource"),
 								),
 								listvalidator.ConflictsWith(path.MatchRoot("port_ranges"), path.MatchRoot(names.AttrProtocol)),
+							},
+						},
+						"cidr_resource": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cidrResourceModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"cidr_ranges": schema.SetAttribute{
+										CustomType: fwtypes.SetOfStringType,
+										Required:   true,
+										Validators: []validator.Set{
+											setvalidator.SizeBetween(1, 10),
+											setvalidator.ValueStringsAre(
+												stringvalidator.Any(
+													fwvalidators.IPv4CIDRNetworkAddress(),
+													fwvalidators.IPv6CIDRNetworkAddress(),
+												),
+											),
+										},
+									},
+								},
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.AlsoRequires(path.MatchRoot("port_ranges")),
 							},
 						},
 						"dns_resource": schema.ListNestedBlock{
@@ -269,7 +293,7 @@ func (r *resourceConfigurationResource) Create(ctx context.Context, request reso
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.DomainVerificationIdentifier = fwflex.StringFromFramework(ctx, data.DomainVerificationID)
 	input.ResourceConfigurationGroupIdentifier = fwflex.StringFromFramework(ctx, data.ResourceConfigurationGroupID)
 	input.ResourceGatewayIdentifier = fwflex.StringFromFramework(ctx, data.ResourceGatewayID)
@@ -362,6 +386,7 @@ func (r *resourceConfigurationResource) Update(ctx context.Context, request reso
 		input.ResourceConfigurationIdentifier = fwflex.StringFromFramework(ctx, new.ID)
 
 		// "ValidationException: cannot modify resource configuration DNS or ARN".
+		// Only IP and CIDR definitions can be updated in place.
 		if input.ResourceConfigurationDefinition != nil {
 			resourceConfigurationDefinition, diags := new.ResourceConfigurationDefinition.ToPtr(ctx)
 			response.Diagnostics.Append(diags...)
@@ -369,7 +394,7 @@ func (r *resourceConfigurationResource) Update(ctx context.Context, request reso
 				return
 			}
 
-			if resourceConfigurationDefinition.IPResource.IsNull() {
+			if resourceConfigurationDefinition.IPResource.IsNull() && resourceConfigurationDefinition.CIDRResource.IsNull() {
 				input.ResourceConfigurationDefinition = nil
 			}
 		}
@@ -436,9 +461,8 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	output, err := conn.GetResourceConfiguration(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -453,8 +477,8 @@ func findResourceConfigurationByID(ctx context.Context, conn *vpclattice.Client,
 	return output, nil
 }
 
-func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusResourceConfiguration(conn *vpclattice.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findResourceConfigurationByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -470,10 +494,10 @@ func statusResourceConfiguration(ctx context.Context, conn *vpclattice.Client, i
 }
 
 func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceConfigurationStatusCreateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceConfigurationStatusActive),
-		Refresh:                   statusResourceConfiguration(ctx, conn, id),
+		Refresh:                   statusResourceConfiguration(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -490,10 +514,10 @@ func waitResourceConfigurationCreated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitResourceConfigurationUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.ResourceConfigurationStatusUpdateInProgress),
 		Target:                    enum.Slice(awstypes.ResourceConfigurationStatusActive),
-		Refresh:                   statusResourceConfiguration(ctx, conn, id),
+		Refresh:                   statusResourceConfiguration(conn, id),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
@@ -508,10 +532,10 @@ func waitResourceConfigurationUpdated(ctx context.Context, conn *vpclattice.Clie
 }
 
 func waitResourceConfigurationDeleted(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetResourceConfigurationOutput, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ResourceConfigurationStatusActive, awstypes.ResourceConfigurationStatusDeleteInProgress),
 		Target:  []string{},
-		Refresh: statusResourceConfiguration(ctx, conn, id),
+		Refresh: statusResourceConfiguration(conn, id),
 		Timeout: timeout,
 	}
 
@@ -546,9 +570,10 @@ type resourceConfigurationResourceModel struct {
 }
 
 type resourceConfigurationDefinitionModel struct {
-	ARNResource fwtypes.ListNestedObjectValueOf[arnResourceModel] `tfsdk:"arn_resource"`
-	DNSResource fwtypes.ListNestedObjectValueOf[dnsResourceModel] `tfsdk:"dns_resource"`
-	IPResource  fwtypes.ListNestedObjectValueOf[ipResourceModel]  `tfsdk:"ip_resource"`
+	ARNResource  fwtypes.ListNestedObjectValueOf[arnResourceModel]  `tfsdk:"arn_resource"`
+	CIDRResource fwtypes.ListNestedObjectValueOf[cidrResourceModel] `tfsdk:"cidr_resource"`
+	DNSResource  fwtypes.ListNestedObjectValueOf[dnsResourceModel]  `tfsdk:"dns_resource"`
+	IPResource   fwtypes.ListNestedObjectValueOf[ipResourceModel]   `tfsdk:"ip_resource"`
 }
 
 func (r *resourceConfigurationDefinitionModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
@@ -562,6 +587,13 @@ func (r *resourceConfigurationDefinitionModel) Flatten(ctx context.Context, v an
 			return diags
 		}
 		r.ARNResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.ResourceConfigurationDefinitionMemberCidrResource:
+		var data cidrResourceModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		r.CIDRResource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.ResourceConfigurationDefinitionMemberDnsResource:
 		var data dnsResourceModel
 		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
@@ -593,6 +625,18 @@ func (r resourceConfigurationDefinitionModel) Expand(ctx context.Context) (any, 
 			return nil, diags
 		}
 		var apiObject awstypes.ResourceConfigurationDefinitionMemberArnResource
+		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		v = &apiObject
+	case !r.CIDRResource.IsNull():
+		data, d := r.CIDRResource.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var apiObject awstypes.ResourceConfigurationDefinitionMemberCidrResource
 		diags.Append(fwflex.Expand(ctx, data, &apiObject.Value)...)
 		if diags.HasError() {
 			return nil, diags
@@ -634,6 +678,10 @@ var (
 
 type arnResourceModel struct {
 	ARN fwtypes.ARN `tfsdk:"arn"`
+}
+
+type cidrResourceModel struct {
+	CIDRRanges fwtypes.SetOfString `tfsdk:"cidr_ranges"`
 }
 
 type dnsResourceModel struct {

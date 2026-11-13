@@ -42,8 +42,6 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the set
 * `xss_match_tuple` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
 
-### Nested fields
-
 #### `xss_match_tuple`
 
 * `field_to_match` - (Required) Specifies where in a web request to look for cross-site scripting attacks.

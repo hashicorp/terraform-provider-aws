@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +28,7 @@ func TestAccLexModelsIntent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -78,7 +78,7 @@ func TestAccLexModelsIntent_createVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -124,7 +124,7 @@ func TestAccLexModelsIntent_conclusionStatement(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -187,7 +187,7 @@ func TestAccLexModelsIntent_confirmationPromptAndRejectionStatement(t *testing.T
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -264,7 +264,7 @@ func TestAccLexModelsIntent_dialogCodeHook(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -301,7 +301,7 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -384,7 +384,7 @@ func TestAccLexModelsIntent_fulfillmentActivity(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -423,7 +423,7 @@ func TestAccLexModelsIntent_sampleUtterances(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -469,7 +469,7 @@ func TestAccLexModelsIntent_slots(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -533,7 +533,7 @@ func TestAccLexModelsIntent_slotsCustom(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -584,7 +584,7 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -602,6 +602,14 @@ func TestAccLexModelsIntent_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceIntent(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -611,7 +619,7 @@ func TestAccLexModelsIntent_updateWithExternalChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetIntentOutput
 	resourceName := "aws_lex_intent.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	testAccCheckAWSLexIntentUpdateDescription := func(provider *schema.Provider, _ *schema.Resource, resourceName string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
@@ -684,7 +692,7 @@ func TestAccLexModelsIntent_computeVersion(t *testing.T) {
 
 	intentResourceName := "aws_lex_intent.test"
 	botResourceName := "aws_lex_bot.test"
-	testIntentName := "test_intent_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testIntentName := "test_intent_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -839,7 +847,7 @@ resource "aws_lambda_function" "test" {
   function_name = "%[1]s"
   handler       = "lambdatest.handler"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs20.x"
+  runtime       = "nodejs24.x"
 }
 `, rName)
 }

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ecs_service: Add vpc_lattice_configurations argument
-```

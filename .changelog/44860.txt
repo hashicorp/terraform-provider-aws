@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix crash when setting override region during provider initialization
-```

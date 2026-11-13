@@ -16,6 +16,7 @@ func TestAccControlTower_serial(t *testing.T) {
 		"LandingZone": {
 			acctest.CtBasic:      testAccLandingZone_basic,
 			acctest.CtDisappears: testAccLandingZone_disappears,
+			"remediationTypes":   testAccLandingZone_remediationTypes,
 			"tags":               testAccLandingZone_tags,
 		},
 		"Control": {

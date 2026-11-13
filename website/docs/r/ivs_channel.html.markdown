@@ -30,7 +30,7 @@ The following arguments are optional:
 * `name` - (Optional) Channel name.
 * `recording_configuration_arn` - (Optional) Recording configuration ARN.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `STANDARD`, `BASIC`.
+* `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `STANDARD`, `BASIC`, `ADVANCED_SD`, `ADVANCED_HD`.
 
 ## Attribute Reference
 
@@ -70,7 +70,7 @@ resource "aws_ivs_channel" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS channel.
+- `arn` (String) ARN of the IVS channel.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Channel using the ARN. For example:
 

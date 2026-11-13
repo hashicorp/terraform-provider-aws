@@ -129,13 +129,13 @@ The `storage_config` configuration block supports the following arguments:
 
 The `kinesis_firehose_config` configuration block supports the following arguments:
 
-* `firehose_arn` - (Required) The Amazon Resource Name (ARN) of the delivery stream.
+* `firehose_arn` - (Required) ARN of the delivery stream.
 
 #### `kinesis_stream_config`
 
 The `kinesis_stream_config` configuration block supports the following arguments:
 
-* `stream_arn` - (Required) The Amazon Resource Name (ARN) of the data stream.
+* `stream_arn` - (Required) ARN of the data stream.
 
 #### `kinesis_video_stream_config`
 

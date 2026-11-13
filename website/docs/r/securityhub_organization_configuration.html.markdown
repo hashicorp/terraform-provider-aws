@@ -16,7 +16,7 @@ Manages the Security Hub Organization Configuration.
 
 ~> **NOTE:** This is an advanced Terraform resource. Terraform will automatically assume management of the Security Hub Organization Configuration without import and perform no actions on removal from the Terraform configuration.
 
-~> **NOTE:** Deleting this resource resets security hub to a local organization configuration with auto enable false.
+~> **NOTE:** Deleting this resource resets Security Hub to a local organization configuration with auto enable false.
 
 ## Example Usage
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudwatch_metric_alarm: Additional allowed values for `extended_statistic` and `metric_query.metric.stat` arguments
-```

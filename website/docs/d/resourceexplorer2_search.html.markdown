@@ -29,7 +29,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `view_arn` - (Optional) Specifies the Amazon resource name (ARN) of the view to use for the query. If you don't specify a value for this parameter, then the operation automatically uses the default view for the AWS Region in which you called this operation. If the Region either doesn't have a default view or if you don't have permission to use the default view, then the operation fails with a `401 Unauthorized` exception.
+* `view_arn` - (Optional) ARN of the view to use for the query. If you don't specify a value for this parameter, then the operation automatically uses the default view for the AWS Region in which you called this operation. If the Region either doesn't have a default view or if you don't have permission to use the default view, then the operation fails with a `401 Unauthorized` exception.
 
 ## Attribute Reference
 
@@ -46,7 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `resources` Attribute Reference
 
-* `arn` - Amazon resource name of resource.
+* `arn` - ARN of resource.
 * `last_reported_at` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
 * `owning_account_id` - Amazon Web Services account that owns the resource.
 * `properties` - Structure with additional type-specific details about the resource.  See [`properties`](#properties-attribute-reference) below.

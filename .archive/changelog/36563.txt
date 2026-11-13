@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_route53_zone: Prevent re-creation when `name` casing changes
-```

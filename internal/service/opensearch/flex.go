@@ -40,6 +40,17 @@ func expandCognitoOptions(c []any) *awstypes.CognitoOptions {
 	return options
 }
 
+func expandDeploymentStrategyOptions(l []any) *awstypes.DeploymentStrategyOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]any)
+	deploymentStrategyOptions := &awstypes.DeploymentStrategyOptions{
+		DeploymentStrategy: awstypes.DeploymentStrategy(m["deployment_strategy"].(string)),
+	}
+
+	return deploymentStrategyOptions
+}
 func expandDomainEndpointOptions(l []any) *awstypes.DomainEndpointOptions {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -112,6 +123,18 @@ func expandEncryptAtRestOptions(m map[string]any) *awstypes.EncryptionAtRestOpti
 	}
 
 	return &options
+}
+
+func flattenDeploymentStrategyOptions(deploymentStrategyOptions *awstypes.DeploymentStrategyOptions) []any {
+	if deploymentStrategyOptions == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"deployment_strategy": string(deploymentStrategyOptions.DeploymentStrategy),
+	}
+
+	return []any{m}
 }
 
 func flattenCognitoOptions(c *awstypes.CognitoOptions) []map[string]any {

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -27,31 +28,78 @@ type ServicePackageResourceRegion struct {
 
 // ResourceRegionDefault returns the default resource region configuration.
 // The default is to enable per-resource Region override and validate the override value.
-func ResourceRegionDefault() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{
+func ResourceRegionDefault() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
 		IsOverrideEnabled:             true,
 		IsValidateOverrideInPartition: true,
-	}
+	})
 }
 
 // ResourceRegionDisabled returns the resource region configuration indicating that there is no per-resource Region override.
-func ResourceRegionDisabled() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{}
+func ResourceRegionDisabled() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{})
 }
 
 // ResourceRegionDeprecatedOverride returns the resource region configuration indicating that per-resource Region override is enabled but deprecated.
-func ResourceRegionDeprecatedOverride() ServicePackageResourceRegion {
-	return ServicePackageResourceRegion{
+func ResourceRegionDeprecatedOverride() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
 		IsOverrideEnabled:             true,
 		IsValidateOverrideInPartition: true,
 		IsOverrideDeprecated:          true,
-	}
+	})
+}
+
+// ResourceRegionNoPartitionValidation returns the resource region configuration indicating that per-resource Region override is enabled but the value is not validated against the partition.
+func ResourceRegionNoPartitionValidation() unique.Handle[ServicePackageResourceRegion] {
+	return unique.Make(ServicePackageResourceRegion{
+		IsOverrideEnabled:             true,
+		IsValidateOverrideInPartition: false,
+	})
 }
 
 // ServicePackageResourceTags represents resource-level tagging information.
-type ServicePackageResourceTags struct {
-	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
-	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+type ServicePackageResourceTags unique.Handle[servicePackageResourceTags]
+
+func (s ServicePackageResourceTags) unwrap() unique.Handle[servicePackageResourceTags] {
+	return unique.Handle[servicePackageResourceTags](s)
+}
+
+func (s ServicePackageResourceTags) value() servicePackageResourceTags {
+	return s.unwrap().Value()
+}
+
+func (s ServicePackageResourceTags) Enabled() bool {
+	return !tfunique.IsHandleNil(s.unwrap())
+}
+
+func (s ServicePackageResourceTags) IdentifierAttribute() string {
+	return s.value().identifierAttribute
+}
+
+func (s ServicePackageResourceTags) ResourceType() string {
+	return s.value().resourceType
+}
+
+type servicePackageResourceTags struct {
+	identifierAttribute string // The attribute for the identifier for UpdateTags etc.
+	resourceType        string // Extra resourceType parameter value for UpdateTags etc.
+}
+
+func ResourceTagsInline() ServicePackageResourceTags {
+	return ServicePackageResourceTags(unique.Make(servicePackageResourceTags{}))
+}
+
+func ResourceTagsAttribute(identifierAttribute string) ServicePackageResourceTags {
+	return ServicePackageResourceTags(unique.Make(servicePackageResourceTags{
+		identifierAttribute: identifierAttribute,
+	}))
+}
+
+func ResourceTagsTypeAndAttribute(resourceType, identifierAttribute string) ServicePackageResourceTags {
+	return ServicePackageResourceTags(unique.Make(servicePackageResourceTags{
+		identifierAttribute: identifierAttribute,
+		resourceType:        resourceType,
+	}))
 }
 
 // ServicePackageAction represents a Terraform Plugin Framework action
@@ -78,7 +126,7 @@ type ServicePackageFrameworkDataSource struct {
 	Factory  func(context.Context) (datasource.DataSourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
@@ -88,7 +136,7 @@ type ServicePackageFrameworkResource struct {
 	Factory  func(context.Context) (resource.ResourceWithConfigure, error)
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 	Import   FrameworkImport
@@ -98,7 +146,7 @@ type ServicePackageFrameworkListResource struct {
 	Factory  func() list.ListResourceWithConfigure
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 }
@@ -109,7 +157,7 @@ type ServicePackageSDKDataSource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 }
 
@@ -119,7 +167,7 @@ type ServicePackageSDKResource struct {
 	Factory  func() *schema.Resource
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 	Import   SDKv2Import
@@ -134,7 +182,7 @@ type ServicePackageSDKListResource struct {
 	Factory  func() ListResourceForSDK
 	TypeName string
 	Name     string
-	Tags     unique.Handle[ServicePackageResourceTags]
+	Tags     ServicePackageResourceTags
 	Region   unique.Handle[ServicePackageResourceRegion]
 	Identity Identity
 }
@@ -372,12 +420,12 @@ func RegionalResourceWithGlobalARNFormatNamed(name string, opts ...IdentityOptsF
 	return identity
 }
 
-func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func RegionalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
 			StringIdentityAttribute("region", false),
-			StringIdentityAttribute(name, true),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}
@@ -389,46 +437,12 @@ func RegionalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Iden
 	return identity
 }
 
-func RegionalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
-	identity := Identity{
-		Attributes: []IdentityAttribute{
-			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute("region", false),
-			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
-		},
-		IsSingleParameter: true,
-	}
-
-	for _, opt := range opts {
-		opt(&identity)
-	}
-
-	return identity
-}
-
-func GlobalSingleParameterIdentity(name string, opts ...IdentityOptsFunc) Identity {
+func GlobalSingleParameterIdentity(attribute IdentityAttribute, opts ...IdentityOptsFunc) Identity {
 	identity := Identity{
 		IsGlobalResource: true,
 		Attributes: []IdentityAttribute{
 			StringIdentityAttribute("account_id", false),
-			StringIdentityAttribute(name, true),
-		},
-		IsSingleParameter: true,
-	}
-
-	for _, opt := range opts {
-		opt(&identity)
-	}
-
-	return identity
-}
-
-func GlobalSingleParameterIdentityWithMappedName(name string, resourceAttributeName string, opts ...IdentityOptsFunc) Identity {
-	identity := Identity{
-		IsGlobalResource: true,
-		Attributes: []IdentityAttribute{
-			StringIdentityAttribute("account_id", false),
-			StringIdentityAttributeWithMappedName(name, true, resourceAttributeName),
+			attribute,
 		},
 		IsSingleParameter: true,
 	}

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_appstream_user_stack_association: Prevent panic during resource read
-```

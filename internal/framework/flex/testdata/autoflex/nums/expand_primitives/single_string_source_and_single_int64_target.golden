@@ -37,13 +37,11 @@
   },
   {
     "@level": "error",
-    "@message": "AutoFlex Expand; incompatible types",
+    "@message": "Expanding incompatible types",
     "@module": "provider.autoflex",
     "autoflex.source.path": "Field1",
     "autoflex.source.type": "github.com/hashicorp/terraform-plugin-framework/types/basetypes.StringValue",
     "autoflex.target.path": "Field1",
-    "autoflex.target.type": "int64",
-    "from": {},
-    "to": 6
+    "autoflex.target.type": "int64"
   }
 ]

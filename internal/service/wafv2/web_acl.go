@@ -17,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -155,6 +154,7 @@ func resourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monetization_config": monetizationConfigSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -173,7 +173,7 @@ func resourceWebACL() *schema.Resource {
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
+						validation.StringLenBetween(1, 128-sdkid.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
@@ -205,6 +205,7 @@ func resourceWebACL() *schema.Resource {
 										"captcha":   captchaConfigSchema(),
 										"challenge": challengeConfigSchema(),
 										"count":     countConfigSchema(),
+										"monetize":  monetizeConfigSchema(),
 									},
 								},
 							},
@@ -231,7 +232,7 @@ func resourceWebACL() *schema.Resource {
 								Required: true,
 							},
 							"rule_label":        ruleLabelsSchema(),
-							"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
+							"statement":         webACLRootStatementSchema(ruleStatementSchemaLevel),
 							"visibility_config": visibilityConfigSchema(),
 						},
 					},
@@ -301,6 +302,10 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+		input.MonetizationConfig = expandMonetizationConfig(v.([]any))
+	}
+
 	if v, ok := d.GetOk("token_domains"); ok && v.(*schema.Set).Len() > 0 {
 		input.TokenDomains = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
@@ -364,6 +369,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
+	if err := d.Set("monetization_config", flattenMonetizationConfig(webACL.MonetizationConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monetization_config: %s", err)
+	}
 	d.Set(names.AttrName, webACL.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 	if _, ok := d.GetOk("rule_json"); !ok {
@@ -397,6 +405,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		"data_protection_config",
 		names.AttrDefaultAction,
 		names.AttrDescription,
+		"monetization_config",
 		"rule_json",
 		names.AttrRule,
 		"token_domains",
@@ -445,6 +454,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			DefaultAction:        expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 			Id:                   aws.String(d.Id()),
 			LockToken:            aws.String(aclLockToken),
+			MonetizationConfig:   expandMonetizationConfig(d.Get("monetization_config").([]any)),
 			Name:                 aws.String(aclName),
 			Rules:                rules,
 			Scope:                awstypes.Scope(aclScope),
@@ -479,8 +489,18 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
-				// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
+				// Retrieved a new lock token, retry due to other processes modifying the web ACL
+				// concurrently (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 				input.LockToken = aws.String(newLockToken)
+
+				// Rules may be managed separately from this resource.
+				//
+				// When no rule changes are planned send the most current rule set instead of
+				// the originally planned values from state, which may now be stale.
+				if !d.HasChanges(names.AttrRule, "rule_json") {
+					input.Rules = output.WebACL.Rules
+				}
+
 				_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 					return conn.UpdateWebACL(ctx, input)
 				})
@@ -557,9 +577,8 @@ func findWebACL(ctx context.Context, conn *wafv2.Client, input *wafv2.GetWebACLI
 	output, err := conn.GetWebACL(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

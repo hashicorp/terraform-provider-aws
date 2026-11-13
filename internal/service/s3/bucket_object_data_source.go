@@ -32,111 +32,113 @@ func dataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Deprecated: "bucket is deprecated. Use the aws_s3_object data source instead.",
-				Type:       schema.TypeString,
-				Required:   true,
-			},
-			"bucket_key_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"cache_control": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_language": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expires": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"object_lock_legal_hold_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_lock_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_lock_retain_until_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"range": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sse_kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageClass: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"website_redirect_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Deprecated: "bucket is deprecated. Use the aws_s3_object data source instead.",
+					Type:       schema.TypeString,
+					Required:   true,
+				},
+				"bucket_key_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"cache_control": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_encoding": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_language": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"expires": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKey: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metadata": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"object_lock_legal_hold_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_retain_until_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"range": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"server_side_encryption": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sse_kms_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageClass: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaComputed(),
+				"version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"website_redirect_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		DeprecationMessage: `use the aws_s3_object data source instead`,

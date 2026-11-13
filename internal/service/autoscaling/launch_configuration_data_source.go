@@ -20,172 +20,174 @@ func dataSourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceLaunchConfigurationRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"associate_public_ip_address": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ebs_block_device": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"no_device": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrSnapshotID: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"associate_public_ip_address": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ebs_block_device": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"no_device": {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrSnapshotID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"ebs_optimized": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"enable_monitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ephemeral_block_device": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeviceName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrVirtualName: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"ebs_optimized": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"enable_monitoring": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ephemeral_block_device": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeviceName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrVirtualName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"iam_instance_profile": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"image_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrInstanceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"key_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata_options": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"http_endpoint": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"http_put_response_hop_limit": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						"http_tokens": {
-							Type:     schema.TypeString,
-							Computed: true,
+				"iam_instance_profile": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"image_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrInstanceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"key_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metadata_options": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"http_endpoint": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"http_put_response_hop_limit": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							"http_tokens": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"placement_tenancy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"root_block_device": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDeleteOnTermination: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrEncrypted: {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
-						names.AttrIOPS: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrThroughput: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeSize: {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrVolumeType: {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"placement_tenancy": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"root_block_device": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDeleteOnTermination: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrEncrypted: {
+								Type:     schema.TypeBool,
+								Computed: true,
+							},
+							names.AttrIOPS: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrThroughput: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeSize: {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrVolumeType: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrSecurityGroups: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"spot_price": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_data": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrSecurityGroups: {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"spot_price": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"user_data": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

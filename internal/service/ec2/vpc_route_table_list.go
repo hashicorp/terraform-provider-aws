@@ -115,22 +115,15 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 			result := request.NewListResult(ctx)
 
 			tags := keyValueTags(ctx, routeTable.Tags)
-			setTagsOut(ctx, routeTable.Tags)
 
 			rd := l.ResourceData()
 			rd.SetId(aws.ToString(routeTable.RouteTableId))
 
-			tflog.Info(ctx, "Reading resource")
-			diags := resourceRouteTableRead(ctx, rd, awsClient)
+			diags := resourceRouteTableFlatten(ctx, awsClient, conn, rd, &routeTable)
 			if diags.HasError() {
 				tflog.Error(ctx, "Reading resource", map[string]any{
-					names.AttrID: aws.ToString(routeTable.RouteTableId),
-					"diags":      diags,
+					"diags": diags,
 				})
-				continue
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
 				continue
 			}
 
@@ -140,11 +133,10 @@ func (l *routeTableListResource) List(ctx context.Context, request list.ListRequ
 				result.DisplayName = aws.ToString(routeTable.RouteTableId)
 			}
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				tflog.Error(ctx, "Setting result", map[string]any{
-					names.AttrID: aws.ToString(routeTable.RouteTableId),
-					"diags":      result.Diagnostics,
+					"diags": result.Diagnostics,
 				})
 				continue
 			}

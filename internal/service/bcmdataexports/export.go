@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -120,12 +122,17 @@ func exportDataQuerySchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 				},
 				"table_configurations": schema.MapAttribute{
+					// TODO: Because `Computed` can only be speciied at the top level, default values for specific tables must be specified if any values are specified.
+					// This should be resolved when we can use `schema.MapNestedAttribute` with protov6.
 					CustomType: fwtypes.MapOfMapOfStringType,
 					Optional:   true,
 					Computed:   true,
 					PlanModifiers: []planmodifier.Map{
 						mapplanmodifier.UseStateForUnknown(),
 						mapplanmodifier.RequiresReplace(),
+					},
+					Validators: []validator.Map{
+						mapvalidator.SizeAtMost(1),
 					},
 				},
 			},
@@ -177,6 +184,15 @@ func exportS3DestinationSchema(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
+					},
+				},
+				"s3_bucket_owner": schema.StringAttribute{
+					Optional: true,
+					PlanModifiers: []planmodifier.String{
+						stringplanmodifier.RequiresReplace(),
+					},
+					Validators: []validator.String{
+						fwvalidators.AWSAccountID(),
 					},
 				},
 				"s3_prefix": schema.StringAttribute{
@@ -500,7 +516,7 @@ type exportData struct {
 
 type dataQueryData struct {
 	QueryStatement      types.String             `tfsdk:"query_statement"`
-	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations" autoflex:",omitempty"`
+	TableConfigurations fwtypes.MapOfMapOfString `tfsdk:"table_configurations"`
 }
 
 type s3OutputConfigurations struct {
@@ -512,6 +528,7 @@ type s3OutputConfigurations struct {
 
 type s3Destination struct {
 	S3Bucket               types.String                                            `tfsdk:"s3_bucket"`
+	S3BucketOwner          types.String                                            `tfsdk:"s3_bucket_owner"`
 	S3Prefix               types.String                                            `tfsdk:"s3_prefix"`
 	S3Region               types.String                                            `tfsdk:"s3_region"`
 	S3OutputConfigurations fwtypes.ListNestedObjectValueOf[s3OutputConfigurations] `tfsdk:"s3_output_configurations"`

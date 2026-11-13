@@ -16,10 +16,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -31,35 +31,39 @@ import (
 )
 
 // @SDKResource("aws_ram_principal_association", name="Principal Association")
+// @IdentityAttribute("principal")
+// @IdentityAttribute("resource_share_arn")
+// @ImportIDHandler("principalAssociationImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShareAssociation")
+// @Testing(useAlternateAccount=true)
+// @Testing(preIdentityVersion="v6.68.0")
 func resourcePrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrincipalAssociationCreate,
 		ReadWithoutTimeout:   resourcePrincipalAssociationRead,
 		DeleteWithoutTimeout: resourcePrincipalAssociationDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrPrincipal: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringIsNotEmpty,
-					validation.Any(
-						verify.ValidAccountID,
-						verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPrincipal: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringIsNotEmpty,
+						validation.Any(
+							verify.ValidAccountID,
+							verify.ValidARN,
+						),
 					),
-				),
-			},
-			"resource_share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
+				},
+				"resource_share_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			}
 		},
 	}
 }
@@ -146,7 +150,7 @@ func resourcePrincipalAssociationDelete(ctx context.Context, d *schema.ResourceD
 
 func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.AssociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -173,7 +177,7 @@ func createResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Clie
 
 func deleteResourceSharePrincipalAssociation(ctx context.Context, conn *ram.Client, resourceShareARN, principal string, sources ...string) error {
 	input := ram.DisassociateResourceShareInput{
-		ClientToken:      aws.String(sdkid.UniqueId()),
+		ClientToken:      aws.String(create.UniqueId(ctx)),
 		Principals:       []string{principal},
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
@@ -278,4 +282,38 @@ func waitPrincipalAssociationDeleted(ctx context.Context, conn *ram.Client, reso
 	}
 
 	return nil, err
+}
+
+var _ inttypes.SDKv2ImportID = principalAssociationImportID{}
+
+func createPrincipalAssociationResourceID(resourceShareARN, principal string) string {
+	id, _ := flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false)
+	return id
+}
+
+type principalAssociationImportID struct{}
+
+func (principalAssociationImportID) Create(d *schema.ResourceData) string {
+	return createPrincipalAssociationResourceID(
+		d.Get("resource_share_arn").(string),
+		d.Get(names.AttrPrincipal).(string),
+	)
+}
+
+func (principalAssociationImportID) Parse(id string) (string, map[string]any, error) {
+	parts, err := flex.ExpandResourceId(
+		id,
+		principalAssociationResourceIDPartCount,
+		false,
+	)
+	if err != nil {
+		return "", nil, fmt.Errorf("parsing ID %q (expected RESOURCE-SHARE-ARN,PRINCIPAL): %w", id, err)
+	}
+
+	result := map[string]any{
+		"resource_share_arn": parts[0],
+		names.AttrPrincipal:  parts[1],
+	}
+
+	return id, result, nil
 }

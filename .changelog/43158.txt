@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_instance: Recompute `ipv6_addresses` when `ipv6_address_count` is updated
-```

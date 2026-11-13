@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -20,7 +21,7 @@ import (
 
 func TestAccOpenSearchPackage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	pkgName := testAccRandomDomainName()
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -56,7 +57,7 @@ func TestAccOpenSearchPackage_basic(t *testing.T) {
 
 func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 	ctx := acctest.Context(t)
-	pkgName := testAccRandomDomainName()
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -98,7 +99,7 @@ func TestAccOpenSearchPackage_packageTypeZipPlugin(t *testing.T) {
 
 func TestAccOpenSearchPackage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	pkgName := testAccRandomDomainName()
+	pkgName := testAccRandomDomainName(t)
 	resourceName := "aws_opensearch_package.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -114,6 +115,14 @@ func TestAccOpenSearchPackage_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfopensearch.ResourcePackage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

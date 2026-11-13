@@ -64,3 +64,29 @@ func fqdn(name string) string {
 		return name + "."
 	}
 }
+
+// denormalizeDomainName removes escaping for the "*" character in the leftmost label of a domain name,
+// and removes the trailing dot if present.
+// The single dot (".") domain name is passed through as-is.
+func denormalizeDomainName(v any) string {
+	switch v := v.(type) {
+	case *string:
+		return denormalizeDomainNameImpl(aws.ToString(v))
+	case string:
+		return denormalizeDomainNameImpl(v)
+	default:
+		return ""
+	}
+}
+
+func denormalizeDomainNameImpl(s string) string {
+	if s == "" || s == "." {
+		return s
+	}
+
+	s = strings.TrimSuffix(s, ".")
+	if after, ok := strings.CutPrefix(s, `\052.`); ok {
+		s = `*.` + after
+	}
+	return s
+}

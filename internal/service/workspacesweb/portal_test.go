@@ -11,9 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspacesweb/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfworkspacesweb "github.com/hashicorp/terraform-provider-aws/internal/service/workspacesweb"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +24,7 @@ func TestAccWorkSpacesWebPortal_basic(t *testing.T) {
 	var portal awstypes.Portal
 	resourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -32,12 +32,12 @@ func TestAccWorkSpacesWebPortal_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPortalDestroy(ctx),
+		CheckDestroy:             testAccCheckPortalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortalConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortalExists(ctx, resourceName, &portal),
+					testAccCheckPortalExists(ctx, t, resourceName, &portal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardRegular)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "portal_arn", "workspaces-web", regexache.MustCompile(`portal/.+$`)),
@@ -61,7 +61,7 @@ func TestAccWorkSpacesWebPortal_disappears(t *testing.T) {
 	var portal awstypes.Portal
 	resourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -69,15 +69,23 @@ func TestAccWorkSpacesWebPortal_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPortalDestroy(ctx),
+		CheckDestroy:             testAccCheckPortalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortalConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortalExists(ctx, resourceName, &portal),
+					testAccCheckPortalExists(ctx, t, resourceName, &portal),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfworkspacesweb.ResourcePortal, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -88,7 +96,7 @@ func TestAccWorkSpacesWebPortal_update(t *testing.T) {
 	var portal awstypes.Portal
 	resourceName := "aws_workspacesweb_portal.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -97,12 +105,12 @@ func TestAccWorkSpacesWebPortal_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPortalDestroy(ctx),
+		CheckDestroy:             testAccCheckPortalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortalConfig_updateBefore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortalExists(ctx, resourceName, &portal),
+					testAccCheckPortalExists(ctx, t, resourceName, &portal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-before"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardRegular)),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_sessions", "1"),
@@ -120,7 +128,7 @@ func TestAccWorkSpacesWebPortal_update(t *testing.T) {
 			{
 				Config: testAccPortalConfig_updateAfter(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortalExists(ctx, resourceName, &portal),
+					testAccCheckPortalExists(ctx, t, resourceName, &portal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-after"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardLarge)),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_sessions", "2"),
@@ -138,7 +146,7 @@ func TestAccWorkSpacesWebPortal_complete(t *testing.T) {
 	resourceName := "aws_workspacesweb_portal.test"
 	kmsKeyResourceName := "aws_kms_key.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.WorkSpacesWebEndpointID)
@@ -146,12 +154,12 @@ func TestAccWorkSpacesWebPortal_complete(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.WorkSpacesWebServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPortalDestroy(ctx),
+		CheckDestroy:             testAccCheckPortalDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortalConfig_complete(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortalExists(ctx, resourceName, &portal),
+					testAccCheckPortalExists(ctx, t, resourceName, &portal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "test-complete"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, string(awstypes.InstanceTypeStandardLarge)),
 					resource.TestCheckResourceAttr(resourceName, "max_concurrent_sessions", "2"),
@@ -172,9 +180,9 @@ func TestAccWorkSpacesWebPortal_complete(t *testing.T) {
 	})
 }
 
-func testAccCheckPortalDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPortalDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_workspacesweb_portal" {
@@ -198,14 +206,14 @@ func testAccCheckPortalDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckPortalExists(ctx context.Context, n string, v *awstypes.Portal) resource.TestCheckFunc {
+func testAccCheckPortalExists(ctx context.Context, t *testing.T, n string, v *awstypes.Portal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesWebClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).WorkSpacesWebClient(ctx)
 
 		output, err := tfworkspacesweb.FindPortalByARN(ctx, conn, rs.Primary.Attributes["portal_arn"])
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
- provider: Add `custom_ca_bundle` argument
- ```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_kms_grant: Retries until valid principal ARNs are returned instead of not updating state
-```

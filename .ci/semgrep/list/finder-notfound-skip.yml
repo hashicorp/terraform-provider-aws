@@ -1,0 +1,51 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: list-resource-finder-inside-setresult
+    languages: [go]
+    message: >-
+      Finder call is inside the SetResult closure: a bare `return` here only
+      exits the closure, so a deleted item can still get yielded with partial
+      data, and any other error here aborts the whole list stream instead of
+      just skipping this item. Move the finder call above SetResult and
+      `continue` on NotFound instead.
+    severity: ERROR
+    paths:
+      include:
+        - "/internal/service/**/*_list.go"
+    patterns:
+      - pattern-inside: |
+          $L.SetResult($CTX, $META, $INCLUDE, $DATA, $RESULT, func() {
+            ...
+          })
+      - pattern: $FIND(...)
+      - metavariable-regex:
+          metavariable: $FIND
+          regex: "^find\\w*$"
+
+  - id: list-resource-notfound-return-not-continue
+    languages: [go]
+    message: >-
+      `return` on NotFound here exits the whole list stream, silently dropping
+      every later item. Use `continue` to skip just this one.
+    severity: ERROR
+    paths:
+      include:
+        - "/internal/service/**/*_list.go"
+    patterns:
+      - pattern-inside: |
+          $STREAM.Results = func(yield func(list.ListResult) bool) {
+            ...
+            for $ITEM, $ERR := range $LISTFN(...) {
+              ...
+            }
+          }
+      - pattern: |
+          if retry.NotFound($ERR) {
+            return
+          }
+      - pattern-not-inside: |
+          $L.SetResult($CTX, $META, $INCLUDE, $DATA, $RESULT, func() {
+            ...
+          })

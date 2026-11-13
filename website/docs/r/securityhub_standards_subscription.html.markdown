@@ -53,7 +53,7 @@ Currently available standards (remember to replace `${var.partition}` and `${var
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ARN of a resource that represents your subscription to a supported standard.
+* `arn` - The ARN of a resource that represents your subscription to a supported standard.
 
 ## Timeouts
 
@@ -64,39 +64,38 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards subscriptions using the standards subscription ARN. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_securityhub_standards_subscription.cis
+  to = aws_securityhub_standards_subscription.example
+  identity = {
+    arn = "arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0"
+  }
+}
+
+resource "aws_securityhub_standards_subscription" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) Security Hub finding aggregator ARN.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub standards subscriptions using `arn`. For example:
+
+```terraform
+import {
+  to = aws_securityhub_standards_subscription.example
   id = "arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0"
 }
 ```
 
-```terraform
-import {
-  to = aws_securityhub_standards_subscription.pci_321
-  id = "arn:aws:securityhub:eu-west-1:123456789012:subscription/pci-dss/v/3.2.1"
-}
-```
-
-```terraform
-import {
-  to = aws_securityhub_standards_subscription.nist_800_53_rev_5
-  id = "arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0"
-}
-```
-
-Using `terraform import`, import Security Hub standards subscriptions using the standards subscription ARN. For example:
+Using `terraform import`, import Security Hub standards subscriptions using `arn`. For example:
 
 ```console
-% terraform import aws_securityhub_standards_subscription.cis arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
-```
-
-```console
-% terraform import aws_securityhub_standards_subscription.pci_321 arn:aws:securityhub:eu-west-1:123456789012:subscription/pci-dss/v/3.2.1
-```
-
-```console
-% terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
+% terraform import aws_securityhub_standards_subscription.example arn:aws:securityhub:eu-west-1:123456789012:subscription/cis-aws-foundations-benchmark/v/1.2.0
 ```

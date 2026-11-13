@@ -69,7 +69,7 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 		conn = l.Meta().S3ExpressClient(ctx)
 	}
 
-	tflog.Info(ctx, "Listing S3 (Simple Storage) Object", map[string]any{
+	tflog.Info(ctx, "Listing S3 Object", map[string]any{
 		names.AttrBucket: bucket,
 	})
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -96,23 +96,36 @@ func (l *listResourceObject) List(ctx context.Context, request list.ListRequest,
 			rd.Set(names.AttrBucket, bucket)
 			rd.Set(names.AttrKey, key)
 
-			tflog.Info(ctx, "Reading S3 (Simple Storage) Object")
-			diags := resourceObjectRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading S3 (Simple Storage) Object", map[string]any{
-					names.AttrID: id,
-					"diags":      sdkdiag.DiagnosticsString(diags),
-				})
-				continue
-			}
-			if rd.Id() == "" || rd.Id() == "/" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", "")
+				if err != nil {
+					tflog.Error(ctx, "Reading S3 Object", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+
+				objectARN, err := newObjectARN(l.Meta().Partition(ctx), bucket, key)
+				if err != nil {
+					tflog.Error(ctx, "Reading S3 Object", map[string]any{
+						"error": err,
+					})
+					continue
+				}
+				rd.Set(names.AttrARN, objectARN.String())
+
+				diags := resourceObjectFlatten(rd, output)
+				if diags.HasError() {
+					tflog.Error(ctx, "Reading S3 Object", map[string]any{
+						"error": sdkdiag.DiagnosticsString(diags),
+					})
+					continue
+				}
 			}
 
-			result.DisplayName = key
+			result.DisplayName = fmt.Sprintf("%s/%s", bucket, key)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -137,7 +150,7 @@ func listObjects(ctx context.Context, conn *s3.Client, input *s3.ListObjectsV2In
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 			if err != nil {
-				yield(awstypes.Object{}, fmt.Errorf("listing S3 (Simple Storage) Object resources: %w", err))
+				yield(awstypes.Object{}, fmt.Errorf("listing S3 Object resources: %w", err))
 				return
 			}
 

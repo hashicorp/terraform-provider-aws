@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Support `ap-southeast-5` as a valid AWS Region
-```

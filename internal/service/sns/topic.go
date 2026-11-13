@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"regexp"
 	"strconv"
 	"time"
@@ -20,7 +21,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
@@ -134,6 +134,12 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
+		"maximum_message_size": {
+			Type:         schema.TypeInt,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.IntBetween(1024, 1048576),
+		},
 		names.AttrName: {
 			Type:          schema.TypeString,
 			Optional:      true,
@@ -188,31 +194,32 @@ var (
 		"application_failure_feedback_role_arn":    topicAttributeNameApplicationFailureFeedbackRoleARN,
 		"application_success_feedback_role_arn":    topicAttributeNameApplicationSuccessFeedbackRoleARN,
 		"application_success_feedback_sample_rate": topicAttributeNameApplicationSuccessFeedbackSampleRate,
-		"archive_policy":                           topicAttributeNameArchivePolicy,
-		names.AttrARN:                              topicAttributeNameTopicARN,
-		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
-		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
-		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
-		names.AttrDisplayName:                      topicAttributeNameDisplayName,
-		"fifo_topic":                               topicAttributeNameFIFOTopic,
-		"fifo_throughput_scope":                    topicAttributeNameFIFOThroughputScope,
-		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
-		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
-		"firehose_success_feedback_sample_rate":    topicAttributeNameFirehoseSuccessFeedbackSampleRate,
-		"http_failure_feedback_role_arn":           topicAttributeNameHTTPFailureFeedbackRoleARN,
-		"http_success_feedback_role_arn":           topicAttributeNameHTTPSuccessFeedbackRoleARN,
-		"http_success_feedback_sample_rate":        topicAttributeNameHTTPSuccessFeedbackSampleRate,
-		"kms_master_key_id":                        topicAttributeNameKMSMasterKeyId,
-		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
-		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
-		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
-		names.AttrOwner:                            topicAttributeNameOwner,
-		names.AttrPolicy:                           topicAttributeNamePolicy,
-		"signature_version":                        topicAttributeNameSignatureVersion,
-		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,
-		"sqs_success_feedback_role_arn":            topicAttributeNameSQSSuccessFeedbackRoleARN,
-		"sqs_success_feedback_sample_rate":         topicAttributeNameSQSSuccessFeedbackSampleRate,
-		"tracing_config":                           topicAttributeNameTracingConfig,
+		"archive_policy":                        topicAttributeNameArchivePolicy,
+		names.AttrARN:                           topicAttributeNameTopicARN,
+		"beginning_archive_time":                topicAttributeNameBeginningArchiveTime,
+		"content_based_deduplication":           topicAttributeNameContentBasedDeduplication,
+		"delivery_policy":                       topicAttributeNameDeliveryPolicy,
+		names.AttrDisplayName:                   topicAttributeNameDisplayName,
+		"fifo_topic":                            topicAttributeNameFIFOTopic,
+		"fifo_throughput_scope":                 topicAttributeNameFIFOThroughputScope,
+		"firehose_failure_feedback_role_arn":    topicAttributeNameFirehoseFailureFeedbackRoleARN,
+		"firehose_success_feedback_role_arn":    topicAttributeNameFirehoseSuccessFeedbackRoleARN,
+		"firehose_success_feedback_sample_rate": topicAttributeNameFirehoseSuccessFeedbackSampleRate,
+		"http_failure_feedback_role_arn":        topicAttributeNameHTTPFailureFeedbackRoleARN,
+		"http_success_feedback_role_arn":        topicAttributeNameHTTPSuccessFeedbackRoleARN,
+		"http_success_feedback_sample_rate":     topicAttributeNameHTTPSuccessFeedbackSampleRate,
+		"kms_master_key_id":                     topicAttributeNameKMSMasterKeyId,
+		"lambda_failure_feedback_role_arn":      topicAttributeNameLambdaFailureFeedbackRoleARN,
+		"lambda_success_feedback_role_arn":      topicAttributeNameLambdaSuccessFeedbackRoleARN,
+		"lambda_success_feedback_sample_rate":   topicAttributeNameLambdaSuccessFeedbackSampleRate,
+		"maximum_message_size":                  topicAttributeNameMaximumMessageSize,
+		names.AttrOwner:                         topicAttributeNameOwner,
+		names.AttrPolicy:                        topicAttributeNamePolicy,
+		"signature_version":                     topicAttributeNameSignatureVersion,
+		"sqs_failure_feedback_role_arn":         topicAttributeNameSQSFailureFeedbackRoleARN,
+		"sqs_success_feedback_role_arn":         topicAttributeNameSQSSuccessFeedbackRoleARN,
+		"sqs_success_feedback_sample_rate":      topicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                        topicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute(names.AttrPolicy).WithMissingSetToNil("*")
 )
 
@@ -221,7 +228,6 @@ var (
 // @ArnIdentity
 // @Testing(preIdentityVersion="v6.4.0")
 // @Testing(existsType="map[string]string")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
@@ -231,7 +237,7 @@ func resourceTopic() *schema.Resource {
 
 		CustomizeDiff: resourceTopicCustomizeDiff,
 
-		Schema: topicSchema,
+		Schema: maps.Clone(topicSchema),
 	}
 }
 
@@ -316,25 +322,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading SNS Topic (%s): %s", d.Id(), err)
 	}
 
-	err = topicAttributeMap.APIAttributesToResourceData(attributes, d)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	arn, err := arn.Parse(d.Id())
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	name := arn.Resource
-	d.Set(names.AttrName, name)
-	if d.Get("fifo_topic").(bool) {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
-	} else {
-		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
-	}
-
-	return diags
+	return append(diags, resourceTopicFlatten(ctx, d, attributes)...)
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -511,9 +499,8 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	output, err := conn.GetTopicAttributes(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -526,4 +513,35 @@ func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string)
 	}
 
 	return output.Attributes, nil
+}
+
+func parseTopicNameFromARN(input string) (string, error) {
+	arn, err := arn.Parse(input)
+	if err != nil {
+		return "", err
+	}
+
+	return arn.Resource, nil
+}
+
+func resourceTopicFlatten(_ context.Context, d *schema.ResourceData, attributes map[string]string) diag.Diagnostics {
+	var diags diag.Diagnostics
+	err := topicAttributeMap.APIAttributesToResourceData(attributes, d)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	name, err := parseTopicNameFromARN(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	d.Set(names.AttrName, name)
+	if d.Get("fifo_topic").(bool) {
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
+	} else {
+		d.Set(names.AttrNamePrefix, create.NamePrefixFromName(name))
+	}
+
+	return diags
 }

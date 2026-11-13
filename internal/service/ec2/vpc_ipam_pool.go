@@ -16,10 +16,10 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -49,136 +49,138 @@ func resourceIPAMPool() *schema.Resource {
 			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"address_family": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
-			},
-			"allocation_default_netmask_length": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 128),
-			},
-			"allocation_max_netmask_length": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 128),
-			},
-			"allocation_min_netmask_length": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 128),
-			},
-			"allocation_resource_tags": tftags.TagsSchema(),
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_import": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"aws_service": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpamPoolAwsService](),
-			},
-			"cascade": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ipam_scope_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"ipam_scope_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"locale": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: validation.Any(
-					validation.StringInSlice([]string{"None"}, false),
-					verify.ValidRegionName,
-				),
-				Default: "None",
-			},
-			"pool_depth": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"public_ip_source": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IpamPoolPublicIpSource](),
-				// default is byoip when AddressFamily = ipv6
-				DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
-					if o == "byoip" && n == "" {
-						return true
-					}
-					return false
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"address_family": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
 				},
-			},
-			"publicly_advertisable": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-			},
-			"source_ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"source_resource": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrResourceID: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrResourceOwner: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"resource_region": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidRegionName,
-						},
-						names.AttrResourceType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.IpamPoolSourceResourceType](),
+				"allocation_default_netmask_length": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 128),
+				},
+				"allocation_max_netmask_length": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 128),
+				},
+				"allocation_min_netmask_length": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 128),
+				},
+				"allocation_resource_tags": tftags.TagsSchema(),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_import": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"aws_service": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpamPoolAwsService](),
+				},
+				"cascade": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"ipam_scope_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"ipam_scope_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"locale": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ValidateFunc: validation.Any(
+						validation.StringInSlice([]string{"None"}, false),
+						verify.ValidRegionName,
+					),
+					Default: "None",
+				},
+				"pool_depth": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"public_ip_source": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IpamPoolPublicIpSource](),
+					// default is byoip when AddressFamily = ipv6
+					DiffSuppressFunc: func(k, o, n string, d *schema.ResourceData) bool {
+						if o == "byoip" && n == "" {
+							return true
+						}
+						return false
+					},
+				},
+				"publicly_advertisable": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					ForceNew: true,
+				},
+				"source_ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"source_resource": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrResourceID: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrResourceOwner: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"resource_region": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidRegionName,
+							},
+							names.AttrResourceType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IpamPoolSourceResourceType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -192,7 +194,7 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 	addressFamily := awstypes.AddressFamily(d.Get("address_family").(string))
 	input := ec2.CreateIpamPoolInput{
 		AddressFamily:     addressFamily,
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		IpamScopeId:       aws.String(scopeID),
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamPool),
 	}
@@ -255,18 +257,13 @@ func resourceIPAMPoolCreate(ctx context.Context, d *schema.ResourceData, meta an
 			resourceRegion := tfMap["resource_region"].(string)
 			resourceType := awstypes.IpamPoolSourceResourceType(tfMap[names.AttrResourceType].(string))
 
-			if resourceType == awstypes.IpamPoolSourceResourceTypeVpc {
-				optFn := func(o *ec2.Options) { o.Region = resourceRegion }
-				if _, err := findVPCByID(ctx, conn, resourceID, optFn); err != nil {
-					return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s): %s", resourceID, err)
-				}
-			}
-
-			log.Printf("[DEBUG] Resource %s exists, waiting for IPAM to manage the resource", resourceID)
+			// There is no way to validate the supplied resource ID since it could be in
+			// another account. If a bad ID is supplied the wait will timeout.
+			log.Printf("[DEBUG] Waiting for IPAM to manage the resource: %s", resourceID)
 
 			// Wait for the resource to be managed by IPAM - can take 20+ minutes
 			if _, err := waitIPAMResourceCIDRManaged(ctx, conn, scopeID, resourceID, addressFamily, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for %s to be managed by IPAM: %s", resourceID, err)
+				return sdkdiag.AppendErrorf(diags, "waiting for source resource to be managed by IPAM (%s %s): %s", resourceType, resourceID, err)
 			}
 
 			log.Printf("[DEBUG] Resource %s is now managed by IPAM", resourceID)

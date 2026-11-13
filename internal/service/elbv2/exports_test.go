@@ -28,6 +28,11 @@ var (
 	ListenerARNFromRuleARN               = listenerARNFromRuleARN
 	ProtocolVersionEnumValues            = protocolVersionEnumValues
 	SuffixFromARN                        = suffixFromARN
+
+	ValidName                  = validName
+	ValidNamePrefix            = validNamePrefix
+	ValidTargetGroupName       = validTargetGroupName
+	ValidTargetGroupNamePrefix = validTargetGroupNamePrefix
 )
 
 const (

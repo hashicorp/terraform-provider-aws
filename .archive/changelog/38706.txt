@@ -1,4 +1,0 @@
-
-```release-note:new-resource
-aws_datazone_glossary_term
-```

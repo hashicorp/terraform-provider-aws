@@ -30,7 +30,7 @@ func TestSimpleSchemaSetFuncNil(t *testing.T) {
 	f := SimpleSchemaSetFunc("key1", "key3", "key4")
 
 	if got, want := f(v), 0; got != want {
-		t.Errorf("SimpleSchemaSetFunc(%q) got %q, want %q", v, got, want)
+		t.Errorf("SimpleSchemaSetFunc(%q) got %v, want %v", v, got, want)
 	}
 }
 

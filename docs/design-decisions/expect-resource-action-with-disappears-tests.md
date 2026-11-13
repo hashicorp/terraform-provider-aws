@@ -16,7 +16,7 @@ Resources implemented in the Terraform AWS provider commonly include a “disapp
 ```
 func TestAccExampleThing_disappears(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{
@@ -49,7 +49,7 @@ The contributor guide and [`skaff`](https://hashicorp.github.io/terraform-provid
 ```
 func TestAccExampleThing_disappears(t *testing.T) {
   ctx := acctest.Context(t)
-  rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+  rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
   resourceName := "aws_example_thing.test"
 
   resource.ParallelTest(t, resource.TestCase{

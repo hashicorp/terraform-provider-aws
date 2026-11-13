@@ -181,3 +181,13 @@ func AssertFirstValueResult[T any](a []T) (*T, error) {
 	}
 	return &a[0], nil
 }
+
+// AssertSingleValueResultMap returns a pointer to the single value in the specified map of values that matches the key.
+// Returns a `NotFound` error otherwise.
+func AssertSingleValueResultMap[Map ~map[K]V, K comparable, V any](m Map, k K) (*V, error) {
+	v, ok := m[k]
+	if !ok {
+		return nil, NewEmptyResultError()
+	}
+	return &v, nil
+}

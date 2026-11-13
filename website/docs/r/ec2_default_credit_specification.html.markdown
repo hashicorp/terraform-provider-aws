@@ -7,7 +7,7 @@ description: |-
 ---
 # Resource: aws_ec2_default_credit_specification
 
-Terraform resource for managing an AWS EC2 (Elastic Compute Cloud) Default Credit Specification.
+Terraform resource for managing an AWS EC2 Default Credit Specification.
 
 ## Example Usage
 
@@ -41,7 +41,7 @@ This data source exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 (Elastic Compute Cloud) Default Credit Specification using the `instance_family`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EC2 Default Credit Specification using the `instance_family`. For example:
 
 ```terraform
 import {
@@ -50,7 +50,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 (Elastic Compute Cloud) Default Credit Specification using the `instance_family`. For example:
+Using `terraform import`, import EC2 Default Credit Specification using the `instance_family`. For example:
 
 ```console
 % terraform import aws_ec2_default_credit_specification.example t2

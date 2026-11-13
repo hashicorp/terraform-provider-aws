@@ -59,237 +59,244 @@ func resourceComputeEnvironment() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrNamePrefix},
-				ValidateFunc:  validName,
-			},
-			names.AttrNamePrefix: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrName},
-				ValidateFunc:  validPrefix,
-			},
-			"compute_resources": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allocation_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRAllocationStrategy](),
-						},
-						"bid_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"desired_vcpus": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"ec2_configuration": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							MaxItems: 2,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"image_id_override": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"image_kubernetes_version": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
-									},
-									"image_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringLenBetween(1, 256),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrNamePrefix},
+					ValidateFunc:  validName,
+				},
+				names.AttrNamePrefix: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrName},
+					ValidateFunc:  validPrefix,
+				},
+				"compute_resources": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_strategy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRAllocationStrategy](),
+							},
+							"bid_percentage": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"desired_vcpus": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Computed: true,
+							},
+							"ec2_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								MaxItems: 2,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"image_id_override": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"image_kubernetes_version": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
+										"image_type": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 256),
+										},
 									},
 								},
 							},
-						},
-						"ec2_key_pair": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"image_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"instance_role": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrInstanceType: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrLaunchTemplate: {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"launch_template_id": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_name"},
-									},
-									"launch_template_name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_id"},
-									},
-									names.AttrVersion: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
+							"ec2_key_pair": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"image_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"instance_role": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrInstanceType: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrLaunchTemplate: {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"launch_template_id": {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_name"},
+										},
+										"launch_template_name": {
+											Type:          schema.TypeString,
+											Optional:      true,
+											ConflictsWith: []string{"compute_resources.0.launch_template.0.launch_template_id"},
+										},
+										names.AttrVersion: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
 									},
 								},
 							},
-						},
-						"max_vcpus": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"min_vcpus": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"placement_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						names.AttrSecurityGroupIDs: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"spot_iam_fleet_role": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrSubnets: {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						names.AttrTags: tftags.TagsSchema(),
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRType](),
-						},
-					},
-				},
-			},
-			"ecs_cluster_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"eks_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MinItems: 0,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"eks_cluster_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"kubernetes_namespace": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+							"max_vcpus": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"min_vcpus": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+							"placement_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							names.AttrSecurityGroupIDs: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"spot_iam_fleet_role": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrSubnets: {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrTags: tftags.TagsSchema(),
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+								ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CRType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrServiceRole: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.CEStateEnabled,
-				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEState](),
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStatusReason: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				StateFunc:        sdkv2.ToUpperSchemaStateFunc,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEType](),
-			},
-			"update_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					// https://docs.aws.amazon.com/batch/latest/APIReference/API_UpdatePolicy.html
-					Schema: map[string]*schema.Schema{
-						"job_execution_timeout_minutes": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 360),
-						},
-						"terminate_jobs_on_update": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
+				"ecs_cluster_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"eks_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"eks_cluster_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"kubernetes_namespace": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
+				names.AttrServiceRole: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.CEStateEnabled,
+					StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEState](),
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatusReason: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					StateFunc:        sdkv2.ToUpperSchemaStateFunc,
+					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.CEType](),
+				},
+				"unmanaged_vcpus": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"update_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						// https://docs.aws.amazon.com/batch/latest/APIReference/API_UpdatePolicy.html
+						Schema: map[string]*schema.Schema{
+							"job_execution_timeout_minutes": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(1, 360),
+							},
+							"terminate_jobs_on_update": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }
@@ -317,6 +324,12 @@ func resourceComputeEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk(names.AttrState); ok {
 		input.State = awstypes.CEState(v.(string))
+	}
+
+	if computeEnvironmentType == awstypes.CETypeUnmanaged {
+		if v, ok := d.GetOk("unmanaged_vcpus"); ok {
+			input.UnmanagedvCpus = aws.Int32(int32(v.(int)))
+		}
 	}
 
 	output, err := conn.CreateComputeEnvironment(ctx, input)
@@ -391,6 +404,7 @@ func resourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatus, computeEnvironment.Status)
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
+	d.Set("unmanaged_vcpus", computeEnvironment.UnmanagedvCpus)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
 	}
@@ -419,6 +433,12 @@ func resourceComputeEnvironmentUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("update_policy") {
 			input.UpdatePolicy = expandComputeEnvironmentUpdatePolicy(d.Get("update_policy").([]any))
+		}
+
+		if d.HasChange("unmanaged_vcpus") {
+			if awstypes.CEType(strings.ToUpper(d.Get(names.AttrType).(string))) == awstypes.CETypeUnmanaged {
+				input.UnmanagedvCpus = aws.Int32(int32(d.Get("unmanaged_vcpus").(int)))
+			}
 		}
 
 		if computeEnvironmentType := strings.ToUpper(d.Get(names.AttrType).(string)); computeEnvironmentType == string(awstypes.CETypeManaged) {
@@ -583,10 +603,17 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceComputeEnvironmentCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, _ any) error {
-	if computeEnvironmentType := strings.ToUpper(diff.Get(names.AttrType).(string)); computeEnvironmentType == string(awstypes.CETypeUnmanaged) {
+	computeEnvironmentType := strings.ToUpper(diff.Get(names.AttrType).(string))
+	switch computeEnvironmentType {
+	case string(awstypes.CETypeUnmanaged):
 		// UNMANAGED compute environments can have no compute_resources configured.
 		if v, ok := diff.GetOk("compute_resources"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 			return fmt.Errorf("no `compute_resources` can be specified when `type` is %q", computeEnvironmentType)
+		}
+	case string(awstypes.CETypeManaged):
+		// Managed types cannot use unmanaged_vcpus
+		if config := diff.GetRawConfig(); config.IsKnown() && !config.IsNull() && !config.GetAttr("unmanaged_vcpus").IsNull() {
+			return fmt.Errorf("`unmanaged_vcpus` can only be specified when `type` is %q", awstypes.CETypeUnmanaged)
 		}
 	}
 

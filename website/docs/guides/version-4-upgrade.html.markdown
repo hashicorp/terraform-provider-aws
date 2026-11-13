@@ -3300,7 +3300,7 @@ The `aws_subnet_ids` data source has been deprecated and will be removed in a fu
 
 For example, change a configuration such as
 
-```hcl
+```terraform
 data "aws_subnet_ids" "example" {
   vpc_id = var.vpc_id
 }
@@ -3317,7 +3317,7 @@ output "subnet_cidr_blocks" {
 
 to
 
-```hcl
+```terraform
 data "aws_subnets" "example" {
   filter {
     name   = "vpc-id"
@@ -3349,7 +3349,7 @@ You can no longer specify `compute_resources` when `type` is `UNMANAGED`.
 
 Previously, you could apply this configuration and the provider would ignore any compute resources:
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = "test"
 
@@ -3378,7 +3378,7 @@ Now, this configuration is invalid and will result in an error during plan.
 
 To resolve this error, simply remove or comment out the `compute_resources` configuration block.
 
-```hcl
+```terraform
 resource "aws_batch_compute_environment" "test" {
   compute_environment_name = "test"
 

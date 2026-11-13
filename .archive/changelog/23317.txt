@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_ssoadmin_instance_access_control_attributes
-```

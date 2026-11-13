@@ -81,6 +81,7 @@ For targets:
 * `local_gateway_id` - Local Gateway ID.
 * `nat_gateway_id` - NAT Gateway ID.
 * `network_interface_id` - ID of the elastic network interface (eni) to use.
+* `odb_network_arn` - ARN of the ODB network.
 * `transit_gateway_id` - EC2 Transit Gateway ID.
 * `vpc_endpoint_id` - VPC Endpoint ID.
 * `vpc_peering_connection_id` - VPC Peering ID.

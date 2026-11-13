@@ -25,4 +25,6 @@ var (
 	FindNodegroupByTwoPartKey                  = findNodegroupByTwoPartKey
 	FindOIDCIdentityProviderConfigByTwoPartKey = findOIDCIdentityProviderConfigByTwoPartKey
 	FindPodIdentityAssociationByTwoPartKey     = findPodIdentityAssociationByTwoPartKey
+
+	ValidClusterName = validClusterName
 )

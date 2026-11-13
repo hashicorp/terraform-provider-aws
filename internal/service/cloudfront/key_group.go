@@ -35,24 +35,26 @@ func resourceKeyGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrComment: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"items": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrComment: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				attrItems: {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -63,7 +65,7 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	name := d.Get(names.AttrName).(string)
 	apiObject := &awstypes.KeyGroupConfig{
-		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
+		Items: flex.ExpandStringValueSet(d.Get(attrItems).(*schema.Set)),
 		Name:  aws.String(name),
 	}
 
@@ -105,7 +107,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta any)
 	keyGroupConfig := output.KeyGroup.KeyGroupConfig
 	d.Set(names.AttrComment, keyGroupConfig.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("items", keyGroupConfig.Items)
+	d.Set(attrItems, keyGroupConfig.Items)
 	d.Set(names.AttrName, keyGroupConfig.Name)
 
 	return diags
@@ -116,7 +118,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	apiObject := &awstypes.KeyGroupConfig{
-		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
+		Items: flex.ExpandStringValueSet(d.Get(attrItems).(*schema.Set)),
 		Name:  aws.String(d.Get(names.AttrName).(string)),
 	}
 

@@ -41,8 +41,6 @@ This resource supports the following arguments:
 * `rules` - (Optional) One or more pairs specifying the IP group rule (in CIDR format) from which web requests originate.
 * `tags` - (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Blocks
-
 ### `rules`
 
 #### Arguments

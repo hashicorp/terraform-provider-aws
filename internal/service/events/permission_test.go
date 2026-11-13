@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -53,7 +53,7 @@ func TestAccEventsPermission_basic(t *testing.T) {
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccPermissionConfig_basic(principal1, sdkacctest.RandString(65)),
+				Config:      testAccPermissionConfig_basic(principal1, acctest.RandString(t, 65)),
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccEventsPermission_action(t *testing.T) {
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
-				Config:      testAccPermissionConfig_action(sdkacctest.RandString(65), principal, statementID),
+				Config:      testAccPermissionConfig_action(acctest.RandString(t, 65), principal, statementID),
 				ExpectError: regexache.MustCompile(`must be between 1 and 64 characters`),
 			},
 			{
@@ -267,8 +267,7 @@ func TestAccEventsPermission_multiple(t *testing.T) {
 func TestAccEventsPermission_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_cloudwatch_event_permission.test"
-	principal := "111111111111"
-	statementID := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -277,12 +276,23 @@ func TestAccEventsPermission_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPermissionDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPermissionConfig_basic(principal, statementID),
+				ConfigDirectory: config.StaticDirectory("testdata/Permission/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfevents.ResourcePermission(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -332,8 +342,8 @@ func testAccCheckPermissionDestroy(ctx context.Context, t *testing.T) resource.T
 func testAccPermissionConfig_basic(principal, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
-  principal    = "%[1]s"
-  statement_id = "%[2]s"
+  principal    = %[1]q
+  statement_id = %[2]q
 }
 `, principal, statementID)
 }
@@ -365,9 +375,9 @@ resource "aws_cloudwatch_event_bus" "test" {
 func testAccPermissionConfig_action(action, principal, statementID string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
-  action       = "%[1]s"
-  principal    = "%[2]s"
-  statement_id = "%[3]s"
+  action       = %[1]q
+  principal    = %[2]q
+  statement_id = %[3]q
 }
 `, action, principal, statementID)
 }
@@ -376,12 +386,12 @@ func testAccPermissionConfig_conditionOrganization(statementID, value string) st
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
   principal    = "*"
-  statement_id = %q
+  statement_id = %[1]q
 
   condition {
     key   = "aws:PrincipalOrgID"
     type  = "StringEquals"
-    value = %q
+    value = %[2]q
   }
 }
 `, statementID, value)
@@ -390,13 +400,13 @@ resource "aws_cloudwatch_event_permission" "test" {
 func testAccPermissionConfig_multiple(principal1, statementID1, principal2, statementID2 string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_permission" "test" {
-  principal    = "%[1]s"
-  statement_id = "%[2]s"
+  principal    = %[1]q
+  statement_id = %[2]q
 }
 
 resource "aws_cloudwatch_event_permission" "test2" {
-  principal    = "%[3]s"
-  statement_id = "%[4]s"
+  principal    = %[3]q
+  statement_id = %[4]q
 }
 `, principal1, statementID1, principal2, statementID2)
 }

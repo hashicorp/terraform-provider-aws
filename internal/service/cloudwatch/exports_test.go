@@ -5,17 +5,23 @@ package cloudwatch
 
 // Exports for use in tests only.
 var (
+	ResourceAlarmMuteRule                 = newAlarmMuteRuleResource
 	ResourceCompositeAlarm                = resourceCompositeAlarm
+	ResourceContributorInsightRule        = newContributorInsightRuleResource
+	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
 	ResourceDashboard                     = resourceDashboard
 	ResourceMetricAlarm                   = resourceMetricAlarm
 	ResourceMetricStream                  = resourceMetricStream
-	ResourceContributorInsightRule        = newContributorInsightRuleResource
-	ResourceContributorManagedInsightRule = newContributorManagedInsightRuleResource
+	ResourceOtelEnrichment                = newOTelEnrichmentResource
+	ResourceResourceMetricsConfiguration  = newResourceMetricsConfigurationResource
 
-	FindCompositeAlarmByName                                   = findCompositeAlarmByName
-	FindDashboardByName                                        = findDashboardByName
-	FindMetricAlarmByName                                      = findMetricAlarmByName
-	FindMetricStreamByName                                     = findMetricStreamByName
-	FindContributorInsightRuleByName                           = findContributorInsightRuleByName
-	FindContributorManagedInsightRuleDescriptionByTemplateName = findContributorManagedInsightRuleDescriptionByTemplateName
+	FindAlarmMuteRuleByName               = findAlarmMuteRuleByName
+	FindCompositeAlarmByName              = findCompositeAlarmByName
+	FindDashboardByName                   = findDashboardByName
+	FindInsightRuleByName                 = findInsightRuleByName
+	FindManagedRuleByTwoPartKey           = findManagedRuleByTwoPartKey
+	FindMetricAlarmByName                 = findMetricAlarmByName
+	FindMetricStreamByName                = findMetricStreamByName
+	FindOtelEnrichment                    = findOTelEnrichment
+	FindResourceMetricsConfigurationByARN = findResourceMetricsConfigurationByARN
 )

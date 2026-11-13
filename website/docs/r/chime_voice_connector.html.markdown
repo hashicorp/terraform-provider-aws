@@ -37,7 +37,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN (Amazon Resource Name) of the Amazon Chime Voice Connector.
+* `arn` - ARN of the Amazon Chime Voice Connector.
 * `outbound_host_name` - The outbound host name for the Amazon Chime Voice Connector.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 

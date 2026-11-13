@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/osis"
 	"github.com/aws/aws-sdk-go-v2/service/osis/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +23,7 @@ import (
 func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -43,11 +42,12 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "pipeline_name"),
 					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
 					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
 					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "pipeline_arn", "osis", "pipeline/{pipeline_name}"),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_role_arn"),
@@ -67,7 +67,7 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -87,6 +87,14 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfosis.ResourcePipeline, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -95,7 +103,7 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -138,7 +146,7 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -172,7 +180,7 @@ func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -208,7 +216,7 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -244,55 +252,10 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 	})
 }
 
-func TestAccOpenSearchIngestionPipeline_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
-	resourceName := "aws_osis_pipeline.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchIngestionEndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchIngestionServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPipelineDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPipelineConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccPipelineConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccPipelineConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -353,7 +316,7 @@ func TestAccOpenSearchIngestionPipeline_pipelineRole(t *testing.T) {
 func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pipeline types.Pipeline
-	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
+	rName := randomPipelineName(t)
 	resourceName := "aws_osis_pipeline.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -372,7 +335,7 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 						VersionConstraint: "5.89.0",
 					},
 				},
-				Config: testAccPipelineConfig_basic(rName),
+				Config: testAccPipelineConfig_basic_V5_90_0(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineExists(ctx, t, resourceName, &pipeline),
 				),
@@ -387,7 +350,7 @@ func TestAccOpenSearchIngestionPipeline_upgradeV5_90_0(t *testing.T) {
 				Config:                   testAccPipelineConfig_basic(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
@@ -459,6 +422,11 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
+func randomPipelineName(t *testing.T) string {
+	t.Helper()
+	return fmt.Sprintf("%s-%s", acctest.ResourcePrefix, acctest.RandString(t, 10))
+}
+
 func testAccPipelineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
@@ -504,109 +472,6 @@ EOS
   min_units                   = 1
 }
 `, rName)
-}
-
-func testAccPipelineConfig_tags1(rName string, key1, value1 string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "osis-pipelines.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_osis_pipeline" "test" {
-  pipeline_name               = %[1]q
-  pipeline_configuration_body = <<-EOT
-            version: "2"
-            test-pipeline:
-              source:
-                http:
-                  path: "/test"
-              sink:
-                - s3:
-                    aws:
-                      sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.region}"
-                    bucket: "test"
-                    threshold:
-                      event_collect_timeout: "60s"
-                    codec:
-                      ndjson:
-        EOT
-  max_units                   = 1
-  min_units                   = 1
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1)
-}
-
-func testAccPipelineConfig_tags2(rName string, key1, value1, key2, value2 string) string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Sid    = ""
-        Principal = {
-          Service = "osis-pipelines.amazonaws.com"
-        }
-      },
-    ]
-  })
-}
-
-resource "aws_osis_pipeline" "test" {
-  pipeline_name               = %[1]q
-  pipeline_configuration_body = <<-EOT
-            version: "2"
-            test-pipeline:
-              source:
-                http:
-                  path: "/test"
-              sink:
-                - s3:
-                    aws:
-                      sts_role_arn: "${aws_iam_role.test.arn}"
-                      region: "${data.aws_region.current.region}"
-                    bucket: "test"
-                    threshold:
-                      event_collect_timeout: "60s"
-                    codec:
-                      ndjson:
-        EOT
-  max_units                   = 1
-  min_units                   = 1
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2)
 }
 
 func testAccPipelineConfig_bufferOptions(rName string, bufferEnabled bool) string {
@@ -906,4 +771,51 @@ EOS
   pipeline_role_arn           = aws_iam_role.%[2]s.arn
 }
 `, rName, roleIdentifier)
+}
+
+func testAccPipelineConfig_basic_V5_90_0(rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "osis-pipelines.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_osis_pipeline" "test" {
+  pipeline_name               = %[1]q
+  pipeline_configuration_body = <<EOS
+            version: "2"
+            test-pipeline:
+              source:
+                http:
+                  path: "/test"
+              sink:
+                - s3:
+                    aws:
+                      sts_role_arn: "${aws_iam_role.test.arn}"
+                      region: "${data.aws_region.current.name}" # Versions older than v6.0 used name instead of region
+                    bucket: "test"
+                    threshold:
+                      event_collect_timeout: "60s"
+                    codec:
+                      ndjson:
+EOS
+  max_units                   = 1
+  min_units                   = 1
+}
+`, rName)
 }

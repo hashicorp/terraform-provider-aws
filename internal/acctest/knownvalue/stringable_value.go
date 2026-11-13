@@ -3,7 +3,9 @@
 
 package knownvalue
 
-import "github.com/hashicorp/terraform-plugin-testing/knownvalue"
+import (
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+)
 
 func StringExact[T ~string](value T) knownvalue.Check {
 	return knownvalue.StringExact(string(value))

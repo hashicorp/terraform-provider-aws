@@ -32,6 +32,9 @@ import (
 
 // @SDKResource("aws_glue_job", name="Job")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/glue/types;types.Job")
+// @Testing(preIdentityVersion="v6.39.0")
 func resourceJob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobCreate,
@@ -39,212 +42,210 @@ func resourceJob() *schema.Resource {
 		UpdateWithoutTimeout: resourceJobUpdate,
 		DeleteWithoutTimeout: resourceJobDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
 		CustomizeDiff: resourceJobCustomizeDiff,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"command": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrName: {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  jobCommandNameApacheSparkETL,
-						},
-						"python_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
-						},
-						"runtime": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
-						},
-						"script_location": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"command": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrName: {
+								Type:     schema.TypeString,
+								Optional: true,
+								Default:  jobCommandNameApacheSparkETL,
+							},
+							"python_version": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice([]string{"2", "3", "3.9"}, true),
+							},
+							"runtime": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice([]string{"Ray2.4"}, true),
+							},
+							"script_location": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"connections": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"default_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"execution_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
-			},
-			"execution_property": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"max_concurrent_runs": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1,
-							ValidateFunc: validation.IntAtLeast(1),
+				"connections": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"default_arguments": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"execution_class": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ExecutionClass](),
+				},
+				"execution_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"max_concurrent_runs": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      1,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
 						},
 					},
 				},
-			},
-			"glue_version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"job_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.JobMode](),
-			},
-			"job_run_queuing_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrMaxCapacity: {
-				Type:          schema.TypeFloat,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"number_of_workers", "worker_type"},
-			},
-			"maintenance_window": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"max_retries": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 10),
-			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			"non_overridable_arguments": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"notification_property": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"notify_delay_after": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(1),
+				"glue_version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"job_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.JobMode](),
+				},
+				"job_run_queuing_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrMaxCapacity: {
+					Type:          schema.TypeFloat,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"number_of_workers", "worker_type"},
+				},
+				"maintenance_window": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"max_retries": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 10),
+				},
+				names.AttrName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				"non_overridable_arguments": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"notification_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"notify_delay_after": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
 						},
 					},
 				},
-			},
-			"number_of_workers": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  validation.IntAtLeast(1),
-			},
-			names.AttrRoleARN: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_control_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"auth_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
-						},
-						"auth_token": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-						},
-						"branch": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"folder": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"last_commit_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						names.AttrOwner: {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"provider": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
-						},
-						"repository": {
-							Type:     schema.TypeString,
-							Optional: true,
+				"number_of_workers": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrMaxCapacity},
+					ValidateFunc:  validation.IntAtLeast(1),
+				},
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"security_configuration": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"source_control_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"auth_strategy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SourceControlAuthStrategy](),
+							},
+							"auth_token": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+							},
+							"branch": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"folder": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"last_commit_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							names.AttrOwner: {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"provider": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.SourceControlProvider](),
+							},
+							"repository": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-			},
-			"worker_type": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{names.AttrMaxCapacity},
-				ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTimeout: {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"worker_type": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{names.AttrMaxCapacity},
+					ValidateFunc:  validation.StringInSlice(workerType_Values(), false),
+				},
+			}
 		},
 	}
 }
@@ -348,7 +349,8 @@ func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta any) di
 
 func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueClient(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.GlueClient(ctx)
 
 	job, err := findJobByName(ctx, conn, d.Id())
 
@@ -362,38 +364,9 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "reading Glue Job (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, jobARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting command: %s", err)
+	if err := resourceJobFlatten(ctx, awsClient, job, d); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting connections: %s", err)
-	}
-	d.Set("default_arguments", job.DefaultArguments)
-	d.Set(names.AttrDescription, job.Description)
-	d.Set("execution_class", job.ExecutionClass)
-	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting execution_property: %s", err)
-	}
-	d.Set("glue_version", job.GlueVersion)
-	d.Set("job_mode", job.JobMode)
-	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
-	d.Set("maintenance_window", job.MaintenanceWindow)
-	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
-	d.Set("max_retries", job.MaxRetries)
-	d.Set(names.AttrName, job.Name)
-	d.Set("non_overridable_arguments", job.NonOverridableArguments)
-	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting notification_property: %s", err)
-	}
-	d.Set("number_of_workers", job.NumberOfWorkers)
-	d.Set(names.AttrRoleARN, job.Role)
-	d.Set("security_configuration", job.SecurityConfiguration)
-	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting source_control_details: %s", err)
-	}
-	d.Set(names.AttrTimeout, job.Timeout)
-	d.Set("worker_type", job.WorkerType)
 
 	return diags
 }
@@ -541,6 +514,43 @@ func resourceJobCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v an
 			}
 		}
 	}
+
+	return nil
+}
+
+func resourceJobFlatten(ctx context.Context, awsClient *conns.AWSClient, job *awstypes.Job, d *schema.ResourceData) error {
+	d.Set(names.AttrARN, jobARN(ctx, awsClient, d.Id()))
+	if err := d.Set("command", flattenJobCommand(job.Command)); err != nil {
+		return fmt.Errorf("setting command: %w", err)
+	}
+	if err := d.Set("connections", flattenConnectionsList(job.Connections)); err != nil {
+		return fmt.Errorf("setting connections: %w", err)
+	}
+	d.Set("default_arguments", job.DefaultArguments)
+	d.Set(names.AttrDescription, job.Description)
+	d.Set("execution_class", job.ExecutionClass)
+	if err := d.Set("execution_property", flattenExecutionProperty(job.ExecutionProperty)); err != nil {
+		return fmt.Errorf("setting execution_property: %w", err)
+	}
+	d.Set("glue_version", job.GlueVersion)
+	d.Set("job_mode", job.JobMode)
+	d.Set("job_run_queuing_enabled", job.JobRunQueuingEnabled)
+	d.Set("maintenance_window", job.MaintenanceWindow)
+	d.Set(names.AttrMaxCapacity, job.MaxCapacity)
+	d.Set("max_retries", job.MaxRetries)
+	d.Set(names.AttrName, job.Name)
+	d.Set("non_overridable_arguments", job.NonOverridableArguments)
+	if err := d.Set("notification_property", flattenNotificationProperty(job.NotificationProperty)); err != nil {
+		return fmt.Errorf("setting notification_property: %w", err)
+	}
+	d.Set("number_of_workers", job.NumberOfWorkers)
+	d.Set(names.AttrRoleARN, job.Role)
+	d.Set("security_configuration", job.SecurityConfiguration)
+	if err := d.Set("source_control_details", flattenSourceControlDetails(job.SourceControlDetails)); err != nil {
+		return fmt.Errorf("setting source_control_details: %w", err)
+	}
+	d.Set(names.AttrTimeout, job.Timeout)
+	d.Set("worker_type", job.WorkerType)
 
 	return nil
 }

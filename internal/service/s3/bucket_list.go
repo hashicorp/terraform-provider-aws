@@ -14,9 +14,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,15 +38,8 @@ type listResourceBucket struct {
 func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().S3Client(ctx)
 
-	var query listBucketModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
+	tflog.Info(ctx, "Listing Resources")
 
-	tflog.Info(ctx, "Listing S3 Bucket")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := s3.ListBucketsInput{
 			BucketRegion: aws.String(l.Meta().Region(ctx)),
@@ -63,27 +56,32 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrBucket), bucketName)
 
 			result := request.NewListResult(ctx)
+
 			rd := l.ResourceData()
 			rd.SetId(bucketName)
 			rd.Set(names.AttrBucket, bucketName)
 
-			tflog.Info(ctx, "Reading S3 Bucket")
-			diags := resourceBucketRead(ctx, rd, l.Meta())
-			if diags.HasError() {
-				tflog.Error(ctx, "Reading S3 Bucket", map[string]any{
-					names.AttrBucket: bucketName,
-					"diags":          sdkdiag.DiagnosticsString(diags),
+			tflog.Info(ctx, "Reading Resource")
+
+			// Verify access to the Bucket
+			_, err := findBucket(ctx, conn, bucketName)
+			if retry.NotFound(err) {
+				tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+				continue
+			}
+			if err != nil {
+				tflog.Error(ctx, "Reading Resource", map[string]any{
+					"error": err.Error(),
 				})
 				continue
 			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
+			if request.IncludeResource {
+				resourceBucketFlatten(ctx, l.Meta(), bucketName, rd)
 			}
 
 			result.DisplayName = bucketName
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -96,21 +94,20 @@ func (l *listResourceBucket) List(ctx context.Context, request list.ListRequest,
 	}
 }
 
-type listBucketModel struct {
-	framework.WithRegionModel
-}
-
 func listBuckets(ctx context.Context, conn *s3.Client, input *s3.ListBucketsInput) iter.Seq2[awstypes.Bucket, error] {
 	return func(yield func(awstypes.Bucket, error) bool) {
-		output, err := conn.ListBuckets(ctx, input)
-		if err != nil {
-			yield(awstypes.Bucket{}, fmt.Errorf("listing S3 Bucket resources: %w", err))
-			return
-		}
-
-		for _, item := range output.Buckets {
-			if !yield(item, nil) {
+		pages := s3.NewListBucketsPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				yield(awstypes.Bucket{}, fmt.Errorf("listing S3 Bucket resources: %w", err))
 				return
+			}
+
+			for _, item := range page.Buckets {
+				if !yield(item, nil) {
+					return
+				}
 			}
 		}
 	}

@@ -20,9 +20,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,7 +62,7 @@ const (
 // @V60SDKv2Fix
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/acm/types;types.CertificateDetail")
 // @Testing(tlsKey=true)
-// @Testing(importIgnore="certificate_body;private_key)
+// @Testing(importIgnore="certificate_body;private_key")
 // @Testing(generator=false)
 func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
@@ -70,199 +71,210 @@ func resourceCertificate() *schema.Resource {
 		UpdateWithoutTimeout: resourceCertificateUpdate,
 		DeleteWithoutTimeout: resourceCertificateDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"certificate_authority_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  verify.ValidARN,
-				ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, "validation_method"},
-			},
-			"certificate_body": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				RequiredWith:  []string{names.AttrPrivateKey},
-				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
-			},
-			names.AttrCertificateChain: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
-			},
-			names.AttrDomainName: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-				ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey},
-				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
-			},
-			"domain_validation_options": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDomainName: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"certificate_authority_arn": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  verify.ValidARN,
+					ConflictsWith: []string{"certificate_body", names.AttrPrivateKey, "private_key_wo", "validation_method"},
+				},
+				"certificate_body": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
+				},
+				names.AttrCertificateChain: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"certificate_authority_arn", names.AttrDomainName, "validation_method"},
+				},
+				names.AttrDomainName: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
+					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+				},
+				"domain_validation_options": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_record_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_record_type": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"resource_record_value": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
-						"resource_record_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resource_record_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"resource_record_value": {
-							Type:     schema.TypeString,
-							Computed: true,
+					},
+					Set: domainValidationOptionsHash,
+				},
+				"early_renewal_duration": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validateHybridDuration,
+					ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey, "validation_method"},
+				},
+				"key_algorithm": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
+					ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+				},
+				"not_after": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"not_before": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"certificate_transparency_logging_preference": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.CertificateTransparencyLoggingPreferenceEnabled,
+								ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
+								ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+							},
+							"export": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.CertificateExport](),
+							},
 						},
 					},
 				},
-				Set: domainValidationOptionsHash,
-			},
-			"early_renewal_duration": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validateHybridDuration,
-				ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey, "validation_method"},
-			},
-			"key_algorithm": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KeyAlgorithm](),
-				ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
-			},
-			"not_after": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"not_before": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"certificate_transparency_logging_preference": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          types.CertificateTransparencyLoggingPreferenceEnabled,
-							ValidateDiagFunc: enum.Validate[types.CertificateTransparencyLoggingPreference](),
-							ConflictsWith:    []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
-						},
-						"export": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							ValidateDiagFunc: enum.Validate[types.CertificateExport](),
+				"pending_renewal": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrPrivateKey: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
+				},
+				"private_key_wo": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					WriteOnly:    true,
+					ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
+					RequiredWith: []string{"private_key_wo_version"},
+				},
+				"private_key_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"private_key_wo"},
+				},
+				"renewal_eligibility": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"renewal_summary": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"renewal_status": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"renewal_status_reason": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"updated_at": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"pending_renewal": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrPrivateKey: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				ExactlyOneOf: []string{names.AttrDomainName, names.AttrPrivateKey},
-			},
-			"renewal_eligibility": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"renewal_summary": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"renewal_status": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"renewal_status_reason": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"updated_at": {
-							Type:     schema.TypeString,
-							Computed: true,
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subject_alternative_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: validation.All(
+							validation.StringLenBetween(1, 253),
+							validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+						),
+					},
+					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"validation_emails": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"validation_method": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ValidationMethod](),
+					ConflictsWith:    []string{"certificate_authority_arn", "certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
+				},
+				"validation_option": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"validation_domain": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
+					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 				},
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subject_alternative_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
-					),
-				},
-				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"validation_emails": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"validation_method": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ValidationMethod](),
-				ConflictsWith:    []string{"certificate_authority_arn", "certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
-			},
-			"validation_option": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDomainName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"validation_domain": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-				ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
-			},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -314,6 +326,14 @@ func resourceCertificate() *schema.Resource {
 					return nil
 				}
 
+				switch diff.Get(names.AttrType).(string) {
+				case string(types.CertificateTypeImported):
+					// Pending renewal is never true for imported certificates
+					if err := diff.SetNew("pending_renewal", false); err != nil {
+						return err
+					}
+				}
+
 				if diff.HasChange("early_renewal_duration") {
 					if duration := diff.Get("early_renewal_duration").(string); duration == "" {
 						if err := diff.SetNew("pending_renewal", false); err != nil {
@@ -328,6 +348,38 @@ func resourceCertificate() *schema.Resource {
 					// Trigger a diff
 					if err := diff.SetNewComputed("pending_renewal"); err != nil {
 						return err
+					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				switch diff.Get(names.AttrType).(string) {
+				case string(types.CertificateTypeImported):
+					// Domain and Subject Alternative Names are derived from the certificate body for imported certificates
+					if diff.HasChange("certificate_body") {
+						if err := diff.SetNewComputed(names.AttrDomainName); err != nil {
+							return err
+						}
+						if err := diff.SetNewComputed("subject_alternative_names"); err != nil {
+							return err
+						}
+					}
+
+				default:
+					if diff.HasChange(names.AttrDomainName) {
+						if err := diff.ForceNew(names.AttrDomainName); err != nil {
+							return err
+						}
+					}
+					if diff.HasChange("subject_alternative_names") {
+						if err := diff.ForceNew("subject_alternative_names"); err != nil {
+							return err
+						}
 					}
 				}
 
@@ -353,7 +405,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		domainName := d.Get(names.AttrDomainName).(string)
 		input := acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
-			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
+			IdempotencyToken: aws.String(sdkid.PrefixedUniqueId("tf")), // 32 character limit
 			Tags:             getTagsIn(ctx),
 		}
 
@@ -389,9 +441,18 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
+		privateKey := d.Get(names.AttrPrivateKey).(string)
+		privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
+		diags = append(diags, di...)
+		if diags.HasError() {
+			return diags
+		}
+		if privateKeyWo != "" {
+			privateKey = privateKeyWo
+		}
 		input := acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
-			PrivateKey:  []byte(d.Get(names.AttrPrivateKey).(string)),
+			PrivateKey:  []byte(privateKey),
 			Tags:        getTagsIn(ctx),
 		}
 
@@ -432,6 +493,12 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", d.Id(), err)
 	}
 
+	return append(diags, resourceCertificateFlatten(ctx, d, certificate)...)
+}
+
+func resourceCertificateFlatten(_ context.Context, d *schema.ResourceData, certificate *types.CertificateDetail) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
 
 	d.Set(names.AttrARN, certificate.CertificateArn)
@@ -468,7 +535,6 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 	} else {
 		d.Set("options", nil)
 	}
-	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	if certificate.RenewalSummary != nil {
 		if err := d.Set("renewal_summary", []any{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
@@ -478,10 +544,15 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta a
 		d.Set("renewal_summary", nil)
 	}
 	d.Set(names.AttrStatus, certificate.Status)
-	d.Set("subject_alternative_names", certificate.SubjectAlternativeNames)
+	if err := d.Set("subject_alternative_names", certificate.SubjectAlternativeNames); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting subject_alternative_names: %s", err)
+	}
 	d.Set(names.AttrType, certificate.Type)
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
+
+	// Value of `pending_renewal` depends on several other attribute values
+	d.Set("pending_renewal", certificateSetPendingRenewal(d))
 
 	return diags
 }
@@ -491,16 +562,25 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
-	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain) {
+	if d.HasChanges(names.AttrPrivateKey, "certificate_body", names.AttrCertificateChain, "private_key_wo_version") {
 		oCBRaw, nCBRaw := d.GetChange("certificate_body")
 		oCCRaw, nCCRaw := d.GetChange(names.AttrCertificateChain)
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
-		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) || d.HasChange("private_key_wo_version") {
+			privateKey := d.Get(names.AttrPrivateKey).(string)
+			privateKeyWo, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("private_key_wo"))
+			diags = append(diags, di...)
+			if diags.HasError() {
+				return diags
+			}
+			if privateKeyWo != "" {
+				privateKey = privateKeyWo
+			}
 			input := acm.ImportCertificateInput{
 				Certificate:    []byte(d.Get("certificate_body").(string)),
 				CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
-				PrivateKey:     []byte(d.Get(names.AttrPrivateKey).(string)),
+				PrivateKey:     []byte(privateKey),
 			}
 
 			if chain, ok := d.GetOk(names.AttrCertificateChain); ok {

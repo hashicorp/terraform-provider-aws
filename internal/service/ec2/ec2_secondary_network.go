@@ -37,8 +37,8 @@ import (
 // @IdentityAttribute("id")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(tagsTest=false)
+// @Testing(serialize=true)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func newSecondaryNetworkResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &secondaryNetworkResource{}
 
@@ -50,7 +50,7 @@ func newSecondaryNetworkResource(_ context.Context) (resource.ResourceWithConfig
 }
 
 type secondaryNetworkResource struct {
-	framework.ResourceWithModel[SecondaryNetworkResourceModel]
+	framework.ResourceWithModel[secondaryNetworkResourceModel]
 	framework.WithTimeouts
 	framework.WithImportByIdentity
 }
@@ -66,7 +66,7 @@ func (r *secondaryNetworkResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[IPv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
+			"ipv4_cidr_block_associations": framework.ResourceComputedListOfObjectsAttribute[ipv4CidrBlockAssociationModel](ctx, listplanmodifier.UseStateForUnknown()),
 			"network_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -108,7 +108,7 @@ func (r *secondaryNetworkResource) Schema(ctx context.Context, request resource.
 }
 
 func (r *secondaryNetworkResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data SecondaryNetworkResourceModel
+	var data secondaryNetworkResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -147,7 +147,7 @@ func (r *secondaryNetworkResource) Create(ctx context.Context, request resource.
 }
 
 func (r *secondaryNetworkResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data SecondaryNetworkResourceModel
+	var data secondaryNetworkResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -184,7 +184,7 @@ func (r *secondaryNetworkResource) Read(ctx context.Context, request resource.Re
 }
 
 func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data SecondaryNetworkResourceModel
+	var data secondaryNetworkResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -215,12 +215,12 @@ func (r *secondaryNetworkResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-type SecondaryNetworkResourceModel struct {
+type secondaryNetworkResourceModel struct {
 	framework.WithRegionModel
 	ARN                       types.String                                                   `tfsdk:"arn"`
 	ID                        types.String                                                   `tfsdk:"id"`
 	IPv4CidrBlock             types.String                                                   `tfsdk:"ipv4_cidr_block"`
-	IPv4CidrBlockAssociations fwtypes.ListNestedObjectValueOf[IPv4CidrBlockAssociationModel] `tfsdk:"ipv4_cidr_block_associations"`
+	IPv4CidrBlockAssociations fwtypes.ListNestedObjectValueOf[ipv4CidrBlockAssociationModel] `tfsdk:"ipv4_cidr_block_associations"`
 	NetworkType               types.String                                                   `tfsdk:"network_type"`
 	OwnerID                   types.String                                                   `tfsdk:"owner_id"`
 	SecondaryNetworkId        types.String                                                   `tfsdk:"secondary_network_id"`
@@ -230,7 +230,7 @@ type SecondaryNetworkResourceModel struct {
 	Timeouts                  timeouts.Value                                                 `tfsdk:"timeouts"`
 }
 
-type IPv4CidrBlockAssociationModel struct {
+type ipv4CidrBlockAssociationModel struct {
 	AssociationID types.String `tfsdk:"association_id"`
 	CidrBlock     types.String `tfsdk:"cidr_block"`
 	State         types.String `tfsdk:"state"`

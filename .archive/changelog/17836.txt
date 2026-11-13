@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_kms_grant: Adds support for operations on asymmetric keys
-```

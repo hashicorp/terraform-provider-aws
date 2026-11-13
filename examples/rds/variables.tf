@@ -30,7 +30,7 @@ variable "engine_version" {
 }
 
 variable "instance_class" {
-  default     = "db.t2.micro"
+  default     = "db.t4g.micro"
   description = "Instance class"
 }
 

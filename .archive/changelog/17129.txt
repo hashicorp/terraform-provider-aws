@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ec2_capacity_reservation: Add `owner_id` attribute
-```

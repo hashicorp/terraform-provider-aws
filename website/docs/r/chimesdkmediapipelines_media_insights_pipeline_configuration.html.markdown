@@ -40,8 +40,11 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "my_
 }
 
 resource "aws_kinesis_stream" "example" {
-  name        = "example"
-  shard_count = 2
+  name = "example"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 data "aws_iam_policy_document" "media_pipelines_assume_role" {
@@ -377,7 +380,7 @@ resource "aws_chimesdkmediapipelines_media_insights_pipeline_configuration" "exa
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Chime SDK media insights pipeline configuration.
+- `arn` (String) ARN of the Chime SDK media insights pipeline configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Chime SDK Media Pipelines Media Insights Pipeline Configuration using the `id`. For example:
 

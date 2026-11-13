@@ -22,50 +22,52 @@ func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
-		Schema: map[string]*schema.Schema{
-			"access_string": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"authentication_mode": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"password_count": {
-							Optional: true,
-							Type:     schema.TypeInt,
-						},
-						names.AttrType: {
-							Optional: true,
-							Type:     schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_string": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"authentication_mode": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"password_count": {
+								Optional: true,
+								Type:     schema.TypeInt,
+							},
+							names.AttrType: {
+								Optional: true,
+								Type:     schema.TypeString,
+							},
 						},
 					},
 				},
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"no_password_required": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"passwords": {
-				Type:      schema.TypeSet,
-				Optional:  true,
-				Elem:      &schema.Schema{Type: schema.TypeString},
-				Set:       schema.HashString,
-				Sensitive: true,
-			},
-			"user_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrUserName: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"no_password_required": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"passwords": {
+					Type:      schema.TypeSet,
+					Optional:  true,
+					Elem:      &schema.Schema{Type: schema.TypeString},
+					Set:       schema.HashString,
+					Sensitive: true,
+				},
+				"user_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrUserName: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

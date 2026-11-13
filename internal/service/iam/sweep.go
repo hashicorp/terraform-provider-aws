@@ -46,6 +46,8 @@ func RegisterSweepers() {
 		Name: "aws_iam_policy",
 		F:    sweepPolicies,
 		Dependencies: []string{
+			"aws_ecs_express_gateway_service",
+			"aws_ecs_service",
 			"aws_iam_group",
 			"aws_iam_role",
 			"aws_iam_user",

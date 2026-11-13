@@ -20,7 +20,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/sqs/types;awstypes;map[awstypes.QueueAttributeName]string")
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.19.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceQueuePolicy() *schema.Resource {
 	h := &queueAttributeHandler{
 		AttributeName: types.QueueAttributeNamePolicy,
@@ -38,13 +37,15 @@ func resourceQueuePolicy() *schema.Resource {
 		MigrateState:  queuePolicyMigrateState,
 		SchemaVersion: 1,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
-			"queue_url": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrPolicy: sdkv2.IAMPolicyDocumentSchemaRequired(),
+				"queue_url": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

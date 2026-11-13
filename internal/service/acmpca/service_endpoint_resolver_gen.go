@@ -7,6 +7,7 @@ package acmpca
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 var _ acmpca.EndpointResolverV2 = resolverV2{}
@@ -67,7 +67,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params acmpca.EndpointP
 		resolver := &net.Resolver{}
 		_, err = resolver.LookupHost(lookupCtx, hostname)
 		if err != nil {
-			if dnsErr, ok := errs.As[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
+			if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && (dnsErr.IsNotFound || dnsErr.IsTimeout) {
 				tflog.Debug(ctx, "default endpoint host not found, disabling FIPS", map[string]any{
 					"tf_aws.hostname": hostname,
 				})

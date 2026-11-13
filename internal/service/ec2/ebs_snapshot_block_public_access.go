@@ -23,7 +23,6 @@ import (
 // @V60SDKv2Fix
 // @Testing(hasExistsFunction=false)
 // @Testing(generator=false)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEBSSnapshotBlockPublicAccessPut,
@@ -31,12 +30,14 @@ func resourceEBSSnapshotBlockPublicAccess() *schema.Resource {
 		UpdateWithoutTimeout: resourceEBSSnapshotBlockPublicAccessPut,
 		DeleteWithoutTimeout: resourceEBSSnapshotBlockPublicAccessDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrState: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrState: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.SnapshotBlockPublicAccessState](),
+				},
+			}
 		},
 	}
 }

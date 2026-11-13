@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -22,7 +23,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_basic(t *testing.T) {
 	var v types.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomSubdomain()
+	domain := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
@@ -54,7 +55,7 @@ func TestAccAPIGatewayDomainNameAccessAssociation_disappears(t *testing.T) {
 	var v types.DomainNameAccessAssociation
 	resourceName := "aws_api_gateway_domain_name_access_association.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	domain := acctest.RandomSubdomain()
+	domain := acctest.RandomSubdomain(t)
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domain)
 
@@ -71,6 +72,14 @@ func TestAccAPIGatewayDomainNameAccessAssociation_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfapigateway.ResourceDomainNameAccessAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

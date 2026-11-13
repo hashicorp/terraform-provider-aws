@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -207,7 +206,7 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 			continue
 		}
 
-		if err, ok := errs.As[smithy.APIError](err); ok {
+		if err, ok := errors.AsType[smithy.APIError](err); ok {
 			if errorCode := err.ErrorCode(); errorCode == errCodeNoSuchBucket {
 				return int64(len(toDelete)), nil
 			} else {
@@ -273,8 +272,10 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 
 			if err != nil {
 				// Add the original error and the new error.
-				errs = append(errs, newDeleteObjectVersionError(v))
-				errs = append(errs, fmt.Errorf("removing legal hold: %w", newObjectVersionError(key, versionID, err)))
+				errs = append(errs,
+					newDeleteObjectVersionError(v),
+					fmt.Errorf("removing legal hold: %w", newObjectVersionError(key, versionID, err)),
+				)
 			} else {
 				// Attempt to delete the object once the legal hold has been removed.
 				input := &s3.DeleteObjectInput{

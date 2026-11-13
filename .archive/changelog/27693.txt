@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpn_connection: Configuring exactly one of `transit_gateway_id` or `vpn_gateway_id` is not required
-```

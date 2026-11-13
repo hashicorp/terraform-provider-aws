@@ -13,8 +13,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -144,7 +144,7 @@ func TestParameterChanges(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -186,7 +186,7 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -202,6 +202,14 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmemorydb.ResourceParameterGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -209,7 +217,7 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -319,7 +327,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 
 func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := "tf-test-" + sdkacctest.RandString(8)
+	rName := "tf-test-" + acctest.RandString(t, 8)
 	resourceName := "aws_memorydb_parameter_group.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

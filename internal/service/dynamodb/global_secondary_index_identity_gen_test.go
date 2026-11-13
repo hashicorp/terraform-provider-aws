@@ -25,7 +25,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v awstypes.GlobalSecondaryIndexDescription
-	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EXPERIMENT_dynamodb_global_secondary_index")
 	resourceName := "aws_dynamodb_global_secondary_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
@@ -117,7 +116,6 @@ func TestAccDynamoDBGlobalSecondaryIndex_Identity_basic(t *testing.T) {
 func TestAccDynamoDBGlobalSecondaryIndex_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	acctest.SkipIfEnvVarNotSet(t, "TF_AWS_EXPERIMENT_dynamodb_global_secondary_index")
 	resourceName := "aws_dynamodb_global_secondary_index.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 

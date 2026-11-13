@@ -27,20 +27,21 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster")
+	awsv2.Register("aws_rds_cluster_parameter_group", sweepClusterParameterGroups, "aws_rds_cluster", "aws_docdb_cluster", "aws_neptune_cluster")
 	awsv2.Register("aws_db_cluster_snapshot", sweepClusterSnapshots, "aws_rds_cluster")
-	awsv2.Register("aws_rds_cluster", sweepClusters, "aws_db_instance", "aws_rds_shard_group")
+	awsv2.Register("aws_rds_cluster", sweepClusters, "aws_db_instance", "aws_rds_shard_group", "aws_rds_integration")
 	awsv2.Register("aws_db_event_subscription", sweepEventSubscriptions)
 	awsv2.Register("aws_rds_global_cluster", sweepGlobalClusters)
 	awsv2.Register("aws_db_instance", sweepInstances, "aws_rds_global_cluster")
 	awsv2.Register("aws_db_option_group", sweepOptionGroups, "aws_rds_cluster", "aws_db_snapshot")
-	awsv2.Register("aws_db_parameter_group", sweepParameterGroups, "aws_db_instance")
+	awsv2.Register("aws_db_parameter_group", sweepParameterGroups, "aws_db_instance", "aws_neptune_cluster_instance")
 	awsv2.Register("aws_db_proxy", sweepProxies)
 	awsv2.Register("aws_db_snapshot", sweepSnapshots, "aws_db_instance")
-	awsv2.Register("aws_db_subnet_group", sweepSubnetGroups, "aws_rds_cluster")
+	awsv2.Register("aws_db_subnet_group", sweepSubnetGroups, "aws_rds_cluster", "aws_docdb_cluster", "aws_neptune_cluster")
 	awsv2.Register("aws_db_instance_automated_backups_replication", sweepInstanceAutomatedBackups, "aws_db_instance")
 	awsv2.Register("aws_rds_shard_group", sweepShardGroups)
 	awsv2.Register("aws_rds_blue_green_deployment", sweepBlueGreenDeployments, "aws_db_instance") // Pseudo resource.
+	awsv2.Register("aws_rds_integration", sweepIntegrations)
 }
 
 func sweepClusterParameterGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -77,13 +78,7 @@ func sweepClusterParameterGroups(ctx context.Context, client *conns.AWSClient) (
 
 func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.RDSClient(ctx)
-	input := rds.DescribeDBClusterSnapshotsInput{
-		// "InvalidDBClusterSnapshotStateFault: Only manual snapshots may be deleted."
-		Filters: []types.Filter{{
-			Name:   aws.String("snapshot-type"),
-			Values: []string{"manual"},
-		}},
-	}
+	var input rds.DescribeDBClusterSnapshotsInput
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := rds.NewDescribeDBClusterSnapshotsPaginator(conn, &input)
@@ -95,9 +90,21 @@ func sweepClusterSnapshots(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, v := range page.DBClusterSnapshots {
+			if engine := aws.ToString(v.Engine); engine == clusterEngineDocDB || engine == clusterEngineNeptune {
+				// DocDB and Neptune cluster snapshots are handled by their respective services' sweepers.
+				continue
+			}
+
+			id := aws.ToString(v.DBClusterSnapshotIdentifier)
+
+			if typ := aws.ToString(v.SnapshotType); typ != "manual" {
+				log.Printf("[INFO] Skipping RDS Cluster Snapshot %s: SnapshotType=%s", id, typ)
+				continue
+			}
+
 			r := resourceClusterSnapshot()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.DBClusterSnapshotIdentifier))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -120,6 +127,11 @@ func sweepClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, v := range page.DBClusters {
+			// DocDB and Neptune clusters are handled by their respective services' sweepers.
+			if engine := aws.ToString(v.Engine); engine == clusterEngineDocDB || engine == clusterEngineNeptune {
+				continue
+			}
+
 			arn := aws.ToString(v.DBClusterArn)
 			id := aws.ToString(v.DBClusterIdentifier)
 			r := resourceCluster()
@@ -190,6 +202,11 @@ func sweepGlobalClusters(ctx context.Context, client *conns.AWSClient) ([]sweep.
 		}
 
 		for _, v := range page.GlobalClusters {
+			if engine := aws.ToString(v.Engine); engine == globalClusterEngineDocDB || engine == globalClusterEngineNeptune {
+				// DocDB and Neptune global clusters are handled by their respective services' sweepers.
+				continue
+			}
+
 			r := resourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
@@ -220,10 +237,10 @@ func sweepInstances(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweep
 			id := aws.ToString(v.DbiResourceId)
 
 			switch engine := aws.ToString(v.Engine); engine {
-			case "docdb", "neptune":
+			case instanceEngineDocDB, instanceEngineNeptune:
 				// These engines are handled by their respective services' sweepers.
 				continue
-			case InstanceEngineMySQL:
+			case instanceEngineMySQL:
 				// "InvalidParameterValue: Deleting cluster instances isn't supported for DB engine mysql".
 				if clusterID := aws.ToString(v.DBClusterIdentifier); clusterID != "" {
 					log.Printf("[INFO] Skipping RDS DB Instance %s: DBClusterIdentifier=%s", id, clusterID)
@@ -534,4 +551,26 @@ func (s blueGreenDeploymentSweeper) Delete(ctx context.Context, optFns ...tfreso
 	}
 
 	return nil
+}
+
+func sweepIntegrations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.RDSClient(ctx)
+	var input rds.DescribeIntegrationsInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := rds.NewDescribeIntegrationsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Integrations {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newIntegrationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.IntegrationArn))))
+		}
+	}
+
+	return sweepResources, nil
 }

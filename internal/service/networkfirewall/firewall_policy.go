@@ -32,6 +32,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	firewallPolicyTimeout = 10 * time.Minute
+)
+
 // @SDKResource("aws_networkfirewall_firewall_policy", name="Firewall Policy")
 // @Tags(identifierAttribute="id")
 func resourceFirewallPolicy() *schema.Resource {
@@ -62,6 +66,11 @@ func resourceFirewallPolicy() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"enable_tls_session_holding": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
 							"policy_variables": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -99,6 +108,35 @@ func resourceFirewallPolicy() *schema.Resource {
 												},
 											},
 										},
+									},
+								},
+							},
+							"route53_resolved_ip_validation": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.Route53ResolvedIPValidationAction](),
+										},
+										"bypass_destination_validation_ip_ranges": route53ResolvedIPValidationIPRangesSchema(),
+										"dns_expiry_exception_policy": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.DNSExpiryExceptionPolicy](),
+										},
+										"dns_firewall_rule_group_id": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 256),
+												validation.StringMatch(regexache.MustCompile(`^rslvr-frg-[0-9a-f]+$`), "must be a Route 53 Resolver DNS Firewall rule group ID"),
+											),
+										},
+										"source_ip_ranges": route53ResolvedIPValidationIPRangesSchema(),
 									},
 								},
 							},
@@ -240,6 +278,24 @@ func resourceFirewallPolicy() *schema.Resource {
 	}
 }
 
+func route53ResolvedIPValidationIPRangesSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		// The API treats an empty list differently from an omitted one, but an empty set
+		// can't be distinguished from an unset one, so require at least one entry.
+		MinItems: 1,
+		MaxItems: 100,
+		Elem: &schema.Schema{
+			Type: schema.TypeString,
+			ValidateFunc: validation.Any(
+				verify.ValidIPv4CIDRNetworkAddress,
+				verify.ValidIPv6CIDRNetworkAddress,
+			),
+		},
+	}
+}
+
 func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
@@ -266,6 +322,12 @@ func resourceFirewallPolicyCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(output.FirewallPolicyResponse.FirewallPolicyArn))
+
+	if v, ok := d.GetOk("firewall_policy.0.route53_resolved_ip_validation"); ok && len(v.([]any)) > 0 {
+		if err := waitFirewallPolicyUpdated(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) create: %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceFirewallPolicyRead(ctx, d, meta)...)
 }
@@ -325,6 +387,12 @@ func resourceFirewallPolicyUpdate(ctx context.Context, d *schema.ResourceData, m
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 		}
+
+		if d.HasChange("firewall_policy.0.route53_resolved_ip_validation") {
+			if err := waitFirewallPolicyUpdated(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) update: %s", d.Id(), err)
+			}
+		}
 	}
 
 	return append(diags, resourceFirewallPolicyRead(ctx, d, meta)...)
@@ -335,10 +403,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	log.Printf("[DEBUG] Deleting NetworkFirewall Firewall Policy: %s", d.Id())
-	const (
-		timeout = 10 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, timeout, func(ctx context.Context) (any, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, firewallPolicyTimeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteFirewallPolicy(ctx, &networkfirewall.DeleteFirewallPolicyInput{
 			FirewallPolicyArn: aws.String(d.Id()),
 		})
@@ -352,7 +417,7 @@ func resourceFirewallPolicyDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Firewall Policy (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id(), timeout); err != nil {
+	if _, err := waitFirewallPolicyDeleted(ctx, conn, d.Id(), firewallPolicyTimeout); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Firewall Policy (%s) delete: %s", d.Id(), err)
 	}
 
@@ -420,6 +485,21 @@ func waitFirewallPolicyDeleted(ctx context.Context, conn *networkfirewall.Client
 	return nil, err
 }
 
+// AWS swaps the managed DNS Firewall rule group association for Route 53 resolved IP
+// validation asynchronously and rejects further policy changes until the policy is ACTIVE again.
+func waitFirewallPolicyUpdated(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) error {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ResourceStatusUpdating),
+		Target:  enum.Slice(awstypes.ResourceStatusActive),
+		Refresh: statusFirewallPolicy(conn, arn),
+		Timeout: timeout,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+
+	return err
+}
+
 func expandPolicyVariables(tfMap map[string]any) *awstypes.PolicyVariables {
 	if tfMap == nil {
 		return nil
@@ -454,6 +534,46 @@ func expandStatefulEngineOptions(tfList []any) *awstypes.StatefulEngineOptions {
 	}
 
 	return apiObject
+}
+
+func expandRoute53ResolvedIPValidation(tfList []any) *awstypes.Route53ResolvedIPValidation {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.Route53ResolvedIPValidation{}
+
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		apiObject.Action = awstypes.Route53ResolvedIPValidationAction(v)
+	}
+	// Leave the ranges nil when unset: the API treats an empty list as "validate nothing".
+	if v, ok := tfMap["bypass_destination_validation_ip_ranges"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.BypassDestinationValidationIPRanges = expandAddressDefinitions(v)
+	}
+	if v, ok := tfMap["dns_expiry_exception_policy"].(string); ok && v != "" {
+		apiObject.DNSExpiryExceptionPolicy = awstypes.DNSExpiryExceptionPolicy(v)
+	}
+	if v, ok := tfMap["dns_firewall_rule_group_id"].(string); ok && v != "" {
+		apiObject.DNSFirewallRuleGroupId = aws.String(v)
+	}
+	if v, ok := tfMap["source_ip_ranges"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SourceIPRanges = expandAddressDefinitions(v)
+	}
+
+	return apiObject
+}
+
+func expandAddressDefinitions(tfSet *schema.Set) []awstypes.Address {
+	apiObjects := make([]awstypes.Address, 0, tfSet.Len())
+
+	for _, v := range tfSet.List() {
+		apiObjects = append(apiObjects, awstypes.Address{
+			AddressDefinition: aws.String(v.(string)),
+		})
+	}
+
+	return apiObjects
 }
 
 func expandFlowTimeouts(tfList []any) *awstypes.FlowTimeouts {
@@ -562,8 +682,16 @@ func expandFirewallPolicy(tfList []any) *awstypes.FirewallPolicy {
 		StatelessFragmentDefaultActions: flex.ExpandStringValueSet(tfMap["stateless_fragment_default_actions"].(*schema.Set)),
 	}
 
+	if v, ok := tfMap["enable_tls_session_holding"].(bool); ok {
+		apiObject.EnableTLSSessionHolding = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["policy_variables"]; ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		apiObject.PolicyVariables = expandPolicyVariables(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := tfMap["route53_resolved_ip_validation"].([]any); ok && len(v) > 0 {
+		apiObject.Route53ResolvedIPValidation = expandRoute53ResolvedIPValidation(v)
 	}
 
 	if v, ok := tfMap["stateful_default_actions"].(*schema.Set); ok && v.Len() > 0 {
@@ -600,8 +728,15 @@ func flattenFirewallPolicy(apiObject *awstypes.FirewallPolicy) []any {
 
 	tfMap := map[string]any{}
 
+	if apiObject.EnableTLSSessionHolding != nil {
+		tfMap["enable_tls_session_holding"] = aws.ToBool(apiObject.EnableTLSSessionHolding)
+	}
+
 	if apiObject.PolicyVariables != nil {
 		tfMap["policy_variables"] = flattenPolicyVariables(apiObject.PolicyVariables)
+	}
+	if apiObject.Route53ResolvedIPValidation != nil {
+		tfMap["route53_resolved_ip_validation"] = flattenRoute53ResolvedIPValidation(apiObject.Route53ResolvedIPValidation)
 	}
 	if apiObject.StatefulDefaultActions != nil {
 		tfMap["stateful_default_actions"] = apiObject.StatefulDefaultActions
@@ -641,6 +776,32 @@ func flattenPolicyVariables(apiObject *awstypes.PolicyVariables) []any {
 	}
 
 	return []any{tfMap}
+}
+
+func flattenRoute53ResolvedIPValidation(apiObject *awstypes.Route53ResolvedIPValidation) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrAction: apiObject.Action,
+		"bypass_destination_validation_ip_ranges": flattenAddressDefinitions(apiObject.BypassDestinationValidationIPRanges),
+		"dns_expiry_exception_policy":             apiObject.DNSExpiryExceptionPolicy,
+		"dns_firewall_rule_group_id":              aws.ToString(apiObject.DNSFirewallRuleGroupId),
+		"source_ip_ranges":                        flattenAddressDefinitions(apiObject.SourceIPRanges),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenAddressDefinitions(apiObjects []awstypes.Address) []string {
+	tfList := make([]string, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, aws.ToString(apiObject.AddressDefinition))
+	}
+
+	return tfList
 }
 
 func flattenStatefulEngineOptions(apiObject *awstypes.StatefulEngineOptions) []any {

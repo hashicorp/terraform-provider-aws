@@ -106,17 +106,43 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Remediation Configurations using the name config_rule_name. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_config_remediation_configuration.this
+  to = aws_config_remediation_configuration.example
+  identity = {
+    name = "example"
+  }
+}
+
+resource "aws_config_remediation_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `config_rule_name` (String) Name of the AWS Config rule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Remediation Configurations using the `config_rule_name`. For example:
+
+```terraform
+import {
+  to = aws_config_remediation_configuration.example
   id = "example"
 }
 ```
 
-Using `terraform import`, import Remediation Configurations using the name config_rule_name. For example:
+Using `terraform import`, import Remediation Configurations using the `config_rule_name`. For example:
 
 ```console
-% terraform import aws_config_remediation_configuration.this example
+% terraform import aws_config_remediation_configuration.example example
 ```

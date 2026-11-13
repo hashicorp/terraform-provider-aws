@@ -463,7 +463,7 @@ func TestAccDMSEndpoint_OpenSearch_fullLoadErrorPercentage(t *testing.T) {
 
 func TestAccDMSEndpoint_kafka(t *testing.T) {
 	ctx := acctest.Context(t)
-	domainName := acctest.RandomSubdomain()
+	domainName := acctest.RandomSubdomain(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_dms_endpoint.test"
 
@@ -690,6 +690,7 @@ func TestAccDMSEndpoint_MongoDB_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.extract_doc_id", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.docs_to_investigate", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.use_update_lookup", acctest.CtTrue),
 				),
 			},
 			{
@@ -1026,7 +1027,7 @@ func TestAccDMSEndpoint_Oracle_update(t *testing.T) {
 	})
 }
 
-func TestAccDMSEndpoint_Oracle_settings(t *testing.T) {
+func TestAccDMSEndpoint_Oracle_settings_source(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1038,7 +1039,7 @@ func TestAccDMSEndpoint_Oracle_settings(t *testing.T) {
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEndpointConfig_oracleSettings(rName, 2000),
+				Config: testAccEndpointConfig_oracleSourceSettings(rName, 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName),
 				),
@@ -1061,7 +1062,7 @@ func TestAccDMSEndpoint_Oracle_settings(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
-				Config: testAccEndpointConfig_oracleSettings(rName, 20000),
+				Config: testAccEndpointConfig_oracleSourceSettings(rName, 20000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, t, resourceName),
 				),
@@ -1076,6 +1077,38 @@ func TestAccDMSEndpoint_Oracle_settings(t *testing.T) {
 						"read_ahead_blocks":        knownvalue.Int64Exact(20000),
 					})})),
 				},
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_Oracle_settings_target(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_oracleTargetSettings(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 		},
 	})
@@ -3097,6 +3130,7 @@ resource "aws_dms_endpoint" "test" {
     nesting_level       = "one"
     extract_doc_id      = "true"
     docs_to_investigate = "1001"
+    use_update_lookup   = true
   }
 }
 `, rName)
@@ -3324,7 +3358,7 @@ resource "aws_dms_endpoint" "test" {
 `, rName)
 }
 
-func testAccEndpointConfig_oracleSettings(rName string, readAheadBlocks int) string {
+func testAccEndpointConfig_oracleSourceSettings(rName string, readAheadBlocks int) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "test" {
   endpoint_id   = %[1]q
@@ -3337,12 +3371,35 @@ resource "aws_dms_endpoint" "test" {
   database_name = "tftest"
   ssl_mode      = "none"
 
+  extra_connection_attributes = "ArchivedLogsOnly=Y"
+
   oracle_settings {
     add_supplemental_logging = false
     read_ahead_blocks        = %[2]d
   }
 }
 `, rName, readAheadBlocks)
+}
+
+func testAccEndpointConfig_oracleTargetSettings(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "oracle"
+  server_name   = "tftest"
+  port          = 1521
+  username      = "tftest"
+  password      = "tftest"
+  database_name = "tftest"
+
+  extra_connection_attributes = "CharLengthSemantics=char"
+
+  oracle_settings {
+    authentication_method = "password"
+  }
+}
+`, rName)
 }
 
 func testAccEndpointConfig_postgreSQL(rName string) string {

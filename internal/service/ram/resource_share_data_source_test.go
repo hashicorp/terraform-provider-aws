@@ -37,37 +37,6 @@ func TestAccRAMResourceShareDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_ram_resource_share.test"
-	datasourceName := "data.aws_ram_resource_share.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResourceShareDataSourceConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-				),
-			},
-			{
-				Config: testAccResourceShareDataSourceConfig_tagsWithoutName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRAMResourceShareDataSource_resources(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -130,49 +99,6 @@ data "aws_ram_resource_share" "test" {
   resource_owner = "SELF"
 
   depends_on = [aws_ram_resource_share.other]
-}
-`, rName)
-}
-
-func testAccResourceShareDataSourceConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ram_resource_share" "test" {
-  name = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_ram_resource_share" "test" {
-  name           = aws_ram_resource_share.test.name
-  resource_owner = "SELF"
-
-  filter {
-    name   = "Name"
-    values = [%[1]q]
-  }
-}
-`, rName)
-}
-
-func testAccResourceShareDataSourceConfig_tagsWithoutName(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ram_resource_share" "test" {
-  name = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_ram_resource_share" "test" {
-  resource_owner = "SELF"
-
-  filter {
-    name   = "Name"
-    values = [aws_ram_resource_share.test.tags["Name"]]
-  }
 }
 `, rName)
 }

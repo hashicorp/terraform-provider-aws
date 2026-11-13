@@ -94,7 +94,7 @@ This resource supports the following arguments:
 * `custom_role_arn` - (Optional) A custom IAM role to use for repository creation. Required if using repository tags or KMS encryption.
 * `description` - (Optional) The description for this template.
 * `encryption_configuration` - (Optional) Encryption configuration for any created repositories. See [below for schema](#encryption_configuration).
-* `image_tag_mutability` - (Optional) The tag mutability setting for any created repositories. Must be one of: `MUTABLE` or `IMMUTABLE`. Defaults to `MUTABLE`.
+* `image_tag_mutability` - (Optional) The tag mutability setting for any created repositories. Must be one of: `MUTABLE`, `IMMUTABLE`, `IMMUTABLE_WITH_EXCLUSION`, or `MUTABLE_WITH_EXCLUSION`. Defaults to `MUTABLE`.
 * `image_tag_mutability_exclusion_filter` - (Optional) Configuration block that defines filters to specify which image tags can override the default tag mutability setting. Only applicable when `image_tag_mutability` is set to `IMMUTABLE_WITH_EXCLUSION` or `MUTABLE_WITH_EXCLUSION`. See [below for schema](#image_tag_mutability_exclusion_filter).
 * `lifecycle_policy` - (Optional) The lifecycle policy document to apply to any created repositories. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. Consider using the [`aws_ecr_lifecycle_policy_document` data_source](/docs/providers/aws/d/ecr_lifecycle_policy_document.html) to generate/manage the JSON document used for the `lifecycle_policy` argument.
 * `repository_policy` - (Optional) The registry policy document to apply to any created repositories. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
@@ -102,8 +102,8 @@ This resource supports the following arguments:
 
 ### encryption_configuration
 
-* `encryption_type` - (Optional) The encryption type to use for any created repositories. Valid values are `AES256` or `KMS`. Defaults to `AES256`.
-* `kms_key` - (Optional) The ARN of the KMS key to use when `encryption_type` is `KMS`. If not specified, uses the default AWS managed key for ECR.
+* `encryption_type` - (Optional) Encryption type to use for any created repositories. Valid values are `AES256`, `KMS`, and `KMS_DSSE`. Defaults to `AES256`.
+* `kms_key` - (Optional) ARN of the KMS key to use when `encryption_type` is `KMS` or `KMS_DSSE`. If not specified, uses the default AWS managed key for ECR.
 
 ### image_tag_mutability_exclusion_filter
 

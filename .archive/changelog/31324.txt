@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_msk_cluster: The `broker_node_group_info.ebs_volume_size` attribute has been removed
-```

@@ -157,6 +157,13 @@ func (sr ServiceRecord) HumanFriendly() string {
 	return sr.service.ServiceNames.HumanFriendly
 }
 
+func (sr ServiceRecord) HumanFriendlyShort() string {
+	if sr.service.ServiceNames.HumanFriendlyShort != "" {
+		return sr.service.ServiceNames.HumanFriendlyShort
+	}
+	return sr.service.ServiceNames.HumanFriendly
+}
+
 func (sr ServiceRecord) FullHumanFriendly() string {
 	if sr.Brand() == "" {
 		return sr.HumanFriendly()
@@ -242,6 +249,13 @@ func (sr ServiceRecord) EndpointAPIParams() string {
 	return ""
 }
 
+func (sr ServiceRecord) EndpointFIPSSupport() bool {
+	if sr.service.ServiceEndpoints != nil {
+		return !sr.service.ServiceEndpoints.EndpointNoFIPSSupport
+	}
+	return true
+}
+
 func (sr ServiceRecord) EndpointRegionOverrides() map[string]string {
 	if sr.service.ServiceEndpoints != nil && len(sr.service.ServiceEndpoints.EndpointRegionOverrides) > 0 {
 		return maps.Clone(sr.service.ServiceEndpoints.EndpointRegionOverrides)
@@ -307,9 +321,10 @@ type SDK struct {
 }
 
 type Names struct {
-	Aliases           []string `hcl:"aliases,optional"`
-	ProviderNameUpper string   `hcl:"provider_name_upper,attr"`
-	HumanFriendly     string   `hcl:"human_friendly,attr"`
+	Aliases            []string `hcl:"aliases,optional"`
+	ProviderNameUpper  string   `hcl:"provider_name_upper,attr"`
+	HumanFriendly      string   `hcl:"human_friendly,attr"`
+	HumanFriendlyShort string   `hcl:"human_friendly_short,optional"`
 }
 
 type ProviderPackage struct {
@@ -332,6 +347,7 @@ type EndpointInfo struct {
 	EndpointAPIParams       string            `hcl:"endpoint_api_params,optional"`
 	EndpointRegionOverrides map[string]string `hcl:"endpoint_region_overrides,optional"`
 	EndpointOnly            bool              `hcl:"endpoint_only,optional"`
+	EndpointNoFIPSSupport   bool              `hcl:"endpoint_no_fips_support,optional"`
 }
 
 type Service struct {

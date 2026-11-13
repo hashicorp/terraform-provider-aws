@@ -11,9 +11,9 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,16 +26,16 @@ func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) { // nosemgrep:
 	ipamName := "aws_vpc_ipam.test"
 	rdName := "aws_vpc_ipam_resource_discovery.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
+					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, t, resourceName, &rda),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery-association/ipam-res-disco-assoc-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_id", rdName, names.AttrID),
@@ -57,16 +57,16 @@ func testAccIPAMResourceDiscoveryAssociation_tags(t *testing.T) { // nosemgrep:c
 	var rda awstypes.IpamResourceDiscoveryAssociation
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
+					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, t, resourceName, &rda),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -100,32 +100,40 @@ func testAccIPAMResourceDiscoveryAssociation_disappears(t *testing.T) { // nosem
 	var rda awstypes.IpamResourceDiscoveryAssociation
 	resourceName := "aws_vpc_ipam_resource_discovery_association.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
+					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, t, resourceName, &rda),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceIPAMResourceDiscoveryAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, n string, v *awstypes.IpamResourceDiscoveryAssociation) resource.TestCheckFunc {
+func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, t *testing.T, n string, v *awstypes.IpamResourceDiscoveryAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		output, err := tfec2.FindIPAMResourceDiscoveryAssociationByID(ctx, conn, rs.Primary.ID)
 
@@ -139,9 +147,9 @@ func testAccCheckIPAMResourceDiscoveryAssociationExists(ctx context.Context, n s
 	}
 }
 
-func testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIPAMResourceDiscoveryAssociationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpc_ipam_resource_discovery_association" {

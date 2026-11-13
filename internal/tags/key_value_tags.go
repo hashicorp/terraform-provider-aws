@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -331,7 +332,7 @@ func (tags KeyValueTags) Map() map[string]string {
 			continue
 		}
 
-		result[k] = *v.Value
+		result[k] = aws.ToString(v.Value)
 	}
 
 	return result

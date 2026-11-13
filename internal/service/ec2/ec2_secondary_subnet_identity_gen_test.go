@@ -20,18 +20,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccEC2SecondarySubnet_Identity_basic(t *testing.T) {
+func testAccEC2SecondarySubnet_identitySerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:  testAccEC2SecondarySubnet_Identity_basic,
+		"RegionOverride": testAccEC2SecondarySubnet_Identity_regionOverride,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccEC2SecondarySubnet_Identity_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_secondary_subnet.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx),
+		CheckDestroy:             testAccCheckSecondarySubnetDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -39,7 +50,7 @@ func TestAccEC2SecondarySubnet_Identity_basic(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/SecondarySubnet/basic/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSecondarySubnetExists(ctx, resourceName),
+					testAccCheckSecondarySubnetExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -95,12 +106,12 @@ func TestAccEC2SecondarySubnet_Identity_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2SecondarySubnet_Identity_regionOverride(t *testing.T) {
+func testAccEC2SecondarySubnet_Identity_regionOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_ec2_secondary_subnet.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_12_0),
 		},

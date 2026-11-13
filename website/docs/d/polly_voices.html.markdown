@@ -30,19 +30,19 @@ data "aws_polly_voices" "example" {
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine` - (Optional) Engine used by Amazon Polly when processing input text for speech synthesis. Valid values are `standard`, `neural`, and `long-form`.
 * `include_additional_language_codes` - (Optional) Whether to return any bilingual voices that use the specified language as an additional language.
 * `language_code` - (Optional) Language identification tag for filtering the list of voices returned. If not specified, all available voices are returned.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account ID.
-* `voices` - List of voices with their properties. See [`voices` Attribute Reference](#voices-attribute-reference) below.
+* `voices` - List of voices with their properties. See [`voices` Block](#voices-block) below.
 
-### `voices` Attribute Reference
+### `voices` Block
 
 See the [AWS Polly Voice documentation](https://docs.aws.amazon.com/polly/latest/dg/API_Voice.html) for additional details.
 
@@ -52,4 +52,4 @@ See the [AWS Polly Voice documentation](https://docs.aws.amazon.com/polly/latest
 * `language_code` - Language code of the voice.
 * `language_name` - Human readable name of the language in English.
 * `name` - Name of the voice.
-* `supported_engines` - Specifies which engines are supported by a given voice.
+* `supported_engines` - Engines supported by a given voice.

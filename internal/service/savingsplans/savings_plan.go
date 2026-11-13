@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -89,8 +89,9 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"offering_id": schema.StringAttribute{
-				Computed:    true,
-				Description: "The ID of the offering.",
+				Computed:           true,
+				DeprecationMessage: "offering_id is deprecated. Use savings_plan_offering_id instead.",
+				Description:        "The ID of the offering.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -114,9 +115,11 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			"purchase_time": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
 				Optional:    true,
+				Computed:    true,
 				Description: "The time at which to purchase the Savings Plan, in UTC format (YYYY-MM-DDTHH:MM:SSZ).",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"recurring_payment_amount": schema.StringAttribute{
@@ -182,9 +185,11 @@ func (r *savingsPlanResource) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"upfront_payment_amount": schema.StringAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "The up-front payment amount.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 		},
@@ -214,7 +219,7 @@ func (r *savingsPlanResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateSavingsPlan(ctx, &input)
@@ -264,6 +269,7 @@ func (r *savingsPlanResource) Read(ctx context.Context, req resource.ReadRequest
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	state.SavingsPlanOfferingID = fwflex.StringToFramework(ctx, out.OfferingId)
 
 	setTagsOut(ctx, out.Tags)
 
@@ -309,8 +315,8 @@ func (r *savingsPlanResource) ImportState(ctx context.Context, req resource.Impo
 
 func waitSavingsPlanCreated(ctx context.Context, conn *savingsplans.Client, id string, timeout time.Duration) (*awstypes.SavingsPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending, awstypes.SavingsPlanStateQueued),
-		Target:  enum.Slice(awstypes.SavingsPlanStateActive),
+		Pending: enum.Slice(awstypes.SavingsPlanStatePaymentPending),
+		Target:  enum.Slice(awstypes.SavingsPlanStateQueued, awstypes.SavingsPlanStateActive),
 		Refresh: statusSavingsPlan(conn, id),
 		Timeout: timeout,
 	}

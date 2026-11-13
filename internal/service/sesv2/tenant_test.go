@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,16 +27,16 @@ func TestAccSESV2Tenant_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_sesv2_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTenantConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTenantExists(ctx, resourceName),
+					testAccCheckTenantExists(ctx, t, resourceName),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -67,16 +66,16 @@ func TestAccSESV2Tenant_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
 	resourceName := "aws_sesv2_tenant.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTenantDestroy(ctx),
+		CheckDestroy:             testAccCheckTenantDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTenantConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTenantExists(ctx, resourceName),
+					testAccCheckTenantExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfsesv2.ResourceTenant, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -93,9 +92,9 @@ func TestAccSESV2Tenant_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTenantDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckTenantDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sesv2_tenant" {
@@ -119,14 +118,14 @@ func testAccCheckTenantDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTenantExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckTenantExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
 
 		_, err := tfsesv2.FindTenantByName(ctx, conn, rs.Primary.Attributes["tenant_name"])
 

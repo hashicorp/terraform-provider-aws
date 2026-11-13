@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_apprunner_service: Add `observability_configuration` argument configuration block
-```

@@ -25,6 +25,7 @@ import (
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_odb_cloud_autonomous_vm_cluster", name="Cloud Autonomous Vm Cluster")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDataSourceCloudAutonomousVmCluster(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceCloudAutonomousVmCluster{}, nil
 }
@@ -92,7 +93,7 @@ func (d *dataSourceCloudAutonomousVmCluster) Schema(ctx context.Context, req dat
 			},
 			"cpu_percentage": schema.Float32Attribute{
 				Computed:    true,
-				Description: "he percentage of total CPU cores currently in use in the Autonomous VM cluster.",
+				Description: "The percentage of total CPU cores currently in use in the Autonomous VM cluster.",
 			},
 			names.AttrCreatedAt: schema.StringAttribute{
 				Computed:    true,

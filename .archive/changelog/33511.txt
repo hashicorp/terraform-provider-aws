@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_db_option_group: Avoid erroneous differences being reported when an `option` `port` and/or `version` is not set
-```

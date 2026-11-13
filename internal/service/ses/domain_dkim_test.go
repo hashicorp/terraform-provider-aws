@@ -10,11 +10,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,9 +22,9 @@ import (
 func TestAccSESDomainDKIM_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ses_domain_dkim.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -36,7 +36,7 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 			{
 				Config: testAccDomainDKIMConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainDKIMExists(ctx, resourceName),
+					testAccCheckDomainDKIMExists(ctx, t, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dkim_tokens"), knownvalue.ListSizeExact(3)),
@@ -49,9 +49,9 @@ func TestAccSESDomainDKIM_basic(t *testing.T) {
 func TestAccSESDomainDKIM_Disappears_identity(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ses_domain_dkim.test"
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
@@ -63,23 +63,31 @@ func TestAccSESDomainDKIM_Disappears_identity(t *testing.T) {
 			{
 				Config: testAccDomainDKIMConfig_basic(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainDKIMExists(ctx, resourceName),
+					testAccCheckDomainDKIMExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
 }
 
-func testAccCheckDomainDKIMExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckDomainDKIMExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SESClient(ctx)
 
 		_, err := tfses.FindIdentityDKIMAttributesByIdentity(ctx, conn, rs.Primary.ID)
 

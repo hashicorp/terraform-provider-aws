@@ -43,3 +43,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - AWS Region.
 * `ids` - Set of Transit Gateway Route Table Association identifiers.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `read` - (Default `20m`)

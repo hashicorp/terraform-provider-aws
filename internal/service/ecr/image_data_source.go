@@ -28,53 +28,55 @@ func dataSourceImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRead,
 
-		Schema: map[string]*schema.Schema{
-			"image_digest": {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
-				ConflictsWith: []string{names.AttrMostRecent},
-			},
-			"image_pushed_at": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"image_size_in_bytes": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"image_tag": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
-				ConflictsWith: []string{names.AttrMostRecent},
-			},
-			"image_tags": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"image_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrMostRecent: {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
-				ConflictsWith: []string{"image_digest", "image_tag"},
-			},
-			"registry_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
-			names.AttrRepositoryName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"image_digest": {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+					ConflictsWith: []string{names.AttrMostRecent},
+				},
+				"image_pushed_at": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"image_size_in_bytes": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"image_tag": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+					ConflictsWith: []string{names.AttrMostRecent},
+				},
+				"image_tags": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"image_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrMostRecent: {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+					ConflictsWith: []string{"image_digest", "image_tag"},
+				},
+				"registry_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
+				names.AttrRepositoryName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

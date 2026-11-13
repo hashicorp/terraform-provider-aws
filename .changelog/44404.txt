@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_cluster: Fixes error when setting `database_insights_mode` with `global_cluster_identifier`.
-```

@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_lambdacore_network_connector
+```
+
+```release-note:new-list-resource
+aws_lambdacore_network_connector
+```

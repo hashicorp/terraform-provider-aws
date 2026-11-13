@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudformation_stack: Fix error when `computed` values are not set when there is no update
-```

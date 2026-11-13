@@ -16,28 +16,29 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.{Service}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
+		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+				Config: testAcc{Service}TagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{Service}TagExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -51,22 +52,27 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 
 func TestAcc{Service}Tag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.{Service}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
+		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(ctx, resourceName),
+				Config: testAcc{Service}TagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{Service}TagExists(ctx, t, resourceName),
 					acctest.CheckSDKResourceDisappears(ctx, t, resourceAws{Service}Tag(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -74,21 +80,21 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 
 func TestAcc{Service}Tag_Value(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_{service}_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.{Service}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
+		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{Service}TagConfig(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1"),
+				Config: testAcc{Service}TagConfig(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{Service}TagExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1),
 				),
 			},
 			{
@@ -97,11 +103,11 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAcc{Service}TagConfig(rName, "key1", "value1updated"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheck{Service}TagExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "key", "key1"),
-					resource.TestCheckResourceAttr(resourceName, "value", "value1updated"),
+				Config: testAcc{Service}TagConfig(rName, acctest.CtKey1, acctest.CtValue1Updated),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{Service}TagExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKey, acctest.CtKey1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.CtValue1Updated),
 				),
 			},
 		},
@@ -127,7 +133,7 @@ resource "aws_{service}_tag" "test" {
 }
 ```
 
-- Run `make testacc TESTS=TestAcc{Service}Tags_ PKG={Service}` and ensure there are no failures.
+- Run `make testacc TESTS=TestAcc{Service}Tag_ PKG={Service}` and ensure there are no failures.
 - Create `website/docs/r/{service}_tag.html.markdown` with initial documentation similar to the following:
 
 ``````markdown
@@ -161,8 +167,9 @@ resource "aws_{service}_tag" "example" {
 
 This resource supports the following arguments:
 
-* `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `key` - (Required) Tag name.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `value` - (Required) Tag value.
 
 ## Attribute Reference
@@ -173,9 +180,18 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_{service}_tag.example
+  id = "arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name"
+}
+```
+
+Using `terraform import`, import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
 
 ```console
-$ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
+% terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
 ```
 ``````

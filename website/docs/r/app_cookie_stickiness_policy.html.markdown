@@ -37,24 +37,21 @@ resource "aws_app_cookie_stickiness_policy" "foo" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Name of the stickiness policy.
-* `load_balancer` - (Required) Name of load balancer to which the policy
-  should be attached.
-* `lb_port` - (Required) Load balancer port to which the policy
-  should be applied. This must be an active listener on the load
-balancer.
 * `cookie_name` - (Required) Application cookie whose lifetime the ELB's cookie should follow.
+* `lb_port` - (Required) Load balancer port to which the policy should be applied. This must be an active listener on the load balancer.
+* `load_balancer` - (Required) Name of load balancer to which the policy should be attached.
+* `name` - (Required) Name of the stickiness policy.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the policy.
-* `name` - Name of the stickiness policy.
-* `load_balancer` - Name of load balancer to which the policy is attached.
-* `lb_port` - Load balancer port to which the policy is applied.
 * `cookie_name` - Application cookie whose lifetime the ELB's cookie should follow.
+* `id` - ID of the policy.
+* `lb_port` - Load balancer port to which the policy is applied.
+* `load_balancer` - Name of load balancer to which the policy is attached.
+* `name` - Name of the stickiness policy.
 
 ## Import
 

@@ -43,8 +43,6 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.tfInterfaceFlexer]",
     "autoflex.target.path": "Field1",
     "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.awsInterfaceInterface",
-    "target_kind": "slice",
-    "target_type": "[]flex.awsInterfaceInterface",
     "xmlWrapper": false,
     "xmlWrapperField": ""
   },

@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -34,7 +33,6 @@ import (
 // @IdentityAttribute("id")
 // @Testing(preIdentityVersion="v6.14.1")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cleanrooms;cleanrooms.GetConfiguredTableOutput")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceConfiguredTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfiguredTableCreate,
@@ -48,61 +46,63 @@ func resourceConfiguredTable() *schema.Resource {
 			Delete: schema.DefaultTimeout(1 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_columns": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				MinItems: 1,
-				MaxItems: 225,
-			},
-			"analysis_method": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCreateTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"table_reference": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDatabaseName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						names.AttrTableName: {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_columns": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					MinItems: 1,
+					MaxItems: 225,
+				},
+				"analysis_method": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCreateTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"table_reference": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"update_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"update_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -163,18 +163,7 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameConfiguredTable, d.Id(), err)
 	}
 
-	configuredTable := out.ConfiguredTable
-	d.Set(names.AttrARN, configuredTable.Arn)
-	d.Set(names.AttrName, configuredTable.Name)
-	d.Set(names.AttrDescription, configuredTable.Description)
-	d.Set("allowed_columns", configuredTable.AllowedColumns)
-	d.Set("analysis_method", configuredTable.AnalysisMethod)
-	d.Set(names.AttrCreateTime, configuredTable.CreateTime.String())
-	d.Set("update_time", configuredTable.UpdateTime.String())
-
-	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting table_reference: %s", err)
-	}
+	resourceConfiguredTableFlatten(ctx, d, out)
 
 	return diags
 }
@@ -282,4 +271,16 @@ func flattenTableReference(tableReference awstypes.TableReference) []any {
 	default:
 		return nil
 	}
+}
+
+func resourceConfiguredTableFlatten(_ context.Context, d *schema.ResourceData, out *cleanrooms.GetConfiguredTableOutput) {
+	configuredTable := out.ConfiguredTable
+	d.Set(names.AttrARN, configuredTable.Arn)
+	d.Set(names.AttrName, configuredTable.Name)
+	d.Set(names.AttrDescription, configuredTable.Description)
+	d.Set("allowed_columns", configuredTable.AllowedColumns)
+	d.Set("analysis_method", configuredTable.AnalysisMethod)
+	d.Set(names.AttrCreateTime, configuredTable.CreateTime.String())
+	d.Set("update_time", configuredTable.UpdateTime.String())
+	d.Set("table_reference", flattenTableReference(configuredTable.TableReference))
 }

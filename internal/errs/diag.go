@@ -184,6 +184,15 @@ func NewAttributeConflictsWhenWillBeError(path, otherPath cty.Path, otherValue s
 	)
 }
 
+// NewInvalidValueAttributeWillBeError returns a warning diagnostic indicating that the attribute at the given path
+// has an invalid value.
+// This is intended to be used for situations where the invalid value will become an error in a future release.
+func NewInvalidValueAttributeWillBeError(path cty.Path, detail string) diag.Diagnostic {
+	return willBeError(
+		NewInvalidValueAttributeError(path, detail),
+	)
+}
+
 func PathString(path cty.Path) string {
 	var buf strings.Builder
 	for i, step := range path {

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_nat_gateway: Update `private_ip` attribute to be configurable
-```

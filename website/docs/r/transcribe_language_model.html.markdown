@@ -82,30 +82,30 @@ resource "aws_transcribe_language_model" "example" {
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
+
+* `base_model_name` - (Required) Name of reference base model.
+* `input_data_config` - (Required) Input data configuration for the LanguageModel. See [`input_data_config` Block](#input_data_config-block) for details.
+* `language_code` - (Required) Language code you selected for your language model. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
+* `model_name` - (Required) Model name.
+
+The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `base_model_name` - (Required) Name of reference base model.
-* `input_data_config` - (Required) The input data config for the LanguageModel. See [Input Data Config](#input-data-config) for more details.
-* `language_code` - (Required) The language code you selected for your language model. Refer to the [supported languages](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html) page for accepted codes.
-* `model_name` - (Required) The model name.
+* `tags` - (Optional) Map of tags to assign to the LanguageModel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Input Data Config
+### `input_data_config` Block
 
 * `data_access_role_arn` - (Required) IAM role with access to S3 bucket.
 * `s3_uri` - (Required) S3 URI where training data is located.
 * `tuning_data_s3_uri` - (Optional) S3 URI where tuning data is located.
 
-The following arguments are optional:
-
-* `tags` - (Optional) A map of tags to assign to the LanguageModel. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - LanguageModel name.
 * `arn` - ARN of the LanguageModel.
+* `id` - LanguageModel name.
 
 ## Timeouts
 

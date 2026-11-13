@@ -17,6 +17,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_sesv2_configuration_set", sweepConfigurationSets)
 	awsv2.Register("aws_sesv2_contact_list", sweepContactLists)
+	awsv2.Register("aws_sesv2_multi_region_endpoint", sweepMultiRegionEndpoints)
 	awsv2.Register("aws_sesv2_tenant", sweepTenants)
 }
 
@@ -85,7 +86,29 @@ func sweepTenants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 
 		for _, v := range page.Tenants {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newTenantResource, client,
-				framework.NewAttribute("tenant_id", aws.ToString(v.TenantId))))
+				framework.NewAttribute("tenant_name", aws.ToString(v.TenantName))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepMultiRegionEndpoints(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	input := sesv2.ListMultiRegionEndpointsInput{}
+	conn := client.SESV2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := sesv2.NewListMultiRegionEndpointsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.MultiRegionEndpoints {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newMultiRegionEndpointResource, client,
+				framework.NewAttribute("endpoint_name", aws.ToString(v.EndpointName))),
+			)
 		}
 	}
 

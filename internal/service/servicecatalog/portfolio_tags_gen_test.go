@@ -8,11 +8,9 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-testing/config"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -31,7 +29,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -39,7 +37,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -51,7 +49,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -95,7 +93,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -143,7 +141,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -184,7 +182,7 @@ func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -217,7 +215,7 @@ func TestAccServiceCatalogPortfolio_Tags_null(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -225,7 +223,7 @@ func TestAccServiceCatalogPortfolio_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +235,7 @@ func TestAccServiceCatalogPortfolio_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -288,7 +286,7 @@ func TestAccServiceCatalogPortfolio_Tags_emptyMap(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -296,7 +294,7 @@ func TestAccServiceCatalogPortfolio_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -306,7 +304,7 @@ func TestAccServiceCatalogPortfolio_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -355,7 +353,7 @@ func TestAccServiceCatalogPortfolio_Tags_addOnUpdate(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -363,7 +361,7 @@ func TestAccServiceCatalogPortfolio_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -373,7 +371,7 @@ func TestAccServiceCatalogPortfolio_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -397,7 +395,7 @@ func TestAccServiceCatalogPortfolio_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -442,7 +440,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_onCreate(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -450,7 +448,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_onCreate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -462,7 +460,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_onCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -502,7 +500,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_onCreate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -537,7 +535,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -545,7 +543,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -557,7 +555,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -589,7 +587,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -635,7 +633,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -680,7 +678,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -688,7 +686,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -700,7 +698,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -731,7 +729,7 @@ func TestAccServiceCatalogPortfolio_Tags_EmptyTag_OnUpdate_replace(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -773,7 +771,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_providerOnly(t *testing.T) 
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -781,7 +779,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_providerOnly(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -794,7 +792,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_providerOnly(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -838,7 +836,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_providerOnly(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -884,7 +882,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_providerOnly(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -924,7 +922,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_providerOnly(t *testing.T) 
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -958,7 +956,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nonOverlapping(t *testing.T
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -966,7 +964,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nonOverlapping(t *testing.T
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -981,7 +979,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nonOverlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1035,7 +1033,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nonOverlapping(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1088,7 +1086,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nonOverlapping(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1122,7 +1120,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_overlapping(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1130,7 +1128,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1145,7 +1143,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1198,7 +1196,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1255,7 +1253,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1302,7 +1300,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToProviderOnly(t *tes
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1310,7 +1308,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToProviderOnly(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1322,7 +1320,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToProviderOnly(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1355,7 +1353,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToProviderOnly(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1396,7 +1394,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToResourceOnly(t *tes
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1404,7 +1402,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToResourceOnly(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1417,7 +1415,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToResourceOnly(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1445,7 +1443,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_updateToResourceOnly(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1491,7 +1489,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_emptyResourceTag(t *testing
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1499,7 +1497,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_emptyResourceTag(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1514,7 +1512,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_emptyResourceTag(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1562,7 +1560,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1570,7 +1568,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1583,7 +1581,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_emptyProviderOnlyTag(t *tes
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1623,7 +1621,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nullOverlappingResourceTag(
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1631,7 +1629,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nullOverlappingResourceTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1646,7 +1644,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nullOverlappingResourceTag(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1689,7 +1687,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nullNonOverlappingResourceT
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1697,7 +1695,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nullNonOverlappingResourceT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1712,7 +1710,7 @@ func TestAccServiceCatalogPortfolio_Tags_DefaultTags_nullNonOverlappingResourceT
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1755,7 +1753,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_onCreate(t *testing.T) {
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1763,7 +1761,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_onCreate(t *testing.T) {
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1773,7 +1771,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_onCreate(t *testing.T) {
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1814,7 +1812,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1822,7 +1820,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1834,7 +1832,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1866,7 +1864,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_add(t *testing.T) 
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1915,7 +1913,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_replace(t *testing
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -1923,7 +1921,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_replace(t *testing
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1935,7 +1933,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_replace(t *testing
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1965,7 +1963,7 @@ func TestAccServiceCatalogPortfolio_Tags_ComputedTag_OnUpdate_replace(t *testing
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2006,7 +2004,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2014,7 +2012,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2033,7 +2031,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2082,7 +2080,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2131,7 +2129,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_defaultTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2172,7 +2170,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 
 	var v servicecatalog.DescribePortfolioOutput
 	resourceName := "aws_servicecatalog_portfolio.test"
-	rName := sdkacctest.RandString(5)
+	rName := randomPortfolioName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -2180,7 +2178,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckPortfolioDestroy(ctx),
+		CheckDestroy: testAccCheckPortfolioDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2197,7 +2195,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2260,7 +2258,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2323,7 +2321,7 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &v),
+					testAccCheckPortfolioExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2376,8 +2374,5 @@ func TestAccServiceCatalogPortfolio_Tags_IgnoreTags_Overlap_resourceTag(t *testi
 }
 
 func expectFullPortfolioResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrID,
-		ResourceType:        "Portfolio",
-	}), knownValue)
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("Portfolio", names.AttrID), knownValue)
 }

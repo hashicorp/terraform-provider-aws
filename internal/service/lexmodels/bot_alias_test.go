@@ -13,8 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -26,8 +26,8 @@ func TestAccLexModelsBotAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := "test_bot_alias" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -71,8 +71,8 @@ func testAccBotAlias_botVersion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := "test_bot_alias" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	acctest.Test(ctx, t, resource.TestCase{
@@ -125,8 +125,8 @@ func testAccBotAlias_botVersion(t *testing.T) {
 func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := "test_bot_alias" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -175,8 +175,8 @@ func TestAccLexModelsBotAlias_conversationLogsText(t *testing.T) {
 func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -226,8 +226,8 @@ func TestAccLexModelsBotAlias_conversationLogsAudio(t *testing.T) {
 func TestAccLexModelsBotAlias_conversationLogsBoth(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
-	testBotID := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotID := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	resourceName := "aws_lex_bot_alias.test"
 	iamRoleResourceName := "aws_iam_role.test"
@@ -284,8 +284,8 @@ func TestAccLexModelsBotAlias_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := "test_bot_alias" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -335,8 +335,8 @@ func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lexmodelbuildingservice.GetBotAliasOutput
 	resourceName := "aws_lex_bot_alias.test"
-	testBotName := "test_bot_" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
-	testBotAliasName := "test_bot_alias" + sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
+	testBotName := "test_bot_" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
+	testBotAliasName := "test_bot_alias" + acctest.RandStringFromCharSet(t, 8, acctest.CharSetAlpha)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
@@ -358,6 +358,14 @@ func TestAccLexModelsBotAlias_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflexmodels.ResourceBotAlias(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

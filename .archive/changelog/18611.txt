@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_s3_object_copy: Add `bucket_key_enabled` argument
-```

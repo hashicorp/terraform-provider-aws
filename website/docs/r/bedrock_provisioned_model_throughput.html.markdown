@@ -25,18 +25,18 @@ resource "aws_bedrock_provisioned_model_throughput" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `commitment_duration` - (Optional) Commitment duration requested for the Provisioned Throughput. For custom models, you can purchase on-demand Provisioned Throughput by omitting this argument. Valid values: `OneMonth`, `SixMonths`.
 * `model_arn` - (Required) ARN of the model to associate with this Provisioned Throughput.
 * `model_units` - (Required) Number of model units to allocate. A model unit delivers a specific throughput level for the specified model.
 * `provisioned_model_name` - (Required) Unique name for this Provisioned Throughput.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `provisioned_model_arn` - The ARN of the Provisioned Throughput.
+* `provisioned_model_arn` - ARN of the Provisioned Throughput.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -53,7 +53,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_bedrock_provisioned_model_throughput.example
   identity = {
-    "arn" = "arn:aws:bedrock:us-west-2:123456789012:provisioned-model/a1b2c3d4567890ab"
+    "provisioned_model_arn" = "arn:aws:bedrock:us-west-2:123456789012:provisioned-model/a1b2c3d4567890ab"
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_bedrock_provisioned_model_throughput" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Bedrock provisioned model throughput.
+- `provisioned_model_arn` (String) ARN of the Bedrock provisioned model throughput.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Provisioned Throughput using the `provisioned_model_arn`. For example:
 

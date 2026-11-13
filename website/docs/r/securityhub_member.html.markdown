@@ -42,7 +42,33 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub members using their account ID. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_securityhub_member.example
+  identity = {
+    member_account_id = "123456789012"
+  }
+}
+
+resource "aws_securityhub_member" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `member_account_id` (String) ID of the member AWS account.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub members using `account_id`. For example:
 
 ```terraform
 import {
@@ -51,7 +77,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Security Hub members using their account ID. For example:
+Using `terraform import`, import Security Hub members using `account_id`. For example:
 
 ```console
 % terraform import aws_securityhub_member.example 123456789012

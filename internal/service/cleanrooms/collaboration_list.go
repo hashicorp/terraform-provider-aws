@@ -37,14 +37,6 @@ type listResourceCollaboration struct {
 func (l *listResourceCollaboration) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().CleanRoomsClient(ctx)
 
-	var query listCollaborationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing Clean Rooms Collaboration")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input cleanrooms.ListCollaborationsInput
@@ -63,20 +55,25 @@ func (l *listResourceCollaboration) List(ctx context.Context, request list.ListR
 			rd.SetId(id)
 
 			tflog.Info(ctx, "Reading Clean Rooms Collaboration")
-			diags := resourceCollaborationRead(ctx, rd, l.Meta())
+			output, err := findCollaborationByID(ctx, conn, id)
+			if err != nil {
+				tflog.Error(ctx, "Reading Clean Rooms Collaboration", map[string]any{
+					names.AttrID: id,
+					"err":        err.Error(),
+				})
+				continue
+			}
+
+			diags := resourceCollaborationFlatten(ctx, conn, rd, output)
 			if diags.HasError() {
 				result.Diagnostics.Append(fwdiag.FromSDKDiagnostics(diags)...)
 				yield(result)
 				return
 			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
-			}
 
 			result.DisplayName = aws.ToString(item.Name)
 
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, &result, rd)
+			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -87,10 +84,6 @@ func (l *listResourceCollaboration) List(ctx context.Context, request list.ListR
 			}
 		}
 	}
-}
-
-type listCollaborationModel struct {
-	framework.WithRegionModel
 }
 
 func listCollaborations(ctx context.Context, conn *cleanrooms.Client, input *cleanrooms.ListCollaborationsInput) iter.Seq2[awstypes.CollaborationSummary, error] {

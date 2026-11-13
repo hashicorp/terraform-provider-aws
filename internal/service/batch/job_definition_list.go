@@ -31,21 +31,9 @@ type jobDefinitionListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type jobDefinitionListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.BatchClient(ctx)
-
-	var query jobDefinitionListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input batch.DescribeJobDefinitionsInput
 
@@ -59,6 +47,10 @@ func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListR
 				return
 			}
 
+			if status := aws.ToString(item.Status); status == jobDefinitionStatusInactive {
+				continue
+			}
+
 			arn := aws.ToString(item.JobDefinitionArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
 
@@ -67,20 +59,16 @@ func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListR
 			rd.SetId(arn)
 
 			tflog.Info(ctx, "Reading Batch job definition")
-			diags := resourceJobDefinitionRead(ctx, rd, awsClient)
+			diags := resourceJobDefinitionFlatten(ctx, &item, rd)
 			if diags.HasError() {
-				result = fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("reading Batch job definition %s", arn))
+				result = fwdiag.NewListResultSDKDiagnostics(diags)
 				yield(result)
 				return
-			}
-			if rd.Id() == "" {
-				// Resource is logically deleted
-				continue
 			}
 
 			result.DisplayName = aws.ToString(item.JobDefinitionName)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return

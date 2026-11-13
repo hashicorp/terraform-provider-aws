@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_spot_fleet_request: Add `overrides.instance_requirements` argument
-```

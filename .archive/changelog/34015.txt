@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_storagegateway_gateway: Support the value `0` (representing Sunday) for `maintenance_start_time.day_of_week`
-```

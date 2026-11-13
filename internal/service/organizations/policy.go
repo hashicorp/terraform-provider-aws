@@ -47,40 +47,51 @@ func resourcePolicy() *schema.Resource {
 			StateContext: resourcePolicyImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrContent: {
-				Type:                  schema.TypeString,
-				Required:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validation.StringIsJSON,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrSkipDestroy: {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				Default:          awstypes.PolicyTypeServiceControlPolicy,
-				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrContent: {
+					Type:                  schema.TypeString,
+					Required:              true,
+					ValidateFunc:          validation.StringIsJSON,
+					DiffSuppressFunc:      suppressEquivalentPolicyDiffs,
+					DiffSuppressOnRefresh: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					Default:          awstypes.PolicyTypeServiceControlPolicy,
+					ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
+				},
+			}
 		},
+	}
+}
+
+func suppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	switch awstypes.PolicyType(d.Get(names.AttrType).(string)) {
+	case awstypes.PolicyTypeResourceControlPolicy, awstypes.PolicyTypeServiceControlPolicy:
+		return verify.SuppressEquivalentPolicyDiffs(k, old, new, d)
+	default:
+		return verify.SuppressEquivalentJSONDiffs(k, old, new, d)
 	}
 }
 
@@ -89,6 +100,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
+
 	input := &organizations.CreatePolicyInput{
 		Content:     aws.String(d.Get(names.AttrContent).(string)),
 		Description: aws.String(d.Get(names.AttrDescription).(string)),

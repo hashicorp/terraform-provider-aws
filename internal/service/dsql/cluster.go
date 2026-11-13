@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -28,7 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -44,8 +45,11 @@ import (
 
 // @FrameworkResource("aws_dsql_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("identifier")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dsql;dsql.GetClusterOutput")
 // @Testing(importStateIdAttribute="identifier")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.61.0")
 // @Testing(generator=false)
 func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &clusterResource{}
@@ -60,6 +64,7 @@ func newClusterResource(_ context.Context) (resource.ResourceWithConfigure, erro
 type clusterResource struct {
 	framework.ResourceWithModel[clusterResourceModel]
 	framework.WithTimeouts
+	framework.WithImportByIdentity
 }
 
 func (r *clusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -151,7 +156,7 @@ func (r *clusterResource) Create(ctx context.Context, request resource.CreateReq
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateCluster(ctx, &input)
@@ -219,31 +224,10 @@ func (r *clusterResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	output.MultiRegionProperties = normalizeMultiRegionProperties(output)
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(r.flatten(ctx, conn, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	if v := output.EncryptionDetails; v != nil {
-		switch typ := v.EncryptionType; typ {
-		case awstypes.EncryptionTypeAwsOwnedKmsKey:
-			data.KMSEncryptionKey = fwflex.StringValueToFramework(ctx, typ)
-		case awstypes.EncryptionTypeCustomerManagedKmsKey:
-			data.KMSEncryptionKey = fwflex.StringToFramework(ctx, v.KmsKeyArn)
-		}
-	}
-
-	vpcEndpointServiceName, err := findVPCEndpointServiceNameByID(ctx, conn, id)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s) VPC endpoint service name", id), err.Error())
-
-		return
-	}
-
-	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -272,7 +256,7 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		_, err := conn.UpdateCluster(ctx, &input)
 
@@ -324,7 +308,7 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 		input := dsql.UpdateClusterInput{
 			Identifier:                data.Identifier.ValueStringPointer(),
 			DeletionProtectionEnabled: aws.Bool(false),
-			ClientToken:               aws.String(sdkid.UniqueId()),
+			ClientToken:               aws.String(create.UniqueId(ctx)),
 		}
 		// Changing DeletionProtectionEnabled is instantaneous, no need to wait.
 		if _, err := conn.UpdateCluster(ctx, &input); err != nil {
@@ -360,8 +344,39 @@ func (r *clusterResource) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
+func (r *clusterResource) flatten(ctx context.Context, conn *dsql.Client, output *dsql.GetClusterOutput, data *clusterResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	output.MultiRegionProperties = normalizeMultiRegionProperties(output)
+
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if v := output.EncryptionDetails; v != nil {
+		switch typ := v.EncryptionType; typ {
+		case awstypes.EncryptionTypeAwsOwnedKmsKey:
+			data.KMSEncryptionKey = fwflex.StringValueToFramework(ctx, typ)
+		case awstypes.EncryptionTypeCustomerManagedKmsKey:
+			data.KMSEncryptionKey = fwflex.StringToFramework(ctx, v.KmsKeyArn)
+		}
+	}
+
+	id := fwflex.StringValueFromFramework(ctx, data.Identifier)
+	vpcEndpointServiceName, err := findVPCEndpointServiceNameByID(ctx, conn, id)
+
+	if err != nil {
+		diags.AddError(fmt.Sprintf("reading Aurora DSQL Cluster (%s) VPC endpoint service name", id), err.Error())
+		return diags
+	}
+
+	data.VPCEndpointServiceName = fwflex.StringToFramework(ctx, vpcEndpointServiceName)
+	return diags
+}
+
 func (r *clusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), request, response)
+	r.WithImportByIdentity.ImportState(ctx, request, response)
 
 	// Set force_destroy to false on import to prevent accidental deletion
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrForceDestroy), types.BoolValue(false))...)

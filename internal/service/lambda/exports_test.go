@@ -11,11 +11,13 @@ var (
 	ResourceEventSourceMapping           = resourceEventSourceMapping
 	ResourceFunction                     = resourceFunction
 	ResourceFunctionEventInvokeConfig    = resourceFunctionEventInvokeConfig
+	ResourceFunctionScalingConfig        = newFunctionScalingConfigResource
 	ResourceFunctionURL                  = resourceFunctionURL
 	ResourceInvocation                   = resourceInvocation
 	ResourceLayerVersion                 = resourceLayerVersion
 	ResourceLayerVersionPermission       = resourceLayerVersionPermission
 	ResourcePermission                   = resourcePermission
+	ResourcePolicy                       = newResourcePolicyResource
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
@@ -25,17 +27,21 @@ var (
 	FindFunctionByName                           = findFunctionByName
 	FindFunctionEventInvokeConfigByTwoPartKey    = findFunctionEventInvokeConfigByTwoPartKey
 	FindFunctionRecursionConfigByName            = findFunctionRecursionConfigByName
+	FindFunctionScalingConfigByTwoPartKey        = findFunctionScalingConfigByTwoPartKey
 	FindFunctionURLByTwoPartKey                  = findFunctionURLByTwoPartKey
 	FindLayerVersionByTwoPartKey                 = findLayerVersionByTwoPartKey
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey
 	FindPolicyStatementByTwoPartKey              = findPolicyStatementByTwoPartKey
 	FindProvisionedConcurrencyConfigByTwoPartKey = findProvisionedConcurrencyConfigByTwoPartKey
+	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindRuntimeManagementConfigByTwoPartKey      = findRuntimeManagementConfigByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
 	GetFunctionNameFromARN                       = getFunctionNameFromARN
 	GetQualifierFromAliasOrVersionARN            = getQualifierFromAliasOrVersionARN
+	LayerNameFromARN                             = layerNameFromARN
 	LayerVersionParseResourceID                  = layerVersionParseResourceID
 	LayerVersionPermissionParseResourceID        = layerVersionPermissionParseResourceID
+	ParseLayerVersionARN                         = parseLayerVersionARN
 	SignerServiceIsAvailable                     = signerServiceIsAvailable
 	InvocationParseResourceID                    = invocationParseResourceID
 

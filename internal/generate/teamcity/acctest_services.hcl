@@ -1,6 +1,10 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+service "agentregistry" {
+  parallelism = 10
+}
+
 service "amp" {
   # The maximum scrapers per region quota is fixed at 10
   parallelism = 10
@@ -182,6 +186,10 @@ service "imagebuilder" {
   vpc_lock = true
 }
 
+service "inspector" {
+  skip = true
+}
+
 service "ipam" {
   vpc_lock                   = true
   pattern_override           = "TestAccIPAM"
@@ -252,6 +260,10 @@ service "qldb" {
   skip = true
 }
 
+service "ram" {
+  parallelism = 10 # Max Permissions
+}
+
 service "rds" {
   vpc_lock = true
 }
@@ -271,6 +283,10 @@ service "route53" {
 
 service "route53resolver" {
   vpc_lock = true
+}
+
+service "glacier" {
+  skip = true
 }
 
 service "sagemaker" {

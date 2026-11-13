@@ -22,7 +22,7 @@ func TestAccBackupReportPlanDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_report_plan.test"
-	rName := randomReportPlanName()
+	rName := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -54,7 +54,7 @@ func TestAccBackupReportPlanDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_report_plan.test"
-	rName := randomReportPlanName()
+	rName := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -82,7 +82,7 @@ func TestAccBackupReportPlanDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_report_plan.test"
-	rName := randomReportPlanName()
+	rName := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -110,7 +110,7 @@ func TestAccBackupReportPlanDataSource_Tags_DefaultTags_nonOverlapping(t *testin
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_report_plan.test"
-	rName := randomReportPlanName()
+	rName := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -146,7 +146,7 @@ func TestAccBackupReportPlanDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *tes
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_report_plan.test"
-	rName := randomReportPlanName()
+	rName := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -188,7 +188,7 @@ func TestAccBackupReportPlanDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *te
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_report_plan.test"
-	rName := randomReportPlanName()
+	rName := randomReportPlanName(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

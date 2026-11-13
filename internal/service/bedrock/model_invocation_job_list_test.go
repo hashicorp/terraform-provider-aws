@@ -1,0 +1,244 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package bedrock_test
+
+import (
+	"testing"
+
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/querycheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccBedrockModelInvocationJob_List_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName1 := "aws_bedrock_model_invocation_job.test[0]"
+	resourceName2 := "aws_bedrock_model_invocation_job.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckModelInvocationJob(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		CheckDestroy:             testAccCheckModelInvocationJobDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationJob/list_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationJob/list_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_bedrock_model_invocation_job.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_bedrock_model_invocation_job.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockModelInvocationJob_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName1 := "aws_bedrock_model_invocation_job.test[0]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckModelInvocationJob(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		CheckDestroy:             testAccCheckModelInvocationJobDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationJob/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationJob/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_bedrock_model_invocation_job.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_bedrock_model_invocation_job.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("end_time"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("error_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("input_data_config"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"s3_input_data_config": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"s3_bucket_owner": knownvalue.NotNull(),
+										"s3_input_format": knownvalue.StringExact(""),
+										"s3_uri":          knownvalue.StringExact("s3://" + rName + "/input/"),
+									}),
+								}),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("job_expiration_time"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("job_name"), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("model_id"), knownvalue.StringExact("us.amazon.nova-2-lite-v1:0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("model_invocation_type"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("output_data_config"), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"s3_output_data_config": knownvalue.ListExact([]knownvalue.Check{
+									knownvalue.ObjectExact(map[string]knownvalue.Check{
+										"s3_bucket_owner":      knownvalue.NotNull(),
+										"s3_encryption_key_id": knownvalue.Null(),
+										"s3_uri":               knownvalue.StringExact("s3://" + rName + "/output/0/"),
+									}),
+								}),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("processed_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRoleARN), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:iam::[^:]+:role/.+$`))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrSkipDestroy), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrStatus), knownvalue.StringExact("Submitted")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("submit_time"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("success_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("timeout_duration_in_hours"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("total_record_count"), knownvalue.NotNull()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrVPCConfig), knownvalue.ListSizeExact(0)),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockModelInvocationJob_List_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName1 := "aws_bedrock_model_invocation_job.test[0]"
+	resourceName2 := "aws_bedrock_model_invocation_job.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckModelInvocationJob(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
+		CheckDestroy:             testAccCheckModelInvocationJobDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationJob/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New("job_arn"), knownvalue.StringRegexp(regexache.MustCompile(`^arn:[^:]+:bedrock:[^:]+:[^:]+:model-invocation-job/.+$`))),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/ModelInvocationJob/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_bedrock_model_invocation_job.test", identity1.Checks()),
+
+					tfquerycheck.ExpectIdentityFunc("aws_bedrock_model_invocation_job.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}

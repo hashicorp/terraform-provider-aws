@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_vpc_dhcp_options: Fix `NotFound` error handling on delete
-```

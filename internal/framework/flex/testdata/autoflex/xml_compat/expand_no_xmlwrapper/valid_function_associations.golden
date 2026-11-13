@@ -43,8 +43,6 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationsTF]",
     "autoflex.target.path": "FunctionAssociations",
     "autoflex.target.type": "*github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociations",
-    "target_kind": "ptr",
-    "target_type": "*flex.FunctionAssociations",
     "xmlWrapper": false,
     "xmlWrapperField": ""
   },
@@ -76,8 +74,6 @@
     "autoflex.source.type": "github.com/hashicorp/terraform-provider-aws/internal/framework/types.ListNestedObjectValueOf[github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociationTF]",
     "autoflex.target.path": "FunctionAssociations.Items",
     "autoflex.target.type": "[]github.com/hashicorp/terraform-provider-aws/internal/framework/flex.FunctionAssociation",
-    "target_kind": "slice",
-    "target_type": "[]flex.FunctionAssociation",
     "xmlWrapper": false,
     "xmlWrapperField": ""
   },

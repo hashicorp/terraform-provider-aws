@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -26,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -41,7 +40,10 @@ import (
 
 // @FrameworkResource("aws_bedrockagentcore_agent_runtime_endpoint", name="Agent Runtime Endpoint")
 // @Tags(identifierAttribute="agent_runtime_endpoint_arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol;bedrockagentcorecontrol;bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput")
+// @Testing(generator="testAccRandomAgentRuntimeName(t)")
+// @Testing(importStateIdAttributes="agent_runtime_id;name", importStateIdAttributesSep="flex.ResourceIdSeparator")
+// @Testing(preCheck="testAccAgentRuntimeEndpointPreCheck")
 func newAgentRuntimeEndpointResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentRuntimeEndpointResource{}
 
@@ -81,7 +83,7 @@ func (r *agentRuntimeEndpointResource) Schema(ctx context.Context, request resou
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`), ""),
+					validResourceName,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -117,7 +119,7 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateAgentRuntimeEndpoint(ctx, &input)
@@ -131,6 +133,9 @@ func (r *agentRuntimeEndpointResource) Create(ctx context.Context, request resou
 	data.AgentRuntimeVersion = fwflex.StringToFramework(ctx, out.TargetVersion)
 
 	if _, err := waitAgentRuntimeEndpointCreated(ctx, conn, agentRuntimeID, name, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		// Taint the resource.
+		response.State.SetAttribute(ctx, path.Root("agent_runtime_id"), agentRuntimeID)
+		response.State.SetAttribute(ctx, path.Root(names.AttrName), name)
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 		return
 	}
@@ -193,7 +198,7 @@ func (r *agentRuntimeEndpointResource) Update(ctx context.Context, request resou
 		}
 
 		// Additional fields.
-		input.ClientToken = aws.String(sdkid.UniqueId())
+		input.ClientToken = aws.String(create.UniqueId(ctx))
 
 		out, err := conn.UpdateAgentRuntimeEndpoint(ctx, &input)
 		if err != nil {
@@ -226,7 +231,7 @@ func (r *agentRuntimeEndpointResource) Delete(ctx context.Context, request resou
 	agentRuntimeID, name := fwflex.StringValueFromFramework(ctx, data.AgentRuntimeID), fwflex.StringValueFromFramework(ctx, data.Name)
 	input := bedrockagentcorecontrol.DeleteAgentRuntimeEndpointInput{
 		AgentRuntimeId: aws.String(agentRuntimeID),
-		ClientToken:    aws.String(sdkid.UniqueId()),
+		ClientToken:    aws.String(create.UniqueId(ctx)),
 		EndpointName:   aws.String(name),
 	}
 

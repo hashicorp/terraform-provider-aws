@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_launch_template: Fix crash when reading `license_specification`
-```

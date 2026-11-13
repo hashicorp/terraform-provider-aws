@@ -1,0 +1,59 @@
+{
+  "resources": [],
+  "dataSources": [
+    {
+      "service": "mockframeworkdatasource",
+      "data_source_type": "aws_mockframeworkdatasource_bar",
+      "plugin_type": "Framework",
+      "expr": "newBarDataSource",
+      "location": "internal/service/mockframeworkdatasource/bar_data_source.go:16",
+      "read": {
+        "expr": "barDataSource.Read",
+        "location": "internal/service/mockframeworkdatasource/bar_data_source.go:24",
+        "sdk_calls": []
+      }
+    },
+    {
+      "service": "mockframeworkdatasource",
+      "data_source_type": "aws_mockframeworkdatasource_baz",
+      "plugin_type": "Framework",
+      "expr": "newBazDataSource",
+      "location": "internal/service/mockframeworkdatasource/baz_data_source.go:20",
+      "read": {
+        "expr": "(*bazDataSourceBase).Read",
+        "location": "internal/service/mockframeworkdatasource/baz_data_source.go:35",
+        "sdk_calls": [
+          "mockframeworkdatasource.GetBaz"
+        ]
+      }
+    },
+    {
+      "service": "mockframeworkdatasource",
+      "data_source_type": "aws_mockframeworkdatasource_foo",
+      "plugin_type": "Framework",
+      "expr": "newFooDataSource",
+      "location": "internal/service/mockframeworkdatasource/foo_data_source.go:23",
+      "read": {
+        "expr": "(*fooDataSource).Read",
+        "location": "internal/service/mockframeworkdatasource/foo_data_source.go:31",
+        "sdk_calls": [
+          "mockframeworkdatasource.ListFoos"
+        ]
+      }
+    },
+    {
+      "service": "mockframeworkdatasource",
+      "data_source_type": "aws_mockframeworkdatasource_legacy_foo",
+      "plugin_type": "Framework",
+      "expr": "newFooDataSource",
+      "location": "internal/service/mockframeworkdatasource/foo_data_source.go:23",
+      "read": {
+        "expr": "(*fooDataSource).Read",
+        "location": "internal/service/mockframeworkdatasource/foo_data_source.go:31",
+        "sdk_calls": [
+          "mockframeworkdatasource.ListFoos"
+        ]
+      }
+    }
+  ]
+}

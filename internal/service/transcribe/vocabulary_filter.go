@@ -17,11 +17,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/transcribe/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -42,42 +42,44 @@ func ResourceVocabularyFilter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"download_uri": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrLanguageCode: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
-			},
-			"words": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				MaxItems:     256,
-				ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
-				Elem:         &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vocabulary_filter_file_uri": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
-				ValidateFunc: validation.StringLenBetween(1, 2000),
-			},
-			"vocabulary_filter_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 200),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_uri": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrLanguageCode: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(validateLanguageCodes(types.LanguageCode("").Values()), false),
+				},
+				"words": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					MaxItems:     256,
+					ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
+					Elem:         &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vocabulary_filter_file_uri": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"words", "vocabulary_filter_file_uri"},
+					ValidateFunc: validation.StringLenBetween(1, 2000),
+				},
+				"vocabulary_filter_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 200),
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -204,8 +206,7 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.DeleteVocabularyFilter(ctx, &input)
 
 	if err != nil {
-		var bre *types.BadRequestException
-		if errors.As(err, &bre) {
+		if errs.IsA[*types.BadRequestException](err) {
 			return diags
 		}
 
@@ -221,11 +222,9 @@ func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id
 	}
 	out, err := conn.GetVocabularyFilter(ctx, in)
 	if err != nil {
-		var bre *types.BadRequestException
-		if errors.As(err, &bre) {
-			return nil, &sdkretry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+		if errs.IsA[*types.BadRequestException](err) {
+			return nil, &retry.NotFoundError{
+				LastError: err,
 			}
 		}
 

@@ -45,7 +45,7 @@ permissions for the CMK whenever the encrypted data is requested.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) specifying the log group. Any `:*` suffix added by the API, denoting all CloudWatch Log Streams under the CloudWatch Log Group, is removed for greater compatibility with other AWS services that do not accept the suffix.
+* `arn` - ARN specifying the log group. Any `:*` suffix added by the API, denoting all CloudWatch Log Streams under the CloudWatch Log Group, is removed for greater compatibility with other AWS services that do not accept the suffix.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -76,7 +76,7 @@ resource "aws_cloudwatch_log_group" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Log Groups using the `name`. For example:
 
 ```terraform
 import {
@@ -85,7 +85,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudwatch Log Groups using the `name`. For example:
+Using `terraform import`, import CloudWatch Log Groups using the `name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_group.example yada

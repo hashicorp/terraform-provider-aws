@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_eip: `vpc` has been removed. Use `domain` instead.
-```

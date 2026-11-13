@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -31,7 +30,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types;awstypes;awstypes.EncryptionConfig")
 // @Testing(generator=false)
 // @Testing(checkDestroyNoop=true)
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceEncryptionConfig() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEncryptionPutConfig,
@@ -39,17 +37,19 @@ func resourceEncryptionConfig() *schema.Resource {
 		UpdateWithoutTimeout: resourceEncryptionPutConfig,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.EncryptionType](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.EncryptionType](),
+				},
+			}
 		},
 	}
 }
@@ -119,8 +119,8 @@ func findEncryptionConfig(ctx context.Context, conn *xray.Client) (*types.Encryp
 	return output.EncryptionConfig, nil
 }
 
-func statusEncryptionConfig(ctx context.Context, conn *xray.Client) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEncryptionConfig(conn *xray.Client) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEncryptionConfig(ctx, conn)
 
 		if retry.NotFound(err) {
@@ -139,10 +139,10 @@ func waitEncryptionConfigAvailable(ctx context.Context, conn *xray.Client) (*typ
 	const (
 		timeout = 15 * time.Minute
 	)
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EncryptionStatusUpdating),
 		Target:  enum.Slice(types.EncryptionStatusActive),
-		Refresh: statusEncryptionConfig(ctx, conn),
+		Refresh: statusEncryptionConfig(conn),
 		Timeout: timeout,
 	}
 

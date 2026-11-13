@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_lambda_function: Handle eventual consistency issues after publishing a version
-```

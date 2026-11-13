@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` argument
+```
+
+```release-note:enhancement
+resource/aws_lb_listener_rule: Change `condition.source_ip.values` to Optional
+```
+
+```release-note:enhancement
+data-source/aws_lb_listener_rule: Add `condition.source_ip.ip_address_type` attribute
+```

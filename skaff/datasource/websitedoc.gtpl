@@ -14,6 +14,7 @@ Documentation guidelines:
 - Focus on brevity and clarity
 - Use present tense and active voice
 - Don't begin argument/attribute descriptions with "An", "The", "Defines", "Indicates", or "Specifies"
+- Don't spell out common abbreviations (e.g. use "ARN", not "Amazon Resource Name")
 - Boolean arguments should begin with "Whether to"
 - Use "example" instead of "test" in examples
 --->
@@ -41,6 +42,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `optional_arg` - (Optional) Brief description of the optional argument.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

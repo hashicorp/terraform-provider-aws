@@ -38,14 +38,6 @@ func (l *listResourceConnectorProfile) List(ctx context.Context, request list.Li
 	awsClient := l.Meta()
 	conn := awsClient.AppFlowClient(ctx)
 
-	var query listConnectorProfileModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	tflog.Info(ctx, "Listing AppFlow Connector Profile")
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input appflow.DescribeConnectorProfilesInput
@@ -69,7 +61,7 @@ func (l *listResourceConnectorProfile) List(ctx context.Context, request list.Li
 
 			result.DisplayName = aws.ToString(item.ConnectorProfileName)
 
-			l.SetResult(ctx, awsClient, request.IncludeResource, &result, rd)
+			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
 			if result.Diagnostics.HasError() {
 				yield(result)
 				return
@@ -80,10 +72,6 @@ func (l *listResourceConnectorProfile) List(ctx context.Context, request list.Li
 			}
 		}
 	}
-}
-
-type listConnectorProfileModel struct {
-	framework.WithRegionModel
 }
 
 func listConnectorProfiles(ctx context.Context, conn *appflow.Client, input *appflow.DescribeConnectorProfilesInput) iter.Seq2[awstypes.ConnectorProfile, error] {

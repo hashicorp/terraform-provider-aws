@@ -20,17 +20,17 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_arcregionswitch_route53_health_checks.test"
 	resourceName := "aws_arcregionswitch_plan.test"
 
-	zoneName := acctest.RandomDomain()
-	recordName := zoneName.RandomSubdomain()
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlanDestroy(ctx),
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53HealthChecksDataSourceConfig_basic(rName, zoneName.String(), recordName.String()),
@@ -40,14 +40,21 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(dataSourceName, "health_checks.0.health_check_id", regexache.MustCompile("^"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.0.record_name", "aws_route53_record.test", names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.0.region", acctest.Region()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.0.status"),
 
 					resource.TestMatchResourceAttr(dataSourceName, "health_checks.1.health_check_id", regexache.MustCompile("^"+verify.UUIDRegexPattern+"$")),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.hosted_zone_id", "aws_route53_zone.test", "zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "health_checks.1.record_name", "aws_route53_record.test", names.AttrName),
-					resource.TestCheckResourceAttr(dataSourceName, "health_checks.1.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "health_checks.1.status"),
+
+					// ListRoute53HealthChecks does not guarantee ordering, so match on
+					// region rather than index.
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "health_checks.*", map[string]string{
+						names.AttrRegion: acctest.Region(),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "health_checks.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+					}),
 				),
 			},
 		},
@@ -71,17 +78,17 @@ func TestAccARCRegionSwitchRoute53HealthChecksDataSource_regionOverride(t *testi
 					ctx := acctest.Context(t)
 					rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-					zoneName := acctest.RandomDomain()
-					recordName := zoneName.RandomSubdomain()
+					zoneName := acctest.RandomDomain(t)
+					recordName := zoneName.RandomSubdomain(t)
 
-					resource.ParallelTest(t, resource.TestCase{
+					acctest.ParallelTest(ctx, t, resource.TestCase{
 						PreCheck: func() {
 							acctest.PreCheck(ctx, t)
 							testAccPreCheck(ctx, t)
 						},
 						ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-						CheckDestroy:             testAccCheckPlanDestroy(ctx),
+						CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 						Steps: []resource.TestStep{
 							{
 								// Cross-region test cases will succeed because `aws_arcregionswitch_route53_health_checks` is global

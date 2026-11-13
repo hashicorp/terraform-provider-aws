@@ -82,8 +82,10 @@ func (d *entityPathDataSource) Read(ctx context.Context, request datasource.Read
 				return
 			}
 
-			parts = append(parts, parentID)                      // Root.
-			parts = append(parts, aws.ToString(organization.Id)) // Organization.
+			parts = append(parts,
+				parentID,                      // Root.
+				aws.ToString(organization.Id), // Organization.
+			)
 
 			break
 		}

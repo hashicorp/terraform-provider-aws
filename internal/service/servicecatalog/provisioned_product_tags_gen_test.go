@@ -8,7 +8,6 @@ package servicecatalog_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
@@ -38,7 +37,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -50,7 +49,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -97,7 +96,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -148,7 +147,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -194,7 +193,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -240,7 +239,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_null(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -252,7 +251,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -314,7 +313,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -324,7 +323,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_emptyMap(t *testing.T) {
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -384,7 +383,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -394,7 +393,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_addOnUpdate(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -418,7 +417,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_addOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -474,7 +473,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_onCreate(t *testing.T
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -486,7 +485,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_onCreate(t *testing.T
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -529,7 +528,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_onCreate(t *testing.T
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -575,7 +574,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_add(t *testi
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -587,7 +586,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -619,7 +618,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -668,7 +667,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -724,7 +723,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_replace(t *t
 		},
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -736,7 +735,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -767,7 +766,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_EmptyTag_OnUpdate_replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -820,7 +819,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_providerOnly(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -833,7 +832,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -880,7 +879,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -929,7 +928,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -974,7 +973,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_providerOnly(t *te
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1021,7 +1020,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nonOverlapping(t *
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1036,7 +1035,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nonOverlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1093,7 +1092,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nonOverlapping(t *
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1149,7 +1148,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nonOverlapping(t *
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1196,7 +1195,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_overlapping(t *tes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1211,7 +1210,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_overlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1267,7 +1266,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_overlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1327,7 +1326,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_overlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1385,7 +1384,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToProviderOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1397,7 +1396,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToProviderOn
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1430,7 +1429,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToProviderOn
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -1482,7 +1481,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToResourceOn
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1495,7 +1494,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToResourceOn
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1523,7 +1522,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_updateToResourceOn
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1580,7 +1579,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_emptyResourceTag(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1595,7 +1594,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_emptyResourceTag(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1654,7 +1653,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_emptyProviderOnlyT
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1667,7 +1666,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_emptyProviderOnlyT
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1718,7 +1717,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nullOverlappingRes
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1733,7 +1732,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nullOverlappingRes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1787,7 +1786,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nullNonOverlapping
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1802,7 +1801,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_DefaultTags_nullNonOverlapping
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1856,7 +1855,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_onCreate(t *testin
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1866,7 +1865,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_onCreate(t *testin
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1918,7 +1917,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_add(t *te
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1930,7 +1929,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_add(t *te
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1962,7 +1961,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_add(t *te
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2022,7 +2021,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_replace(t
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -2034,7 +2033,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_replace(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2064,7 +2063,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_ComputedTag_OnUpdate_replace(t
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -2116,7 +2115,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_defaultTag(
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2135,7 +2134,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_defaultTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2184,7 +2183,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_defaultTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2233,7 +2232,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_defaultTag(
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2282,7 +2281,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_resourceTag
 		},
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx),
+		CheckDestroy: testAccCheckProvisionedProductDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
@@ -2299,7 +2298,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_resourceTag
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2362,7 +2361,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_resourceTag
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2425,7 +2424,7 @@ func TestAccServiceCatalogProvisionedProduct_Tags_IgnoreTags_Overlap_resourceTag
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckProvisionedProductExists(ctx, resourceName, &v),
+					testAccCheckProvisionedProductExists(ctx, t, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2485,8 +2484,5 @@ func testAccServiceCatalogProvisionedProduct_removingTagNotSupported(t *testing.
 }
 
 func expectFullProvisionedProductResourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrID,
-		ResourceType:        "Provisioned Product",
-	}), knownValue)
+	return tfstatecheck.ExpectFullResourceTagsSpecTags(tfservicecatalog.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("Provisioned Product", names.AttrID), knownValue)
 }

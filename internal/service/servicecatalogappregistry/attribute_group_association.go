@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -177,9 +176,7 @@ func findAttributeGroupAssociationByTwoPartKey(ctx context.Context, conn *servic
 		}
 	}
 
-	return "", &sdkretry.NotFoundError{
-		LastRequest: in,
-	}
+	return "", &retry.NotFoundError{}
 }
 
 type attributeGroupAssociationResourceModel struct {

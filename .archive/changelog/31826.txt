@@ -1,3 +1,0 @@
-```release-note:bug
-provider/default_tags: Fix perpetual diff when identical tags are moved from `default_tags` to resource `tags`, and vice versa
-```

@@ -33,6 +33,8 @@ import (
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudfront/types;awstypes;awstypes.VpcOrigin")
+// @Testing(importIgnore="etag")
 func newVPCOriginResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcOriginResource{}
 
@@ -98,7 +100,7 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.SetAttribute{
+									attrItems: schema.SetAttribute{
 										CustomType: fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
 										Required:   true,
 									},

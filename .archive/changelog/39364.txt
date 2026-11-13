@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_ses_receipt_rule: Add `iam_role_arn` argument to `s3_action` configuration block
-```

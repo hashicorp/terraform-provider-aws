@@ -55,14 +55,14 @@ This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the S3 bucket.
 * `object_key` - (Required) The object key (or key name) uniquely identifies the object in an S3 bucket.
-* `version_id` - (Optional) Version Id of the pipeline definition file. If not specified, Amazon SageMaker AI will retrieve the latest version.
+* `version_id` - (Optional) Version ID of the pipeline definition file. If not specified, Amazon SageMaker AI will retrieve the latest version.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Pipeline.
-* `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Pipeline.
+* `arn` - ARN assigned by AWS to this Pipeline.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

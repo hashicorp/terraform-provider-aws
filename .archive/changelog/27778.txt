@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cloudfront_response_headers_policy: Allow `server_timing_headers_config.0.sampling_rate` to be `0`
-```

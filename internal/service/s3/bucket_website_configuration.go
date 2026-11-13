@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -34,7 +33,6 @@ import (
 // @Testing(preIdentityVersion="v6.9.0")
 // @Testing(identityVersion="0;v6.10.0")
 // @Testing(identityVersion="1;v6.31.0")
-// @Testing(existsTakesT=false, destroyTakesT=false)
 func resourceBucketWebsiteConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketWebsiteConfigurationCreate,
@@ -42,145 +40,147 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketWebsiteConfigurationUpdate,
 		DeleteWithoutTimeout: resourceBucketWebsiteConfigurationDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			"error_document": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
 				},
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
-			},
-			"index_document": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"suffix": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"redirect_all_requests_to": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ConflictsWith: []string{
-					"error_document",
-					"index_document",
-					"routing_rule",
-					"routing_rules",
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"host_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrProtocol: {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.Protocol](),
-						},
-					},
-				},
-			},
-			"routing_rule": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"routing_rules"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCondition: {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"http_error_code_returned_equals": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"key_prefix_equals": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"redirect": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"host_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"http_redirect_code": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									names.AttrProtocol: {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.Protocol](),
-									},
-									"replace_key_prefix_with": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"replace_key_with": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+				"error_document": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrKey: {
+								Type:     schema.TypeString,
+								Required: true,
 							},
 						},
 					},
 				},
-			},
-			"routing_rules": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"routing_rule"},
-				ValidateFunc:  validation.StringIsJSON,
-				StateFunc: func(v any) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
 				},
-			},
-			"website_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"website_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"index_document": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"suffix": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"redirect_all_requests_to": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"error_document",
+						"index_document",
+						"routing_rule",
+						"routing_rules",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"host_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrProtocol: {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.Protocol](),
+							},
+						},
+					},
+				},
+				"routing_rule": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"routing_rules"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCondition: {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"http_error_code_returned_equals": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"key_prefix_equals": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"redirect": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"host_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"http_redirect_code": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										names.AttrProtocol: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Protocol](),
+										},
+										"replace_key_prefix_with": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"replace_key_with": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"routing_rules": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"routing_rule"},
+					ValidateFunc:  validation.StringIsJSON,
+					StateFunc: func(v any) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+				},
+				"website_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"website_endpoint": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
@@ -452,9 +452,8 @@ func findBucketWebsite(ctx context.Context, conn *s3.Client, bucket, expectedBuc
 	output, err := conn.GetBucketWebsite(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchWebsiteConfiguration) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -480,9 +479,8 @@ func findBucketLocation(ctx context.Context, conn *s3.Client, bucket, expectedBu
 	output, err := conn.GetBucketLocation(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

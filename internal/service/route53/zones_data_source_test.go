@@ -14,7 +14,7 @@ import (
 
 func TestAccRoute53ZonesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	zoneName := acctest.RandomDomainName()
+	zoneName := acctest.RandomDomainName(t)
 	dataSourceName := "data.aws_route53_zones.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

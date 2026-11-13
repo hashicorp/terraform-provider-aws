@@ -29,7 +29,7 @@ This resource supports the following arguments:
 
 * `destination_arn` - (Required) ARN of the destination to deliver matching log events to. Kinesis stream or Lambda function ARN.
 * `distribution` - (Optional) Method used to distribute log data to the destination. By default log data is grouped by log stream, but the grouping can be set to random for a more even distribution. This property is only applicable when the destination is an Amazon Kinesis stream. Valid values are "Random" and "ByLogStream".
-* `emit_system_fields` - (Optional) List of system fields to include in the log events sent to the subscription destination. These fields provide source information for centralized log data in the forwarded payload. Valid values: `"@aws.account"`, `"@aws.region"`. To remove this argument after it has been set, specify an empty list `[]` explicitly to avoid perpetual differences.
+* `emit_system_fields` - (Optional) List of system fields to include in the log events sent to the subscription destination. These fields provide source information for centralized log data in the forwarded payload. Valid values: `"@aws.account"`, `"@aws.region"`, `"@source.log"`. To remove this argument after it has been set, specify an empty list `[]` explicitly to avoid perpetual differences.
 * `filter_pattern` - (Required) Valid CloudWatch Logs filter pattern for subscribing to a filtered stream of log events. Use empty string `""` to match everything. For more information, see the [Amazon CloudWatch Logs User Guide](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/FilterAndPatternSyntax.html).
 * `log_group_name` - (Required) Name of the log group to associate the subscription filter with.
 * `name` - (Required) Name for the subscription filter.
@@ -43,17 +43,45 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter
-  id = "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
+  to = aws_cloudwatch_log_subscription_filter.example
+  identity = {
+    log_group_name = "example-group"
+    name           = "example-filter"
+  }
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "example" {
+  ### Configuration omitted for brevity ###
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs subscription filter using the log group name and subscription filter name separated by `|`. For example:
+### Identity Schema
+
+#### Required
+
+* `log_group_name` (String) Name of the log group.
+* `name` (String) Name of the subscription filter.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Subscription Filters using `log_group_name` and `name` separated by a vertical bar (`|`). For example:
+
+```terraform
+import {
+  to = aws_cloudwatch_log_subscription_filter.example
+  id = "example-group|example-filter"
+}
+```
+
+Using `terraform import`, import Subscription Filters using `log_group_name` and `name` separated by a vertical bar (`|`). For example:
 
 ```console
-% terraform import aws_cloudwatch_log_subscription_filter.test_lambdafunction_logfilter "/aws/lambda/example_lambda_name|test_lambdafunction_logfilter"
+% terraform import aws_cloudwatch_log_subscription_filter.example example-group|example-filter
 ```

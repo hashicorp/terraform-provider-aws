@@ -37,7 +37,7 @@ func testAccBackupFrameworkDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -69,7 +69,7 @@ func testAccBackupFrameworkDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -97,7 +97,7 @@ func testAccBackupFrameworkDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -125,7 +125,7 @@ func testAccBackupFrameworkDataSource_Tags_DefaultTags_nonOverlapping(t *testing
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -161,7 +161,7 @@ func testAccBackupFrameworkDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *test
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -203,7 +203,7 @@ func testAccBackupFrameworkDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *tes
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_backup_framework.test"
-	rName := randomFrameworkName()
+	rName := randomFrameworkName(t)
 
 	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{

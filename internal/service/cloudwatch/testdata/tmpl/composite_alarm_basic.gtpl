@@ -1,4 +1,5 @@
 resource "aws_cloudwatch_composite_alarm" "test" {
+{{- template "region" }}
   alarm_name = var.rName
   alarm_rule = join(" OR ", formatlist("ALARM(%s)", aws_cloudwatch_metric_alarm.test[*].alarm_name))
 
@@ -6,6 +7,7 @@ resource "aws_cloudwatch_composite_alarm" "test" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "test" {
+{{- template "region" }}
   count = 2
 
   alarm_name          = "${var.rName}-${count.index}"

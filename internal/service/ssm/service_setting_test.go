@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,6 +25,8 @@ func TestAccSSMServiceSetting_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:     testAccServiceSetting_basic,
 		"upgradeFromV6_5_0": testAccServiceSetting_upgradeFromV6_5_0,
+		"identity":          testAccSSMServiceSetting_identitySerial,
+		"list":              testAccSSMServiceSetting_listSerial,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -37,16 +38,16 @@ func testAccServiceSetting_basic(t *testing.T) {
 	resourceName := "aws_ssm_service_setting.test"
 	settingID := "/ssm/parameter-store/high-throughput-enabled"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceSettingDestroy(ctx),
+		CheckDestroy:             testAccCheckServiceSettingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceSettingConfig_basic(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -60,7 +61,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_basic(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					resource.TestCheckResourceAttr(resourceName, "setting_id", settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -69,7 +70,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -87,7 +88,7 @@ func testAccServiceSetting_basic(t *testing.T) {
 			{
 				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "setting_id", "ssm", "servicesetting"+settingID),
 					resource.TestCheckResourceAttr(resourceName, "setting_value", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
@@ -102,10 +103,10 @@ func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 	var setting awstypes.ServiceSetting
 	resourceName := "aws_ssm_service_setting.test"
 
-	resource.Test(t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.SSMServiceID),
-		CheckDestroy: testAccCheckServiceSettingDestroy(ctx),
+		CheckDestroy: testAccCheckServiceSettingDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
@@ -116,7 +117,7 @@ func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 				},
 				Config: testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -128,7 +129,7 @@ func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccServiceSettingConfig_settingIDByARN(acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccServiceSettingExists(ctx, resourceName, &setting),
+					testAccCheckServiceSettingExists(ctx, t, resourceName, &setting),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -143,9 +144,9 @@ func testAccServiceSetting_upgradeFromV6_5_0(t *testing.T) {
 	})
 }
 
-func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckServiceSettingDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssm_service_setting" {
@@ -173,14 +174,14 @@ func testAccCheckServiceSettingDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccServiceSettingExists(ctx context.Context, n string, v *awstypes.ServiceSetting) resource.TestCheckFunc {
+func testAccCheckServiceSettingExists(ctx context.Context, t *testing.T, n string, v *awstypes.ServiceSetting) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSMClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SSMClient(ctx)
 
 		output, err := tfssm.FindServiceSettingByID(ctx, conn, rs.Primary.ID)
 

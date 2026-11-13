@@ -35,14 +35,6 @@ type directoryBucketListResource struct {
 func (r *directoryBucketListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().S3ExpressClient(ctx)
 
-	var query listDirectoryBucketModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input s3.ListDirectoryBucketsInput
@@ -66,27 +58,23 @@ func (r *directoryBucketListResource) List(ctx context.Context, request list.Lis
 
 			var data directoryBucketResourceModel
 			r.SetResult(ctx, r.Meta(), request.IncludeResource, &data, &result, func() {
-				flattenDirectoryBucketResource(ctx, bucket, &data, &result.Diagnostics)
 				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
+
+				result.Diagnostics.Append(r.flatten(ctx, bucket, &data)...)
+				if result.Diagnostics.HasError() {
+					return
+				}
+
 				data.ID = data.Bucket
 
 				result.DisplayName = bucketName
 			})
-
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
 
 			if !yield(result) {
 				return
 			}
 		}
 	}
-}
-
-type listDirectoryBucketModel struct {
-	framework.WithRegionModel
 }
 
 func listDirectoryBuckets(ctx context.Context, conn *s3.Client, input *s3.ListDirectoryBucketsInput) iter.Seq2[awstypes.Bucket, error] {

@@ -803,7 +803,7 @@ func (d *mockChangesDiffer) GetRawPlan() cty.Value {
 	return cty.NilVal
 }
 
-func (d *mockChangesDiffer) GetRawState() cty.Value { // nosemgrep:ci.aws-in-func-name
+func (d *mockChangesDiffer) GetRawState() cty.Value {
 	return cty.NilVal
 }
 

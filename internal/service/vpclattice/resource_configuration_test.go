@@ -6,17 +6,16 @@ package vpclattice_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfvpclattice "github.com/hashicorp/terraform-provider-aws/internal/service/vpclattice"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,11 +24,11 @@ import (
 func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -37,12 +36,12 @@ func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "port_ranges.0", "80"),
@@ -68,11 +67,11 @@ func TestAccVPCLatticeResourceConfiguration_basic(t *testing.T) {
 func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -80,12 +79,12 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtTrue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &v1),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -108,7 +107,7 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 			{
 				Config: testAccResourceConfigurationConfig_update(rName, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -136,11 +135,11 @@ func TestAccVPCLatticeResourceConfiguration_update(t *testing.T) {
 func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -148,12 +147,12 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigurationConfig_ipAddress(rName, "10.0.0.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &v1),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -175,7 +174,7 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 			{
 				Config: testAccResourceConfigurationConfig_ipAddress(rName, "10.0.0.2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &v2),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "allow_association_to_shareable_service_network", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
@@ -201,12 +200,12 @@ func TestAccVPCLatticeResourceConfiguration_ipAddress(t *testing.T) {
 func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
 	resourceParentName := "aws_vpclattice_resource_configuration.parent"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -214,12 +213,12 @@ func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigurationConfig_parentChild(rName, "10.0.0.1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_group_id", resourceParentName, names.AttrID),
@@ -247,12 +246,12 @@ func TestAccVPCLatticeResourceConfiguration_parentChild(t *testing.T) {
 func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
 	resourceArnName := "aws_rds_cluster_instance.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -260,12 +259,12 @@ func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigurationConfig_arnResource(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_configuration_definition.0.arn_resource.0.arn", resourceArnName, names.AttrARN),
@@ -289,13 +288,13 @@ func TestAccVPCLatticeResourceConfiguration_arnResource(t *testing.T) {
 func TestAccVPCLatticeResourceConfiguration_domainVerification(t *testing.T) {
 	ctx := acctest.Context(t)
 	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	domainName := fmt.Sprintf("%s.example.com", rName)
 	customDomainName := fmt.Sprintf("test.%s.example.com", rName)
 	resourceName := "aws_vpclattice_resource_configuration.test"
 	domainVerificationResourceName := "aws_vpclattice_domain_verification.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -303,12 +302,12 @@ func TestAccVPCLatticeResourceConfiguration_domainVerification(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfigurationConfig_domainVerification(rName, domainName, customDomainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "custom_domain_name", customDomainName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_verification_id", domainVerificationResourceName, names.AttrID),
@@ -326,13 +325,14 @@ func TestAccVPCLatticeResourceConfiguration_domainVerification(t *testing.T) {
 	})
 }
 
-func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
+func TestAccVPCLatticeResourceConfiguration_cidr(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var v1, v2 vpclattice.GetResourceConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
@@ -340,23 +340,160 @@ func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx),
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceConfigurationConfig_basic(rName),
+				Config: testAccResourceConfigurationConfig_cidr(rName, []string{"10.0.0.0/24", "192.168.0.0/24"}, []string{"53", "443"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceConfigurationExists(ctx, resourceName, &resourceconfiguration),
-					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceConfiguration, resourceName),
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeCidr)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(types.ProtocolTypeTcpUdp)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "53"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "443"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "10.0.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "192.168.0.0/24"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`resourceconfiguration/+.`)),
 				),
-				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccResourceConfigurationConfig_cidr(rName, []string{"10.0.0.0/24", "172.16.0.0/16"}, []string{"53", "443", "8080-8090"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeCidr)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(types.ProtocolTypeTcpUdp)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "53"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "443"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "8080-8090"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "10.0.0.0/24"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "172.16.0.0/16"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckResourceConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+func TestAccVPCLatticeResourceConfiguration_cidrIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+	resourceGatewayName := "aws_vpclattice_resource_gateway.test"
+	vpcResourceName := "aws_vpc.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_cidrIPv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_gateway_identifier", resourceGatewayName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.ResourceConfigurationTypeCidr)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(types.ProtocolTypeTcpUdp)),
+					resource.TestCheckResourceAttr(resourceName, "port_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "53"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "port_ranges.*", "443"),
+					resource.TestCheckResourceAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", "10.0.0.0/24"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_configuration_definition.0.cidr_resource.0.cidr_ranges.*", vpcResourceName, "ipv6_cidr_block"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeResourceConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceconfiguration vpclattice.GetResourceConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_resource_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfigurationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceConfigurationExists(ctx, t, resourceName, &resourceconfiguration),
+					acctest.CheckFrameworkResourceDisappears(ctx, t, tfvpclattice.ResourceResourceConfiguration, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func testAccCheckResourceConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_vpclattice_resource_configuration" {
@@ -380,14 +517,14 @@ func testAccCheckResourceConfigurationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckResourceConfigurationExists(ctx context.Context, n string, v *vpclattice.GetResourceConfigurationOutput) resource.TestCheckFunc {
+func testAccCheckResourceConfigurationExists(ctx context.Context, t *testing.T, n string, v *vpclattice.GetResourceConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).VPCLatticeClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).VPCLatticeClient(ctx)
 
 		output, err := tfvpclattice.FindResourceConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -550,6 +687,63 @@ resource "aws_rds_cluster_instance" "test" {
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = [aws_subnet.test.id, aws_subnet.test2.id]
+}
+`, rName))
+}
+
+func testAccResourceConfigurationConfig_cidr(rName string, cidrRanges, portRanges []string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_resourceConfigDNSResolution(rName, string(types.ResourceConfigDnsResolutionInVpc)),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type        = "CIDR"
+  protocol    = "TCP_UDP"
+  port_ranges = ["%[3]s"]
+
+  resource_configuration_definition {
+    cidr_resource {
+      cidr_ranges = ["%[2]s"]
+    }
+  }
+}
+`, rName, strings.Join(cidrRanges, `", "`), strings.Join(portRanges, `", "`)))
+}
+
+// The IPv6 range is the VPC's Amazon-provided block rather than a literal
+// documentation prefix (2001:db8::/32) so the test doesn't depend on whether AWS
+// accepts documentation prefixes. EC2 returns the block in canonical (lowercase,
+// compressed) form, so the post-apply empty plan check also verifies that VPC
+// Lattice returns IPv6 CIDR ranges without reformatting them.
+func testAccResourceConfigurationConfig_cidrIPv6(rName string) string {
+	return acctest.ConfigCompose(testAccResourceGatewayConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_vpclattice_resource_gateway" "test" {
+  name               = %[1]q
+  vpc_id             = aws_vpc.test.id
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = [aws_subnet.test.id]
+  ip_address_type    = "DUALSTACK"
+
+  resource_config_dns_resolution = "IN_VPC"
+}
+
+resource "aws_vpclattice_resource_configuration" "test" {
+  name = %[1]q
+
+  resource_gateway_identifier = aws_vpclattice_resource_gateway.test.id
+
+  type        = "CIDR"
+  protocol    = "TCP_UDP"
+  port_ranges = ["53", "443"]
+
+  resource_configuration_definition {
+    cidr_resource {
+      cidr_ranges = ["10.0.0.0/24", aws_vpc.test.ipv6_cidr_block]
+    }
+  }
 }
 `, rName))
 }

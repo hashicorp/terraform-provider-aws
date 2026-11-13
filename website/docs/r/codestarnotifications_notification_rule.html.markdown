@@ -100,7 +100,7 @@ resource "aws_codestarnotifications_notification_rule" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the CodeStar notification rule.
+- `arn` (String) ARN of the CodeStar notification rule.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeStar notification rule using the ARN. For example:
 

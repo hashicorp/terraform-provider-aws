@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_bedrockagent_flow: Prevent `created_at` becoming `null` on Update
-```

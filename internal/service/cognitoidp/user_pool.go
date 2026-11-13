@@ -48,687 +48,689 @@ func resourceUserPool() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"account_recovery_setting": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"recovery_mechanism": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							MinItems: 1,
-							MaxItems: 2,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.RecoveryOptionNameType](),
-									},
-									names.AttrPriority: {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"admin_create_user_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allow_admin_create_user_only": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"invite_message_template": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"email_message": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validUserPoolInviteTemplateEmailMessage,
-									},
-									"email_subject": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validUserPoolTemplateEmailSubject,
-									},
-									"sms_message": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validUserPoolInviteTemplateSMSMessage,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"account_recovery_setting": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"recovery_mechanism": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								MinItems: 1,
+								MaxItems: 2,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.RecoveryOptionNameType](),
+										},
+										names.AttrPriority: {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"alias_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				"admin_create_user_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_admin_create_user_only": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"invite_message_template": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"email_message": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validUserPoolInviteTemplateEmailMessage,
+										},
+										"email_subject": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validUserPoolTemplateEmailSubject,
+										},
+										"sms_message": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validUserPoolInviteTemplateSMSMessage,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"alias_attributes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.AliasAttributeType](),
+					},
+					ConflictsWith: []string{"username_attributes"},
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_verified_attributes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.VerifiedAttributeType](),
+					},
+				},
+				names.AttrCreationDate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_domain": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDeletionProtection: {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.AliasAttributeType](),
+					Optional:         true,
+					Default:          awstypes.DeletionProtectionTypeInactive,
+					ValidateDiagFunc: enum.Validate[awstypes.DeletionProtectionType](),
 				},
-				ConflictsWith: []string{"username_attributes"},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_verified_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.VerifiedAttributeType](),
-				},
-			},
-			names.AttrCreationDate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_domain": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDeletionProtection: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.DeletionProtectionTypeInactive,
-				ValidateDiagFunc: enum.Validate[awstypes.DeletionProtectionType](),
-			},
-			"device_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"challenge_required_on_new_device": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"device_only_remembered_on_user_prompt": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
-			},
-			names.AttrDomain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"email_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"configuration_set": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"email_sending_account": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.EmailSendingAccountTypeCognitoDefault,
-							ValidateDiagFunc: enum.Validate[awstypes.EmailSendingAccountType](),
-						},
-						"from_email_address": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"reply_to_email_address": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringInSlice([]string{""}, false),
-								validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-							),
-						},
-						"source_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"email_mfa_configuration": {
-				Type:             schema.TypeList,
-				Optional:         true,
-				MaxItems:         1,
-				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrMessage: {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(6, 20000),
-								validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
-									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
-							),
-						},
-						"subject": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
-								`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
-						},
-					},
-				},
-			},
-			"email_verification_message": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validUserPoolEmailVerificationMessage,
-				ConflictsWith: []string{"verification_message_template.0.email_message"},
-			},
-			"email_verification_subject": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validUserPoolEmailVerificationSubject,
-				ConflictsWith: []string{"verification_message_template.0.email_subject"},
-			},
-			names.AttrEndpoint: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"estimated_number_of_users": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"lambda_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"create_auth_challenge": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"custom_email_sender": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							RequiredWith: []string{"lambda_config.0.kms_key_id"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CustomEmailSenderLambdaVersionType](),
-									},
-								},
+				"device_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"challenge_required_on_new_device": {
+								Type:     schema.TypeBool,
+								Optional: true,
 							},
-						},
-						"custom_message": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"custom_sms_sender": {
-							Type:         schema.TypeList,
-							Optional:     true,
-							MaxItems:     1,
-							RequiredWith: []string{"lambda_config.0.kms_key_id"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.CustomSMSSenderLambdaVersionType](),
-									},
-								},
-							},
-						},
-						"define_auth_challenge": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						names.AttrKMSKeyID: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"post_authentication": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"post_confirmation": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"pre_authentication": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"pre_sign_up": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"pre_token_generation": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"pre_token_generation_config": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"lambda_version": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.PreTokenGenerationLambdaVersionType](),
-									},
-								},
-							},
-						},
-						"user_migration": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"verify_auth_challenge_response": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-					},
-				},
-			},
-			"last_modified_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"mfa_configuration": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.UserPoolMfaTypeOff,
-				ValidateDiagFunc: enum.Validate[awstypes.UserPoolMfaType](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.Any(
-					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
-						`must satisfy regular expression pattern: [\w\s+=,.@-]+`),
-				),
-			},
-			"password_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"minimum_length": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(6, 99),
-						},
-						"password_history_size": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 24),
-						},
-						"require_lowercase": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"require_numbers": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"require_symbols": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"require_uppercase": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"temporary_password_validity_days": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 365),
-						},
-					},
-				},
-			},
-			names.AttrSchema: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 50,
-				Set:      resourceUserPoolSchemaHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attribute_data_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AttributeDataType](),
-						},
-						"developer_only_attribute": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"mutable": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						names.AttrName: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validUserPoolSchemaName,
-						},
-						"number_attribute_constraints": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"min_value": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"required": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"string_attribute_constraints": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"max_length": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"min_length": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+							"device_only_remembered_on_user_prompt": {
+								Type:     schema.TypeBool,
+								Optional: true,
 							},
 						},
 					},
 				},
-			},
-			"sign_in_policy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_first_auth_factors": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
+				names.AttrDomain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"email_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"configuration_set": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"email_sending_account": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.AuthFactorType](),
+								Optional:         true,
+								Default:          awstypes.EmailSendingAccountTypeCognitoDefault,
+								ValidateDiagFunc: enum.Validate[awstypes.EmailSendingAccountType](),
+							},
+							"from_email_address": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"reply_to_email_address": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.Any(
+									validation.StringInSlice([]string{""}, false),
+									validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+										`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+								),
+							},
+							"source_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
 							},
 						},
 					},
 				},
-			},
-			"sms_authentication_message": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validUserPoolSMSAuthenticationMessage,
-			},
-			"sms_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrExternalID: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"sns_caller_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"sns_region": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: verify.ValidRegionName,
+				"email_mfa_configuration": {
+					Type:             schema.TypeList,
+					Optional:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMessage: {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(6, 20000),
+									validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+										`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+								),
+							},
+							"subject": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+							},
 						},
 					},
 				},
-			},
-			"sms_verification_message": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ValidateFunc:  validUserPoolSMSVerificationMessage,
-				ConflictsWith: []string{"verification_message_template.0.sms_message"},
-			},
-			"software_token_mfa_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrEnabled: {
-							Type:     schema.TypeBool,
-							Required: true,
+				"email_verification_message": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validUserPoolEmailVerificationMessage,
+					ConflictsWith: []string{"verification_message_template.0.email_message"},
+				},
+				"email_verification_subject": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validUserPoolEmailVerificationSubject,
+					ConflictsWith: []string{"verification_message_template.0.email_subject"},
+				},
+				names.AttrEndpoint: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"estimated_number_of_users": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"lambda_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"create_auth_challenge": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"custom_email_sender": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								RequiredWith: []string{"lambda_config.0.kms_key_id"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"lambda_version": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CustomEmailSenderLambdaVersionType](),
+										},
+									},
+								},
+							},
+							"custom_message": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"custom_sms_sender": {
+								Type:         schema.TypeList,
+								Optional:     true,
+								MaxItems:     1,
+								RequiredWith: []string{"lambda_config.0.kms_key_id"},
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"lambda_version": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.CustomSMSSenderLambdaVersionType](),
+										},
+									},
+								},
+							},
+							"define_auth_challenge": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							names.AttrKMSKeyID: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"post_authentication": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"post_confirmation": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"pre_authentication": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"pre_sign_up": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"pre_token_generation": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"pre_token_generation_config": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"lambda_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"lambda_version": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.PreTokenGenerationLambdaVersionType](),
+										},
+									},
+								},
+							},
+							"user_migration": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"verify_auth_challenge_response": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_attribute_update_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attributes_require_verification_before_update": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
+				"last_modified_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"mfa_configuration": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.UserPoolMfaTypeOff,
+					ValidateDiagFunc: enum.Validate[awstypes.UserPoolMfaType](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.Any(
+						validation.StringLenBetween(1, 128),
+						validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
+							`must satisfy regular expression pattern: [\w\s+=,.@-]+`),
+					),
+				},
+				"password_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"minimum_length": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(6, 99),
+							},
+							"password_history_size": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(0, 24),
+							},
+							"require_lowercase": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"require_numbers": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"require_symbols": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"require_uppercase": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"temporary_password_validity_days": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(0, 365),
+							},
+						},
+					},
+				},
+				names.AttrSchema: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 50,
+					Set:      resourceUserPoolSchemaHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attribute_data_type": {
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.VerifiedAttributeType](),
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AttributeDataType](),
 							},
-						},
-					},
-				},
-			},
-			"user_pool_add_ons": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"advanced_security_additional_flows": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							MaxItems:         1,
-							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"custom_auth_mode": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityEnabledModeType](),
+							"developer_only_attribute": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"mutable": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							names.AttrName: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validUserPoolSchemaName,
+							},
+							"number_attribute_constraints": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_value": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"min_value": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"required": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"string_attribute_constraints": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"max_length": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"min_length": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
-						"advanced_security_mode": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityModeType](),
+					},
+				},
+				"sign_in_policy": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allowed_first_auth_factors": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.AuthFactorType](),
+								},
+							},
 						},
 					},
 				},
-			},
-			"user_pool_tier": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
-			},
-			"username_attributes": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Schema{
+				"sms_authentication_message": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validUserPoolSMSAuthenticationMessage,
+				},
+				"sms_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrExternalID: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"sns_caller_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"sns_region": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+					},
+				},
+				"sms_verification_message": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validUserPoolSMSVerificationMessage,
+					ConflictsWith: []string{"verification_message_template.0.sms_message"},
+				},
+				"software_token_mfa_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_attribute_update_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attributes_require_verification_before_update": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.VerifiedAttributeType](),
+								},
+							},
+						},
+					},
+				},
+				"user_pool_add_ons": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"advanced_security_additional_flows": {
+								Type:             schema.TypeList,
+								Optional:         true,
+								MaxItems:         1,
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"custom_auth_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityEnabledModeType](),
+										},
+									},
+								},
+							},
+							"advanced_security_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityModeType](),
+							},
+						},
+					},
+				},
+				"user_pool_tier": {
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.UsernameAttributeType](),
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
 				},
-				ConflictsWith: []string{"alias_attributes"},
-			},
-			"username_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"case_sensitive": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+				"username_attributes": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.UsernameAttributeType](),
+					},
+					ConflictsWith: []string{"alias_attributes"},
+				},
+				"username_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"case_sensitive": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+							},
 						},
 					},
 				},
-			},
-			"verification_message_template": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_email_option": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.DefaultEmailOptionTypeConfirmWithCode,
-							ValidateDiagFunc: enum.Validate[awstypes.DefaultEmailOptionType](),
-						},
-						"email_message": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  validUserPoolTemplateEmailMessage,
-							ConflictsWith: []string{"email_verification_message"},
-						},
-						"email_message_by_link": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validUserPoolTemplateEmailMessageByLink,
-						},
-						"email_subject": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  validUserPoolTemplateEmailSubject,
-							ConflictsWith: []string{"email_verification_subject"},
-						},
-						"email_subject_by_link": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validUserPoolTemplateEmailSubjectByLink,
-						},
-						"sms_message": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ValidateFunc:  validUserPoolTemplateSMSMessage,
-							ConflictsWith: []string{"sms_verification_message"},
-						},
-					},
-				},
-			},
-			"web_authn_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"relying_party_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"user_verification": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.UserVerificationType](),
+				"verification_message_template": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_email_option": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          awstypes.DefaultEmailOptionTypeConfirmWithCode,
+								ValidateDiagFunc: enum.Validate[awstypes.DefaultEmailOptionType](),
+							},
+							"email_message": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  validUserPoolTemplateEmailMessage,
+								ConflictsWith: []string{"email_verification_message"},
+							},
+							"email_message_by_link": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validUserPoolTemplateEmailMessageByLink,
+							},
+							"email_subject": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  validUserPoolTemplateEmailSubject,
+								ConflictsWith: []string{"email_verification_subject"},
+							},
+							"email_subject_by_link": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validUserPoolTemplateEmailSubjectByLink,
+							},
+							"sms_message": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ValidateFunc:  validUserPoolTemplateSMSMessage,
+								ConflictsWith: []string{"sms_verification_message"},
+							},
 						},
 					},
 				},
-			},
+				"web_authn_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"relying_party_id": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"user_verification": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.UserVerificationType](),
+							},
+						},
+					},
+				},
+			}
 		},
 	}
 }

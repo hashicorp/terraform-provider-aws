@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Preserve concurrent rule changes when retrying an optimistic lock conflict if neither `rule` nor `rule_json` has a planned change
+```

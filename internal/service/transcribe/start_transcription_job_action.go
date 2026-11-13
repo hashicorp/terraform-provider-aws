@@ -17,7 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -116,14 +119,11 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 	// Get AWS client
 	conn := a.Meta().TranscribeClient(ctx)
 
-	transcriptionJobName := config.TranscriptionJobName.ValueString()
-	mediaFileUri := config.MediaFileUri.ValueString()
+	transcriptionJobName := fwflex.StringValueFromFramework(ctx, config.TranscriptionJobName)
+	mediaFileUri := fwflex.StringValueFromFramework(ctx, config.MediaFileUri)
 
 	// Set default timeout
-	timeout := 5 * time.Minute
-	if !config.Timeout.IsNull() {
-		timeout = time.Duration(config.Timeout.ValueInt64()) * time.Second
-	}
+	timeout := fwactions.TimeoutOr(config.Timeout, 5*time.Minute)
 
 	tflog.Info(ctx, "Starting transcription job action", map[string]any{
 		"transcription_job_name": transcriptionJobName,
@@ -132,9 +132,8 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 	})
 
 	// Send initial progress update
-	resp.SendProgress(action.InvokeProgressEvent{
-		Message: fmt.Sprintf("Starting transcription job %s...", transcriptionJobName),
-	})
+	cb := fwactions.NewSendProgressFunc(resp)
+	cb(ctx, "Starting transcription job %s...", transcriptionJobName)
 
 	// Build the start transcription job input
 	input := &transcribe.StartTranscriptionJobInput{
@@ -240,25 +239,21 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 			actionwait.Status(awstypes.TranscriptionJobStatusFailed),
 		},
 		ProgressSink: func(fr actionwait.FetchResult[any], meta actionwait.ProgressMeta) {
-			resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("Transcription job %s is currently %s", transcriptionJobName, fr.Status)})
+			cb(ctx, "Transcription job %s is currently %s", transcriptionJobName, fr.Status)
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var failureErr *actionwait.FailureStateError
-		var unexpectedErr *actionwait.UnexpectedStateError
-
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Transcription Job",
 				fmt.Sprintf("Transcription job %s did not reach a running state within %v", transcriptionJobName, timeout),
 			)
-		} else if errors.As(err, &failureErr) {
+		} else if failureErr, ok := errors.AsType[*actionwait.FailureStateError](err); ok {
 			resp.Diagnostics.AddError(
 				"Transcription Job Failed",
 				fmt.Sprintf("Transcription job %s failed: %s", transcriptionJobName, failureErr.Status),
 			)
-		} else if errors.As(err, &unexpectedErr) {
+		} else if unexpectedErr, ok := errors.AsType[*actionwait.UnexpectedStateError](err); ok {
 			resp.Diagnostics.AddError(
 				"Unexpected Transcription Job Status",
 				fmt.Sprintf("Transcription job %s entered unexpected status: %s", transcriptionJobName, unexpectedErr.Status),
@@ -272,7 +267,7 @@ func (a *startTranscriptionJobAction) Invoke(ctx context.Context, req action.Inv
 		return
 	}
 
-	resp.SendProgress(action.InvokeProgressEvent{Message: fmt.Sprintf("Transcription job %s started successfully and is %s", transcriptionJobName, fr.Status)})
+	cb(ctx, "Transcription job %s started successfully and is %s", transcriptionJobName, fr.Status)
 	logFields := map[string]any{
 		"transcription_job_name": transcriptionJobName,
 		"job_status":             fr.Status,

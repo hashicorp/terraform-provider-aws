@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_s3_bucket_lifecycle_configuration: Allow `rule.filter.object_size_greater_than` = 0
-```

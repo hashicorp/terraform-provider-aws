@@ -17,8 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,6 +80,7 @@ func resourceRuleGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monetization_config": monetizationConfigSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -99,7 +99,7 @@ func resourceRuleGroup() *schema.Resource {
 					ForceNew:      true,
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 128-id.UniqueIDSuffixLength),
+						validation.StringLenBetween(1, 128-sdkid.UniqueIDSuffixLength),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
@@ -131,6 +131,7 @@ func resourceRuleGroup() *schema.Resource {
 										"captcha":   captchaConfigSchema(),
 										"challenge": challengeConfigSchema(),
 										"count":     countConfigSchema(),
+										"monetize":  monetizeConfigSchema(),
 									},
 								},
 							},
@@ -145,7 +146,7 @@ func resourceRuleGroup() *schema.Resource {
 								Required: true,
 							},
 							"rule_label":        ruleLabelsSchema(),
-							"statement":         ruleGroupRootStatementSchema(ruleGroupRootStatementSchemaLevel),
+							"statement":         ruleGroupRootStatementSchema(ruleStatementSchemaLevel),
 							"visibility_config": visibilityConfigSchema(),
 						},
 					},
@@ -197,6 +198,10 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta a
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+		input.MonetizationConfig = expandMonetizationConfig(v.([]any))
+	}
+
 	const (
 		timeout = 5 * time.Minute
 	)
@@ -238,6 +243,9 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta any
 	}
 	d.Set(names.AttrDescription, ruleGroup.Description)
 	d.Set("lock_token", output.LockToken)
+	if err := d.Set("monetization_config", flattenMonetizationConfig(ruleGroup.MonetizationConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monetization_config: %s", err)
+	}
 	d.Set(names.AttrName, ruleGroup.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ruleGroup.Name)))
 	if _, ok := d.GetOk("rules_json"); !ok {
@@ -286,6 +294,10 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+			input.MonetizationConfig = expandMonetizationConfig(v.([]any))
 		}
 
 		const (
@@ -343,9 +355,8 @@ func findRuleGroupByThreePartKey(ctx context.Context, conn *wafv2.Client, id, na
 	output, err := conn.GetRuleGroup(ctx, input)
 
 	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 

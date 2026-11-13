@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,7 +17,7 @@ func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName1 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	lbName2 := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	sharedTagVal := sdkacctest.RandString(32)
+	sharedTagVal := acctest.RandString(t, 32)
 
 	resource1 := "aws_lb.test1"
 	resource2 := "aws_lb.test2"

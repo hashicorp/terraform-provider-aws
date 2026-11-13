@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -35,7 +34,7 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 
 func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test/" + sdkacctest.RandString(22)
+	repositoryPrefix := "tf-test/" + acctest.RandString(t, 22)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -57,7 +56,7 @@ func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testi
 
 func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -79,7 +78,7 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 
 func TestAccECRPullThroughCacheRuleDataSource_privateRepositorySelfAccount(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -103,7 +102,7 @@ func TestAccECRPullThroughCacheRuleDataSource_privateRepositorySelfAccount(t *te
 
 func TestAccECRPullThroughCacheRuleDataSource_privateRepositoryCrossAccount(t *testing.T) {
 	ctx := acctest.Context(t)
-	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
+	repositoryPrefix := "tf-test-" + acctest.RandString(t, 8)
 	dataSource := "data.aws_ecr_pull_through_cache_rule.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{

@@ -26,100 +26,102 @@ func dataSourceOrderableDBInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOrderableDBInstanceRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  defaultEngine,
-			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_class": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"preferred_instance_classes"},
-			},
-			"license_model": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "amazon-license",
-			},
-			"max_iops_per_db_instance": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"max_iops_per_gib": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"max_storage_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"min_iops_per_db_instance": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"min_iops_per_gib": {
-				Type:     schema.TypeFloat,
-				Computed: true,
-			},
-			"min_storage_size": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"multi_az_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"preferred_instance_classes": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"instance_class"},
-			},
-			"read_replica_capable": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"supports_enhanced_monitoring": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_iam_database_authentication": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_iops": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_performance_insights": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"supports_storage_encryption": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"vpc": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAvailabilityZones: {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  defaultEngine,
+				},
+				names.AttrEngineVersion: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_class": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"preferred_instance_classes"},
+				},
+				"license_model": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "amazon-license",
+				},
+				"max_iops_per_db_instance": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"max_iops_per_gib": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"max_storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"min_iops_per_db_instance": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"min_iops_per_gib": {
+					Type:     schema.TypeFloat,
+					Computed: true,
+				},
+				"min_storage_size": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"multi_az_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"preferred_instance_classes": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{"instance_class"},
+				},
+				"read_replica_capable": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				names.AttrStorageType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"supports_enhanced_monitoring": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_iam_database_authentication": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_iops": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_performance_insights": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"supports_storage_encryption": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"vpc": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

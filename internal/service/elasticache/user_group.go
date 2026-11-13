@@ -8,6 +8,7 @@ package elasticache
 import (
 	"context"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -42,32 +43,35 @@ func resourceUserGroup() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateDiagFunc: validation.AllDiag(
-					validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
-					verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
-				),
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"user_group_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"user_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringInSlice([]string{engineRedis, engineValkey}, true)),
+						verify.CaseInsensitiveMatchDeprecation([]string{engineRedis, engineValkey}),
+					),
+					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"user_group_id": {
+					Type:      schema.TypeString,
+					Required:  true,
+					ForceNew:  true,
+					StateFunc: sdkv2.ToLowerSchemaStateFunc,
+				},
+				"user_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -156,9 +160,11 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		input := &elasticache.ModifyUserGroupInput{
 			UserGroupId: aws.String(d.Get("user_group_id").(string)),
 		}
+		modified := false
 
 		if d.HasChange(names.AttrEngine) {
 			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+			modified = true
 		}
 
 		if d.HasChange("user_ids") {
@@ -167,20 +173,35 @@ func resourceUserGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 			if add.Len() > 0 {
 				input.UserIdsToAdd = flex.ExpandStringValueSet(add)
+				modified = true
 			}
+
 			if del.Len() > 0 {
-				input.UserIdsToRemove = flex.ExpandStringValueSet(del)
+				// Deleting a user detaches it from its groups, so a stale removal would fail
+				// the whole request, discarding any pending additions with it.
+				userGroup, err := findUserGroupByID(ctx, conn, d.Id())
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "reading ElastiCache User Group (%s): %s", d.Id(), err)
+				}
+
+				if remove := tfslices.Filter(flex.ExpandStringValueSet(del), func(v string) bool {
+					return slices.Contains(userGroup.UserIds, v)
+				}); len(remove) > 0 {
+					input.UserIdsToRemove = remove
+					modified = true
+				}
 			}
 		}
 
-		_, err := conn.ModifyUserGroup(ctx, input)
+		if modified {
+			if _, err := conn.ModifyUserGroup(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
+			}
 
-		if err != nil && !errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "is not a member of user group") {
-			return sdkdiag.AppendErrorf(diags, "updating ElastiCache User Group (%q): %s", d.Id(), err)
-		}
-
-		if _, err := waitUserGroupUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User Group (%s) update: %s", d.Id(), err)
+			if _, err := waitUserGroupUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache User Group (%s) update: %s", d.Id(), err)
+			}
 		}
 	}
 

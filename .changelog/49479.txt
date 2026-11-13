@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_bedrockagentcore_online_evaluation_config: Retries additional IAM propagation errors on creation
+```
+
+```release-note:bug
+list-resource/aws_bedrockagentcore_online_evaluation_config: Prevents error when remote resource disappears during List
+```

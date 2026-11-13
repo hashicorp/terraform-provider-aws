@@ -1,4 +1,5 @@
 resource "aws_medialive_input_security_group" "test" {
+{{- template "region" }}
   whitelist_rules {
     cidr = "10.2.0.0/16"
   }

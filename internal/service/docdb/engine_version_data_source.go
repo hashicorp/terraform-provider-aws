@@ -25,51 +25,53 @@ import (
 func dataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
-		Schema: map[string]*schema.Schema{
-			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  engineDocDB,
-			},
-			"engine_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"exportable_log_types": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"parameter_group_family": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-			},
-			"preferred_versions": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{names.AttrVersion},
-			},
-			"supports_log_exports_to_cloudwatch": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"valid_upgrade_targets": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrVersion: {
-				Type:          schema.TypeString,
-				Computed:      true,
-				Optional:      true,
-				ConflictsWith: []string{"preferred_versions"},
-			},
-			"version_description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEngine: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  engineDocDB,
+				},
+				"engine_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"exportable_log_types": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"parameter_group_family": {
+					Type:     schema.TypeString,
+					Computed: true,
+					Optional: true,
+				},
+				"preferred_versions": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					Elem:          &schema.Schema{Type: schema.TypeString},
+					ConflictsWith: []string{names.AttrVersion},
+				},
+				"supports_log_exports_to_cloudwatch": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"valid_upgrade_targets": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrVersion: {
+					Type:          schema.TypeString,
+					Computed:      true,
+					Optional:      true,
+					ConflictsWith: []string{"preferred_versions"},
+				},
+				"version_description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

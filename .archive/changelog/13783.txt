@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_dynamodb_tag
-```
-
-```release-note:new-resource
-aws_ecs_tag
-```

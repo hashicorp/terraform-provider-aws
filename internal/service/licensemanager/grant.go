@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/licensemanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/licensemanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -38,62 +38,64 @@ func resourceGrant() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"allowed_operations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				MaxItems: len(enum.Values[awstypes.AllowedOperation]()),
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.AllowedOperation](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allowed_operations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					MaxItems: len(enum.Values[awstypes.AllowedOperation]()),
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.AllowedOperation](),
+					},
+					Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
 				},
-				Description: "Allowed operations for the grant. This is a subset of the allowed operations on the license.",
-			},
-			names.AttrARN: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Amazon Resource Name (ARN) of the grant.",
-			},
-			"home_region": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Home Region of the grant.",
-			},
-			"license_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "License ARN.",
-			},
-			names.AttrName: {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "Name of the grant.",
-			},
-			"parent_arn": {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Parent ARN.",
-			},
-			names.AttrPrincipal: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "The grantee principal ARN. The target account for the grant in the form of the ARN for an account principal of the root user.",
-			},
-			names.AttrStatus: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Grant status.",
-			},
-			names.AttrVersion: {
-				Type:        schema.TypeString,
-				Computed:    true,
-				Description: "Grant version.",
-			},
+				names.AttrARN: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Amazon Resource Name (ARN) of the grant.",
+				},
+				"home_region": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Home Region of the grant.",
+				},
+				"license_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "License ARN.",
+				},
+				names.AttrName: {
+					Type:        schema.TypeString,
+					Required:    true,
+					Description: "Name of the grant.",
+				},
+				"parent_arn": {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Parent ARN.",
+				},
+				names.AttrPrincipal: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "The grantee principal ARN. The target account for the grant in the form of the ARN for an account principal of the root user.",
+				},
+				names.AttrStatus: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Grant status.",
+				},
+				names.AttrVersion: {
+					Type:        schema.TypeString,
+					Computed:    true,
+					Description: "Grant version.",
+				},
+			}
 		},
 	}
 }
@@ -105,7 +107,7 @@ func resourceGrantCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 	name := d.Get(names.AttrName).(string)
 	input := &licensemanager.CreateGrantInput{
 		AllowedOperations: flex.ExpandStringyValueSet[awstypes.AllowedOperation](d.Get("allowed_operations").(*schema.Set)),
-		ClientToken:       aws.String(id.UniqueId()),
+		ClientToken:       aws.String(create.UniqueId(ctx)),
 		GrantName:         aws.String(name),
 		HomeRegion:        aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		LicenseArn:        aws.String(d.Get("license_arn").(string)),
@@ -157,7 +159,7 @@ func resourceGrantUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	conn := meta.(*conns.AWSClient).LicenseManagerClient(ctx)
 
 	input := &licensemanager.CreateGrantVersionInput{
-		ClientToken: aws.String(id.UniqueId()),
+		ClientToken: aws.String(create.UniqueId(ctx)),
 		GrantArn:    aws.String(d.Id()),
 	}
 

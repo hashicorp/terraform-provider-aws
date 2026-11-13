@@ -22,28 +22,30 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccountPublicAccessBlockRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"block_public_acls": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"ignore_public_acls": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"restrict_public_buckets": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"block_public_acls": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"block_public_policy": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"ignore_public_acls": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"restrict_public_buckets": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

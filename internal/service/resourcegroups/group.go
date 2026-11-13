@@ -45,73 +45,75 @@ func resourceGroup() *schema.Resource {
 			Update: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrConfiguration: {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrParameters: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									names.AttrValues: {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrConfiguration: {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrParameters: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										names.AttrValues: {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
 										},
 									},
 								},
 							},
-						},
-						names.AttrType: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"resource_query": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"query": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrType: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      types.QueryTypeTagFilters10,
-							ValidateFunc: validation.StringInSlice(enum.Slice(types.QueryTypeTagFilters10), false),
+							names.AttrType: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"resource_query": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"query": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrType: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      types.QueryTypeTagFilters10,
+								ValidateFunc: validation.StringInSlice(enum.Slice(types.QueryTypeTagFilters10), false),
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 	}
 }
@@ -178,7 +180,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set(names.AttrName, group.Name)
 
 	q, err := conn.GetGroupQuery(ctx, &resourcegroups.GetGroupQueryInput{
-		GroupName: aws.String(d.Id()),
+		Group: aws.String(d.Id()),
 	})
 
 	hasQuery := true
@@ -232,7 +234,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 	if d.HasChange(names.AttrDescription) {
 		input := &resourcegroups.UpdateGroupInput{
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-			GroupName:   aws.String(d.Id()),
+			Group:       aws.String(d.Id()),
 		}
 
 		_, err := conn.UpdateGroup(ctx, input)
@@ -244,7 +246,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	if d.HasChange("resource_query") {
 		input := &resourcegroups.UpdateGroupQueryInput{
-			GroupName:     aws.String(d.Id()),
+			Group:         aws.String(d.Id()),
 			ResourceQuery: expandResourceQuery(d.Get("resource_query").([]any)),
 		}
 
@@ -281,7 +283,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	log.Printf("[DEBUG] Deleting Resource Groups Group: %s", d.Id())
 	_, err := conn.DeleteGroup(ctx, &resourcegroups.DeleteGroupInput{
-		GroupName: aws.String(d.Id()),
+		Group: aws.String(d.Id()),
 	})
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -297,7 +299,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 
 func findGroupByName(ctx context.Context, conn *resourcegroups.Client, name string) (*types.Group, error) {
 	input := &resourcegroups.GetGroupInput{
-		GroupName: aws.String(name),
+		Group: aws.String(name),
 	}
 
 	output, err := conn.GetGroup(ctx, input)

@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,6 +28,11 @@ import (
 )
 
 // @SDKResource("aws_ssm_service_setting", name="Service Setting")
+// @ArnIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.ServiceSetting")
+// @Testing(generator=false)
+// @Testing(serialize=true)
+// @Testing(preIdentityVersion="v6.67.0")
 func resourceServiceSetting() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSettingUpdate,
@@ -36,31 +40,29 @@ func resourceServiceSetting() *schema.Resource {
 		UpdateWithoutTimeout: resourceServiceSettingUpdate,
 		DeleteWithoutTimeout: resourceServiceSettingDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"setting_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.Any(
-					verify.ValidARN,
-					validation.StringMatch(regexache.MustCompile(`^/ssm/`), "setting_id must begin with '/ssm/'"),
-				),
-			},
-			"setting_value": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"setting_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.Any(
+						verify.ValidARN,
+						validation.StringMatch(regexache.MustCompile(`^/ssm/`), "setting_id must begin with '/ssm/'"),
+					),
+				},
+				"setting_value": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -112,6 +114,12 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading SSM Service Setting (%s): %s", d.Id(), err)
 	}
 
+	resourceServiceSettingFlatten(d, output)
+
+	return diags
+}
+
+func resourceServiceSettingFlatten(d *schema.ResourceData, output *awstypes.ServiceSetting) {
 	d.Set(names.AttrARN, output.ARN)
 	// setting_id begins with "/ssm/" prefix, according to the AWS documentation
 	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_GetServiceSetting.html#API_GetServiceSetting_RequestSyntax
@@ -124,8 +132,6 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("setting_value", output.SettingValue)
 	d.Set(names.AttrStatus, output.Status)
-
-	return diags
 }
 
 func resourceServiceSettingDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -157,9 +163,8 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	output, err := conn.GetServiceSetting(ctx, &input)
 
 	if errs.IsA[*awstypes.ServiceSettingNotFound](err) {
-		return nil, &sdkretry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
 	}
 
@@ -174,8 +179,8 @@ func findServiceSettingByID(ctx context.Context, conn *ssm.Client, id string) (*
 	return output.ServiceSetting, nil
 }
 
-func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusServiceSetting(conn *ssm.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findServiceSettingByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -191,10 +196,10 @@ func statusServiceSetting(ctx context.Context, conn *ssm.Client, id string) sdkr
 }
 
 func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"PendingUpdate", ""},
 		Target:  []string{"Customized", "Default"},
-		Refresh: statusServiceSetting(ctx, conn, id),
+		Refresh: statusServiceSetting(conn, id),
 		Timeout: timeout,
 	}
 
@@ -208,10 +213,10 @@ func waitServiceSettingUpdated(ctx context.Context, conn *ssm.Client, id string,
 }
 
 func waitServiceSettingReset(ctx context.Context, conn *ssm.Client, id string, timeout time.Duration) (*awstypes.ServiceSetting, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{"Customized", "PendingUpdate", ""},
 		Target:  []string{"Default"},
-		Refresh: statusServiceSetting(ctx, conn, id),
+		Refresh: statusServiceSetting(conn, id),
 		Timeout: timeout,
 	}
 

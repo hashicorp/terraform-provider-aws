@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -46,7 +47,7 @@ func TestAccCloudWatchMetricStream_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudwatch", fmt.Sprintf("metric-stream/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_linked_accounts_metrics", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_update_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -85,6 +86,14 @@ func TestAccCloudWatchMetricStream_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfcloudwatch.ResourceMetricStream(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -106,7 +115,7 @@ func TestAccCloudWatchMetricStream_nameGenerated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMetricStreamExists(ctx, t, resourceName),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, sdkid.UniqueIdPrefix),
 				),
 			},
 			{
@@ -195,7 +204,7 @@ func TestAccCloudWatchMetricStream_includeFiltersWithMetricNames(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.0", "CPUUtilization"),
+					resource.TestCheckResourceAttr(resourceName, "include_filter.0.metric_names.0", "TestMetricOne"),
 					resource.TestCheckResourceAttr(resourceName, "include_filter.1.metric_names.#", "0"),
 				),
 			},
@@ -225,7 +234,7 @@ func TestAccCloudWatchMetricStream_excludeFilters(t *testing.T) {
 					testAccCheckMetricStreamExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "6"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "0")),
 			},
 			{
@@ -254,9 +263,9 @@ func TestAccCloudWatchMetricStream_excludeFiltersWithMetricNames(t *testing.T) {
 					testAccCheckMetricStreamExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "output_format", names.AttrJSON),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.#", "6"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.0", "CPUUtilization"),
+					resource.TestCheckResourceAttr(resourceName, "exclude_filter.0.metric_names.0", "CurrConnections"),
 					resource.TestCheckResourceAttr(resourceName, "exclude_filter.1.metric_names.#", "0"),
 				),
 			},
@@ -594,6 +603,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 }
 `, rName))
 }
@@ -604,6 +617,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 }
 `)
 }
@@ -615,6 +632,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   role_arn      = aws_iam_role.metric_stream_to_firehose.arn
   firehose_arn  = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 }
 `, namePrefix))
 }
@@ -630,6 +651,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[2]s"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 }
 `, rName, arnSuffix)
 }
@@ -645,6 +670,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   role_arn      = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[2]s"
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/%[2]s"
   output_format = "json"
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 
   tags = {
     %[3]q = %[4]q
@@ -666,11 +695,11 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   include_filter {
-    namespace = "AWS/EC2"
+    namespace = "CWAccTest/One"
   }
 
   include_filter {
-    namespace = "AWS/EBS"
+    namespace = "CWAccTest/Two"
   }
 }
 `, rName)
@@ -689,12 +718,12 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   include_filter {
-    namespace    = "AWS/EC2"
-    metric_names = ["CPUUtilization", "NetworkOut"]
+    namespace    = "CWAccTest/One"
+    metric_names = ["TestMetricOne", "TestMetricTwo"]
   }
 
   include_filter {
-    namespace    = "AWS/EBS"
+    namespace    = "CWAccTest/Two"
     metric_names = []
   }
 }
@@ -714,11 +743,27 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   exclude_filter {
-    namespace = "AWS/EC2"
+    namespace = "AWS/ElastiCache"
   }
 
   exclude_filter {
-    namespace = "AWS/EBS"
+    namespace = "AWS/Usage"
+  }
+
+  exclude_filter {
+    namespace = "AWS/Firehose"
+  }
+
+  exclude_filter {
+    namespace = "AWS/ES"
+  }
+
+  exclude_filter {
+    namespace = "AWS/SQS"
+  }
+
+  exclude_filter {
+    namespace = "AWS/CloudWatch"
   }
 }
 `, rName)
@@ -737,13 +782,29 @@ resource "aws_cloudwatch_metric_stream" "test" {
   output_format = "json"
 
   exclude_filter {
-    namespace    = "AWS/EC2"
-    metric_names = ["CPUUtilization", "NetworkOut"]
+    namespace    = "AWS/ElastiCache"
+    metric_names = ["CurrConnections", "NewConnections"]
   }
 
   exclude_filter {
-    namespace    = "AWS/EBS"
+    namespace    = "AWS/Usage"
     metric_names = []
+  }
+
+  exclude_filter {
+    namespace = "AWS/Firehose"
+  }
+
+  exclude_filter {
+    namespace = "AWS/ES"
+  }
+
+  exclude_filter {
+    namespace = "AWS/SQS"
+  }
+
+  exclude_filter {
+    namespace = "AWS/CloudWatch"
   }
 }
 `, rName)
@@ -761,14 +822,18 @@ resource "aws_cloudwatch_metric_stream" "test" {
   firehose_arn  = "arn:${data.aws_partition.current.partition}:firehose:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:deliverystream/MyFirehose"
   output_format = "json"
 
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
+
   statistics_configuration {
     additional_statistics = [
       "p1", "tm99"
     ]
 
     include_metric {
-      metric_name = "CPUUtilization"
-      namespace   = "AWS/EC2"
+      metric_name = "TestMetricOne"
+      namespace   = "CWAccTest/One"
     }
   }
 
@@ -778,8 +843,8 @@ resource "aws_cloudwatch_metric_stream" "test" {
     ]
 
     include_metric {
-      metric_name = "CPUUtilization"
-      namespace   = "AWS/EC2"
+      metric_name = "TestMetricOne"
+      namespace   = "CWAccTest/One"
     }
   }
 }
@@ -794,6 +859,10 @@ resource "aws_cloudwatch_metric_stream" "test" {
   firehose_arn                    = aws_kinesis_firehose_delivery_stream.s3_stream.arn
   output_format                   = "json"
   include_linked_accounts_metrics = %[2]t
+
+  include_filter {
+    namespace = "CWAccTest/One"
+  }
 }
 `, rName, include))
 }

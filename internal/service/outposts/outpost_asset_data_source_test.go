@@ -27,6 +27,7 @@ func TestAccOutpostsAssetDataSource_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/.+`)),
 					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexache.MustCompile(`^(\w+)$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "asset_type"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_families.#"),
 					resource.TestMatchResourceAttr(dataSourceName, "rack_elevation", regexache.MustCompile(`^[\S \n]+$`)),
 					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexache.MustCompile(`^[\S \n]+$`)),
 				),
