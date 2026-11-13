@@ -194,6 +194,7 @@ var (
 	FindInternetGatewayByID                                     = findInternetGatewayByID
 	FindKeyPairByName                                           = findKeyPairByName
 	FindLaunchTemplateByID                                      = findLaunchTemplateByID
+	FindLaunchTemplateVersions                                  = findLaunchTemplateVersions
 	FindLocalGatewayRouteByTwoPartKey                           = findLocalGatewayRouteByTwoPartKey
 	FindLocalGatewayRouteTableByID                              = findLocalGatewayRouteTableByID
 	FindLocalGatewayRouteTableVIFGroupAssociationByID           = findLocalGatewayRouteTableVIFGroupAssociationByID
@@ -301,6 +302,7 @@ var (
 	InternetGatewayAttachmentParseResourceID                    = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                         = keyPairMigrateState
 	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
+	LaunchTemplateVersionsToDelete                              = launchTemplateVersionsToDelete
 	ManagedPrefixListEntryCreateResourceID                      = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
 	MatchRules                                                  = matchRules
