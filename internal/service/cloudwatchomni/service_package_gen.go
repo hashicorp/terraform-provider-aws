@@ -78,6 +78,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newOrganizationAccessGrantResource,
+			TypeName: "aws_cloudwatchomni_organization_access_grant",
+			Name:     "Organization Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newOrganizationDomainResource,
 			TypeName: "aws_cloudwatchomni_organization_domain",
 			Name:     "Organization Domain",
@@ -149,6 +160,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Domain",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+		},
+		{
+			Factory:  newOrganizationAccessGrantResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_organization_access_grant",
+			Name:     "Organization Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
 		},
 		{
 			Factory:  newOrganizationDomainResourceAsListResource,

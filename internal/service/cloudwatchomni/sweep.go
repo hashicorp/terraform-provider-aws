@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchomni/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -23,7 +24,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_cloudwatchomni_access_profile", sweepAccessProfiles)
 	awsv2.Register("aws_cloudwatchomni_dashboard", sweepDashboards)
 	awsv2.Register("aws_cloudwatchomni_domain", sweepDomains, "aws_cloudwatchomni_space")
-	awsv2.Register("aws_cloudwatchomni_organization_domain", sweepOrganizationDomains, "aws_cloudwatchomni_space")
+	awsv2.Register("aws_cloudwatchomni_organization_access_grant", sweepOrganizationAccessGrants)
+	awsv2.Register("aws_cloudwatchomni_organization_domain", sweepOrganizationDomains, "aws_cloudwatchomni_space", "aws_cloudwatchomni_organization_access_grant")
 	awsv2.Register("aws_cloudwatchomni_space", sweepSpaces,
 		"aws_cloudwatchomni_access_grant",
 		"aws_cloudwatchomni_access_profile",
@@ -173,6 +175,39 @@ func sweepOrganizationDomains(ctx context.Context, client *conns.AWSClient) ([]s
 
 		sweepResources = append(sweepResources, framework.NewSweepResource(newOrganizationDomainResource, client,
 			framework.NewAttribute("domain_id", aws.ToString(v.DomainId))),
+		)
+	}
+
+	return sweepResources, nil
+}
+
+func sweepOrganizationAccessGrants(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input cloudwatchomni.ListDomainAccessGrantsForOrganizationInput
+	conn := client.CloudWatchOmniClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	// Organization access grants are organization-wide and can only be deleted in their domain's home
+	// Region, so sweep only grants whose domain is homed in this account and Region.
+	localDomainIDs, err := findLocalOrganizationDomainIDs(ctx, conn, client.AccountID(ctx))
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	for v, err := range tfiter.ConcatValuesWithError(listOrganizationAccessGrantPages(ctx, conn, &input)) {
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		if v.GrantType == awstypes.AccessGrantTypeServiceManaged {
+			continue
+		}
+
+		if _, ok := localDomainIDs[aws.ToString(v.DomainId)]; !ok {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newOrganizationAccessGrantResource, client,
+			framework.NewAttribute("grant_id", aws.ToString(v.GrantId))),
 		)
 	}
 
