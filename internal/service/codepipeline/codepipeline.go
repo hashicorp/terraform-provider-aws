@@ -460,6 +460,29 @@ func resourcePipeline() *schema.Resource {
 												ValidateFunc: validation.StringLenBetween(1, 1000),
 											},
 										},
+										"environment_variable": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 10,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrName: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrValue: {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Default:          types.EnvironmentVariableTypePlaintext,
+														ValidateDiagFunc: enum.Validate[types.EnvironmentVariableType](),
+													},
+												},
+											},
+										},
 										names.AttrConfiguration: {
 											Type:     schema.TypeMap,
 											Optional: true,
@@ -1088,6 +1111,10 @@ func expandActionDeclaration(tfMap map[string]any) *types.ActionDeclaration {
 		apiObject.Configuration = flex.ExpandStringValueMap(v)
 	}
 
+	if v, ok := tfMap["environment_variable"].([]any); ok && len(v) > 0 {
+		apiObject.EnvironmentVariables = expandEnvironmentVariablesDeclaration(v)
+	}
+
 	if v, ok := tfMap["input_artifacts"].([]any); ok && len(v) > 0 {
 		apiObject.InputArtifacts = expandInputArtifacts(v)
 	}
@@ -1194,6 +1221,42 @@ func expandInputArtifacts(tfList []any) []types.InputArtifact {
 		}
 
 		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandEnvironmentVariableDeclaration(tfMap map[string]any) *types.EnvironmentVariable {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.EnvironmentVariable{
+		Name:  aws.String(tfMap[names.AttrName].(string)),
+		Value: aws.String(tfMap[names.AttrValue].(string)),
+		Type:  types.EnvironmentVariableType(tfMap[names.AttrType].(string)),
+	}
+
+	return apiObject
+}
+
+func expandEnvironmentVariablesDeclaration(tfList []any) []types.EnvironmentVariable {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.EnvironmentVariable
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandEnvironmentVariableDeclaration(tfMap)
+
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -2039,6 +2102,10 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 		tfMap[names.AttrNamespace] = aws.ToString(v)
 	}
 
+	if v := apiObject.EnvironmentVariables; len(v) > 0 {
+		tfMap["environment_variable"] = flattenEnvironmentVariables(v)
+	}
+
 	if v := apiObject.OutputArtifacts; len(v) > 0 {
 		if apiObject.ActionTypeId.Category == types.ActionCategoryCompute {
 			tfMap["output_artifacts_for_compute_action"] = flattenOutputArtifactsForComputeAction(v)
@@ -2072,6 +2139,18 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 	}
 
 	return tfMap
+}
+
+func flattenEnvironmentVariables(apiObjects []types.EnvironmentVariable) []any {
+	tfList := make([]any, 0, len(apiObjects))
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			names.AttrName:  aws.ToString(apiObject.Name),
+			names.AttrValue: aws.ToString(apiObject.Value),
+			names.AttrType:  apiObject.Type,
+		})
+	}
+	return tfList
 }
 
 func flattenActionDeclarations(d *schema.ResourceData, i int, apiObjects []types.ActionDeclaration) []any {
