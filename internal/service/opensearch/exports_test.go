@@ -21,6 +21,7 @@ var (
 	FindPackageAssociationByTwoPartKey         = findPackageAssociationByTwoPartKey
 	FindVPCEndpointByID                        = findVPCEndpointByID
 
+	DomainErrorRetryable                = domainErrorRetryable
 	EBSVolumeTypePermitsIopsInput       = ebsVolumeTypePermitsIopsInput
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput
 	ExpandServerlessVectorAcceleration  = expandServerlessVectorAcceleration

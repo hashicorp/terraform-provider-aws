@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_opensearch_domain: Retry `CreateDomain` while the OpenSearch service-linked role is still propagating
+```
