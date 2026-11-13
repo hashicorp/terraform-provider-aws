@@ -36,6 +36,7 @@ var (
 	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindRuntimeManagementConfigByTwoPartKey      = findRuntimeManagementConfigByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
+	FunctionNameHasQualifier                     = functionNameHasQualifier
 	GetFunctionNameFromARN                       = getFunctionNameFromARN
 	GetQualifierFromAliasOrVersionARN            = getQualifierFromAliasOrVersionARN
 	LayerNameFromARN                             = layerNameFromARN
