@@ -33,7 +33,7 @@ func StringMatch(pattern, message string) schema.SchemaValidateFunc {
 		re, matched, err := matchString(pattern, v)
 		switch {
 		case err != nil:
-			return nil, []error{fmt.Errorf("failed to compile regex pattern %q: %v", pattern, err)}
+			return nil, []error{fmt.Errorf("failed to compile regex pattern %q: %w", pattern, err)}
 		case !matched && message != "":
 			return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
 		case !matched:
@@ -94,7 +94,7 @@ func StringDoesNotMatch(pattern, message string) schema.SchemaValidateFunc {
 		re, matched, err := matchString(pattern, v)
 		switch {
 		case err != nil:
-			return nil, []error{fmt.Errorf("failed to compile regex pattern %q: %v", pattern, err)}
+			return nil, []error{fmt.Errorf("failed to compile regex pattern %q: %w", pattern, err)}
 		case matched && message != "":
 			return nil, []error{fmt.Errorf("invalid value for %s (%s)", k, message)}
 		case matched:
