@@ -243,6 +243,225 @@ func TestAccLogsQueryDefinition_logGroupARNs(t *testing.T) {
 	})
 }
 
+func TestAccLogsQueryDefinition_queryLanguage(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.QueryDefinition
+	resourceName := "aws_cloudwatch_query_definition.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueryDefinitionConfig_queryLanguageSQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "query_language", string(types.QueryLanguageSql)),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccQueryDefinitionConfig_queryLanguagePPL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "query_language", string(types.QueryLanguagePpl)),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccQueryDefinitionConfig_queryLanguageCWLI(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "query_language", string(types.QueryLanguageCwli)),
+					resource.TestCheckResourceAttr(resourceName, "log_group_names.#", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsQueryDefinition_queryLanguageDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.QueryDefinition
+	resourceName := "aws_cloudwatch_query_definition.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// No query_language: whatever the API reports (if anything) is stored without drift.
+				Config: testAccQueryDefinitionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				// Setting the Logs Insights QL language explicitly on an existing definition.
+				Config: testAccQueryDefinitionConfig_queryLanguageCWLINoLogGroups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "query_language", string(types.QueryLanguageCwli)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsQueryDefinition_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.QueryDefinition
+	resourceName := "aws_cloudwatch_query_definition.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccQueryDefinitionConfig_parameters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.name", names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.default_value", "500"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.description", "HTTP status code"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.name", "max_rows"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.default_value", ""),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.description", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccQueryDefinitionConfig_parametersUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.name", names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.default_value", "404"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.0.description", ""),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.name", "max_rows"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1.default_value", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccQueryDefinitionConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckQueryDefinitionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsQueryDefinition_parametersInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueryDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccQueryDefinitionConfig_parametersLanguage(rName, string(types.QueryLanguageSql)),
+				ExpectError: regexache.MustCompile(`"parameter" is not supported when "query_language" is "SQL"`),
+			},
+			{
+				Config:      testAccQueryDefinitionConfig_parametersLanguage(rName, string(types.QueryLanguagePpl)),
+				ExpectError: regexache.MustCompile(`"parameter" is not supported when "query_language" is "PPL"`),
+			},
+			{
+				Config:      testAccQueryDefinitionConfig_parametersInvalidName(rName),
+				ExpectError: regexache.MustCompile(`must start with a letter or underscore`),
+			},
+			{
+				Config:      testAccQueryDefinitionConfig_queryLanguageInvalid(rName),
+				ExpectError: regexache.MustCompile(`expected query_language to be one of`),
+			},
+		},
+	})
+}
+
 func testAccCheckQueryDefinitionExists(ctx context.Context, t *testing.T, n string, v *types.QueryDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -347,6 +566,173 @@ resource "aws_cloudwatch_log_group" "test" {
   count = 2
 
   name = "%[1]s-${count.index}"
+}
+`, rName)
+}
+
+func testAccQueryDefinitionConfig_queryLanguageSQL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name           = %[1]q
+  query_language = "SQL"
+
+  query_string = <<EOF
+SELECT %[2]s@timestamp%[2]s, %[2]s@message%[2]s FROM %[2]s${aws_cloudwatch_log_group.test.name}%[2]s LIMIT 20
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+`, rName, "`")
+}
+
+func testAccQueryDefinitionConfig_queryLanguagePPL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name            = %[1]q
+  query_language  = "PPL"
+  log_group_names = [aws_cloudwatch_log_group.test.name]
+
+  query_string = <<EOF
+fields %[2]s@timestamp%[2]s, %[2]s@message%[2]s | head 20
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+`, rName, "`")
+}
+
+func testAccQueryDefinitionConfig_queryLanguageCWLI(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name            = %[1]q
+  query_language  = "CWLI"
+  log_group_names = [aws_cloudwatch_log_group.test.name]
+
+  query_string = <<EOF
+fields @timestamp, @message
+| sort @timestamp desc
+| limit 20
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+
+func testAccQueryDefinitionConfig_queryLanguageCWLINoLogGroups(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name           = %[1]q
+  query_language = "CWLI"
+
+  query_string = <<EOF
+fields @timestamp, @message
+| sort @timestamp desc
+| limit 20
+EOF
+}
+`, rName)
+}
+
+func testAccQueryDefinitionConfig_queryLanguageInvalid(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name           = %[1]q
+  query_language = "KQL"
+
+  query_string = <<EOF
+fields @timestamp, @message
+| limit 20
+EOF
+}
+`, rName)
+}
+
+func testAccQueryDefinitionConfig_parameters(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name = %[1]q
+
+  query_string = <<EOF
+fields @timestamp, @message
+| filter status = {{status}}
+| limit {{max_rows}}
+EOF
+
+  parameter {
+    name          = "status"
+    default_value = "500"
+    description   = "HTTP status code"
+  }
+
+  parameter {
+    name = "max_rows"
+  }
+}
+`, rName)
+}
+
+func testAccQueryDefinitionConfig_parametersUpdated(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name = %[1]q
+
+  query_string = <<EOF
+fields @timestamp, @message
+| filter status = {{status}}
+| limit {{max_rows}}
+EOF
+
+  parameter {
+    name          = "status"
+    default_value = "404"
+  }
+
+  parameter {
+    name          = "max_rows"
+    default_value = ""
+  }
+}
+`, rName)
+}
+
+func testAccQueryDefinitionConfig_parametersLanguage(rName, queryLanguage string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name           = %[1]q
+  query_language = %[2]q
+
+  query_string = <<EOF
+fields @message
+| head 20
+EOF
+
+  parameter {
+    name = "status"
+  }
+}
+`, rName, queryLanguage)
+}
+
+func testAccQueryDefinitionConfig_parametersInvalidName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_query_definition" "test" {
+  name = %[1]q
+
+  query_string = <<EOF
+fields @timestamp, @message
+| filter status = {{1status}}
+EOF
+
+  parameter {
+    name = "1status"
+  }
 }
 `, rName)
 }
