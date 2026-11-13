@@ -302,6 +302,7 @@ var (
 	InternetGatewayAttachmentParseResourceID                    = internetGatewayAttachmentParseResourceID
 	KeyPairMigrateState                                         = keyPairMigrateState
 	LaunchTemplateStateUpgradeV0                                = launchTemplateStateUpgradeV0
+	LaunchTemplateVersionsDeleteErrors                          = launchTemplateVersionsDeleteErrors
 	LaunchTemplateVersionsToDelete                              = launchTemplateVersionsToDelete
 	ManagedPrefixListEntryCreateResourceID                      = managedPrefixListEntryCreateResourceID
 	ManagedPrefixListEntryParseResourceID                       = managedPrefixListEntryParseResourceID
