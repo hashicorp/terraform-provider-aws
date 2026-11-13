@@ -7,6 +7,7 @@ package ec2
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -24,6 +25,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -102,7 +104,9 @@ func (r *vpcBlockPublicAccessOptionsResource) Create(ctx context.Context, reques
 	data.ID = data.AWSRegion
 
 	if _, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		// Preserve regional identity so recovery of the tainted resource cannot use the provider's default Region.
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID))
+		smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrRegion), r.Meta().Region(ctx)))
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Options (%s) create", data.ID.ValueString()), err.Error())
 
 		return
@@ -115,6 +119,11 @@ func (r *vpcBlockPublicAccessOptionsResource) Read(ctx context.Context, request 
 	var data vpcBlockPublicAccessOptionsResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := r.checkRegion(ctx, data.ID); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
 		return
 	}
 
@@ -151,6 +160,11 @@ func (r *vpcBlockPublicAccessOptionsResource) Update(ctx context.Context, reques
 		return
 	}
 
+	if err := r.checkRegion(ctx, new.ID); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, new.ID.ValueString())
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
 	input := &ec2.ModifyVpcBlockPublicAccessOptionsInput{
@@ -181,6 +195,11 @@ func (r *vpcBlockPublicAccessOptionsResource) Delete(ctx context.Context, reques
 		return
 	}
 
+	if err := r.checkRegion(ctx, data.ID); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, data.ID.ValueString())
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
 	// On deletion of this resource set the VPC Block Public Access Options to off.
@@ -201,6 +220,19 @@ func (r *vpcBlockPublicAccessOptionsResource) Delete(ctx context.Context, reques
 
 		return
 	}
+}
+
+func (r *vpcBlockPublicAccessOptionsResource) checkRegion(ctx context.Context, id types.String) error {
+	if id.IsNull() || id.IsUnknown() || id.ValueString() == "" {
+		return errors.New("refusing to access VPC Block Public Access Options without a known regional resource ID")
+	}
+
+	// Older failed creates can have an ID but no region. Never refresh those options or disable BPA in another Region.
+	if region := r.Meta().Region(ctx); region != id.ValueString() {
+		return fmt.Errorf("refusing to access VPC Block Public Access Options: resource ID identifies Region %q but the selected Region is %q; restore the resource's region in state to match its ID before retrying", id.ValueString(), region)
+	}
+
+	return nil
 }
 
 type vpcBlockPublicAccessOptionsResourceModel struct {
