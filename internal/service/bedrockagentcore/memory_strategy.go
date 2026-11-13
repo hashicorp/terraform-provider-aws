@@ -155,6 +155,12 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 					tfsetplanmodifier.DefaultValueFromPath[fwtypes.SetOfString](path.Root("namespaces")),
 				},
 			},
+			"record_expiry_duration_days": schema.Int32Attribute{
+				Optional: true,
+				Validators: []validator.Int32{
+					int32validator.AtLeast(31),
+				},
+			},
 			names.AttrType: schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.MemoryStrategyType](),
@@ -201,6 +207,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 								// - self_managed_configuration {} is only valid and is required when type = "SELF_MANAGED"
 								// - extraction {} is not valid when type = "SUMMARY_OVERRIDE" or type = "SELF_MANAGED"
 								// - consolidation {} is not valid when type = "SELF_MANAGED"
+								// - record_expiry_duration_days is not valid when type = "SELF_MANAGED"
 								// - Exactly one of namespaces or namespace_templates is required except when type = "CUSTOM" and configuration.type = "SELF_MANAGED"
 								tfstringvalidator.AlsoRequiresWhenEquals(
 									awstypes.OverrideTypeEpisodicOverride,
@@ -222,6 +229,7 @@ func (r *resourceMemoryStrategy) Schema(ctx context.Context, request resource.Sc
 									awstypes.OverrideTypeSelfManaged,
 									path.MatchRoot("namespaces"),
 									path.MatchRoot("namespace_templates"),
+									path.MatchRoot("record_expiry_duration_days"),
 									path.MatchRelative().AtParent().AtName("consolidation"),
 									path.MatchRelative().AtParent().AtName("extraction"),
 									// "reflection" is handled via the ConflictsWithWhenNotEquals above.
@@ -856,6 +864,8 @@ func (r *resourceMemoryStrategy) Update(ctx context.Context, request resource.Up
 			return
 		}
 
+		strategyInput.RecordExpirySpecification = expandModifyRecordExpirySpecification(plan.RecordExpiryDurationDays, state.RecordExpiryDurationDays)
+
 		memoryID, memoryStrategyID := fwflex.StringValueFromFramework(ctx, plan.MemoryID), fwflex.StringValueFromFramework(ctx, plan.MemoryStrategyID)
 		input := bedrockagentcorecontrol.UpdateMemoryInput{
 			ClientToken: aws.String(create.UniqueId(ctx)),
@@ -1125,18 +1135,19 @@ func findMemoryStrategyByTwoPartKey(ctx context.Context, conn *bedrockagentcorec
 
 type memoryStrategyResourceModel struct {
 	framework.WithRegionModel
-	Configuration           fwtypes.ListNestedObjectValueOf[customConfigurationModel]             `tfsdk:"configuration"`
-	Description             types.String                                                          `tfsdk:"description"`
-	MemoryExecutionRoleARN  fwtypes.ARN                                                           `tfsdk:"memory_execution_role_arn"`
-	MemoryID                types.String                                                          `tfsdk:"memory_id"`
-	MemoryRecordSchema      fwtypes.ListNestedObjectValueOf[memoryRecordSchemaModel]              `tfsdk:"memory_record_schema"`
-	MemoryStrategyID        types.String                                                          `tfsdk:"memory_strategy_id"`
-	Name                    types.String                                                          `tfsdk:"name"`
-	Namespaces              fwtypes.SetOfString                                                   `tfsdk:"namespaces"`
-	NamespaceTemplates      fwtypes.SetOfString                                                   `tfsdk:"namespace_templates"`
-	ReflectionConfiguration fwtypes.ListNestedObjectValueOf[episodicReflectionConfigurationModel] `tfsdk:"reflection_configuration"`
-	Timeouts                timeouts.Value                                                        `tfsdk:"timeouts"`
-	Type                    fwtypes.StringEnum[awstypes.MemoryStrategyType]                       `tfsdk:"type"`
+	Configuration            fwtypes.ListNestedObjectValueOf[customConfigurationModel]             `tfsdk:"configuration"`
+	Description              types.String                                                          `tfsdk:"description"`
+	MemoryExecutionRoleARN   fwtypes.ARN                                                           `tfsdk:"memory_execution_role_arn"`
+	MemoryID                 types.String                                                          `tfsdk:"memory_id"`
+	MemoryRecordSchema       fwtypes.ListNestedObjectValueOf[memoryRecordSchemaModel]              `tfsdk:"memory_record_schema"`
+	MemoryStrategyID         types.String                                                          `tfsdk:"memory_strategy_id"`
+	Name                     types.String                                                          `tfsdk:"name"`
+	Namespaces               fwtypes.SetOfString                                                   `tfsdk:"namespaces"`
+	NamespaceTemplates       fwtypes.SetOfString                                                   `tfsdk:"namespace_templates"`
+	RecordExpiryDurationDays types.Int32                                                           `tfsdk:"record_expiry_duration_days"`
+	ReflectionConfiguration  fwtypes.ListNestedObjectValueOf[episodicReflectionConfigurationModel] `tfsdk:"reflection_configuration"`
+	Timeouts                 timeouts.Value                                                        `tfsdk:"timeouts"`
+	Type                     fwtypes.StringEnum[awstypes.MemoryStrategyType]                       `tfsdk:"type"`
 }
 
 var (
@@ -1217,6 +1228,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
+		r.Value.RecordExpirySpecification = m.expandRecordExpirySpecification()
 		return &r, diags
 
 	case awstypes.MemoryStrategyTypeSemantic:
@@ -1225,6 +1237,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
+		r.Value.RecordExpirySpecification = m.expandRecordExpirySpecification()
 		return &r, diags
 
 	case awstypes.MemoryStrategyTypeUserPreference:
@@ -1233,6 +1246,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
+		r.Value.RecordExpirySpecification = m.expandRecordExpirySpecification()
 		return &r, diags
 
 	case awstypes.MemoryStrategyTypeCustom:
@@ -1241,6 +1255,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 		if diags.HasError() {
 			return nil, diags
 		}
+		r.Value.RecordExpirySpecification = m.expandRecordExpirySpecification()
 		return &r, diags
 
 	case awstypes.MemoryStrategyTypeEpisodic:
@@ -1266,6 +1281,7 @@ func (m memoryStrategyResourceModel) expandToMemoryStrategyInput(ctx context.Con
 				return nil, diags
 			}
 		}
+		r.Value.RecordExpirySpecification = m.expandRecordExpirySpecification()
 		return &r, diags
 
 	default:
@@ -1314,7 +1330,43 @@ func (m memoryStrategyResourceModel) expandToModifyMemoryStrategyInput(ctx conte
 		r.Configuration = nil
 	}
 
+	// Update sends the configured value. Removing the argument (REMOVE) depends on
+	// prior state and is handled by expandModifyRecordExpirySpecification in Update.
+	r.RecordExpirySpecification = m.expandRecordExpirySpecification()
+
 	return &r, diags
+}
+
+// expandRecordExpirySpecification returns the RecordExpirySpecification union for
+// a configured record_expiry_duration_days, or nil when it is not configured.
+func (m memoryStrategyResourceModel) expandRecordExpirySpecification() awstypes.RecordExpirySpecification {
+	if m.RecordExpiryDurationDays.IsNull() || m.RecordExpiryDurationDays.IsUnknown() {
+		return nil
+	}
+
+	return &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+		Value: m.RecordExpiryDurationDays.ValueInt32(),
+	}
+}
+
+// expandModifyRecordExpirySpecification returns the RecordExpirySpecification to send on
+// update. It is nil when record_expiry_duration_days has not changed, so that unrelated
+// updates do not need the bedrock-agentcore:UpdateMemoryRecordExpirySpecification permission.
+// Removing a previously configured value sends action = REMOVE.
+func expandModifyRecordExpirySpecification(plan, state types.Int32) awstypes.RecordExpirySpecification {
+	switch {
+	case plan.Equal(state), plan.IsUnknown():
+		return nil
+
+	case plan.IsNull():
+		return &awstypes.RecordExpirySpecificationMemberAction{
+			Value: awstypes.RecordExpiryActionRemove,
+		}
+	}
+
+	return &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+		Value: plan.ValueInt32(),
+	}
 }
 
 type customConfigurationModel struct {
