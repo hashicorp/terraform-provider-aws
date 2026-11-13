@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -28,6 +27,7 @@ import (
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,10 +60,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 				Description: "The ID of the CloudFront distribution to invalidate cache for",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Z0-9]+$`),
-						"must be a valid CloudFront distribution ID (e.g., E1GHKQ2EXAMPLE)",
-					),
+					lazystringvalidator.RegexMatches(`^[A-Z0-9]+$`, "must be a valid CloudFront distribution ID (e.g., E1GHKQ2EXAMPLE)"),
 				},
 			},
 			"paths": schema.ListAttribute{
@@ -76,7 +73,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 					listvalidator.SizeAtMost(3000), // CloudFront limit
 					listvalidator.ValueStringsAre(
 						stringvalidator.LengthAtLeast(1),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^(/.*|\*)$`), "must start with '/' or be '*'"),
+						lazystringvalidator.RegexMatches(`^(/.*|\*)$`, "must start with '/' or be '*'"),
 					),
 				},
 			},
