@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,7 +77,7 @@ func (r *eventDestinationResource) Schema(ctx context.Context, req resource.Sche
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_:/-]+$`), "must contain only alphanumeric characters, underscores, hyphens, colons, and slashes"),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9_:/-]+$`, "must contain only alphanumeric characters, underscores, hyphens, colons, and slashes"),
 				},
 			},
 			names.AttrEnabled: schema.BoolAttribute{
@@ -97,7 +97,7 @@ func (r *eventDestinationResource) Schema(ctx context.Context, req resource.Sche
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_-]+$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9_-]+$`, "must contain only alphanumeric characters, underscores, and hyphens"),
 				},
 			},
 			"matching_event_types": schema.SetAttribute{
