@@ -86,6 +86,16 @@ func CIDRBlocksEqual(cidr1, cidr2 string) bool {
 	return ip2.String() == ip1.String() && ipnet2.String() == ipnet1.String()
 }
 
+// CIDRBlockKey returns a key matching the equality semantics of CIDRBlocksEqual.
+func CIDRBlockKey(cidr string) (string, error) {
+	ip, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return "", err
+	}
+
+	return ip.String() + "_" + ipnet.String(), nil
+}
+
 // CanonicalCIDRBlock returns the canonical representation of a CIDR block.
 // This function is especially useful for hash functions for sets which include IPv6 CIDR blocks.
 func CanonicalCIDRBlock(cidr string) string {
