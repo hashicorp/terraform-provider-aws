@@ -77,6 +77,8 @@ func TestValidationStringMatchDiag(t *testing.T) {
 }
 
 func TestValidationStringDoesNotMatch(t *testing.T) {
+	t.Parallel()
+
 	runTestCases(t, []testCase{
 		{
 			val: "foobar",
