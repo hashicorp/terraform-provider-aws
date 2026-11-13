@@ -388,9 +388,7 @@ const testAccPolicyDocumentBasicExpectedJSON = `{
       "2001:4860::/32",
       "192.0.0.0/8",
       "10.1.0.0/16"
-    ],
-    "dns-support": true,
-    "security-group-referencing-support": false
+    ]
   },
   "segments": [
     {
@@ -690,9 +688,7 @@ const testAccPolicyDocumentServiceInsertionExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ],
-    "dns-support": true,
-    "security-group-referencing-support": false
+    ]
   },
   "segments": [
     {
@@ -846,9 +842,7 @@ const testAccPolicyDocumentWildCardWhenSentToExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ],
-    "dns-support": true,
-    "security-group-referencing-support": false
+    ]
   },
   "segments": [
     {
@@ -1083,9 +1077,7 @@ const testAccPolicyDocumentViaExpectedJSON = `{
       {
         "location": "us-west-2"
       }
-    ],
-    "dns-support": true,
-    "security-group-referencing-support": false
+    ]
   },
   "segments": [
     {
@@ -1221,8 +1213,6 @@ const testAccPolicyDocumentRoutingPolicyNamesExpectedJSON = `{
   "version": "2025.11",
   "core-network-configuration": {
     "vpn-ecmp-support": false,
-    "dns-support": true,
-    "security-group-referencing-support": false,
     "asn-ranges": [
       "64512-65534"
     ],
@@ -1339,3 +1329,69 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `, acctest.Region())
 }
+
+// dns_support and security_group_referencing_support must round-trip when set.
+// Rendering them only when truthy would work for security-group-referencing-support,
+// whose AWS-side default is false, but would silently flip an explicit
+// dns_support = false, whose AWS-side default is true.
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_optionalSupportFlags(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_optionalSupportFlags,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentOptionalSupportFlagsExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_optionalSupportFlags = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    vpn_ecmp_support                   = false
+    dns_support                        = false
+    security_group_referencing_support = true
+    asn_ranges                         = ["64512-65534"]
+
+    edge_locations {
+      location = "us-east-1"
+    }
+  }
+
+  segments {
+    name = "segment"
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccPolicyDocumentOptionalSupportFlagsExpectedJSON = `{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "vpn-ecmp-support": false,
+    "edge-locations": [
+      {
+        "location": "us-east-1"
+      }
+    ],
+    "dns-support": false,
+    "security-group-referencing-support": true
+  },
+  "segments": [
+    {
+      "name": "segment",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": true
+    }
+  ]
+}`
