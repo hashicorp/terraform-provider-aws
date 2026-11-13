@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -36,6 +35,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -66,7 +66,7 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 50),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric characters, and underscores"),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z_]+$`, "must contain only alphanumeric characters, and underscores"),
 				},
 			},
 			"protected_resource_arns": schema.SetAttribute{
