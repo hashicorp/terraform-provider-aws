@@ -113,22 +113,45 @@ jobs:
               r"^\* `(github\.com/aws/aws-sdk-go-v2(?:/[^`]+)?)`: \[?(v[0-9][0-9A-Za-z.+-]*)",
               re.MULTILINE,
           )
-          unmatched = changed.copy()
-          matched = []
-          for release in releases:
-              versions = set(module_pattern.findall(release["body"] or ""))
-              if unmatched & versions:
-                  matched.append(release)
-                  unmatched -= versions
+          release_versions = [
+              (release, set(module_pattern.findall(release["body"] or "")))
+              for release in releases
+          ]
+
+          def match_versions(wanted):
+              unmatched = wanted.copy()
+              matched = []
+              for release, versions in release_versions:
+                  if unmatched & versions:
+                      matched.append(release)
+                      unmatched -= versions
+              return matched, unmatched
+
+          matched, unmatched = match_versions(changed)
+          prior_versions = {(path, before[path]) for path, _ in changed if path in before}
+          prior_matched, prior_unmatched = match_versions(prior_versions)
+          prior = prior_matched[0] if prior_matched and not prior_unmatched else None
+          final = matched[0] if matched and not unmatched else None
 
           title = "deps: update AWS SDK for Go v2"
           notes = []
+          notes.append("Release endpoints are inferred from the newest matching releases for the modules being updated, not an exact SDK-wide snapshot.")
+          notes.append("")
+          if prior:
+              notes.append(f'Prior release: [{prior["tag_name"]}]({prior["html_url"]}).')
+          else:
+              notes.append("The prior release could not be determined from the 100 most recent published releases.")
+          if final:
+              notes.append(f'Final release: [{final["tag_name"]}]({final["html_url"]}).')
+              if prior:
+                  title += f' from {prior["tag_name"]} to {final["tag_name"]}'
+              else:
+                  title += f' through {final["tag_name"]}'
+          notes.append("")
           if matched:
               notes.append("Published releases containing the updated SDK module versions (intermediate releases are not listed):")
               notes.append("")
               notes.extend(f'- [{r["tag_name"]}]({r["html_url"]})' for r in matched)
-              if not unmatched:
-                  title += f' through {matched[0]["tag_name"]}'
           else:
               notes.append("No corresponding published SDK release could be determined.")
           if unmatched:
