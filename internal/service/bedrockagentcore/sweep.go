@@ -20,6 +20,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_bedrockagentcore_consent_portal", sweepConsentPortals)
 	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes, "aws_bedrockagentcore_agent_runtime_endpoint")
 	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints, "aws_bedrockagentcore_harness")
 	awsv2.Register("aws_bedrockagentcore_workload_identity", sweepWorkloadIdentities)
@@ -27,8 +28,8 @@ func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_browser", sweepBrowsers)
 	awsv2.Register("aws_bedrockagentcore_browser_profile", sweepBrowserProfiles)
 	awsv2.Register("aws_bedrockagentcore_api_key_credential_provider", sweepAPIKeyCredentialProviders)
-	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders)
-	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target")
+	awsv2.Register("aws_bedrockagentcore_oauth2_credential_provider", sweepOAuth2CredentialProviders, "aws_bedrockagentcore_consent_portal")
+	awsv2.Register("aws_bedrockagentcore_gateway", sweepGateways, "aws_bedrockagentcore_gateway_target", "aws_bedrockagentcore_consent_portal")
 	awsv2.Register("aws_bedrockagentcore_gateway_target", sweepGatewayTargets)
 	awsv2.Register("aws_bedrockagentcore_harness", sweepHarnesses)
 	awsv2.Register("aws_bedrockagentcore_memory", sweepMemories, "aws_bedrockagentcore_harness")
@@ -476,5 +477,23 @@ func sweepPolicies(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 	}
 
+	return sweepResources, nil
+}
+
+func sweepConsentPortals(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input bedrockagentcorecontrol.ListConsentPortalsInput
+	conn := client.BedrockAgentCoreClient(ctx)
+	var sweepResources []sweep.Sweepable
+	pages := bedrockagentcorecontrol.NewListConsentPortalsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+		for _, v := range page.ConsentPortals {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newConsentPortalResource, client,
+				framework.NewAttribute("consent_portal_id", aws.ToString(v.ConsentPortalId))))
+		}
+	}
 	return sweepResources, nil
 }
