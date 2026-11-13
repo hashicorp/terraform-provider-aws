@@ -1349,6 +1349,31 @@ func statusTransitGatewayAttachment(conn *ec2.Client, id string) retry.StateRefr
 	}
 }
 
+// statusTransitGatewayAttachmentNATConfiguration reports a transitional rule state (pending or deleting)
+// if any rule is in transition, otherwise the NAT gateway support state.
+func statusTransitGatewayAttachmentNATConfiguration(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTransitGatewayAttachmentNATConfigurationByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		for _, rule := range output.NatGatewayRules {
+			switch rule.State {
+			case awstypes.TransitGatewayNatRuleStatePending, awstypes.TransitGatewayNatRuleStateDeleting:
+				return output, string(rule.State), nil
+			}
+		}
+
+		return output, string(output.NatGatewaySupport), nil
+	}
+}
+
 func statusTransitGatewayConnect(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayConnectByID(ctx, conn, id)
