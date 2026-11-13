@@ -627,6 +627,28 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			return
 		}
 
+		// When a ListNestedBlock is absent from the Terraform configuration, it
+		// is represented as an empty list (not null). AutoFlex expands this to a
+		// non-nil pointer to a zero-value struct, which the Bedrock API may
+		// interpret as "keep existing config" rather than "remove this config."
+		// Explicitly nil out policy config fields when the corresponding plan
+		// block is empty so the API correctly clears them.
+		if len(plan.SensitiveInformationPolicy.Elements()) == 0 {
+			in.SensitiveInformationPolicyConfig = nil
+		}
+		if len(plan.ContentPolicy.Elements()) == 0 {
+			in.ContentPolicyConfig = nil
+		}
+		if len(plan.TopicPolicy.Elements()) == 0 {
+			in.TopicPolicyConfig = nil
+		}
+		if len(plan.WordPolicy.Elements()) == 0 {
+			in.WordPolicyConfig = nil
+		}
+		if len(plan.ContextualGroundingPolicy.Elements()) == 0 {
+			in.ContextualGroundingPolicyConfig = nil
+		}
+
 		_, err := conn.UpdateGuardrail(ctx, &in)
 		if err != nil {
 			resp.Diagnostics.AddError(
