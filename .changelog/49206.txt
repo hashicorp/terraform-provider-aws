@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_acm_acme_endpoint
+```
+
+```release-note:new-list-resource
+aws_acm_acme_endpoint
+```
