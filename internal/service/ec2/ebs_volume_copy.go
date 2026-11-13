@@ -19,14 +19,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -66,12 +69,31 @@ func (r *ebsVolumeCopyResource) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrEncrypted: schema.BoolAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrIOPS: schema.Int32Attribute{
 				Computed: true,
 				Optional: true,
 				PlanModifiers: []planmodifier.Int32{
 					int32planmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrKMSKeyID: schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					fwvalidators.ARN(),
 				},
 			},
 			names.AttrSize: schema.Int32Attribute{
@@ -159,7 +181,7 @@ func (r *ebsVolumeCopyResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut, &plan, ebsVolumeCopyFlexOptions(&plan)...))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -189,7 +211,7 @@ func (r *ebsVolumeCopyResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &state, ebsVolumeCopyFlexOptions(&state)...))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -264,7 +286,7 @@ func (r *ebsVolumeCopyResource) Update(ctx context.Context, req resource.UpdateR
 			return
 		}
 
-		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut, &plan))
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, waitOut, &plan, ebsVolumeCopyFlexOptions(&plan)...))
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -307,13 +329,26 @@ func (r *ebsVolumeCopyResource) Delete(ctx context.Context, req resource.DeleteR
 
 func (r *ebsVolumeCopyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
 	var volumeTypeCfg fwtypes.StringEnum[awstypes.VolumeType]
+	var encrypted types.Bool
 	var iops, throughput types.Int32
+	var kmsKeyID types.String
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrVolumeType), &volumeTypeCfg))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrEncrypted), &encrypted))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrIOPS), &iops))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrKMSKeyID), &kmsKeyID))
 	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.GetAttribute(ctx, path.Root(names.AttrThroughput), &throughput))
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	if !kmsKeyID.IsNull() && !kmsKeyID.IsUnknown() &&
+		!encrypted.IsUnknown() && (encrypted.IsNull() || !encrypted.ValueBool()) {
+		resp.Diagnostics.AddAttributeError(
+			path.Root(names.AttrKMSKeyID),
+			"Invalid KMS Key Configuration",
+			"`encrypted` must be set to true when `kms_key_id` is configured.",
+		)
 	}
 
 	if volumeTypeCfg.IsNull() || volumeTypeCfg.IsUnknown() {
@@ -394,8 +429,10 @@ type ebsVolumeCopyResourceModel struct {
 	framework.WithRegionModel
 	ARN              types.String                            `tfsdk:"arn"`
 	AvailabilityZone types.String                            `tfsdk:"availability_zone"`
+	Encrypted        types.Bool                              `tfsdk:"encrypted"`
 	ID               types.String                            `tfsdk:"id"`
 	Iops             types.Int32                             `tfsdk:"iops"`
+	KMSKeyID         types.String                            `tfsdk:"kms_key_id"`
 	Size             types.Int32                             `tfsdk:"size"`
 	SourceVolumeID   types.String                            `tfsdk:"source_volume_id"`
 	Tags             tftags.Map                              `tfsdk:"tags"`
@@ -403,4 +440,15 @@ type ebsVolumeCopyResourceModel struct {
 	Throughput       types.Int32                             `tfsdk:"throughput"`
 	Timeouts         timeouts.Value                          `tfsdk:"timeouts"`
 	VolumeType       fwtypes.StringEnum[awstypes.VolumeType] `tfsdk:"volume_type"`
+}
+
+func ebsVolumeCopyFlexOptions(model *ebsVolumeCopyResourceModel) []fwflex.AutoFlexOptionsFunc {
+	// DescribeVolumes returns the canonical key ARN even when CopyVolumes used an alias.
+	if !model.KMSKeyID.IsNull() && !model.KMSKeyID.IsUnknown() {
+		return []fwflex.AutoFlexOptionsFunc{
+			fwflex.WithIgnoredFieldNamesAppend("KmsKeyId"),
+		}
+	}
+
+	return nil
 }
