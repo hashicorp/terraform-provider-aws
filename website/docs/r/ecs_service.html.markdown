@@ -224,6 +224,45 @@ resource "aws_cloudwatch_log_group" "example" {
 data "aws_region" "current" {}
 ```
 
+### Gateway Connector
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name            = "example"
+  cluster         = aws_ecs_cluster.example.arn
+  task_definition = aws_ecs_task_definition.example.arn
+  desired_count   = 2
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets = aws_subnet.example[*].id
+  }
+
+  gateway_connector {
+    port_name = "web"
+
+    filters {
+      access_types = [aws_ecs_gateway.example.access_type]
+    }
+
+    health_check {
+      path = "/healthz"
+
+      matcher {
+        http_code = "200-299"
+      }
+    }
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.example]
+}
+
+resource "aws_ecs_gateway_cluster_association" "example" {
+  gateway_arn = aws_ecs_gateway.example.arn
+  cluster_arn = aws_ecs_cluster.example.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -246,6 +285,7 @@ The following arguments are optional:
 * `enable_execute_command` - (Optional) Whether to enable Amazon ECS Exec for the tasks within the service.
 * `force_delete` - (Optional) Enable to delete a service even if it wasn't scaled down to zero tasks. It's only necessary to use this if the service uses the `REPLICA` scheduling strategy.
 * `force_new_deployment` - (Optional) Enable to force a new task deployment of the service. This can be used to update tasks to use a newer Docker image with same image/tag combination (e.g., `myimage:latest`), roll Fargate tasks onto a newer platform version, or immediately deploy `ordered_placement_strategy` and `placement_constraints` updates.
+* `gateway_connector` - (Optional) Configuration block that routes ingress traffic from the ECS gateways associated with the cluster to a port of the service. See [`gateway_connector` Block](#gateway_connector-block) below.
 * `health_check_grace_period_seconds` - (Optional) Seconds to ignore failing load balancer health checks on newly instantiated tasks to prevent premature shutdown, up to 2147483647. Only valid for services configured to use load balancers.
 * `iam_role` - (Optional) ARN of the IAM role that allows Amazon ECS to make calls to your load balancer on your behalf. This parameter is required if you are using a load balancer with your service, but only if your task definition does not use the `awsvpc` network mode. If using `awsvpc` network mode, do not specify this role. If your account has already created the Amazon ECS service-linked role, that role is used by default for your service unless you specify a role here.
 * `launch_type` - (Optional) Launch type on which to run your service. The valid values are `EC2`, `FARGATE`, and `EXTERNAL`. Defaults to `EC2`. Conflicts with `capacity_provider_strategy`.
@@ -368,6 +408,46 @@ The `deployment_circuit_breaker` configuration block supports the following:
 The `deployment_controller` configuration block supports the following:
 
 * `type` - (Optional) Type of deployment controller. Valid values: `CODE_DEPLOY`, `ECS`, `EXTERNAL`. Default: `ECS`.
+
+### `gateway_connector` Block
+
+The `gateway_connector` block supports:
+
+* `filters` - (Optional) Filters that control which gateway ingress paths the connector applies to. See [`filters` Block](#filters-block) below.
+* `health_check` - (Optional) Health check that the gateways use to determine whether the targets for the connector are healthy. See [`health_check` Block](#health_check-block) below.
+* `port_name` - (Required) Name of the port mapping in the task definition that the gateways route ingress traffic to.
+
+-> **Note:** `gateway_connector` names no gateway. The service connects to the gateways that are associated with its cluster. Set `depends_on` to the related `aws_ecs_gateway_cluster_association`, so that Terraform creates the association before the service and destroys the service before the association.
+
+-> **Note:** Reading `gateway_connector` requires the `ecs:DescribeServiceRevisions` permission. The provider calls `DescribeServiceRevisions` when `gateway_connector` is configured, when a service is imported, and when services are listed with `include_resource` enabled. Terraform does not detect a connector that is added outside of Terraform to a service without a `gateway_connector` block.
+
+### `filters` Block
+
+The `filters` block supports:
+
+* `access_types` - (Optional) Access types of the gateway ingress paths that the connector applies to. Allowed values are: `PUBLIC` and `PRIVATE`.
+
+### `health_check` Block
+
+The `health_check` block supports:
+
+* `healthy_threshold_count` - (Optional) Number of consecutive successful health checks that a target must pass before the gateways consider it healthy.
+* `interval_seconds` - (Optional) Approximate amount of time, in seconds, between health checks of an individual target.
+* `matcher` - (Optional) Codes that indicate a successful health check response from a target. See [`matcher` Block](#matcher-block) below.
+* `path` - (Optional) Destination path for health check requests.
+* `port` - (Optional) Port that the gateways use to perform health checks on the targets.
+* `protocol` - (Optional) Protocol that the gateways use to perform health checks. Allowed values are: `HTTP` and `HTTPS`.
+* `timeout_seconds` - (Optional) Amount of time, in seconds, during which no response from a target means a failed health check.
+* `unhealthy_threshold_count` - (Optional) Number of consecutive failed health checks that a target must fail before the gateways consider it unhealthy.
+
+~> **Note:** A service that uses the `ROLLING` deployment strategy cannot change `health_check` in place. Amazon ECS rejects the update and asks for a different deployment strategy.
+
+### `matcher` Block
+
+The `matcher` block supports:
+
+* `grpc_code` - (Optional) gRPC codes that indicate a successful response from a target.
+* `http_code` - (Optional) HTTP codes that indicate a successful response from a target.
 
 ### `load_balancer` Block
 
