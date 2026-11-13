@@ -353,6 +353,26 @@ func TestAccPricingPlanManagerSubscription_approvalModeManual(t *testing.T) {
 				// approval_mode is a create-time-only argument, not returned by the API.
 				ImportStateVerifyIgnore: []string{"approval_mode"},
 			},
+			// Importing with approval_mode set in configuration must not replace
+			// the subscription: the imported state has no approval mode.
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Subscription/approvalMode/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"plan_tier":     config.StringVariable("PRO"),
+					"approval_mode": tfconfig.StringVariable(awstypes.ApprovalModeManual),
+				},
+				ResourceName:       resourceName,
+				ImportState:        true,
+				ImportStateKind:    resource.ImportBlockWithResourceIdentity,
+				ExpectNonEmptyPlan: true,
+				ImportPlanChecks: resource.ImportPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("approval_mode"), tfknownvalue.StringExact(awstypes.ApprovalModeManual)),
+					},
+				},
+			},
 		},
 	})
 }
