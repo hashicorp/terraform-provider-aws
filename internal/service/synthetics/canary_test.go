@@ -5,6 +5,7 @@ package synthetics_test
 
 import (
 	"archive/zip"
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
@@ -1025,19 +1026,18 @@ func testAccCanaryCopyFile(t *testing.T, src, dst string) {
 func testAccCanaryWriteModifiedZip(t *testing.T, src, dst string) {
 	t.Helper()
 
-	r, err := zip.OpenReader(src)
+	b, err := os.ReadFile(src)
+	if err != nil {
+		t.Fatalf("reading %s: %s", src, err)
+	}
+
+	r, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
 	if err != nil {
 		t.Fatalf("opening %s: %s", src, err)
 	}
-	defer r.Close()
 
-	out, err := os.Create(dst)
-	if err != nil {
-		t.Fatalf("creating %s: %s", dst, err)
-	}
-	defer out.Close()
-
-	w := zip.NewWriter(out)
+	var buf bytes.Buffer
+	w := zip.NewWriter(&buf)
 	for _, f := range r.File {
 		fw, err := w.CreateHeader(&zip.FileHeader{
 			Name:          f.Name,
@@ -1053,18 +1053,22 @@ func testAccCanaryWriteModifiedZip(t *testing.T, src, dst string) {
 			continue
 		}
 
-		b, err := testAccCanaryReadZipEntry(f)
+		content, err := testAccCanaryReadZipEntry(f)
 		if err != nil {
 			t.Fatalf("reading %s from %s: %s", f.Name, src, err)
 		}
 
-		if _, err := fw.Write(append(b, "\n// modified\n"...)); err != nil {
+		if _, err := fw.Write(append(content, "\n// modified\n"...)); err != nil {
 			t.Fatalf("writing %s to %s: %s", f.Name, dst, err)
 		}
 	}
 
 	if err := w.Close(); err != nil {
 		t.Fatalf("closing %s: %s", dst, err)
+	}
+
+	if err := os.WriteFile(dst, buf.Bytes(), 0o600); err != nil {
+		t.Fatalf("writing %s: %s", dst, err)
 	}
 }
 
