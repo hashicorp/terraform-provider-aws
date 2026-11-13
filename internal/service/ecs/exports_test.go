@@ -12,6 +12,7 @@ var (
 	ResourceDaemon                   = newDaemonResource
 	ResourceDaemonTaskDefinition     = newDaemonTaskDefinitionResource
 	ResourceExpressGatewayService    = newExpressGatewayServiceResource
+	ResourceGateway                  = newGatewayResource
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
 	ResourceTaskDefinition           = resourceTaskDefinition
@@ -25,11 +26,13 @@ var (
 	FindDaemonTaskDefinitionByARN           = findDaemonTaskDefinitionByARN
 	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
 	FindExpressGatewayServiceByARN          = findExpressGatewayServiceByARN
+	FindGatewayByARN                        = findGatewayByARN
 	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
 	FindTag                                 = findTag
 	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
 	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
 	FlattenServiceVolumeConfigurations      = flattenServiceVolumeConfigurations
+	GatewayStatusError                      = gatewayStatusError
 	RoleNameFromARN                         = roleNameFromARN
 	ServiceNameFromARN                      = serviceNameFromARN
 	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
