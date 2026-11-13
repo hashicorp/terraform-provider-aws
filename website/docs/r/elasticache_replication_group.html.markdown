@@ -304,6 +304,8 @@ The following arguments are optional:
 
 The `log_delivery_configuration` block allows the streaming of Redis OSS/Valkey [SLOWLOG](https://redis.io/commands/slowlog) or Redis OSS/Valkey [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
 
+~> **Note:** Changes to `log_delivery_configuration` are always applied immediately, regardless of the value of `apply_immediately`, because ElastiCache requires apply-immediately for all log delivery modifications.
+
 * `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
 * `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
 * `log_format` - Valid values are `json` or `text`
