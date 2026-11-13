@@ -74,6 +74,11 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 			}
 		}
 
+		// The API sets user to "0" (root) on a FireLens container that has no user.
+		if def.FirelensConfiguration != nil && def.User == nil {
+			cd[i].User = aws.String("0")
+		}
+
 		for j, pm := range def.PortMappings {
 			if pm.Protocol == awstypes.TransportProtocolTcp {
 				cd[i].PortMappings[j].Protocol = ""

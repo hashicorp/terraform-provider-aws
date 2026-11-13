@@ -853,3 +853,83 @@ func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
 		t.Fatalf("Expected message '%[1]s', got '%[2]s'", expectedErr, err.Error())
 	}
 }
+
+func TestContainerDefinitionsAreEquivalent_firelensConfiguration(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresentation := `
+[
+    {
+        "name": "log_router",
+        "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+        "essential": true,
+        "firelensConfiguration": {
+            "type": "fluentbit"
+        }
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "environment": [],
+        "essential": true,
+        "firelensConfiguration": {
+            "type": "fluentbit"
+        },
+        "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+        "mountPoints": [],
+        "name": "log_router",
+        "portMappings": [],
+        "systemControls": [],
+        "user": "0",
+        "volumesFrom": []
+    }
+]`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
+
+func TestContainerDefinitionsAreEquivalent_firelensConfigurationNonRootUser(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresentation := `
+[
+    {
+        "name": "log_router",
+        "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+        "essential": true,
+        "firelensConfiguration": {
+            "type": "fluentbit"
+        },
+        "user": "1000"
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "essential": true,
+        "firelensConfiguration": {
+            "type": "fluentbit"
+        },
+        "image": "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable",
+        "name": "log_router",
+        "user": "0"
+    }
+]`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if equal {
+		t.Fatal("Expected definitions to differ.")
+	}
+}
