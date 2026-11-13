@@ -570,18 +570,13 @@ func resourceInstance() *schema.Resource {
 					Optional:              true,
 					DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
 					DiffSuppressOnRefresh: true,
-					ConflictsWith: []string{
-						"replicate_source_db_cluster",
-					},
+					ConflictsWith:         []string{"replicate_source_db_cluster"},
 				},
 				"replicate_source_db_cluster": {
-					Type:                  schema.TypeString,
-					Optional:              true,
-					DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
-					DiffSuppressOnRefresh: true,
-					ConflictsWith: []string{
-						"replicate_source_db",
-					},
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validIdentifier,
+					ConflictsWith: []string{"replicate_source_db"},
 				},
 				names.AttrResourceID: {
 					Type:     schema.TypeString,
@@ -689,9 +684,6 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeInt,
 					Optional: true,
 					Computed: true,
-					ConflictsWith: []string{
-						"replicate_source_db_cluster",
-					},
 				},
 				names.AttrStorageType: {
 					Type:     schema.TypeString,
@@ -755,9 +747,13 @@ func resourceInstance() *schema.Resource {
 					return nil
 				}
 
-				sourceInstance := d.Get("replicate_source_db").(string)
-				if sourceInstance != "" {
+				source := d.Get("replicate_source_db").(string)
+				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
+				}
+
+				if d.Get("replicate_source_db_cluster").(string) != "" {
+					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db_cluster" is set.`)
 				}
 				return nil
 			},
