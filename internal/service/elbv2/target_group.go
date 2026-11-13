@@ -410,6 +410,12 @@ func resourceTargetGroup() *schema.Resource {
 					ForceNew:         true,
 					DiffSuppressFunc: suppressIfTargetType(awstypes.TargetTypeEnumLambda),
 				},
+				"waf_http2_traffic_inspection_behavior": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(wafHTTP2TrafficInspectionBehavior_Values(), false),
+				},
 			}
 		},
 	}
@@ -868,6 +874,11 @@ var targetGroupAttributes = targetGroupAttributeMap(map[string]targetGroupAttrib
 	"slow_start": {
 		apiAttributeKey:      targetGroupAttributeSlowStartDurationSeconds,
 		tfType:               schema.TypeInt,
+		targetTypesSupported: []awstypes.TargetTypeEnum{awstypes.TargetTypeEnumInstance, awstypes.TargetTypeEnumIp},
+	},
+	"waf_http2_traffic_inspection_behavior": {
+		apiAttributeKey:      targetGroupAttributeWAFHTTP2TrafficInspectionBehavior,
+		tfType:               schema.TypeString,
 		targetTypesSupported: []awstypes.TargetTypeEnum{awstypes.TargetTypeEnumInstance, awstypes.TargetTypeEnumIp},
 	},
 })

@@ -2426,6 +2426,46 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 	})
 }
 
+func TestAccELBV2TargetGroup_wafHTTP2TrafficInspectionBehavior(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TargetGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_albWAFHTTP2TrafficInspectionBehavior(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "waf_http2_traffic_inspection_behavior", "inspect_immediately"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albWAFHTTP2TrafficInspectionBehavior(rName, "inspect_after_sufficient_data"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "waf_http2_traffic_inspection_behavior", "inspect_after_sufficient_data"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albWAFHTTP2TrafficInspectionBehavior(rName, "inspect_immediately"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "waf_http2_traffic_inspection_behavior", "inspect_immediately"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_ALBAlias_InvalidAnomalyMitigation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -6029,6 +6069,33 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }`, rName, crossZoneParam)
+}
+
+func testAccTargetGroupConfig_albWAFHTTP2TrafficInspectionBehavior(rName, behavior string) string {
+	var behaviorParam string
+
+	if behavior != "" {
+		behaviorParam = fmt.Sprintf(`waf_http2_traffic_inspection_behavior = %q`, behavior)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_lb_target_group" "test" {
+  name             = %[1]q
+  port             = 443
+  protocol         = "HTTPS"
+  protocol_version = "HTTP2"
+  vpc_id           = aws_vpc.test.id
+
+  %[2]s
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName, behaviorParam)
 }
 
 func testAccTargetGroupConfig_albMissingPort(rName string) string {
