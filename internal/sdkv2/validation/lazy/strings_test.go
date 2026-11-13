@@ -38,7 +38,7 @@ func TestValidationStringMatch(t *testing.T) {
 		{
 			val:         "bar",
 			f:           StringMatch("(", ""),
-			expectedErr: regexache.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`),
+			expectedErr: regexache.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`), //nolint:staticcheck // Tests invalid regular expression handling.
 		},
 	})
 }
@@ -71,7 +71,7 @@ func TestValidationStringMatchDiag(t *testing.T) {
 		{
 			val:                "bar",
 			f:                  StringMatchDiag("(", ""),
-			expectedDiagDetail: regexache.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())),
+			expectedDiagDetail: regexache.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())), //nolint:staticcheck // Tests invalid regular expression handling.
 		},
 	})
 }
@@ -104,7 +104,7 @@ func TestValidationStringDoesNotMatch(t *testing.T) {
 		{
 			val:         "bar",
 			f:           StringDoesNotMatch("(", ""),
-			expectedErr: regexache.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`),
+			expectedErr: regexache.MustCompile(`^failed to compile regex pattern "\(": ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }()) + `$`), //nolint:staticcheck // Tests invalid regular expression handling.
 		},
 	})
 }
@@ -137,7 +137,7 @@ func TestValidationStringDoesNotMatchDiag(t *testing.T) {
 		{
 			val:                "bar",
 			f:                  StringDoesNotMatchDiag("(", ""),
-			expectedDiagDetail: regexache.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())),
+			expectedDiagDetail: regexache.MustCompile(`(?s)An unexpected error occurred while validating the attribute value\..+The regex pattern "\(" failed to compile: ` + regexp.QuoteMeta(func() string { _, err := regexp.Compile(`(`); return err.Error() }())), //nolint:staticcheck // Tests invalid regular expression handling.
 		},
 	})
 }
@@ -176,7 +176,7 @@ func TestRegexacheCompile(t *testing.T) {
 			t.Errorf("expected nil regexp, got %q", re)
 		}
 
-		_, wantErr := regexp.Compile(pattern)
+		_, wantErr := regexp.Compile(pattern) //nolint:staticcheck // Tests invalid regular expression handling.
 		if err.Error() != wantErr.Error() {
 			t.Errorf("expected error %q, got %q", wantErr, err)
 		}
