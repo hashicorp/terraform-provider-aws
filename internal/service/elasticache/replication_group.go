@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfcty "github.com/hashicorp/terraform-provider-aws/internal/cty"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -684,11 +685,12 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.PreferredCacheClusterAZs = flex.ExpandStringValueList(v.([]any))
 	}
 
+	rawConfig := d.GetRawConfig()
+
 	if v, ok := d.GetOk("node_group_configuration"); ok && v.(*schema.Set).Len() > 0 {
-		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.(*schema.Set).List())
+		input.NodeGroupConfiguration = expandNodeGroupConfigurations(v.(*schema.Set).List(), rawConfig.GetAttr("node_group_configuration"))
 	}
 
-	rawConfig := d.GetRawConfig()
 	rawReplicasPerNodeGroup := rawConfig.GetAttr("replicas_per_node_group")
 	if rawReplicasPerNodeGroup.IsKnown() && !rawReplicasPerNodeGroup.IsNull() {
 		var v int32
@@ -1893,7 +1895,22 @@ func checkIfLogTypeSlowLog(currentLogDeliveryConfig []any) bool {
 	return logTypeSlowLogExists
 }
 
-func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfiguration {
+func expandNodeGroupConfigurations(tfList []any, rawConfig cty.Value) []awstypes.NodeGroupConfiguration {
+	// tfList holds 0 for an unset replica_count, and AWS rejects ReplicaCount alongside ReplicasPerNodeGroup.
+	hasReplicaCount := make(map[string]bool)
+	if tfcty.HasValue(rawConfig) {
+		for block := range tfcty.ValueElementValues(rawConfig) {
+			if !tfcty.HasValue(block.GetAttr("replica_count")) {
+				continue
+			}
+			var nodeGroupID string
+			if v := block.GetAttr("node_group_id"); tfcty.HasValue(v) {
+				nodeGroupID = v.AsString()
+			}
+			hasReplicaCount[nodeGroupID] = true
+		}
+	}
+
 	var apiObjects []awstypes.NodeGroupConfiguration
 
 	for _, tfMapRaw := range tfList {
@@ -1915,7 +1932,7 @@ func expandNodeGroupConfigurations(tfList []any) []awstypes.NodeGroupConfigurati
 		if v, ok := tfMap["replica_outpost_arns"].([]any); ok && len(v) > 0 {
 			apiObject.ReplicaOutpostArns = flex.ExpandStringValueList(v)
 		}
-		if v, ok := tfMap["replica_count"].(int); ok {
+		if v, ok := tfMap["replica_count"].(int); ok && hasReplicaCount[aws.ToString(apiObject.NodeGroupId)] {
 			apiObject.ReplicaCount = aws.Int32(int32(v))
 		}
 		if v, ok := tfMap["slots"].(string); ok && v != "" {
