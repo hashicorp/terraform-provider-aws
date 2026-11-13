@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `engine_mode` and `use_case` arguments to support the log-analytics optimized engine (OpenSearch 3.5+)
+```
+
+```release-note:enhancement
+data-source/aws_opensearch_domain: Add `engine_mode` and `use_case` attributes
+```
