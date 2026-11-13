@@ -32,6 +32,8 @@ var (
 	FlattenServiceVolumeConfigurations      = flattenServiceVolumeConfigurations
 	RoleNameFromARN                         = roleNameFromARN
 	ServiceNameFromARN                      = serviceNameFromARN
+	SuppressTaskDefinitionCPUDiffs          = suppressTaskDefinitionCPUDiffs
+	SuppressTaskDefinitionMemoryDiffs       = suppressTaskDefinitionMemoryDiffs
 	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
 	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
 )
