@@ -135,6 +135,7 @@ This resource supports the following arguments:
 * `key_name` - (Optional) The key name to use for the instance.
 * `license_specification` - (Optional) A list of license specifications to associate with. See [License Specification](#license-specification) below for more details.
 * `maintenance_options` - (Optional) The maintenance options for the instance. See [Maintenance Options](#maintenance-options) below for more details.
+* `max_versions` - (Optional) Maximum number of versions to keep, between `1` and `10000`. After each update, Terraform deletes all but the newest `max_versions` versions; the default version is never deleted. If unset, no version is deleted. An Auto Scaling group or instance that references a deleted version by number can no longer launch from it, so reference `latest_version`, `$Latest` or `$Default` instead.
 * `metadata_options` - (Optional) Customize the metadata options for the instance. See [Metadata Options](#metadata-options) below for more details.
 * `monitoring` - (Optional) The monitoring option for the instance. See [Monitoring](#monitoring) below for more details.
 * `name` - (Optional) The name of the launch template. If you leave this blank, Terraform will auto-generate a unique name.
