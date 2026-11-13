@@ -12037,6 +12037,7 @@ resource "aws_rds_cluster" "test" {
   master_password_wo_version = 1
   master_username            = "tfacctest"
   skip_final_snapshot        = true
+  storage_encrypted          = true
   storage_type               = "io1"
 }
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
@@ -12051,6 +12052,7 @@ resource "aws_db_instance" "test" {
   instance_class              = aws_rds_cluster.test.db_cluster_instance_class
   replicate_source_db_cluster = aws_rds_cluster.test.cluster_identifier
   skip_final_snapshot         = true
+  storage_encrypted           = true
 }
 `, rName))
 }
@@ -12064,6 +12066,7 @@ resource "aws_db_instance" "test" {
   identifier              = %[1]q
   instance_class          = aws_rds_cluster.test.db_cluster_instance_class
   skip_final_snapshot     = true
+  storage_encrypted       = true
 }
 `, rName))
 }
@@ -12080,6 +12083,7 @@ resource "aws_db_instance" "test" {
   maintenance_window          = "mon:00:00-mon:03:00"
   replicate_source_db_cluster = aws_rds_cluster.test.cluster_identifier
   skip_final_snapshot         = true
+  storage_encrypted           = true
 }
 `, rName))
 }
