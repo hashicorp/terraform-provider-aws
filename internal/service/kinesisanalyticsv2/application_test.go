@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -4330,6 +4331,159 @@ func TestAccKinesisAnalyticsV2Application_ApplicationEncryptionConfiguration_upd
 	})
 }
 
+func TestRuntimeSupportsEnhancedSnapshots(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]bool{
+		"FLINK-1_15":         false,
+		"FLINK-1_19":         false,
+		"FLINK-1_20":         true,
+		"FLINK-2_2":          true,
+		"SQL-1_0":            false,
+		"ZEPPELIN-FLINK-3_0": true, // Left for the API to validate.
+	}
+
+	for runtime, want := range testCases {
+		t.Run(runtime, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfkinesisanalyticsv2.RuntimeSupportsEnhancedSnapshots(runtime); got != want {
+				t.Errorf("RuntimeSupportsEnhancedSnapshots(%q) = %t, want %t", runtime, got, want)
+			}
+		})
+	}
+}
+
+func TestAccKinesisAnalyticsV2Application_SnapshotMode_enhanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ApplicationDetail
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_snapshotMode(rName, "FLINK-1_20", "ENHANCED_SNAPSHOTS", false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshot_mode", "ENHANCED_SNAPSHOTS"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshots_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_application"},
+			},
+			{
+				Config:      testAccApplicationConfig_snapshotMode(rName, "FLINK-1_20", "APPLICATION_SNAPSHOTS_LEGACY", false, false),
+				ExpectError: regexache.MustCompile(`opting in to enhanced snapshots is one-way`),
+			},
+			// A replacement may use either mode.
+			{
+				Config: testAccApplicationConfig_snapshotModeDescription(rName, "APPLICATION_SNAPSHOTS_LEGACY", "replacement"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshot_mode", "APPLICATION_SNAPSHOTS_LEGACY"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKinesisAnalyticsV2Application_SnapshotMode_snapshotARNRequiresEnhanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccApplicationConfig_snapshotARNWithoutEnhancedMode(rName),
+				ExpectError: regexache.MustCompile(`snapshot_arn requires .*snapshot_mode = ENHANCED_SNAPSHOTS`),
+			},
+		},
+	})
+}
+
+func TestAccKinesisAnalyticsV2Application_SnapshotMode_unsupportedRuntime(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccApplicationConfig_snapshotMode(rName, "FLINK-1_19", "ENHANCED_SNAPSHOTS", false, false),
+				ExpectError: regexache.MustCompile(`requires an Apache Flink runtime_environment of FLINK-1_20 or later`),
+			},
+		},
+	})
+}
+
+// TestAccKinesisAnalyticsV2Application_SnapshotMode_optIn opts a running application in to enhanced snapshots,
+// then snapshots it so that a later RESTORE_FROM_LATEST_SNAPSHOT has state to restore.
+func TestAccKinesisAnalyticsV2Application_SnapshotMode_optIn(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ApplicationDetail
+	var snapshot awstypes.SnapshotInfoDetails
+	resourceName := "aws_kinesisanalyticsv2_application.test"
+	snapshotResourceName := "aws_kinesisanalyticsv2_snapshot.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckApplicationDestroy(ctx, t),
+			testAccCheckSnapshotDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_snapshotMode(rName, "FLINK-1_20", "", true, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshot_mode", "APPLICATION_SNAPSHOTS_LEGACY"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_snapshotMode(rName, "FLINK-1_20", "ENHANCED_SNAPSHOTS", true, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.application_snapshot_configuration.0.snapshot_mode", "ENHANCED_SNAPSHOTS"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "version_id", "2"),
+					testAccCheckSnapshotExists(ctx, t, snapshotResourceName, &snapshot),
+					resource.TestCheckResourceAttr(snapshotResourceName, "application_version_id", "2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckApplicationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).KinesisAnalyticsV2Client(ctx)
@@ -6355,4 +6509,105 @@ resource "aws_kms_key_policy" "test" {
   })
 }
 `, rName, count)
+}
+
+// testAccApplicationConfig_snapshotMode returns an Apache Flink application with the given snapshot mode.
+// An empty snapshotMode leaves it unset. withSnapshot adds an enhanced snapshot of the application.
+func testAccApplicationConfig_snapshotMode(rName, runtimeEnvironment, snapshotMode string, startApplication, withSnapshot bool) string {
+	return testAccApplicationConfig_snapshotModeExtra(rName, runtimeEnvironment, snapshotMode, startApplication, withSnapshot, "", "")
+}
+
+// testAccApplicationConfig_snapshotModeExtra adds extraApplicationConfiguration inside application_configuration
+// and extraArguments at the top level of the application.
+func testAccApplicationConfig_snapshotModeExtra(rName, runtimeEnvironment, snapshotMode string, startApplication, withSnapshot bool, extraApplicationConfiguration, extraArguments string) string {
+	snapshotModeLine := ""
+	if snapshotMode != "" {
+		snapshotModeLine = fmt.Sprintf("snapshot_mode     = %q", snapshotMode)
+	}
+
+	snapshot := ""
+	if withSnapshot {
+		snapshot = fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_snapshot" "test" {
+  application_name = aws_kinesisanalyticsv2_application.test.name
+  name             = %[1]q
+}
+`, rName)
+	}
+
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_baseServiceExecutionIAMRole(rName),
+		testAccApplicationConfig_baseFlinkApplication(rName),
+		fmt.Sprintf(`
+resource "aws_kinesisanalyticsv2_application" "test" {
+  name                   = %[1]q
+  runtime_environment    = %[2]q
+  service_execution_role = aws_iam_role.test[0].arn
+
+  application_configuration {
+    application_code_configuration {
+      code_content {
+        s3_content_location {
+          bucket_arn     = aws_s3_bucket.test.arn
+          file_key       = aws_s3_object.test[0].key
+          object_version = aws_s3_object.test[0].version_id
+        }
+      }
+
+      code_content_type = "ZIPFILE"
+    }
+
+    application_snapshot_configuration {
+      snapshots_enabled = true
+      %[3]s
+    }
+
+    environment_properties {
+      property_group {
+        property_group_id = "InputStream0"
+
+        property_map = {
+          "aws.region"  = data.aws_region.current.region
+          "stream.name" = aws_kinesis_stream.input.name
+        }
+      }
+
+      property_group {
+        property_group_id = "OutputStream0"
+
+        property_map = {
+          "aws.region"  = data.aws_region.current.region
+          "stream.name" = aws_kinesis_stream.output.name
+        }
+      }
+    }
+
+    %[6]s
+  }
+
+  start_application = %[4]t
+  %[7]s
+}
+%[5]s
+`, rName, runtimeEnvironment, snapshotModeLine, startApplication, snapshot, extraApplicationConfiguration, extraArguments))
+}
+
+// testAccApplicationConfig_snapshotModeDescription is testAccApplicationConfig_snapshotMode with a description,
+// which is ForceNew, so changing it replaces the application.
+func testAccApplicationConfig_snapshotModeDescription(rName, snapshotMode, description string) string {
+	return testAccApplicationConfig_snapshotModeExtra(rName, "FLINK-1_20", snapshotMode, false, false, "", fmt.Sprintf("description = %q", description))
+}
+
+func testAccApplicationConfig_snapshotARNWithoutEnhancedMode(rName string) string {
+	return testAccApplicationConfig_snapshotModeExtra(rName, "FLINK-1_20", "APPLICATION_SNAPSHOTS_LEGACY", false, false, `
+    run_configuration {
+      application_restore_configuration {
+        application_restore_type = "RESTORE_FROM_CUSTOM_SNAPSHOT"
+        snapshot_arn             = "arn:${data.aws_partition.current.partition}:kinesisanalytics:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:snapshot/example"
+      }
+    }
+`, "") + `
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+`
 }

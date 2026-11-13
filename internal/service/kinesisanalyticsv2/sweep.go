@@ -4,6 +4,7 @@
 package kinesisanalyticsv2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -11,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,6 +24,30 @@ func RegisterSweepers() {
 		Name: "aws_awstypes.application",
 		F:    sweepApplication,
 	})
+	// Enhanced snapshots outlive their application and keep accruing storage charges.
+	awsv2.Register("aws_kinesisanalyticsv2_snapshot", sweepSnapshots)
+}
+
+func sweepSnapshots(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.KinesisAnalyticsV2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	// Unfiltered, so that imported snapshots, which have no source application, are included.
+	input := kinesisanalyticsv2.ListSnapshotsInput{}
+	pages := kinesisanalyticsv2.NewListSnapshotsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.SnapshotInfoList {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newSnapshotResource, client,
+				sweepfw.NewAttribute(names.AttrName, aws.ToString(v.SnapshotName))))
+		}
+	}
+
+	return sweepResources, nil
 }
 
 func sweepApplication(region string) error {

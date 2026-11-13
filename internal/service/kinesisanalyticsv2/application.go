@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,6 +49,7 @@ func resourceApplication() *schema.Resource {
 				// An existing input configuration cannot be deleted.
 				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
+			customizeDiffValidateSnapshotMode,
 		),
 
 		Importer: &schema.ResourceImporter{
@@ -149,6 +151,12 @@ func resourceApplication() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"snapshot_mode": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.SnapshotMode](),
+										},
 										"snapshots_enabled": {
 											Type:     schema.TypeBool,
 											Required: true,
@@ -311,9 +319,16 @@ func resourceApplication() *schema.Resource {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ApplicationRestoreType](),
 													},
+													"snapshot_arn": {
+														Type:          schema.TypeString,
+														Optional:      true,
+														ValidateFunc:  verify.ValidARN,
+														ConflictsWith: []string{"application_configuration.0.run_configuration.0.application_restore_configuration.0.snapshot_name"},
+													},
 													"snapshot_name": {
-														Type:     schema.TypeString,
-														Optional: true,
+														Type:          schema.TypeString,
+														Optional:      true,
+														ConflictsWith: []string{"application_configuration.0.run_configuration.0.application_restore_configuration.0.snapshot_arn"},
 													},
 												},
 											},
@@ -978,6 +993,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	if d.HasChanges("application_configuration", "cloudwatch_logging_options", "runtime_environment", "service_execution_role") {
 		currentApplicationVersionID := int64(d.Get("version_id").(int))
 		updateApplication := false
+		optingInToEnhancedSnapshots := false
 
 		input := &kinesisanalyticsv2.UpdateApplicationInput{
 			ApplicationName: aws.String(applicationName),
@@ -999,7 +1015,12 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			if d.HasChange("application_configuration.0.application_snapshot_configuration") {
-				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]any))
+				snapshotModeChanged := d.HasChange("application_configuration.0.application_snapshot_configuration.0.snapshot_mode")
+				applicationConfigurationUpdate.ApplicationSnapshotConfigurationUpdate = expandApplicationSnapshotConfigurationUpdate(d.Get("application_configuration.0.application_snapshot_configuration").([]any), snapshotModeChanged)
+
+				if snapshotModeChanged && d.Get("application_configuration.0.application_snapshot_configuration.0.snapshot_mode").(string) == string(awstypes.SnapshotModeEnhancedSnapshots) {
+					optingInToEnhancedSnapshots = true
+				}
 
 				updateApplication = true
 			}
@@ -1415,6 +1436,18 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			if actual, expected := application.ApplicationStatus, awstypes.ApplicationStatusRunning; actual == expected {
 				input.RunConfigurationUpdate = expandRunConfigurationUpdate(d.Get("application_configuration.0.run_configuration").([]any))
+			}
+
+			// Opting in to enhanced snapshots only preserves state when MSF can take a boundary snapshot,
+			// which requires the application to be RUNNING with system snapshots enabled.
+			if optingInToEnhancedSnapshots {
+				if actual := application.ApplicationStatus; actual != awstypes.ApplicationStatusRunning {
+					diags = sdkdiag.AppendWarningf(diags, "Kinesis Analytics v2 Application (%s) is opting in to enhanced snapshots while in status %s. No boundary snapshot is taken, so the application's current state will not be restorable once it starts. Opt in while the application is RUNNING to preserve state.", applicationName, actual)
+				}
+
+				if !d.Get("application_configuration.0.application_snapshot_configuration.0.snapshots_enabled").(bool) {
+					diags = sdkdiag.AppendWarningf(diags, "Kinesis Analytics v2 Application (%s) is opting in to enhanced snapshots with snapshots_enabled = false. No boundary snapshot is taken, so the application restarts from its newest existing application snapshot, if any, rather than its current state.", applicationName)
+				}
 			}
 
 			input.CurrentApplicationVersionId = aws.Int64(currentApplicationVersionID)
@@ -1862,6 +1895,10 @@ func expandApplicationConfiguration(vApplicationConfiguration []any) *awstypes.A
 			applicationSnapshotConfiguration.SnapshotsEnabled = aws.Bool(vSnapshotsEnabled)
 		}
 
+		if vSnapshotMode, ok := mApplicationSnapshotConfiguration["snapshot_mode"].(string); ok && vSnapshotMode != "" {
+			applicationSnapshotConfiguration.SnapshotMode = awstypes.SnapshotMode(vSnapshotMode)
+		}
+
 		applicationConfiguration.ApplicationSnapshotConfiguration = applicationSnapshotConfiguration
 	}
 
@@ -2114,7 +2151,7 @@ func expandApplicationFlinkApplicationConfigurationUpdate(vFlinkApplicationConfi
 	return flinkApplicationConfigurationUpdate
 }
 
-func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []any) *awstypes.ApplicationSnapshotConfigurationUpdate {
+func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfiguration []any, includeSnapshotMode bool) *awstypes.ApplicationSnapshotConfigurationUpdate {
 	if len(vApplicationSnapshotConfiguration) == 0 || vApplicationSnapshotConfiguration[0] == nil {
 		return nil
 	}
@@ -2123,11 +2160,77 @@ func expandApplicationSnapshotConfigurationUpdate(vApplicationSnapshotConfigurat
 
 	mApplicationSnapshotConfiguration := vApplicationSnapshotConfiguration[0].(map[string]any)
 
+	// The API requires SnapshotsEnabledUpdate even when only the snapshot mode changes.
 	if vSnapshotsEnabled, ok := mApplicationSnapshotConfiguration["snapshots_enabled"].(bool); ok {
 		applicationSnapshotConfigurationUpdate.SnapshotsEnabledUpdate = aws.Bool(vSnapshotsEnabled)
 	}
 
+	if vSnapshotMode, ok := mApplicationSnapshotConfiguration["snapshot_mode"].(string); ok && vSnapshotMode != "" && includeSnapshotMode {
+		applicationSnapshotConfigurationUpdate.SnapshotModeUpdate = awstypes.SnapshotMode(vSnapshotMode)
+	}
+
 	return applicationSnapshotConfigurationUpdate
+}
+
+// customizeDiffValidateSnapshotMode rejects snapshot mode changes that the API refuses, before any update is attempted.
+func customizeDiffValidateSnapshotMode(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	const key = "application_configuration.0.application_snapshot_configuration.0.snapshot_mode"
+
+	o, n := d.GetChange(key)
+	oldMode, newMode := awstypes.SnapshotMode(o.(string)), awstypes.SnapshotMode(n.(string))
+
+	// Opting in is one-way. The only reversal is RollbackApplication, which Terraform does not model.
+	// A change to a ForceNew argument replaces the application, and the new one may use either mode.
+	replacing := d.HasChanges(names.AttrName, names.AttrDescription, "application_mode")
+	if d.Id() != "" && !replacing && oldMode == awstypes.SnapshotModeEnhancedSnapshots && newMode != awstypes.SnapshotModeEnhancedSnapshots && d.NewValueKnown(key) {
+		return fmt.Errorf("%s cannot be changed from %s to %s: opting in to enhanced snapshots is one-way", key, oldMode, newMode)
+	}
+
+	// Restoring by ARN is only possible for enhanced snapshots.
+	const snapshotARNKey = "application_configuration.0.run_configuration.0.application_restore_configuration.0.snapshot_arn"
+	if v, ok := d.GetOk(snapshotARNKey); ok && v.(string) != "" && d.NewValueKnown(key) && newMode != awstypes.SnapshotModeEnhancedSnapshots {
+		return fmt.Errorf("%s requires %s = %s", snapshotARNKey, key, awstypes.SnapshotModeEnhancedSnapshots)
+	}
+
+	if newMode != awstypes.SnapshotModeEnhancedSnapshots || !d.NewValueKnown("runtime_environment") {
+		return nil
+	}
+
+	if runtime := d.Get("runtime_environment").(string); !runtimeSupportsEnhancedSnapshots(runtime) {
+		return fmt.Errorf("%s = %s requires an Apache Flink runtime_environment of FLINK-1_20 or later, got %s", key, newMode, runtime)
+	}
+
+	return nil
+}
+
+// runtimeSupportsEnhancedSnapshots reports whether a runtime environment can be put in enhanced snapshot mode.
+// Only runtimes known to be unsupported are rejected; anything else is left for the API to validate.
+func runtimeSupportsEnhancedSnapshots(runtime string) bool {
+	if runtime == string(awstypes.RuntimeEnvironmentSql10) {
+		return false
+	}
+
+	version, ok := strings.CutPrefix(runtime, "FLINK-")
+	if !ok {
+		return true
+	}
+
+	majorStr, minorStr, ok := strings.Cut(version, "_")
+	if !ok {
+		return true
+	}
+
+	major, err := strconv.Atoi(majorStr)
+	if err != nil {
+		return true
+	}
+
+	minor, err := strconv.Atoi(minorStr)
+	if err != nil {
+		return true
+	}
+
+	return major > 1 || (major == 1 && minor >= 20)
 }
 
 func expandCloudWatchLoggingOptions(vCloudWatchLoggingOptions []any) []awstypes.CloudWatchLoggingOption {
@@ -2685,6 +2788,10 @@ func expandRunConfigurationUpdate(vRunConfigurationUpdate []any) *awstypes.RunCo
 			applicationRestoreConfiguration.ApplicationRestoreType = awstypes.ApplicationRestoreType(vApplicationRestoreType)
 		}
 
+		if vSnapshotARN, ok := mApplicationRestoreConfiguration["snapshot_arn"].(string); ok && vSnapshotARN != "" {
+			applicationRestoreConfiguration.SnapshotArn = aws.String(vSnapshotARN)
+		}
+
 		if vSnapshotName, ok := mApplicationRestoreConfiguration["snapshot_name"].(string); ok && vSnapshotName != "" {
 			applicationRestoreConfiguration.SnapshotName = aws.String(vSnapshotName)
 		}
@@ -2745,7 +2852,14 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 	}
 
 	if applicationSnapshotConfigurationDescription := applicationConfigurationDescription.ApplicationSnapshotConfigurationDescription; applicationSnapshotConfigurationDescription != nil {
+		// An application with no stored snapshot mode is in the default, legacy, mode.
+		snapshotMode := applicationSnapshotConfigurationDescription.SnapshotMode
+		if snapshotMode == "" {
+			snapshotMode = awstypes.SnapshotModeApplicationSnapshotsLegacy
+		}
+
 		mApplicationSnapshotConfiguration := map[string]any{
+			"snapshot_mode":     snapshotMode,
 			"snapshots_enabled": aws.ToBool(applicationSnapshotConfigurationDescription.SnapshotsEnabled),
 		}
 
@@ -2815,6 +2929,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 		if applicationRestoreConfigurationDescription := runConfigurationDescription.ApplicationRestoreConfigurationDescription; applicationRestoreConfigurationDescription != nil {
 			mApplicationRestoreConfiguration := map[string]any{
 				"application_restore_type": applicationRestoreConfigurationDescription.ApplicationRestoreType,
+				"snapshot_arn":             aws.ToString(applicationRestoreConfigurationDescription.SnapshotArn),
 				"snapshot_name":            aws.ToString(applicationRestoreConfigurationDescription.SnapshotName),
 			}
 
@@ -3100,6 +3215,10 @@ func expandStartApplicationInput(d *schema.ResourceData) *kinesisanalyticsv2.Sta
 
 				if v, ok := tfMap["application_restore_type"].(string); ok && v != "" {
 					apiObject.RunConfiguration.ApplicationRestoreConfiguration.ApplicationRestoreType = awstypes.ApplicationRestoreType(v)
+				}
+
+				if v, ok := tfMap["snapshot_arn"].(string); ok && v != "" {
+					apiObject.RunConfiguration.ApplicationRestoreConfiguration.SnapshotArn = aws.String(v)
 				}
 
 				if v, ok := tfMap["snapshot_name"].(string); ok && v != "" {
