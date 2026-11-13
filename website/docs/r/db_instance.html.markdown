@@ -117,6 +117,17 @@ resource "aws_db_instance" "test-replica" {
 }
 ```
 
+### Read Replica of a Multi-AZ DB Cluster
+
+```terraform
+resource "aws_db_instance" "replica" {
+  identifier                  = "example-replica"
+  instance_class              = aws_rds_cluster.example.db_cluster_instance_class
+  replicate_source_db_cluster = aws_rds_cluster.example.cluster_identifier
+  skip_final_snapshot         = true
+}
+```
+
 ### RDS Custom for SQL Server
 
 ```terraform
@@ -302,7 +313,7 @@ resource "aws_db_instance" "db" {
 }
 ```
 
-~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS Replicate database managed by Terraform will promote the database to a fully standalone database.
+~> **NOTE:** Removing the `replicate_source_db` or `replicate_source_db_cluster` attribute from an existing RDS Replicate database managed by Terraform will promote the database to a fully standalone database.
 
 For more detailed documentation about each argument, refer to the [AWS official documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 
@@ -371,7 +382,7 @@ This resource supports the following arguments:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replica_mode` - (Optional) Whether the replica is in either `mounted` or `open-read-only` mode. This attribute is only supported by Oracle instances. Oracle replicas operate in `open-read-only` mode unless otherwise specified. See [Working with Oracle Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/oracle-read-replicas.html) for more information.
 * `replicate_source_db` - (Optional) Set this to specify that this resource is a Replica database, and to use this value as the source database. If replicating an Amazon RDS Database Instance in the same region, use the `identifier` of the source DB, unless also specifying the `db_subnet_group_name`. If specifying the `db_subnet_group_name` in the same region, use the `arn` of the source DB. If replicating an Instance in a different region, use the `arn` of the source DB. Note that if you are creating a cross-region replica of an encrypted database you will also need to specify a `kms_key_id`. See [DB Instance Replication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.Replication.html) and [Working with PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html) for more information on using Replication.
-* `replicate_source_db_cluster` - (Optional) Specifies that this resource is a Replica to a Multi-AZ Cluster database, and to use this value as the source DB Cluster database. Use the `identifier` field of the cluster. Can only be used to replicate an instance in the same region and same VPC. The source cluster must have enabled automated backups, with a retention period greater than 0.
+* `replicate_source_db_cluster` - (Optional) Identifier of a Multi-AZ DB cluster to use as the source for this read replica. Use the cluster's `cluster_identifier`, not its ARN. The source cluster must be in the same region as the replica and have a `backup_retention_period` greater than `0`. Conflicts with `replicate_source_db`. See [Creating a DB instance read replica from a Multi-AZ DB cluster](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_MultiAZDBCluster_ReadRepl.html) for more information.
 * `restore_to_point_in_time` - (Optional, Forces new resource) Configuration block for restoring a DB instance to an arbitrary point in time. Requires the `identifier` argument to be set with the name of the new DB instance to be created. See [`restore_to_point_in_time` Block](#restore_to_point_in_time-block) below for details.
 * `s3_import` - (Optional) Restore from a Percona XtraBackup in S3. See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html). See [`s3_import` Block](#s3_import-block) below.
 * `skip_final_snapshot` - (Optional) Whether a final DB snapshot is created before the DB instance is deleted. If true is specified, no DBSnapshot is created. If false is specified, a DB snapshot is created before the DB instance is deleted, using the value from `final_snapshot_identifier`. Default is `false`.
@@ -382,7 +393,7 @@ This resource supports the following arguments:
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently only supported by Microsoft SQL Server. The `timezone` can only be set on creation. See [MSSQL User Guide](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_SQLServer.html#SQLServer.Concepts.General.TimeZone) for more information.
 * `upgrade_storage_config` - (Optional) Whether to upgrade the storage file system configuration on the read replica. Can only be set with `replicate_source_db`.
-* `username` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) Username for the master DB user. Cannot be specified for a replica.
+* `username` - (Required unless a `snapshot_identifier`, `replicate_source_db`, or `replicate_source_db_cluster` is provided) Username for the master DB user. Cannot be specified for a replica.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to associate.
 * `warning_event_categories` - (Optional) Set of RDS event categories (for example `failure`, `maintenance`) to check for after create and update operations. If set, Terraform describes RDS events reported for this instance during the operation and surfaces a warning diagnostic, with the RDS event message, for each one found in these categories. Has no effect if unset; see [DescribeEvents](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_DescribeEvents.html) and the [`aws_rds_events`](/docs/providers/aws/d/rds_events.html) data source for the source of these events. Requires the `rds:DescribeEvents` IAM permission when set.
 
