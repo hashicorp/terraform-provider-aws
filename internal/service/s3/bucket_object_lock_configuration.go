@@ -77,6 +77,27 @@ func resourceBucketObjectLockConfiguration() *schema.Resource {
 											Optional:      true,
 											ConflictsWith: []string{"rule.0.default_retention.0.years"},
 										},
+										"default_event_hold": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"days": {
+														Type:          schema.TypeInt,
+														Optional:      true,
+														ValidateFunc:  validation.IntBetween(1, 36500),
+														ConflictsWith: []string{"rule.0.default_retention.0.default_event_hold.0.years"},
+													},
+													"years": {
+														Type:          schema.TypeInt,
+														Optional:      true,
+														ValidateFunc:  validation.IntBetween(1, 100),
+														ConflictsWith: []string{"rule.0.default_retention.0.default_event_hold.0.days"},
+													},
+												},
+											},
+										},
 										names.AttrMode: {
 											Type:             schema.TypeString,
 											Optional:         true,
@@ -307,76 +328,117 @@ func findObjectLockConfiguration(ctx context.Context, conn *s3.Client, bucket, e
 	return output.ObjectLockConfiguration, nil
 }
 
-func expandObjectLockRule(l []any) *types.ObjectLockRule {
-	if len(l) == 0 || l[0] == nil {
+func expandObjectLockRule(tfList []any) *types.ObjectLockRule {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]any)
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	rule := &types.ObjectLockRule{}
+	apiObject := &types.ObjectLockRule{}
 
 	if v, ok := tfMap["default_retention"].([]any); ok && len(v) > 0 && v[0] != nil {
-		rule.DefaultRetention = expandDefaultRetention(v)
+		apiObject.DefaultRetention = expandDefaultRetention(v)
 	}
 
-	return rule
+	return apiObject
 }
 
-func expandDefaultRetention(l []any) *types.DefaultRetention {
-	if len(l) == 0 || l[0] == nil {
+func expandDefaultRetention(tfList []any) *types.DefaultRetention {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]any)
+	tfMap, ok := tfList[0].(map[string]any)
 	if !ok {
 		return nil
 	}
 
-	dr := &types.DefaultRetention{}
+	apiObject := &types.DefaultRetention{}
 
 	if v, ok := tfMap["days"].(int); ok && v > 0 {
-		dr.Days = aws.Int32(int32(v))
+		apiObject.Days = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["default_event_hold"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DefaultEventHold = expandEventHoldDuration(v)
 	}
 
 	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
-		dr.Mode = types.ObjectLockRetentionMode(v)
+		apiObject.Mode = types.ObjectLockRetentionMode(v)
 	}
 
 	if v, ok := tfMap["years"].(int); ok && v > 0 {
-		dr.Years = aws.Int32(int32(v))
+		apiObject.Years = aws.Int32(int32(v))
 	}
 
-	return dr
+	return apiObject
 }
 
-func flattenObjectLockRule(rule *types.ObjectLockRule) []any {
-	if rule == nil {
+func expandEventHoldDuration(tfList []any) *types.EventHoldDuration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.EventHoldDuration{}
+
+	if v, ok := tfMap["days"].(int); ok && v > 0 {
+		apiObject.Days = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["years"].(int); ok && v > 0 {
+		apiObject.Years = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenEventHoldDuration(apiObject *types.EventHoldDuration) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := make(map[string]any)
-
-	if rule.DefaultRetention != nil {
-		m["default_retention"] = flattenDefaultRetention(rule.DefaultRetention)
+	tfMap := map[string]any{
+		"days":  aws.ToInt32(apiObject.Days),
+		"years": aws.ToInt32(apiObject.Years),
 	}
 
-	return []any{m}
+	return []any{tfMap}
 }
 
-func flattenDefaultRetention(dr *types.DefaultRetention) []any {
-	if dr == nil {
+func flattenObjectLockRule(apiObject *types.ObjectLockRule) []any {
+	if apiObject == nil {
 		return []any{}
 	}
 
-	m := map[string]any{
-		"days":         dr.Days,
-		names.AttrMode: dr.Mode,
-		"years":        dr.Years,
+	tfMap := make(map[string]any)
+
+	if apiObject.DefaultRetention != nil {
+		tfMap["default_retention"] = flattenDefaultRetention(apiObject.DefaultRetention)
 	}
 
-	return []any{m}
+	return []any{tfMap}
+}
+
+func flattenDefaultRetention(apiObject *types.DefaultRetention) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"days":               aws.ToInt32(apiObject.Days),
+		"default_event_hold": flattenEventHoldDuration(apiObject.DefaultEventHold),
+		names.AttrMode:       apiObject.Mode,
+		"years":              aws.ToInt32(apiObject.Years),
+	}
+
+	return []any{tfMap}
 }

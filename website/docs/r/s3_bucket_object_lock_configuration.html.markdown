@@ -64,9 +64,21 @@ The `rule` configuration block supports the following arguments:
 
 The `default_retention` configuration block supports the following arguments:
 
-* `days` - (Optional, Required if `years` is not specified) Number of days that you want to specify for the default retention period.
+* `days` - (Optional) Number of days that you want to specify for the default retention period. Conflicts with `years`.
+* `default_event_hold` - (Optional) Configuration block for an event hold applied automatically to new objects placed in the bucket. [See below](#default_event_hold-block).
 * `mode` - (Optional) Default Object Lock retention mode you want to apply to new objects placed in the specified bucket. Valid values: `COMPLIANCE`, `GOVERNANCE`.
-* `years` - (Optional, Required if `days` is not specified) Number of years that you want to specify for the default retention period.
+* `years` - (Optional) Number of years that you want to specify for the default retention period. Conflicts with `days`.
+
+~> **NOTE:** Either `days` or `years` is required unless `default_event_hold` is set. When a retention period and `default_event_hold` are both set, the retention period must be greater than or equal to the event hold duration.
+
+### `default_event_hold` Block
+
+The `default_event_hold` configuration block supports the following arguments:
+
+* `days` - (Optional) Number of days an object remains protected after its event hold is released. Valid values are between `1` and `36500`. Conflicts with `years`.
+* `years` - (Optional) Number of years an object remains protected after its event hold is released. Valid values are between `1` and `100`. Conflicts with `days`.
+
+~> **NOTE:** Objects created in the bucket inherit an active event hold even when their own configuration does not mention Object Lock.
 
 ## Attribute Reference
 
