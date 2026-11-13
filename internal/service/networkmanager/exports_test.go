@@ -6,6 +6,7 @@ package networkmanager
 // Exports for use in tests only.
 var (
 	ResourceAttachmentAccepter                   = resourceAttachmentAccepter
+	ResourceAttachmentNATConfiguration           = newAttachmentNATConfigurationResource
 	ResourceAttachmentRoutingPolicyLabel         = newAttachmentRoutingPolicyLabelResource
 	ResourceConnectAttachment                    = resourceConnectAttachment
 	ResourceConnectPeer                          = resourceConnectPeer
@@ -26,6 +27,7 @@ var (
 	ResourceTransitGatewayRouteTableAttachment   = resourceTransitGatewayRouteTableAttachment
 	ResourceVPCAttachment                        = resourceVPCAttachment
 
+	FindAttachmentNATConfigurationByID                      = findAttachmentNATConfigurationByID
 	FindAttachmentRoutingPolicyAssociationLabelByTwoPartKey = findAttachmentRoutingPolicyAssociationLabelByTwoPartKey
 	FindConnectAttachmentByID                               = findConnectAttachmentByID
 	FindConnectionByTwoPartKey                              = findConnectionByTwoPartKey
@@ -47,8 +49,14 @@ var (
 	FindTransitGatewayRouteTableAttachmentByID              = findTransitGatewayRouteTableAttachmentByID
 	FindVPCAttachmentByID                                   = findVPCAttachmentByID
 
+	AttachmentNATRulesMatch                             = attachmentNATRulesMatch
 	CustomerGatewayAssociationParseResourceID           = customerGatewayAssociationParseResourceID
 	LinkAssociationParseResourceID                      = linkAssociationParseResourceID
 	TransitGatewayConnectPeerAssociationParseResourceID = transitGatewayConnectPeerAssociationParseResourceID
 	TransitGatewayRegistrationParseResourceID           = transitGatewayRegistrationParseResourceID
+	ValidateAttachmentNATRules                          = validateAttachmentNATRules
+)
+
+type (
+	AttachmentNATRuleModel = attachmentNATRuleModel
 )
