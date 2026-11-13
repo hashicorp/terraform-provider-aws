@@ -122,7 +122,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Summary description of the snapshot.
-* `destination_encryption_configuration` - (Optional) Encryption of the imported snapshot. If omitted, the snapshot is encrypted with an AWS owned key. See [Encryption Configuration Blocks](#encryption-configuration-blocks) below.
+* `destination_encryption_configuration` - (Optional) Encryption of the imported snapshot. If omitted, the snapshot is encrypted with an AWS owned key. See [`destination_encryption_configuration` Block](#destination_encryption_configuration-block) below.
 * `format` - (Optional) Format of the savepoint. Valid values: `CANONICAL`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the snapshot. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -130,7 +130,7 @@ The following arguments are optional:
 ### `import_source_configuration` Block
 
 * `import_role_arn` - (Required) ARN of the IAM role that Managed Service for Apache Flink assumes to read the source. It needs `s3:GetObject` and `s3:GetObjectAttributes` on the source prefix, and `s3:ListBucket` on the bucket.
-* `source_encryption_configuration` - (Optional) Encryption of the source objects. See [Encryption Configuration Blocks](#encryption-configuration-blocks) below.
+* `source_encryption_configuration` - (Optional) Encryption of the source objects. See [`source_encryption_configuration` Block](#source_encryption_configuration-block) below.
 * `source_s3_prefix_location` - (Required) Amazon S3 location of the savepoint. See [`source_s3_prefix_location` Block](#source_s3_prefix_location-block) below.
 * `source_type` - (Required) Type of the source location. Valid values: `S3`.
 
@@ -139,11 +139,14 @@ The following arguments are optional:
 * `bucket_arn` - (Required) ARN of the bucket. The bucket must be in the same account and Region as the snapshot.
 * `key_prefix` - (Required) Prefix that directly contains the savepoint's `_metadata` file. Must end with `/`. For a savepoint written by an export, use the export's `ExportedPrefix` (the `.../data/` directory), not the prefix the export was given.
 
-### Encryption Configuration Blocks
+### `destination_encryption_configuration` Block
 
-The `destination_encryption_configuration` and `source_encryption_configuration` blocks support the following arguments:
+* `key_id` - (Optional) ARN of the KMS key. Required when `key_type` is `CUSTOMER_MANAGED_KEY`.
+* `key_type` - (Required) Type of key. Valid values: `AWS_OWNED_KEY`, `CUSTOMER_MANAGED_KEY`.
 
-* `key_id` - (Optional) KMS key. Required when `key_type` is `CUSTOMER_MANAGED_KEY`. For `destination_encryption_configuration`, use the key ARN.
+### `source_encryption_configuration` Block
+
+* `key_id` - (Optional) KMS key of the source objects. Required when `key_type` is `CUSTOMER_MANAGED_KEY`.
 * `key_type` - (Required) Type of key. Valid values: `AWS_OWNED_KEY`, `CUSTOMER_MANAGED_KEY`.
 
 ## Attribute Reference
