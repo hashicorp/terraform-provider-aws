@@ -11,7 +11,7 @@ require (
 	github.com/YakDriver/go-version v0.2.0
 	github.com/YakDriver/regexache v0.26.0
 	github.com/YakDriver/smarterr v0.10.0
-	github.com/aws/aws-sdk-go-v2 v1.47.4
+	github.com/aws/aws-sdk-go-v2 v1.48.0
 	github.com/aws/aws-sdk-go-v2/config v1.33.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.20.10
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.20.4
@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.56.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.39.6
-	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.47.6
+	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.61.6
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.56.1
@@ -297,7 +297,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.82.1
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.47.5
 	github.com/aws/aws-sdk-go-v2/service/xray v1.46.1
-	github.com/aws/smithy-go v1.28.6
+	github.com/aws/smithy-go v1.28.9
 	github.com/beevik/etree v1.8.1
 	github.com/cedar-policy/cedar-go v1.9.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
@@ -356,8 +356,8 @@ require (
 	github.com/apparentlymart/go-textseg/v17 v17.0.1 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.24 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.7 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.7 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.12 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.22 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.8 // indirect
