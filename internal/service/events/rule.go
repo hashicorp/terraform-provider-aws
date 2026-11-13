@@ -67,11 +67,12 @@ func resourceRule() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 512),
 				},
 				"event_bus_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ForceNew:     true,
-					ValidateFunc: validBusNameOrARN,
-					Default:      defaultEventBusName,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentBusNameOrARN,
+					ValidateFunc:     validBusNameOrARN,
+					Default:          defaultEventBusName,
 				},
 				"event_pattern": {
 					Type:         schema.TypeString,
