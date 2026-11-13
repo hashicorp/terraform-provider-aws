@@ -5,33 +5,37 @@ package ecs
 
 // Exports for use in tests only.
 var (
-	ResourceAccountSettingDefault    = resourceAccountSettingDefault
-	ResourceCapacityProvider         = resourceCapacityProvider
-	ResourceCluster                  = resourceCluster
-	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
-	ResourceDaemon                   = newDaemonResource
-	ResourceDaemonTaskDefinition     = newDaemonTaskDefinitionResource
-	ResourceExpressGatewayService    = newExpressGatewayServiceResource
-	ResourceService                  = resourceService
-	ResourceTag                      = resourceTag
-	ResourceTaskDefinition           = resourceTaskDefinition
-	ResourceTaskSet                  = resourceTaskSet
+	ResourceAccountSettingDefault     = resourceAccountSettingDefault
+	ResourceCapacityProvider          = resourceCapacityProvider
+	ResourceCluster                   = resourceCluster
+	ResourceClusterCapacityProviders  = resourceClusterCapacityProviders
+	ResourceDaemon                    = newDaemonResource
+	ResourceDaemonTaskDefinition      = newDaemonTaskDefinitionResource
+	ResourceExpressGatewayService     = newExpressGatewayServiceResource
+	ResourceGateway                   = newGatewayResource
+	ResourceGatewayClusterAssociation = newGatewayClusterAssociationResource
+	ResourceService                   = resourceService
+	ResourceTag                       = resourceTag
+	ResourceTaskDefinition            = resourceTaskDefinition
+	ResourceTaskSet                   = resourceTaskSet
 
-	ClusterNameFromARN                      = clusterNameFromARN
-	DaemonNameFromARN                       = daemonNameFromARN
-	FindCapacityProviderByARN               = findCapacityProviderByARN
-	FindClusterByNameOrARN                  = findClusterByNameOrARN
-	FindDaemonByARN                         = findDaemonByARN
-	FindDaemonTaskDefinitionByARN           = findDaemonTaskDefinitionByARN
-	FindEffectiveAccountSettingByName       = findEffectiveAccountSettingByName
-	FindExpressGatewayServiceByARN          = findExpressGatewayServiceByARN
-	FindServiceNoTagsByTwoPartKey           = findServiceNoTagsByTwoPartKey
-	FindTag                                 = findTag
-	FindTaskDefinitionByFamilyOrARN         = findTaskDefinitionByFamilyOrARN
-	FindTaskSetNoTagsByThreePartKey         = findTaskSetNoTagsByThreePartKey
-	FlattenServiceVolumeConfigurations      = flattenServiceVolumeConfigurations
-	RoleNameFromARN                         = roleNameFromARN
-	ServiceNameFromARN                      = serviceNameFromARN
-	TaskDefinitionARNStripRevision          = taskDefinitionARNStripRevision
-	ValidTaskDefinitionContainerDefinitions = validTaskDefinitionContainerDefinitions
+	ClusterNameFromARN                        = clusterNameFromARN
+	DaemonNameFromARN                         = daemonNameFromARN
+	FindCapacityProviderByARN                 = findCapacityProviderByARN
+	FindClusterByNameOrARN                    = findClusterByNameOrARN
+	FindDaemonByARN                           = findDaemonByARN
+	FindDaemonTaskDefinitionByARN             = findDaemonTaskDefinitionByARN
+	FindEffectiveAccountSettingByName         = findEffectiveAccountSettingByName
+	FindExpressGatewayServiceByARN            = findExpressGatewayServiceByARN
+	FindGatewayByARN                          = findGatewayByARN
+	FindGatewayClusterAssociationByTwoPartKey = findGatewayClusterAssociationByTwoPartKey
+	FindServiceNoTagsByTwoPartKey             = findServiceNoTagsByTwoPartKey
+	FindTag                                   = findTag
+	FindTaskDefinitionByFamilyOrARN           = findTaskDefinitionByFamilyOrARN
+	FindTaskSetNoTagsByThreePartKey           = findTaskSetNoTagsByThreePartKey
+	FlattenServiceVolumeConfigurations        = flattenServiceVolumeConfigurations
+	RoleNameFromARN                           = roleNameFromARN
+	ServiceNameFromARN                        = serviceNameFromARN
+	TaskDefinitionARNStripRevision            = taskDefinitionARNStripRevision
+	ValidTaskDefinitionContainerDefinitions   = validTaskDefinitionContainerDefinitions
 )

@@ -39,6 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -820,6 +821,103 @@ func resourceService() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"gateway_connector": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"filters": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"access_types": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Computed: true,
+											Elem: &schema.Schema{
+												Type:             schema.TypeString,
+												ValidateDiagFunc: enum.Validate[awstypes.AccessType](),
+											},
+										},
+									},
+								},
+							},
+							names.AttrHealthCheck: {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"healthy_threshold_count": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"interval_seconds": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"matcher": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Computed: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"grpc_code": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"http_code": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+										},
+										names.AttrPort: {
+											Type:         schema.TypeInt,
+											Optional:     true,
+											Computed:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										names.AttrProtocol: {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.GatewayConnectorHealthCheckProtocol](),
+										},
+										"timeout_seconds": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+										"unhealthy_threshold_count": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											Computed: true,
+										},
+									},
+								},
+							},
+							"port_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
 				"health_check_grace_period_seconds": {
 					Type:         schema.TypeInt,
 					Optional:     true,
@@ -1547,6 +1645,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.PropagateTags = awstypes.PropagateTags(v.(string))
 	}
 
+	if v, ok := d.GetOk("gateway_connector"); ok && len(v.([]any)) > 0 {
+		input.GatewayConnectors = expandGatewayConnectors(v.([]any))
+	}
+
 	if v, ok := d.GetOk("service_connect_configuration"); ok && len(v.([]any)) > 0 {
 		input.ServiceConnectConfiguration = expandServiceConnectConfiguration(v.([]any))
 	}
@@ -1622,7 +1724,26 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s): %s", d.Id(), err)
 	}
 
-	return append(diags, resourceServiceFlatten(ctx, d, service, cluster)...)
+	diags = append(diags, resourceServiceFlatten(ctx, d, service, cluster)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// Gateway connectors are only returned by DescribeServiceRevisions, so the
+	// extra call (and IAM permission) is only made when the argument is in use.
+	if v, ok := d.GetOk("gateway_connector"); ok && len(v.([]any)) > 0 {
+		revision, err := findLatestServiceRevision(ctx, conn, service)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ECS Service (%s) revision: %s", d.Id(), err)
+		}
+
+		if err := d.Set("gateway_connector", flattenGatewayConnectors(revision.GatewayConnectors)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting gateway_connector: %s", err)
+		}
+	}
+
+	return diags
 }
 
 func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1833,6 +1954,10 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("volume_configuration") {
 			input.VolumeConfigurations = expandServiceVolumeConfigurations(ctx, d.Get("volume_configuration").([]any))
+		}
+
+		if d.HasChange("gateway_connector") {
+			input.GatewayConnectors = expandGatewayConnectors(d.Get("gateway_connector").([]any))
 		}
 
 		if d.HasChange("vpc_lattice_configurations") {
@@ -2931,6 +3056,157 @@ func expandNetworkConfiguration(nc []any) *awstypes.NetworkConfiguration {
 	}
 
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
+}
+
+func findLatestServiceRevision(ctx context.Context, conn *ecs.Client, service *awstypes.Service) (*awstypes.ServiceRevision, error) {
+	arns := tfslices.ApplyToAll(service.CurrentServiceRevisions, func(v awstypes.ServiceCurrentRevisionSummary) string {
+		return aws.ToString(v.Arn)
+	})
+
+	if len(arns) == 0 {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	input := ecs.DescribeServiceRevisionsInput{
+		ServiceRevisionArns: arns,
+	}
+	output, err := conn.DescribeServiceRevisions(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ServiceRevisions) == 0 {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	// During a deployment there can be more than one current revision; the newest one
+	// carries the configuration most recently applied by Terraform.
+	latest := output.ServiceRevisions[0]
+	for _, v := range output.ServiceRevisions[1:] {
+		if aws.ToTime(v.CreatedAt).After(aws.ToTime(latest.CreatedAt)) {
+			latest = v
+		}
+	}
+
+	return &latest, nil
+}
+
+func expandGatewayConnectors(tfList []any) []awstypes.GatewayConnector {
+	apiObjects := make([]awstypes.GatewayConnector, 0)
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.GatewayConnector{
+			PortName: aws.String(tfMap["port_name"].(string)),
+		}
+
+		if v, ok := tfMap["filters"].([]any); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := v[0].(map[string]any)["access_types"].(*schema.Set); ok && v.Len() > 0 {
+				apiObject.Filters = &awstypes.GatewayConnectorFilters{
+					AccessTypes: flex.ExpandStringyValueSet[awstypes.AccessType](v),
+				}
+			}
+		}
+
+		if v, ok := tfMap[names.AttrHealthCheck].([]any); ok && len(v) > 0 && v[0] != nil {
+			apiObject.HealthCheck = expandGatewayConnectorHealthCheck(v[0].(map[string]any))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandGatewayConnectorHealthCheck(tfMap map[string]any) *awstypes.GatewayConnectorHealthCheck {
+	apiObject := &awstypes.GatewayConnectorHealthCheck{}
+
+	if v, ok := tfMap["healthy_threshold_count"].(int); ok && v != 0 {
+		apiObject.HealthyThresholdCount = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["interval_seconds"].(int); ok && v != 0 {
+		apiObject.HealthCheckIntervalSeconds = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["matcher"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+		matcher := &awstypes.GatewayConnectorHealthCheckMatcher{}
+
+		if v, ok := tfMap["grpc_code"].(string); ok && v != "" {
+			matcher.GrpcCode = aws.String(v)
+		}
+		if v, ok := tfMap["http_code"].(string); ok && v != "" {
+			matcher.HttpCode = aws.String(v)
+		}
+
+		apiObject.Matcher = matcher
+	}
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
+		apiObject.HealthCheckPath = aws.String(v)
+	}
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
+		apiObject.HealthCheckPort = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
+		apiObject.HealthCheckProtocol = awstypes.GatewayConnectorHealthCheckProtocol(v)
+	}
+	if v, ok := tfMap["timeout_seconds"].(int); ok && v != 0 {
+		apiObject.HealthCheckTimeoutSeconds = aws.Int32(int32(v))
+	}
+	if v, ok := tfMap["unhealthy_threshold_count"].(int); ok && v != 0 {
+		apiObject.UnhealthyThresholdCount = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func flattenGatewayConnectors(apiObjects []awstypes.GatewayConnector) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"port_name": aws.ToString(apiObject.PortName),
+		}
+
+		if v := apiObject.Filters; v != nil {
+			tfMap["filters"] = []any{map[string]any{
+				"access_types": flex.FlattenStringyValueSet(v.AccessTypes),
+			}}
+		}
+
+		if v := apiObject.HealthCheck; v != nil {
+			tfMap[names.AttrHealthCheck] = []any{flattenGatewayConnectorHealthCheck(v)}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenGatewayConnectorHealthCheck(apiObject *awstypes.GatewayConnectorHealthCheck) map[string]any {
+	tfMap := map[string]any{
+		"healthy_threshold_count":   aws.ToInt32(apiObject.HealthyThresholdCount),
+		"interval_seconds":          aws.ToInt32(apiObject.HealthCheckIntervalSeconds),
+		names.AttrPath:              aws.ToString(apiObject.HealthCheckPath),
+		names.AttrPort:              aws.ToInt32(apiObject.HealthCheckPort),
+		names.AttrProtocol:          apiObject.HealthCheckProtocol,
+		"timeout_seconds":           aws.ToInt32(apiObject.HealthCheckTimeoutSeconds),
+		"unhealthy_threshold_count": aws.ToInt32(apiObject.UnhealthyThresholdCount),
+	}
+
+	if v := apiObject.Matcher; v != nil {
+		tfMap["matcher"] = []any{map[string]any{
+			"grpc_code": aws.ToString(v.GrpcCode),
+			"http_code": aws.ToString(v.HttpCode),
+		}}
+	}
+
+	return tfMap
 }
 
 func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
