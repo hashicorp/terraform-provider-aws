@@ -7,7 +7,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -171,7 +171,7 @@ var excludedRuleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Blo
 					Description: "Name of the rule to exclude (1-128 characters).",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 128),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]{1,128}$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+						lazystringvalidator.RegexMatches(`^[0-9A-Za-z_-]{1,128}$`, "must contain only alphanumeric characters, underscores, and hyphens"),
 					},
 				},
 			},
@@ -404,7 +404,7 @@ var labelMatchStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) sch
 					Description: "String to match against. Must be 1-1024 characters and match pattern ^[0-9A-Za-z_\\-:]+$.",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 1024),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
+						lazystringvalidator.RegexMatches(`^[0-9A-Za-z_\-:]+$`, "must contain only alphanumeric characters, underscores, hyphens, and colons"),
 					},
 				},
 				names.AttrScope: schema.StringAttribute{
@@ -814,7 +814,7 @@ var ruleActionOverrideBlock = tfsync.OnceValueCtx(func(ctx context.Context) sche
 					Description: "Name of the rule to override (1-128 characters).",
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 128),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[\w\-]+$`), "must contain only word characters and hyphens"),
+						lazystringvalidator.RegexMatches(`^[\w\-]+$`, "must contain only word characters and hyphens"),
 					},
 				},
 			},
