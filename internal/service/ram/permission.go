@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ram"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ram/types"
@@ -27,6 +26,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -68,10 +68,7 @@ func (r *permissionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 36),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^\S[\w.-]*$`),
-						"value must contain letters and numbers",
-					),
+					lazystringvalidator.RegexMatches(`^\S[\w.-]*$`, "value must contain letters and numbers"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
