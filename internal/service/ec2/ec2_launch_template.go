@@ -6,9 +6,12 @@
 package ec2
 
 import (
+	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -660,6 +663,11 @@ func resourceLaunchTemplate() *schema.Resource {
 						},
 					},
 				},
+				"max_versions": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(1, 10000),
+				},
 				"metadata_options": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1084,7 +1092,7 @@ func resourceLaunchTemplate() *schema.Resource {
 			customdiff.ComputedIf("default_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description":
+					case "name", "name_prefix", "description", "max_versions":
 						continue
 					default:
 						return diff.Get("update_default_version").(bool)
@@ -1095,7 +1103,7 @@ func resourceLaunchTemplate() *schema.Resource {
 			customdiff.ComputedIf("latest_version", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description", "default_version", "update_default_version":
+					case "name", "name_prefix", "description", "default_version", "max_versions", "update_default_version":
 						continue
 					default:
 						return true
@@ -1273,7 +1281,63 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("max_versions"); ok {
+		if err := deleteLaunchTemplateVersionsBeyond(ctx, conn, d.Id(), v.(int)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting EC2 Launch Template (%s) versions: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceLaunchTemplateRead(ctx, d, meta)...)
+}
+
+// deleteLaunchTemplateVersionsBeyond deletes all but the newest keep versions of a launch template.
+func deleteLaunchTemplateVersionsBeyond(ctx context.Context, conn *ec2.Client, id string, keep int) error {
+	input := ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: aws.String(id),
+	}
+	versions, err := findLaunchTemplateVersions(ctx, conn, &input)
+	if err != nil {
+		return err
+	}
+
+	const maxVersionsPerDelete = 200 // DeleteLaunchTemplateVersions limit per call.
+	var errs []error
+	for chunk := range slices.Chunk(launchTemplateVersionsToDelete(versions, keep), maxVersionsPerDelete) {
+		input := ec2.DeleteLaunchTemplateVersionsInput{
+			LaunchTemplateId: aws.String(id),
+			Versions:         chunk,
+		}
+		output, err := conn.DeleteLaunchTemplateVersions(ctx, &input)
+		if err != nil {
+			return err
+		}
+
+		for _, v := range output.UnsuccessfullyDeletedLaunchTemplateVersions {
+			if v.ResponseError == nil || v.ResponseError.Code == awstypes.LaunchTemplateErrorCodeLaunchTemplateVersionDoesNotExist {
+				continue
+			}
+			errs = append(errs, fmt.Errorf("version %d: %s: %s", aws.ToInt64(v.VersionNumber), v.ResponseError.Code, aws.ToString(v.ResponseError.Message)))
+		}
+	}
+
+	return errors.Join(errs...)
+}
+
+// launchTemplateVersionsToDelete returns the numbers of all versions except the newest keep and the default version, which AWS refuses to delete.
+func launchTemplateVersionsToDelete(versions []awstypes.LaunchTemplateVersion, keep int) []string {
+	versions = slices.SortedFunc(slices.Values(versions), func(a, b awstypes.LaunchTemplateVersion) int {
+		return cmp.Compare(aws.ToInt64(b.VersionNumber), aws.ToInt64(a.VersionNumber))
+	})
+
+	var numbers []string
+	for i, v := range versions {
+		if i < keep || aws.ToBool(v.DefaultVersion) {
+			continue
+		}
+		numbers = append(numbers, flex.Int64ToStringValue(v.VersionNumber))
+	}
+
+	return numbers
 }
 
 func resourceLaunchTemplateDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
