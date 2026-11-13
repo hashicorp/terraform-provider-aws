@@ -308,6 +308,101 @@ func testAccCheckMetricFilterManyExists(ctx context.Context, t *testing.T, basen
 	}
 }
 
+func TestAccLogsMetricFilter_systemFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	var mf types.MetricFilter
+	resourceName := "aws_cloudwatch_log_metric_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@aws.account"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.account"),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-east-1"`),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccMetricFilterImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-west-2\"`, `["@aws.account", "@aws.region"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.account"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.region"),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-west-2"`),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccMetricFilterConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
+					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsMetricFilter_systemFieldsInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@source.log"]`),
+				ExpectError: regexache.MustCompile(`expected emit_system_field_dimensions.\d+ to be one of`),
+			},
+			{
+				Config:      testAccMetricFilterConfig_systemFields(rName, "", `["@aws.region"]`),
+				ExpectError: regexache.MustCompile(`expected length of field_selection_criteria to be in the range \(1 - 2000\)`),
+			},
+		},
+	})
+}
+
 func testAccMetricFilterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
@@ -421,4 +516,27 @@ resource "aws_cloudwatch_log_metric_filter" "test" {
   }
 }
 `, rName, pattern)
+}
+
+func testAccMetricFilterConfig_systemFields(rName, fieldSelectionCriteria, emitSystemFieldDimensions string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_log_metric_filter" "test" {
+  name           = %[1]q
+  pattern        = ""
+  log_group_name = aws_cloudwatch_log_group.test.name
+
+  field_selection_criteria     = "%[2]s"
+  emit_system_field_dimensions = %[3]s
+
+  metric_transformation {
+    name      = "metric1"
+    namespace = "ns1"
+    value     = "1"
+  }
+}
+`, rName, fieldSelectionCriteria, emitSystemFieldDimensions)
 }

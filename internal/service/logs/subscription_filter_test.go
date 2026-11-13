@@ -338,6 +338,78 @@ func TestAccLogsSubscriptionFilter_emitSystemFields(t *testing.T) {
 	})
 }
 
+func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
+	ctx := acctest.Context(t)
+	var filter types.SubscriptionFilter
+	resourceName := "aws_cloudwatch_log_subscription_filter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-east-1\"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-east-1"`)),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSubscriptionFilterImportStateIDFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
+			},
+			{
+				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-west-2\"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-west-2"`)),
+				},
+			},
+			{
+				Config: testAccSubscriptionFilterConfig_destinationARNLambda(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccLogsSubscriptionFilter_roleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var filter types.SubscriptionFilter
@@ -1066,6 +1138,18 @@ resource "aws_cloudwatch_log_subscription_filter" "test" {
   emit_system_fields = %[2]s
 }
 `, rName, emitSystemFieldsStr))
+}
+
+func testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, fieldSelectionCriteria string) string {
+	return acctest.ConfigCompose(testAccSubscriptionFilterConfig_lambdaBase(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_log_subscription_filter" "test" {
+  destination_arn          = aws_lambda_function.test.arn
+  filter_pattern           = "logtype test"
+  log_group_name           = aws_cloudwatch_log_group.test.name
+  name                     = %[1]q
+  field_selection_criteria = "%[2]s"
+}
+`, rName, fieldSelectionCriteria))
 }
 
 func testAccSubscriptionFilterConfig_roleARN1(rName string) string {

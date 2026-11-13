@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_metric_filter: Add `emit_system_field_dimensions` and `field_selection_criteria` arguments
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_subscription_filter: Add `field_selection_criteria` argument
+```
