@@ -105,8 +105,11 @@ jobs:
           }
           releases = sorted(
               (r for r in json.loads((temp / "sdk-releases.json").read_text())
-               if not r["draft"] and not r["prerelease"] and re.fullmatch(r"release-\d{4}-\d{2}-\d{2}", r["tag_name"])),
-              key=lambda r: r["tag_name"],
+               if not r["draft"] and not r["prerelease"] and re.fullmatch(r"release-\d{4}-\d{2}-\d{2}(?:\.\d+)?", r["tag_name"])),
+              key=lambda r: (
+                  r["tag_name"].split(".")[0],
+                  int(r["tag_name"].partition(".")[2] or "0"),
+              ),
               reverse=True,
           )
           module_pattern = re.compile(
