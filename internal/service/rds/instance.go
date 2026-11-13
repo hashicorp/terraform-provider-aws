@@ -683,7 +683,6 @@ func resourceInstance() *schema.Resource {
 				names.AttrStorageEncrypted: {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Computed: true,
 					ForceNew: true,
 				},
 				"storage_throughput": {
