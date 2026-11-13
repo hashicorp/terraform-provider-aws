@@ -1,8 +1,3 @@
-data "aws_route53_zone" "test" {
-  name         = var.rootDomain
-  private_zone = false
-}
-
 resource "aws_iot_domain_configuration" "test" {
 {{- template "region" }}
   depends_on              = [aws_acm_certificate_validation.test]
@@ -25,6 +20,11 @@ resource "aws_route53_record" "test" {
   ttl             = 60
   type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
   zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+data "aws_route53_zone" "test" {
+  name         = var.rootDomain
+  private_zone = false
 }
 
 resource "aws_acm_certificate_validation" "test" {

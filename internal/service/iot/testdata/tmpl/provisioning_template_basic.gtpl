@@ -1,14 +1,3 @@
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["iot.amazonaws.com"]
-    }
-  }
-}
-
 resource "aws_iot_provisioning_template" "test" {
 {{- template "region" }}
   name                  = var.rName
@@ -44,6 +33,17 @@ resource "aws_iam_role" "test" {
   name               = var.rName
   path               = "/service-role/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["iot.amazonaws.com"]
+    }
+  }
 }
 
 data "aws_partition" "current" {}

@@ -1,17 +1,6 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
-data "aws_iam_policy_document" "assume_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["iot.amazonaws.com"]
-    }
-  }
-}
-
 resource "aws_iot_provisioning_template" "test" {
   name                  = var.rName
   provisioning_role_arn = aws_iam_role.test.arn
@@ -46,6 +35,17 @@ resource "aws_iam_role" "test" {
   name               = var.rName
   path               = "/service-role/"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["iot.amazonaws.com"]
+    }
+  }
 }
 
 data "aws_partition" "current" {}
