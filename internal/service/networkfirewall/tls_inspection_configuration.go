@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -112,7 +112,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "Must contain only a-z, A-Z, 0-9 and - (hyphen)"),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9-]+$`, "Must contain only a-z, A-Z, 0-9 and - (hyphen)"),
 				},
 			},
 			"number_of_associations": schema.Int64Attribute{
@@ -221,7 +221,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(1, 255),
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^([a-fA-F\d:\.]+($|/\d{1,3}))$`), "Must contain IP address or a block of IP addresses in Classless Inter-Domain Routing (CIDR) notation"),
+																	lazystringvalidator.RegexMatches(`^([a-fA-F\d:\.]+($|/\d{1,3}))$`, "Must contain IP address or a block of IP addresses in Classless Inter-Domain Routing (CIDR) notation"),
 																},
 															},
 														},
@@ -254,7 +254,7 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(1, 255),
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^([a-fA-F\d:\.]+($|/\d{1,3}))$`), "Must contain IP address or a block of IP addresses in Classless Inter-Domain Routing (CIDR) notation"),
+																	lazystringvalidator.RegexMatches(`^([a-fA-F\d:\.]+($|/\d{1,3}))$`, "Must contain IP address or a block of IP addresses in Classless Inter-Domain Routing (CIDR) notation"),
 																},
 															},
 														},
