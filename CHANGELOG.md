@@ -4,6 +4,7 @@ FEATURES:
 
 * **New List Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
 * **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
+* **New List Resource:** `aws_ssoadmin_managed_policy_attachment` ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
 * **New Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
 * **New Resource:** `aws_pinpointsmsvoicev2_account_default_protect_configuration` ([#50934](https://github.com/hashicorp/terraform-provider-aws/issues/50934))
 * **New Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
@@ -12,6 +13,12 @@ ENHANCEMENTS:
 
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
 * resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
+* resource/aws_ssoadmin_managed_policy_attachment: Add resource identity support ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
+
+BUG FIXES:
+
+* resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
 
 ## 6.73.0 (November 11, 2026)
 
