@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_arcregionswitch_plan: Add `payload` argument to the `workflow.step.custom_action_lambda_config.lambda` and `workflow.step.parallel_config.step.custom_action_lambda_config.lambda` blocks
+```
+
+```release-note:enhancement
+resource/aws_arcregionswitch_plan: Add `wait_elb_target_group_healthy` argument to the `workflow.step.ec2_asg_capacity_increase_config` and `workflow.step.ecs_capacity_increase_config` blocks
+```
+
+```release-note:enhancement
+resource/aws_arcregionswitch_plan: Add `service_quota_checks_enabled` argument
+```
