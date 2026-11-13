@@ -6,7 +6,6 @@ package resiliencehubv2
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
@@ -31,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,10 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var validResourceName validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`),
-	`Must start with a letter or number. 2-60 characters. Use letters, numbers, hyphens, and underscores only.`,
-)
+var validResourceName validator.String = lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`, `Must start with a letter or number. 2-60 characters. Use letters, numbers, hyphens, and underscores only.`)
 
 // @FrameworkResource("aws_resiliencehubv2_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
