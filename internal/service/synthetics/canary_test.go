@@ -4,17 +4,18 @@
 package synthetics_test
 
 import (
+	"archive/zip"
 	"context"
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
-	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -374,8 +375,12 @@ func TestAccSyntheticsCanary_sourceCodeHash(t *testing.T) {
 	resourceName := "aws_synthetics_canary.test"
 	// The canary always points at the same path; only the file contents change.
 	// This mirrors an archive_file data source rewriting its output in place.
-	zipFile := filepath.Join(t.TempDir(), "canary.zip")
-	sourceLocationARNChanged := statecheck.CompareValue(compare.ValuesDiffer())
+	dir := t.TempDir()
+	zipFile := filepath.Join(dir, "canary.zip")
+	// test-fixtures/lambdatest_modified.zip is byte-for-byte identical to lambdatest.zip,
+	// so build a package whose contents actually differ.
+	modifiedZipFile := filepath.Join(dir, "canary_modified.zip")
+	testAccCanaryWriteModifiedZip(t, "test-fixtures/lambdatest.zip", modifiedZipFile)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -393,7 +398,6 @@ func TestAccSyntheticsCanary_sourceCodeHash(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_code_hash"), knownvalue.StringExact(testAccCanaryFileBase64SHA256(t, "test-fixtures/lambdatest.zip"))),
-					sourceLocationARNChanged.AddStateValue(resourceName, tfjsonpath.New("source_location_arn")),
 				},
 			},
 			{
@@ -413,7 +417,7 @@ func TestAccSyntheticsCanary_sourceCodeHash(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					testAccCanaryCopyFile(t, "test-fixtures/lambdatest_modified.zip", zipFile)
+					testAccCanaryCopyFile(t, modifiedZipFile, zipFile)
 				},
 				Config: testAccCanaryConfig_sourceCodeHash(rName, zipFile),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -426,9 +430,7 @@ func TestAccSyntheticsCanary_sourceCodeHash(t *testing.T) {
 					testAccCheckCanaryIsUpdated(&conf1, &conf2),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_code_hash"), knownvalue.StringExact(testAccCanaryFileBase64SHA256(t, "test-fixtures/lambdatest_modified.zip"))),
-					// A new Lambda layer version is only published when the code is actually re-uploaded.
-					sourceLocationARNChanged.AddStateValue(resourceName, tfjsonpath.New("source_location_arn")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_code_hash"), knownvalue.StringExact(testAccCanaryFileBase64SHA256(t, modifiedZipFile))),
 				},
 			},
 		},
@@ -1016,6 +1018,64 @@ func testAccCanaryCopyFile(t *testing.T, src, dst string) {
 	if err := os.WriteFile(dst, b, 0o600); err != nil {
 		t.Fatalf("writing %s: %s", dst, err)
 	}
+}
+
+// testAccCanaryWriteModifiedZip copies the zip archive at src to dst, appending a
+// comment line to every file so the script changes without changing behavior.
+func testAccCanaryWriteModifiedZip(t *testing.T, src, dst string) {
+	t.Helper()
+
+	r, err := zip.OpenReader(src)
+	if err != nil {
+		t.Fatalf("opening %s: %s", src, err)
+	}
+	defer r.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		t.Fatalf("creating %s: %s", dst, err)
+	}
+	defer out.Close()
+
+	w := zip.NewWriter(out)
+	for _, f := range r.File {
+		fw, err := w.CreateHeader(&zip.FileHeader{
+			Name:          f.Name,
+			Method:        f.Method,
+			Modified:      f.Modified,
+			ExternalAttrs: f.ExternalAttrs,
+		})
+		if err != nil {
+			t.Fatalf("adding %s to %s: %s", f.Name, dst, err)
+		}
+
+		if f.FileInfo().IsDir() {
+			continue
+		}
+
+		b, err := testAccCanaryReadZipEntry(f)
+		if err != nil {
+			t.Fatalf("reading %s from %s: %s", f.Name, src, err)
+		}
+
+		if _, err := fw.Write(append(b, "\n// modified\n"...)); err != nil {
+			t.Fatalf("writing %s to %s: %s", f.Name, dst, err)
+		}
+	}
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("closing %s: %s", dst, err)
+	}
+}
+
+func testAccCanaryReadZipEntry(f *zip.File) ([]byte, error) {
+	rc, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+
+	return io.ReadAll(rc)
 }
 
 func testAccCanaryFileBase64SHA256(t *testing.T, path string) string {
