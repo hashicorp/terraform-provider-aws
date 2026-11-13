@@ -8,7 +8,6 @@ package shield
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -72,7 +72,7 @@ func (r *proactiveEngagementResource) Schema(ctx context.Context, request resour
 						"phone_number": schema.StringAttribute{
 							Optional: true,
 							Validators: []validator.String{
-								stringvalidator.RegexMatches(regexache.MustCompile(`^\+[1-9]\d{1,14}$`), ""),
+								lazystringvalidator.RegexMatches(`^\+[1-9]\d{1,14}$`, ""),
 							},
 						},
 					},
