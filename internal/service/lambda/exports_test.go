@@ -56,6 +56,8 @@ var (
 
 	BuildInput = buildInput
 
+	ExpandFileSystemConfigs = expandFileSystemConfigs
+
 	InvocationActionCreate = invocationActionCreate
 	InvocationActionDelete = invocationActionDelete
 	InvocationActionUpdate = invocationActionUpdate
