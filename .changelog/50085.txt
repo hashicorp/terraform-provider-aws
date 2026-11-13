@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_cognito_user_pool_client: Mark `retry_grace_period_seconds` in `refresh_token_rotation` as computed to prevent inconsistent result after apply when omitted
+```
+```release-note:bug
+resource/aws_cognito_managed_user_pool_client: Mark `retry_grace_period_seconds` in `refresh_token_rotation` as computed to prevent inconsistent result after apply when omitted
+```
