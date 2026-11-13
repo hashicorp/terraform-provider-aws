@@ -157,6 +157,22 @@ func dataSourceTaskDefinition() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"trusted_execution_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attestation_policy": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"isolation_mode": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"volume": sdkv2.ComputedOnlyFromSchema(resourceTaskDefinitionVolumeSchema()),
 			}
 		},
@@ -220,6 +236,9 @@ func dataSourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set(names.AttrStatus, taskDefinition.Status)
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
+	if err := d.Set("trusted_execution_configuration", flattenTrustedExecutionConfiguration(taskDefinition.TrustedExecutionConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting trusted_execution_configuration: %s", err)
+	}
 	if err := d.Set("volume", flattenVolumes(taskDefinition.Volumes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting volume: %s", err)
 	}

@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -57,6 +58,8 @@ func resourceTaskDefinition() *schema.Resource {
 		ReadWithoutTimeout:   resourceTaskDefinitionRead,
 		UpdateWithoutTimeout: resourceTaskDefinitionUpdate,
 		DeleteWithoutTimeout: resourceTaskDefinitionDelete,
+
+		CustomizeDiff: resourceTaskDefinitionCustomizeDiff,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
@@ -297,6 +300,31 @@ func resourceTaskDefinition() *schema.Resource {
 					Type:     schema.TypeBool,
 					Default:  false,
 					Optional: true,
+				},
+				"trusted_execution_configuration": {
+					Type:             schema.TypeList,
+					MaxItems:         1,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: trustedExecutionConfigurationDiffSuppress,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"attestation_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ForceNew:         true,
+								ValidateFunc:     verify.ValidBase64String,
+								DiffSuppressFunc: trustedExecutionConfigurationDiffSuppress,
+							},
+							"isolation_mode": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ForceNew:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.IsolationMode](),
+								DiffSuppressFunc: trustedExecutionConfigurationDiffSuppress,
+							},
+						},
+					},
 				},
 				"volume": resourceTaskDefinitionVolumeSchema(),
 			}
@@ -629,6 +657,10 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("ephemeral_storage"); ok && len(v.([]any)) > 0 {
 		input.EphemeralStorage = expandEphemeralStorage(v.([]any))
+	}
+
+	if v, ok := d.GetOk("trusted_execution_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TrustedExecutionConfiguration = expandTrustedExecutionConfiguration(v.([]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrExecutionRoleARN); ok {
@@ -1266,6 +1298,83 @@ func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	return []any{tfMap}
 }
 
+func expandTrustedExecutionConfiguration(tfList []any) *awstypes.TrustedExecutionConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.TrustedExecutionConfiguration{}
+
+	if v, ok := tfMap["attestation_policy"].(string); ok && v != "" {
+		apiObject.AttestationPolicy = aws.String(v)
+	}
+
+	if v, ok := tfMap["isolation_mode"].(string); ok && v != "" {
+		apiObject.IsolationMode = awstypes.IsolationMode(v)
+	}
+
+	return apiObject
+}
+
+func flattenTrustedExecutionConfiguration(apiObject *awstypes.TrustedExecutionConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"attestation_policy": aws.ToString(apiObject.AttestationPolicy),
+		"isolation_mode":     apiObject.IsolationMode,
+	}
+
+	return []any{tfMap}
+}
+
+// trustedExecutionConfigurationDiffSuppress treats an absent
+// trusted_execution_configuration block and a block with the default isolation
+// mode (SHARED) and no attestation policy as equivalent, so that neither form
+// plans a replacement when the API reports the other one.
+//
+// Unknown values (for example a dynamic block whose count isn't known yet) are
+// never suppressed, so that a replacement is still planned if they resolve to
+// a non-default isolation mode.
+func trustedExecutionConfigurationDiffSuppress(_, _, _ string, d *schema.ResourceData) bool {
+	if v, diags := d.GetRawConfigAt(cty.GetAttrPath("trusted_execution_configuration")); diags.HasError() || !v.IsWhollyKnown() {
+		return false
+	}
+
+	o, n := d.GetChange("trusted_execution_configuration")
+
+	return isDefaultTrustedExecutionConfiguration(o.([]any)) && isDefaultTrustedExecutionConfiguration(n.([]any))
+}
+
+func isDefaultTrustedExecutionConfiguration(tfList []any) bool {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return true
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return tfMap["isolation_mode"].(string) == string(awstypes.IsolationModeShared) && tfMap["attestation_policy"].(string) == ""
+}
+
+func resourceTaskDefinitionCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+	const (
+		attestationPolicyKey = "trusted_execution_configuration.0.attestation_policy"
+		isolationModeKey     = "trusted_execution_configuration.0.isolation_mode"
+	)
+
+	if !diff.NewValueKnown(isolationModeKey) || !diff.NewValueKnown(attestationPolicyKey) {
+		return nil
+	}
+
+	if diff.Get(isolationModeKey).(string) == string(awstypes.IsolationModeConfidentialSandbox) && diff.Get(attestationPolicyKey).(string) == "" {
+		return fmt.Errorf("trusted_execution_configuration.attestation_policy is required when isolation_mode is %s", awstypes.IsolationModeConfidentialSandbox)
+	}
+
+	return nil
+}
+
 func expandS3FilesVolumeConfiguration(tfList []any) *awstypes.S3FilesVolumeConfiguration {
 	tfMap := tfList[0].(map[string]any)
 	apiObject := &awstypes.S3FilesVolumeConfiguration{}
@@ -1339,6 +1448,7 @@ func resourceTaskDefinitionFlatten(ctx context.Context, d *schema.ResourceData, 
 	d.Set("runtime_platform", flattenRuntimePlatform(taskDefinition.RuntimePlatform))
 	d.Set("task_role_arn", taskDefinition.TaskRoleArn)
 	d.Set("track_latest", d.Get("track_latest"))
+	d.Set("trusted_execution_configuration", flattenTrustedExecutionConfiguration(taskDefinition.TrustedExecutionConfiguration))
 	d.Set("volume", flattenVolumes(taskDefinition.Volumes))
 
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
