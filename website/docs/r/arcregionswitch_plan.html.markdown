@@ -212,7 +212,7 @@ The following arguments are optional:
 * `ecs_capacity_increase_config` - (Optional) Configuration for ECS service capacity increase. See [`ecs_capacity_increase_config` Block](#ecs_capacity_increase_config-block) for details.
 * `eks_resource_scaling_config` - (Optional) Configuration for EKS resource scaling. See [`eks_resource_scaling_config` Block](#eks_resource_scaling_config-block) for details.
 * `execution_approval_config` - (Optional) Configuration for manual approval steps. See [`execution_approval_config` Block](#execution_approval_config-block) for details.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `RdsSwitchoverReadReplica`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `RdsSwitchoverReadReplica`, `Route53HealthCheck`, `SSMSendCommand`.
 * `global_aurora_config` - (Optional) Configuration for Aurora Global Database operations. See [`global_aurora_config` Block](#global_aurora_config-block) for details.
 * `lambda_event_source_mapping_config` - (Optional) Configuration for Lambda event source mapping operations. See [`lambda_event_source_mapping_config` Block](#lambda_event_source_mapping_config-block) for details.
 * `name` - (Required) Name of the step.
@@ -223,6 +223,7 @@ The following arguments are optional:
 * `rds_switchover_read_replica_config` - (Optional) Configuration for switching over RDS read replicas. See [`rds_switchover_read_replica_config` Block](#rds_switchover_read_replica_config-block) for details.
 * `region_switch_plan_config` - (Optional) Configuration for executing a nested region switch plan. See [`region_switch_plan_config` Block](#region_switch_plan_config-block) for details.
 * `route53_health_check_config` - (Optional) Configuration for Route53 health check operations. See [`route53_health_check_config` Block](#route53_health_check_config-block) for details.
+* `ssm_send_command_config` - (Optional) Configuration for running an AWS Systems Manager document with SendCommand. See [`ssm_send_command_config` Block](#ssm_send_command_config-block) for details.
 
 ### `arc_routing_control_config` Block
 
@@ -402,6 +403,32 @@ The following arguments are optional:
 
 * `behavior` - (Required) Ungraceful behavior.
 
+### `ssm_send_command_config` Block
+
+* `region_document` - (Required) Systems Manager document and target configuration per Region. See [`region_document` Block](#region_document-block) for details.
+* `retry_interval_minutes` - (Required) How often, in minutes, to retry the command if it returns a failure.
+* `timeout_minutes` - (Optional) Timeout in minutes.
+* `ungraceful` - (Optional) Ungraceful behavior configuration. See [`workflow.step.ssm_send_command_config.ungraceful` Block](#workflowstepssm_send_command_configungraceful-block) for details.
+
+### `region_document` Block
+
+* `cross_account_role` - (Optional) ARN of the cross-account role to assume.
+* `document_arn` - (Required) ARN of the Systems Manager document to run.
+* `document_version` - (Optional) Systems Manager document version to run. When omitted, the document's default version is used.
+* `external_id` - (Optional) External ID for cross-account role assumption.
+* `parameters` - (Optional) Map of Systems Manager document parameter names to lists of values.
+* `region` - (Required) AWS Region.
+* `target` - (Required) SendCommand targets that resolve to managed nodes. See [`target` Block](#target-block) for details.
+
+### `target` Block
+
+* `key` - (Required) Target key, such as `InstanceIds` or `tag:<TagKey>`.
+* `values` - (Required) Values matched by the target key.
+
+### `workflow.step.ssm_send_command_config.ungraceful` Block
+
+* `behavior` - (Required) Ungraceful behavior. Valid value: `skip`.
+
 ### `neptune_global_database_config` Block
 
 * `behavior` - (Required) Behavior for global database operations.
@@ -464,7 +491,7 @@ The following arguments are optional:
 * `ecs_capacity_increase_config` - (Optional) Configuration for ECS service capacity increase. See [`ecs_capacity_increase_config` Block](#ecs_capacity_increase_config-block) for details.
 * `eks_resource_scaling_config` - (Optional) Configuration for EKS resource scaling. See [`eks_resource_scaling_config` Block](#eks_resource_scaling_config-block) for details.
 * `execution_approval_config` - (Optional) Configuration for manual approval steps. See [`execution_approval_config` Block](#execution_approval_config-block) for details.
-* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `RdsSwitchoverReadReplica`, `Route53HealthCheck`.
+* `execution_block_type` - (Required) Type of execution block. Valid values: `ARCRegionSwitchPlan`, `ARCRoutingControl`, `AuroraGlobalDatabase`, `CustomActionLambda`, `DocumentDb`, `EC2AutoScaling`, `ECSServiceScaling`, `EKSResourceScaling`, `ManualApproval`, `Parallel`, `RdsCreateCrossRegionReplica`, `RdsPromoteReadReplica`, `RdsSwitchoverReadReplica`, `Route53HealthCheck`, `SSMSendCommand`.
 * `global_aurora_config` - (Optional) Configuration for Aurora Global Database operations. See [`global_aurora_config` Block](#global_aurora_config-block) for details.
 * `lambda_event_source_mapping_config` - (Optional) Configuration for Lambda event source mapping operations. See [`lambda_event_source_mapping_config` Block](#lambda_event_source_mapping_config-block) for details.
 * `name` - (Required) Name of the step.
@@ -474,6 +501,7 @@ The following arguments are optional:
 * `rds_switchover_read_replica_config` - (Optional) Configuration for switching over RDS read replicas. See [`rds_switchover_read_replica_config` Block](#rds_switchover_read_replica_config-block) for details.
 * `region_switch_plan_config` - (Optional) Configuration for executing a nested region switch plan. See [`region_switch_plan_config` Block](#region_switch_plan_config-block) for details.
 * `route53_health_check_config` - (Optional) Configuration for Route53 health check operations. See [`route53_health_check_config` Block](#route53_health_check_config-block) for details.
+* `ssm_send_command_config` - (Optional) Configuration for running an AWS Systems Manager document with SendCommand. See [`ssm_send_command_config` Block](#ssm_send_command_config-block) for details.
 
 ### `route53_health_check_config` Block
 
