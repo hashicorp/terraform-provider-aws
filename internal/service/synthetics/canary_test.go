@@ -4,15 +4,25 @@
 package synthetics_test
 
 import (
+	"archive/zip"
+	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
@@ -354,6 +364,75 @@ func TestAccSyntheticsCanary_StartCanary_codeChanges(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "timeline.0.last_stopped"),
 					testAccCheckCanaryIsStartedAfter(&conf1, &conf2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccSyntheticsCanary_sourceCodeHash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf1, conf2 awstypes.Canary
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(t, 8))
+	resourceName := "aws_synthetics_canary.test"
+	// The canary always points at the same path; only the file contents change.
+	// This mirrors an archive_file data source rewriting its output in place.
+	dir := t.TempDir()
+	zipFile := filepath.Join(dir, "canary.zip")
+	// test-fixtures/lambdatest_modified.zip is byte-for-byte identical to lambdatest.zip,
+	// so build a package whose contents actually differ.
+	modifiedZipFile := filepath.Join(dir, "canary_modified.zip")
+	testAccCanaryWriteModifiedZip(t, "test-fixtures/lambdatest.zip", modifiedZipFile)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCanaryDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {
+					testAccCanaryCopyFile(t, "test-fixtures/lambdatest.zip", zipFile)
+				},
+				Config: testAccCanaryConfig_sourceCodeHash(rName, zipFile),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, t, resourceName, &conf1),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_code_hash"), knownvalue.StringExact(testAccCanaryFileBase64SHA256(t, "test-fixtures/lambdatest.zip"))),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file", "source_code_hash", "start_canary", "delete_lambda"},
+			},
+			{
+				// Re-planning unchanged config and file contents must not produce a diff.
+				Config: testAccCanaryConfig_sourceCodeHash(rName, zipFile),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				PreConfig: func() {
+					testAccCanaryCopyFile(t, modifiedZipFile, zipFile)
+				},
+				Config: testAccCanaryConfig_sourceCodeHash(rName, zipFile),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCanaryExists(ctx, t, resourceName, &conf2),
+					testAccCheckCanaryIsUpdated(&conf1, &conf2),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("source_code_hash"), knownvalue.StringExact(testAccCanaryFileBase64SHA256(t, modifiedZipFile))),
+				},
 			},
 		},
 	})
@@ -929,6 +1008,93 @@ func testAccCheckCanaryIsStartedAfter(first, second *awstypes.Canary) resource.T
 	}
 }
 
+func testAccCanaryCopyFile(t *testing.T, src, dst string) {
+	t.Helper()
+
+	b, err := os.ReadFile(src)
+	if err != nil {
+		t.Fatalf("reading %s: %s", src, err)
+	}
+
+	if err := os.WriteFile(dst, b, 0o600); err != nil {
+		t.Fatalf("writing %s: %s", dst, err)
+	}
+}
+
+// testAccCanaryWriteModifiedZip copies the zip archive at src to dst, appending a
+// comment line to every file so the script changes without changing behavior.
+func testAccCanaryWriteModifiedZip(t *testing.T, src, dst string) {
+	t.Helper()
+
+	b, err := os.ReadFile(src)
+	if err != nil {
+		t.Fatalf("reading %s: %s", src, err)
+	}
+
+	r, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
+	if err != nil {
+		t.Fatalf("opening %s: %s", src, err)
+	}
+
+	var buf bytes.Buffer
+	w := zip.NewWriter(&buf)
+	for _, f := range r.File {
+		fw, err := w.CreateHeader(&zip.FileHeader{
+			Name:          f.Name,
+			Method:        f.Method,
+			Modified:      f.Modified,
+			ExternalAttrs: f.ExternalAttrs,
+		})
+		if err != nil {
+			t.Fatalf("adding %s to %s: %s", f.Name, dst, err)
+		}
+
+		if f.FileInfo().IsDir() {
+			continue
+		}
+
+		content, err := testAccCanaryReadZipEntry(f)
+		if err != nil {
+			t.Fatalf("reading %s from %s: %s", f.Name, src, err)
+		}
+
+		if _, err := fw.Write(append(content, "\n// modified\n"...)); err != nil {
+			t.Fatalf("writing %s to %s: %s", f.Name, dst, err)
+		}
+	}
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("closing %s: %s", dst, err)
+	}
+
+	if err := os.WriteFile(dst, buf.Bytes(), 0o600); err != nil {
+		t.Fatalf("writing %s: %s", dst, err)
+	}
+}
+
+func testAccCanaryReadZipEntry(f *zip.File) ([]byte, error) {
+	rc, err := f.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer rc.Close()
+
+	return io.ReadAll(rc)
+}
+
+func testAccCanaryFileBase64SHA256(t *testing.T, path string) string {
+	t.Helper()
+
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("reading %s: %s", path, err)
+	}
+
+	h := sha256.Sum256(b)
+
+	return base64.StdEncoding.EncodeToString(h[:])
+}
+
 func testAccCanaryConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -1406,6 +1572,29 @@ resource "aws_synthetics_canary" "test" {
   depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
 }
 `, rName, state))
+}
+
+func testAccCanaryConfig_sourceCodeHash(rName, zipFile string) string {
+	return acctest.ConfigCompose(
+		testAccCanaryConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = %[2]q
+  source_code_hash     = filebase64sha256(%[2]q)
+  runtime_version      = data.aws_synthetics_runtime_version.test.version_name
+  delete_lambda        = true
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  depends_on = [aws_iam_role.test, aws_iam_role_policy.test]
+}
+`, rName, zipFile))
 }
 
 func testAccCanaryConfig_basicS3Code(rName string) string {
