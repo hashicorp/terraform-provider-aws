@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -38,6 +37,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -76,7 +76,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(1024),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "algorithm description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+					lazystringvalidator.RegexMatches(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`, "algorithm description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -86,7 +86,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`), "algorithm name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`, "algorithm name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -164,7 +164,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 							Validators: []validator.List{
 								listvalidator.ValueStringsAre(
 									stringvalidator.LengthAtMost(1024),
-									stringvalidator.RegexMatches(regexache.MustCompile(`[-\w]+/.+`), "supported response MIME types must be in type/subtype format"),
+									lazystringvalidator.RegexMatches(`[-\w]+/.+`, "supported response MIME types must be in type/subtype format"),
 								),
 							},
 							PlanModifiers: []planmodifier.List{
@@ -198,7 +198,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 									"container_hostname": schema.StringAttribute{
 										Optional: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "container hostname must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+											lazystringvalidator.RegexMatches(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`, "container hostname must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -212,11 +212,11 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 											mapvalidator.SizeAtMost(100),
 											mapvalidator.KeysAre(
 												stringvalidator.LengthAtMost(1024),
-												stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]*`), "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
+												lazystringvalidator.RegexMatches(`[a-zA-Z_][a-zA-Z0-9_]*`, "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
 											),
 											mapvalidator.ValueStringsAre(
 												stringvalidator.LengthAtMost(1024),
-												stringvalidator.RegexMatches(regexache.MustCompile(`[\S\s]*`), "environment values may contain any characters"),
+												lazystringvalidator.RegexMatches(`[\S\s]*`, "environment values may contain any characters"),
 											),
 										},
 										PlanModifiers: []planmodifier.Map{
@@ -233,7 +233,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 										Optional: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(3, 10),
-											stringvalidator.RegexMatches(regexache.MustCompile(`[0-9]\.[A-Za-z0-9.-]+`), "framework version must start with a digit, followed by a period, and contain only alphanumeric characters, dots, and hyphens"),
+											lazystringvalidator.RegexMatches(`[0-9]\.[A-Za-z0-9.-]+`, "framework version must start with a digit, followed by a period, and contain only alphanumeric characters, dots, and hyphens"),
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -243,7 +243,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 										Optional: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(255),
-											stringvalidator.RegexMatches(regexache.MustCompile(`[\S]+`), "image must not contain whitespace"),
+											lazystringvalidator.RegexMatches(`[\S]+`, "image must not contain whitespace"),
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -254,7 +254,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 										Computed: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(72),
-											stringvalidator.RegexMatches(regexache.MustCompile(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`), "image digest must be a valid sha256 digest"),
+											lazystringvalidator.RegexMatches(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`, "image digest must be a valid sha256 digest"),
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.UseStateForUnknown(),
@@ -291,7 +291,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 										Optional: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(256),
-											stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9](-*[a-zA-Z0-9])*`), "product ID must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+											lazystringvalidator.RegexMatches(`[a-zA-Z0-9](-*[a-zA-Z0-9])*`, "product ID must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
@@ -341,7 +341,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(255),
-								stringvalidator.RegexMatches(regexache.MustCompile(`[\S]+`), "training image must not contain whitespace"),
+								lazystringvalidator.RegexMatches(`[\S]+`, "training image must not contain whitespace"),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -352,7 +352,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 							Computed: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(72),
-								stringvalidator.RegexMatches(regexache.MustCompile(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`), "training image digest must be a valid sha256 digest"),
+								lazystringvalidator.RegexMatches(`[Ss][Hh][Aa]256:[0-9a-fA-F]{64}`, "training image digest must be a valid sha256 digest"),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
@@ -383,7 +383,7 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(20, 2048),
-								stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`), "validation role must be a valid IAM role ARN"),
+								lazystringvalidator.RegexMatches(`arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+`, "validation role must be a valid IAM role ARN"),
 							},
 							PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 						},
@@ -456,7 +456,7 @@ func baseModelBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(63),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "hub content name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`, "hub content name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -466,7 +466,7 @@ func baseModelBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(5, 14),
-						stringvalidator.RegexMatches(regexache.MustCompile(`\d{1,4}\.\d{1,4}\.\d{1,4}`), "hub content version must be in major.minor.patch format with 1 to 4 digits per segment"),
+						lazystringvalidator.RegexMatches(`\d{1,4}\.\d{1,4}\.\d{1,4}`, "hub content version must be in major.minor.patch format with 1 to 4 digits per segment"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -644,7 +644,7 @@ func metricDefinitionsBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
-						stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "metric name must not be empty"),
+						lazystringvalidator.RegexMatches(`.+`, "metric name must not be empty"),
 					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
@@ -652,7 +652,7 @@ func metricDefinitionsBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 500),
-						stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "metric regex must not be empty"),
+						lazystringvalidator.RegexMatches(`.+`, "metric regex must not be empty"),
 					},
 					PlanModifiers: []planmodifier.String{stringplanmodifier.RequiresReplace()},
 				},
@@ -683,7 +683,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+						lazystringvalidator.RegexMatches(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`, "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -709,7 +709,7 @@ func supportedHyperParametersBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(256),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "name must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+						lazystringvalidator.RegexMatches(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`, "name must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -894,7 +894,7 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
+						lazystringvalidator.RegexMatches(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`, "description must contain only letters, marks, spaces, symbols, numbers, and punctuation"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -912,7 +912,7 @@ func trainingChannelsBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 64),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z0-9\.\-_]+`), "name must contain only letters, numbers, periods, hyphens, and underscores"),
+						lazystringvalidator.RegexMatches(`[A-Za-z0-9\.\-_]+`, "name must contain only letters, numbers, periods, hyphens, and underscores"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -972,7 +972,7 @@ func validationProfilesBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 63),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "profile name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`, "profile name must start with an alphanumeric character and contain only alphanumeric characters and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1051,7 +1051,7 @@ func inputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 64),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z0-9\.\-_]+`), "channel name must contain only letters, numbers, periods, hyphens, and underscores"),
+						lazystringvalidator.RegexMatches(`[A-Za-z0-9\.\-_]+`, "channel name must contain only letters, numbers, periods, hyphens, and underscores"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1149,7 +1149,7 @@ func fileSystemDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(11, 21),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^(fs-[0-9a-f]{8,})$`), "file system ID must match the required pattern"),
+						lazystringvalidator.RegexMatches(`^(fs-[0-9a-f]{8,})$`, "file system ID must match the required pattern"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1186,7 +1186,7 @@ func trainingS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 						listvalidator.SizeAtMost(16),
 						listvalidator.ValueStringsAre(
 							stringvalidator.LengthBetween(1, 256),
-							stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "attribute names must not be empty"),
+							lazystringvalidator.RegexMatches(`.+`, "attribute names must not be empty"),
 						),
 					},
 					PlanModifiers: []planmodifier.List{
@@ -1289,7 +1289,7 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2048),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9:/_-]*`, "KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1351,7 +1351,7 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(50, 2048),
-						stringvalidator.RegexMatches(regexache.MustCompile(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*`), "training plan ARN must match the required SageMaker training plan ARN pattern"),
+						lazystringvalidator.RegexMatches(`arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*`, "training plan ARN must match the required SageMaker training plan ARN pattern"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1361,7 +1361,7 @@ func resourceConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2048),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "volume KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9:/_-]*`, "volume KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1553,7 +1553,7 @@ func transformJobDefinitionBlock(ctx context.Context) schema.ListNestedBlock {
 						mapvalidator.SizeAtMost(16),
 						mapvalidator.KeysAre(
 							stringvalidator.LengthAtMost(1024),
-							stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z_][a-zA-Z0-9_]`), "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
+							lazystringvalidator.RegexMatches(`[a-zA-Z_][a-zA-Z0-9_]`, "environment keys must start with a letter or underscore and contain only letters, numbers, and underscores"),
 						),
 						mapvalidator.ValueStringsAre(
 							stringvalidator.LengthAtMost(10240),
@@ -1719,7 +1719,7 @@ func transformOutputBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2048),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9:/_-]*`, "KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1770,7 +1770,7 @@ func transformResourcesBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 63),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*`), "transform AMI version must contain only alphanumeric characters and single hyphen-separated segments"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*`, "transform AMI version must contain only alphanumeric characters and single hyphen-separated segments"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -1780,7 +1780,7 @@ func transformResourcesBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthAtMost(2048),
-						stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9:/_-]*`), "volume KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+						lazystringvalidator.RegexMatches(`[a-zA-Z0-9:/_-]*`, "volume KMS key ID must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
