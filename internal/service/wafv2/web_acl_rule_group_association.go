@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
@@ -39,6 +38,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -83,10 +83,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 					Validators: []validator.String{
 						stringvalidator.All(
 							stringvalidator.LengthBetween(1, 512),
-							stringvalidator.RegexMatches(
-								regexache.MustCompile(`\S`),
-								"can not be empty string",
-							),
+							lazystringvalidator.RegexMatches(`\S`, "can not be empty string"),
 						),
 					},
 					Description: "Identifier of the username field",
@@ -107,10 +104,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 					Validators: []validator.String{
 						stringvalidator.All(
 							stringvalidator.LengthBetween(1, 512),
-							stringvalidator.RegexMatches(
-								regexache.MustCompile(`\S`),
-								"can not be empty string",
-							),
+							lazystringvalidator.RegexMatches(`\S`, "can not be empty string"),
 						),
 					},
 					Description: "Identifier of the password field",
@@ -166,10 +160,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								Validators: []validator.String{
 									stringvalidator.All(
 										stringvalidator.LengthBetween(1, 512),
-										stringvalidator.RegexMatches(
-											regexache.MustCompile(`\S`),
-											"can not be empty string",
-										),
+										lazystringvalidator.RegexMatches(`\S`, "can not be empty string"),
 									),
 								},
 								Description: "Identifier of the email field",
@@ -342,10 +333,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								Validators: []validator.String{
 									stringvalidator.All(
 										stringvalidator.LengthBetween(1, 256),
-										stringvalidator.RegexMatches(
-											regexache.MustCompile(`\S`),
-											"can not be empty string",
-										),
+										lazystringvalidator.RegexMatches(`\S`, "can not be empty string"),
 									),
 								},
 								Description: "Path to the account creation endpoint on the protected website",
@@ -360,10 +348,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								Validators: []validator.String{
 									stringvalidator.All(
 										stringvalidator.LengthBetween(1, 256),
-										stringvalidator.RegexMatches(
-											regexache.MustCompile(`\S`),
-											"can not be empty string",
-										),
+										lazystringvalidator.RegexMatches(`\S`, "can not be empty string"),
 									),
 								},
 							},
@@ -460,10 +445,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 								Validators: []validator.String{
 									stringvalidator.All(
 										stringvalidator.LengthBetween(1, 256),
-										stringvalidator.RegexMatches(
-											regexache.MustCompile(`\S`),
-											"can not be empty string",
-										),
+										lazystringvalidator.RegexMatches(`\S`, "can not be empty string"),
 									),
 								},
 							},
@@ -884,10 +866,7 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 							Validators: []validator.String{
 								stringvalidator.All(
 									stringvalidator.LengthBetween(1, 128),
-									stringvalidator.RegexMatches(
-										regexache.MustCompile(`^[0-9A-Za-z_-]+$`),
-										"can only contain alphanumeric characters, hyphens, underscores, and colons",
-									),
+									lazystringvalidator.RegexMatches(`^[0-9A-Za-z_-]+$`, "can only contain alphanumeric characters, hyphens, underscores, and colons"),
 								),
 							},
 							Description: "A name for the metrics for this rule.",
