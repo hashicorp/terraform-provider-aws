@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -36,6 +35,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -116,8 +116,7 @@ func (r *evaluationJobResource) Schema(ctx context.Context, req resource.SchemaR
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9](-*[a-z0-9])*$`),
-						"must be up to 63 lowercase letters, numbers, and dashes, and must start and end with a letter or number"),
+					lazystringvalidator.RegexMatches(`^[a-z0-9](-*[a-z0-9])*$`, "must be up to 63 lowercase letters, numbers, and dashes, and must start and end with a letter or number"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -248,8 +247,7 @@ func (r *evaluationJobResource) Schema(ctx context.Context, req resource.SchemaR
 																			Required: true,
 																			Validators: []validator.String{
 																				stringvalidator.LengthBetween(1, 63),
-																				stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-zA-Z\-_.]+$`),
-																					"must be alphanumeric, with hyphens, underscores, and periods"),
+																				lazystringvalidator.RegexMatches(`^[0-9a-zA-Z\-_.]+$`, "must be alphanumeric, with hyphens, underscores, and periods"),
 																			},
 																		},
 																	},
