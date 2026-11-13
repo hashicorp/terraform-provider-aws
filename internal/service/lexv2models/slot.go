@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -258,19 +258,13 @@ func (r *slotResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				"deletion_character": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^[A-D0-9#*]{1}$`),
-							"alphanumeric characters",
-						),
+						lazystringvalidator.RegexMatches(`^[A-D0-9#*]{1}$`, "alphanumeric characters"),
 					},
 				},
 				"end_character": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^[A-D0-9#*]{1}$`),
-							"alphanumeric characters",
-						),
+						lazystringvalidator.RegexMatches(`^[A-D0-9#*]{1}$`, "alphanumeric characters"),
 					},
 				},
 				"end_timeout_ms": schema.Int64Attribute{
