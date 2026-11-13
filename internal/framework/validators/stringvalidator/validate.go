@@ -3,15 +3,12 @@
 
 package stringvalidator
 
-import (
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-)
+import lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 
 var (
-	ContainsOnlyLowerCaseLettersNumbersHyphens     = stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase letters, numbers, or hyphens")
-	ContainsOnlyLowerCaseLettersNumbersUnderscores = stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z_]+$`), "must contain only lowercase letters, numbers, or underscores")
+	ContainsOnlyLowerCaseLettersNumbersHyphens     = lazystringvalidator.RegexMatches(`^[0-9a-z-]+$`, "must contain only lowercase letters, numbers, or hyphens")
+	ContainsOnlyLowerCaseLettersNumbersUnderscores = lazystringvalidator.RegexMatches(`^[0-9a-z_]+$`, "must contain only lowercase letters, numbers, or underscores")
 
-	StartsWithLetterOrNumber = stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z]`), "must start with a letter or number")
-	EndsWithLetterOrNumber   = stringvalidator.RegexMatches(regexache.MustCompile(`[0-9a-z]$`), "must end with a letter or number")
+	StartsWithLetterOrNumber = lazystringvalidator.RegexMatches(`^[0-9a-z]`, "must start with a letter or number")
+	EndsWithLetterOrNumber   = lazystringvalidator.RegexMatches(`[0-9a-z]$`, "must end with a letter or number")
 )
