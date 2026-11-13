@@ -12,80 +12,47 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_s3control_multi_region_access_point")
 func newMultiRegionAccessPointResourceAsListResource() inttypes.ListResourceForSDK {
-	l := multiRegionAccessPointListResource{}
-	l.SetResourceSchema(resourceMultiRegionAccessPoint())
-	return &l
-}
-
-var _ list.ListResource = &multiRegionAccessPointListResource{}
-
-type multiRegionAccessPointListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *multiRegionAccessPointListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.S3ControlClient(ctx)
-	accountID := awsClient.AccountID(ctx)
-
-	tflog.Info(ctx, "Listing S3 Multi-Region Access Points")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		input := s3control.ListMultiRegionAccessPointsInput{
-			AccountId: aws.String(accountID),
-		}
-
-		for item, err := range listMultiRegionAccessPointsIterator(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
+	return framework.NewSDKListResource(resourceMultiRegionAccessPoint(), framework.SDKListSpec[multiRegionAccessPointItem, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[multiRegionAccessPointItem, error], diag.Diagnostics) {
+			accountID := c.AccountID(ctx)
+			input := s3control.ListMultiRegionAccessPointsInput{
+				AccountId: aws.String(accountID),
 			}
 
-			name := aws.ToString(item.Name)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrName), name)
+			reports := listMultiRegionAccessPointsIterator(ctx, c.S3ControlClient(ctx), &input)
 
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			id := multiRegionAccessPointCreateResourceID(accountID, name)
-			rd.SetId(id)
-			// Set the identity attribute.
-			rd.Set(names.AttrName, name)
-
-			if request.IncludeResource {
-				if err := resourceMultiRegionAccessPointFlatten(ctx, awsClient, accountID, &item, rd); err != nil {
-					tflog.Error(ctx, "Flattening S3 Multi-Region Access Point", map[string]any{
-						"error":      err.Error(),
-						names.AttrID: id,
-					})
-					continue
+			return func(yield func(multiRegionAccessPointItem, error) bool) {
+				for report, err := range reports {
+					if !yield(multiRegionAccessPointItem{report: report, accountID: accountID}, err) {
+						return
+					}
 				}
-			}
+			}, nil
+		},
+		ID: func(item multiRegionAccessPointItem, _ framework.RegionQuery) string {
+			return multiRegionAccessPointCreateResourceID(item.accountID, aws.ToString(item.report.Name))
+		},
+		Flatten: func(ctx context.Context, c *conns.AWSClient, item *multiRegionAccessPointItem, rd *schema.ResourceData) error {
+			return resourceMultiRegionAccessPointFlatten(ctx, c, &item.report, rd)
+		},
+		DisplayName: func(item multiRegionAccessPointItem) string { return aws.ToString(item.report.Name) },
+	})
+}
 
-			result.DisplayName = name
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+// The resource ID embeds the account ID, which is listing scope rather than
+// per-item, so the iterator pairs it with each report.
+type multiRegionAccessPointItem struct {
+	report    awstypes.MultiRegionAccessPointReport
+	accountID string
 }
 
 func listMultiRegionAccessPointsIterator(ctx context.Context, conn *s3control.Client, input *s3control.ListMultiRegionAccessPointsInput) iter.Seq2[awstypes.MultiRegionAccessPointReport, error] {
