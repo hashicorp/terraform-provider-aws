@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
@@ -32,6 +31,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -98,7 +98,7 @@ func (r *spaceResource) Schema(ctx context.Context, request resource.SchemaReque
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`), "use lowercase letters, numbers, and hyphens. Start and end with a letter or number."),
+					lazystringvalidator.RegexMatches(`^[a-z0-9]+(-[a-z0-9]+)*$`, "use lowercase letters, numbers, and hyphens. Start and end with a letter or number."),
 				},
 			},
 			"space_arn": framework.ARNAttributeComputedOnly(),
