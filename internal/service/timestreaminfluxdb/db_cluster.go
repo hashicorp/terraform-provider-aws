@@ -362,8 +362,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					listvalidator.SizeAtMost(1),
 				},
 				Description: `Specifies the maintenance schedule for the DB cluster, including the preferred
-					maintenance window and timezone. This field is only supported for InfluxDB V3 clusters
-					(when using an InfluxDB V3 db parameter group).`,
+					maintenance window and timezone.`,
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
@@ -653,14 +652,6 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 					)
 				}
 			}
-		}
-
-		if !isNullOrUnknownValue(data.MaintenanceSchedule) {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("maintenance_schedule"),
-				"Invalid Configuration for InfluxDB V2",
-				"maintenance_schedule is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group)",
-			)
 		}
 	}
 }
