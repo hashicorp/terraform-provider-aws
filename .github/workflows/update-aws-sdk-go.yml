@@ -87,11 +87,18 @@ jobs:
             echo "::warning::Unable to look up AWS SDK for Go v2 releases"
             printf '[]\n' > "$RUNNER_TEMP/sdk-releases.json"
           fi
+          if ! gh api repos/aws/aws-sdk-go-v2/commits/main --jq .sha > "$RUNNER_TEMP/sdk-source-ref"; then
+            echo "::warning::Unable to resolve SDK source revision for changelog matching"
+            : > "$RUNNER_TEMP/sdk-source-ref"
+          fi
           python3 <<'PY'
           import json
           import os
           import re
+          from concurrent.futures import ThreadPoolExecutor
           from pathlib import Path
+          from urllib.error import URLError
+          from urllib.request import urlopen
 
           temp = Path(os.environ["RUNNER_TEMP"])
           before = {m["Path"]: m["Version"] for m in json.loads((temp / "go-mod.json").read_text())["Require"]}
@@ -138,6 +145,54 @@ jobs:
           # Newly added modules have no prior version and cannot contribute to the old release endpoint.
           prior_versions = {(path, before[path]) for path, _ in changed if path in before}
           prior_matched, prior_unmatched = match_versions(prior_versions)
+          missing = unmatched | prior_unmatched
+          source_ref = (temp / "sdk-source-ref").read_text().strip()
+          if missing and releases and re.fullmatch(r"[0-9a-f]{40}", source_ref):
+              # Highlights omit dependency-only updates; changelog headings identify their version and release date.
+              # Pin submodule reads to one commit and fetch each needed module once for both old and new versions.
+              changelog_pattern = re.compile(
+                  r"^# (v[0-9][0-9A-Za-z.+-]*) \((\d{4}-\d{2}-\d{2}(?:\.\d+)?)\)[ \t]*\r?$",
+                  re.MULTILINE,
+              )
+              versions_by_tag = {release["tag_name"]: versions for release, versions in release_versions}
+
+              def read_changelog(path, ref=source_ref):
+                  relative = path.removeprefix(prefix).lstrip("/")
+                  filename = f"{relative}/CHANGELOG.md" if relative else "CHANGELOG.md"
+                  url = f"https://raw.githubusercontent.com/aws/aws-sdk-go-v2/{ref}/{filename}"
+                  try:
+                      with urlopen(url, timeout=30) as response:
+                          return path, response.read().decode("utf-8")
+                  except (URLError, OSError, UnicodeError):
+                      return path, None
+
+              failures = 0
+              with ThreadPoolExecutor(max_workers=6) as executor:
+                  for path, changelog in executor.map(read_changelog, sorted({path for path, _ in missing if path != prefix})):
+                      if changelog is None:
+                          failures += 1
+                          continue
+                      for version, date in changelog_pattern.findall(changelog):
+                          pair = (path, version)
+                          tag = f"release-{date}"
+                          # A changelog date alone is not proof that a stable GitHub release was published.
+                          if pair in missing and tag in versions_by_tag:
+                              versions_by_tag[tag].add(pair)
+              # The root changelog is an aggregate; its first heading at an exact module tag identifies that release.
+              for path, version in sorted(missing):
+                  if path != prefix:
+                      continue
+                  _, changelog = read_changelog(path, version)
+                  if changelog is None:
+                      failures += 1
+                      continue
+                  heading = re.match(r"# Release \((\d{4}-\d{2}-\d{2}(?:\.\d+)?)\)", changelog)
+                  if heading and (tag := f"release-{heading[1]}") in versions_by_tag:
+                      versions_by_tag[tag].add((path, version))
+              if failures:
+                  print(f"::warning::Unable to read {failures} SDK module changelogs; release matching may be incomplete")
+              matched, unmatched = match_versions(changed)
+              prior_matched, prior_unmatched = match_versions(prior_versions)
           # Infer an endpoint only when every relevant version is matched; a partial match could mislabel the title.
           prior = prior_matched[0] if prior_matched and not prior_unmatched else None
           final = matched[0] if matched and not unmatched else None
@@ -145,6 +200,7 @@ jobs:
           title = "deps: update AWS SDK for Go v2"
           notes = []
           notes.append("Release endpoints are inferred from the newest matching releases for the modules being updated, not an exact SDK-wide snapshot.")
+          notes.append("Module versions are matched using release highlights and, where needed, individual module changelog version/date headings.")
           notes.append("")
           if prior:
               notes.append(f'Prior release: [{prior["tag_name"]}]({prior["html_url"]}).')
@@ -164,9 +220,9 @@ jobs:
           else:
               notes.append("No corresponding published SDK release could be determined.")
           if unmatched:
-              print(f"::warning::{len(unmatched)} updated SDK module versions were not found in the 100 most recent releases")
+              print(f"::warning::{len(unmatched)} updated SDK module versions could not be mapped to the 100 most recent published releases using highlights and module changelogs")
               notes.append("")
-              notes.append("Some updated SDK module versions could not be matched to the 100 most recent published releases; the PR title is left unversioned.")
+              notes.append("Some updated SDK module versions could not be matched to the 100 most recent published releases using highlights and module changelogs; the PR title is left unversioned.")
           notes.append("")
           notes.append("[All AWS SDK for Go v2 release notes](https://github.com/aws/aws-sdk-go-v2/releases)")
           with open(os.environ["GITHUB_OUTPUT"], "a") as output:
