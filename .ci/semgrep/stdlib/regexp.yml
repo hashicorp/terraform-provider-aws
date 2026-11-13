@@ -4,7 +4,7 @@
 rules:
   - id: regexp-no-compile-at-init
     languages: [go]
-    message: Do not compile regular expressions as global variables. Either use it inline or wrap with `sync.OnceValue`.
+    message: Do not compile regular expressions as global variables. Either use it inline or wrap in an accessor function.
     paths:
       include:
         - "/internal"

@@ -17,7 +17,6 @@ import (
 	"regexp"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -54,14 +53,12 @@ const (
 	bucketPropagationTimeout = 2 * time.Minute
 )
 
-var (
-	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
-	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
-	// e.g. example-123456789012-us-west-2-an.
-	accountRegionalBucketNameRegex = sync.OnceValue(func() *regexp.Regexp {
-		return regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
-	})
-)
+// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+// e.g. example-123456789012-us-west-2-an.
+func accountRegionalBucketNameRegex() *regexp.Regexp {
+	return regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+}
 
 func isGeneralPurposeBucket(bucket string) bool {
 	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket

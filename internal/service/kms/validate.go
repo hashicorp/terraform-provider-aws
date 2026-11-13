@@ -6,7 +6,6 @@ package kms
 import (
 	"fmt"
 	"regexp"
-	"sync"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -19,9 +18,9 @@ const (
 	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
-var aliasNameRegex = sync.OnceValue(func() *regexp.Regexp {
+func aliasNameRegex() *regexp.Regexp {
 	return regexache.MustCompile(`^` + aliasNamePattern + `$`)
-})
+}
 
 func validGrantName(v any, k string) (ws []string, es []error) {
 	value := v.(string)

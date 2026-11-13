@@ -13,7 +13,6 @@ import (
 	"log"
 	"regexp"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -337,14 +336,13 @@ func findRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.
 	return output, nil
 }
 
-var (
-	eventBusARNPattern = sync.OnceValue(func() *regexp.Regexp {
-		return regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	})
-	partnerEventBusPattern = sync.OnceValue(func() *regexp.Regexp {
-		return regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
-	})
-)
+func eventBusARNPattern() *regexp.Regexp {
+	return regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+}
+
+func partnerEventBusPattern() *regexp.Regexp {
+	return regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+}
 
 const ruleResourceIDSeparator = "/"
 

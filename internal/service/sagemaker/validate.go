@@ -6,7 +6,6 @@ package sagemaker
 import (
 	"fmt"
 	"regexp"
-	"sync"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -53,11 +52,11 @@ func validImage(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var (
-	httpsOrS3URIRegexp = sync.OnceValue(func() *regexp.Regexp {
-		return regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`)
-	})
+func httpsOrS3URIRegexp() *regexp.Regexp {
+	return regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`)
+}
 
+var (
 	validHTTPSOrS3URI = validation.All(
 		validation.StringMatch(httpsOrS3URIRegexp(), "must be HTTPS or Amazon S3 URI"),
 		validation.StringLenBetween(0, 1024),
