@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_redshift_idc_application: Fix `InvalidParameterValue` error when creating a `Lakehouse` application by sending all populated `service_integration` sub-blocks (`lake_formation`, `redshift`, `s3_access_grants`) as separate entries in the API's `ServiceIntegrations` array instead of only one
+```
+
+```release-note:enhancement
+resource/aws_redshift_idc_application: Add plan-time validation requiring both `service_integration.lake_formation.lake_formation_query` and `service_integration.redshift.connect` when `application_type` is `Lakehouse`
+```
