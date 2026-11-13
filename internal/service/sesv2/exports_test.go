@@ -18,6 +18,7 @@ var (
 	ResourceMultiRegionEndpoint              = newMultiRegionEndpointResource
 	ResourceTenant                           = newTenantResource
 	ResourceTenantResource                   = newTenantResourceAssociationResource
+	ResourceTenantSuppressionAttributes      = newTenantSuppressionAttributesResource
 
 	FindAccountSuppressionAttributes                 = findAccountSuppressionAttributes
 	FindAccountVDMAttributes                         = findAccountVDMAttributes
@@ -31,4 +32,5 @@ var (
 	FindMultiRegionEndpointByName                    = findMultiRegionEndpointByName
 	FindTenantByName                                 = findTenantByName
 	FindTenantResourceAssociationByID                = findTenantResourceAssociationByTwoPartKey
+	FindTenantSuppressionAttributesByName            = findTenantSuppressionAttributesByName
 )
