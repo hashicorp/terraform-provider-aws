@@ -250,7 +250,7 @@ func TestRegexMatchesValidator_InvalidPattern(t *testing.T) {
 	t.Parallel()
 
 	const pattern = `(`
-	_, compileErr := regexp.Compile(pattern)
+	_, compileErr := regexp.Compile(pattern) //nolint:staticcheck // Tests invalid regular expression handling.
 	if compileErr == nil {
 		t.Fatalf("expected %q to be an invalid pattern", pattern)
 	}
@@ -404,7 +404,7 @@ func TestRegexacheCompile(t *testing.T) {
 			t.Errorf("expected nil regexp, got %q", re)
 		}
 
-		_, wantErr := regexp.Compile(pattern)
+		_, wantErr := regexp.Compile(pattern) //nolint:staticcheck // Tests invalid regular expression handling.
 		if err.Error() != wantErr.Error() {
 			t.Errorf("expected error %q, got %q", wantErr, err)
 		}
