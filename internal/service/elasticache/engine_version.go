@@ -23,12 +23,10 @@ const (
 	versionStringRegexpPattern         = "^" + versionStringRegexpInternalPattern + "$"
 )
 
-var versionStringRegexp = regexache.MustCompile(versionStringRegexpPattern)
-
 func validMemcachedVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !versionStringRegexp.MatchString(value) {
+	if !regexache.MustCompile(versionStringRegexpPattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%s: must be a version string matching <major>.<minor>.<patch>", k))
 	}
 
@@ -42,15 +40,10 @@ const (
 	redisVersionRegexpPattern = redisVersionPreV6RegexpPattern + "|" + redisVersionPostV6RegexpPattern
 )
 
-var (
-	redisVersionRegexp       = regexache.MustCompile(redisVersionRegexpPattern)
-	redisVersionPostV6Regexp = regexache.MustCompile(redisVersionPostV6RegexpPattern)
-)
-
 func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !redisVersionRegexp.MatchString(value) {
+	if !regexache.MustCompile(redisVersionRegexpPattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%s: %s is invalid. For Redis v6 or higher, use <major>.<minor>. For Redis v5 or lower, use <major>.<minor>.<patch>.", k, value))
 	}
 
@@ -61,14 +54,10 @@ const (
 	valkeyVersionRegexpPattern = `^[7-9]\.[[:digit:]]+$`
 )
 
-var (
-	valkeyVersionRegexp = regexache.MustCompile(valkeyVersionRegexpPattern)
-)
-
 func validValkeyVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !valkeyVersionRegexp.MatchString(value) {
+	if !regexache.MustCompile(valkeyVersionRegexpPattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%s: %s is invalid. For Valkey use <major>.<minor>.", k, value))
 	}
 
@@ -197,7 +186,7 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 // - either the 6.x or 6.0 version number used for ElastiCache Redis version 6. 6.x will sort to 6.<maxint>
 // - a 7.0 version number used from version 7
 func normalizeEngineVersion(version string) (*gversion.Version, error) {
-	if matches := redisVersionPostV6Regexp.FindStringSubmatch(version); matches != nil {
+	if matches := regexache.MustCompile(redisVersionPostV6RegexpPattern).FindStringSubmatch(version); matches != nil {
 		if matches[1] != "" {
 			version = fmt.Sprintf("%s.%d", matches[2], math.MaxInt)
 		}

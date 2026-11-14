@@ -7,6 +7,7 @@ package s3control
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -49,7 +50,9 @@ const (
 	ResNameDirectoryBucketAccessPointScope = "Directory Bucket Access Point Scope"
 )
 
-var AccessPointForDirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--xa-s3$`)
+func accessPointForDirectoryBucketNameRegex() *regexp.Regexp {
+	return regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--xa-s3$`)
+}
 
 func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -69,7 +72,7 @@ func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ 
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(AccessPointForDirectoryBucketNameRegex,
+					stringvalidator.RegexMatches(accessPointForDirectoryBucketNameRegex(),
 						"must be in the format [access_point_name]--[azid]--xa-s3"),
 				},
 			},

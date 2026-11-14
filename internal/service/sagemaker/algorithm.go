@@ -275,11 +275,8 @@ func (r *algorithmResource) Schema(ctx context.Context, _ resource.SchemaRequest
 										},
 									},
 									"model_data_url": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthAtMost(1024),
-											stringvalidator.RegexMatches(httpsOrS3URIRegexp, "model data URL must be HTTPS or Amazon S3 URI"),
-										},
+										Optional:   true,
+										Validators: validHTTPSOrS3URIFramework,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -433,11 +430,8 @@ func additionalS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"s3_uri": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
-					},
+					Required:   true,
+					Validators: validHTTPSOrS3URIFramework,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -533,11 +527,8 @@ func modelDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 								},
 							},
 							"manifest_s3_uri": schema.StringAttribute{
-								Optional: true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(1024),
-									stringvalidator.RegexMatches(httpsOrS3URIRegexp, "manifest S3 URI must be HTTPS or Amazon S3 URI"),
-								},
+								Optional:   true,
+								Validators: validHTTPSOrS3URIFramework,
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
 								},
@@ -550,11 +541,8 @@ func modelDataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 								},
 							},
 							"s3_uri": schema.StringAttribute{
-								Required: true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtMost(1024),
-									stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
-								},
+								Required:   true,
+								Validators: validHTTPSOrS3URIFramework,
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
 								},
@@ -1234,11 +1222,8 @@ func trainingS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"s3_uri": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
-					},
+					Required:   true,
+					Validators: validHTTPSOrS3URIFramework,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -1311,11 +1296,8 @@ func outputDataConfigBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"s3_output_path": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 output path must be HTTPS or Amazon S3 URI"),
-					},
+					Required:   true,
+					Validators: validHTTPSOrS3URIFramework,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -1693,11 +1675,8 @@ func transformS3DataSourceBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"s3_uri": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 URI must be HTTPS or Amazon S3 URI"),
-					},
+					Required:   true,
+					Validators: validHTTPSOrS3URIFramework,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},
@@ -1747,11 +1726,8 @@ func transformOutputBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 				},
 				"s3_output_path": schema.StringAttribute{
-					Required: true,
-					Validators: []validator.String{
-						stringvalidator.LengthAtMost(1024),
-						stringvalidator.RegexMatches(httpsOrS3URIRegexp, "S3 output path must be HTTPS or Amazon S3 URI"),
-					},
+					Required:   true,
+					Validators: validHTTPSOrS3URIFramework,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
 					},

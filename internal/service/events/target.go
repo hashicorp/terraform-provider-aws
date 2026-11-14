@@ -1429,10 +1429,10 @@ func targetParseImportID(id string) (string, string, string, error) {
 		iRule := strings.LastIndex(id[:iTarget], targetImportIDSeparator)
 		eventBusName := id[:iRule]
 		ruleName := id[iRule+1 : iTarget]
-		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+		if eventBusARNPattern().MatchString(eventBusName) && ruleName != "" && targetID != "" {
 			return eventBusName, ruleName, targetID, nil
 		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" && targetID != "" {
+		if partnerEventBusPattern().MatchString(eventBusName) && ruleName != "" && targetID != "" {
 			return eventBusName, ruleName, targetID, nil
 		}
 	}

@@ -94,11 +94,8 @@ func (r *modelCardExportJobResource) Schema(ctx context.Context, request resourc
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"s3_output_path": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-								stringvalidator.LengthBetween(0, 1024),
-							},
+							Required:   true,
+							Validators: validHTTPSOrS3URIFramework,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},

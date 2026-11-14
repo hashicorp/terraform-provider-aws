@@ -6,8 +6,10 @@ package kms
 import (
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 func diffSuppressKey(_, oldValue, newValue string, _ *schema.ResourceData) bool {
@@ -77,7 +79,7 @@ func keyIDFromARN(s string) string {
 }
 
 func keyIDFromARNResource(s string) string {
-	matches := keyIDResourceRegex.FindStringSubmatch(s)
+	matches := regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`).FindStringSubmatch(s)
 	if matches == nil || len(matches) != 2 {
 		return ""
 	}
@@ -95,7 +97,7 @@ func keyAliasFromARN(s string) string {
 }
 
 func keyAliasNameFromARNResource(s string) string {
-	if aliasNameRegex.MatchString(s) {
+	if aliasNameRegex().MatchString(s) {
 		return s
 	}
 

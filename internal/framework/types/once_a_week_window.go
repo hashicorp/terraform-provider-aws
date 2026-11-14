@@ -24,10 +24,6 @@ const (
 )
 
 var (
-	validTimeFormatConsolidatedRegex = regexache.MustCompile(validTimeFormatConsolidated)
-)
-
-var (
 	_ basetypes.StringTypable = (*onceAWeekWindowType)(nil)
 )
 
@@ -132,6 +128,7 @@ func (v OnceAWeekWindow) ValidateAttribute(ctx context.Context, req xattr.Valida
 		return
 	}
 
+	validTimeFormatConsolidatedRegex := regexache.MustCompile(validTimeFormatConsolidated)
 	if vs := strings.ToLower(v.ValueString()); !validTimeFormatConsolidatedRegex.MatchString(vs) {
 		resp.Diagnostics.AddAttributeError(
 			req.Path,

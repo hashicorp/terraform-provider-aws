@@ -12,11 +12,10 @@ import (
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-var (
-	functionNameRegex = regexache.MustCompile("^(arn:(aws[a-zA-Z-]*)?:lambda:)?(" + inttypes.CanonicalRegionPatternNoAnchors + ":)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:([a-zA-Z0-9-_]+|\\$LATEST))?$")
+var functionNameValidator validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile("^(arn:(aws[a-zA-Z-]*)?:lambda:)?("+inttypes.CanonicalRegionPatternNoAnchors+":)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:([a-zA-Z0-9-_]+|\\$LATEST))?$"),
+	"must be a valid function name",
 )
-
-var functionNameValidator validator.String = stringvalidator.RegexMatches(functionNameRegex, "must be a valid function name")
 
 func validFunctionName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
