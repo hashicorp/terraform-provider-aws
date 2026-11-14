@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"strings"
 	"time"
 
@@ -55,29 +56,12 @@ func resourceIPSet() *schema.Resource {
 					Type:     schema.TypeSet,
 					Optional: true,
 					MaxItems: 10000,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						if d.GetRawPlan().GetAttr("addresses").IsWhollyKnown() {
-							o, n := d.GetChange("addresses")
-							oldAddresses := o.(*schema.Set).List()
-							newAddresses := n.(*schema.Set).List()
-							if len(oldAddresses) == len(newAddresses) {
-								for _, ov := range oldAddresses {
-									hasAddress := false
-									for _, nv := range newAddresses {
-										if inttypes.CIDRBlocksEqual(ov.(string), nv.(string)) {
-											hasAddress = true
-											break
-										}
-									}
-									if !hasAddress {
-										return false
-									}
-								}
-								return true
-							}
-						}
-						return false
+					Set:      ipSetAddressHash,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+							return inttypes.CIDRBlocksEqual(old, new)
+						},
 					},
 				},
 				names.AttrARN: {
@@ -132,6 +116,16 @@ func resourceIPSet() *schema.Resource {
 			}
 		},
 	}
+}
+
+func ipSetAddressHash(v any) int {
+	ip, network, err := net.ParseCIDR(v.(string))
+	if err != nil {
+		return schema.HashString(v)
+	}
+
+	// Match CIDRBlocksEqual by retaining host bits as well as the network.
+	return schema.HashString(ip.String() + "|" + network.String())
 }
 
 func resourceIPSetCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
