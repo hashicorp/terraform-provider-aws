@@ -36,6 +36,28 @@ resource "aws_cloudfront_vpc_origin" "alb" {
 }
 ```
 
+### Dual-stack Application Load Balancer
+
+The following example creates a CloudFront VPC origin that connects to a dual-stack internal Application Load Balancer over IPv4 or IPv6.
+
+```terraform
+resource "aws_cloudfront_vpc_origin" "dualstack" {
+  vpc_origin_endpoint_config {
+    name                   = "example-dualstack-vpc-origin"
+    arn                    = aws_lb.dualstack.arn
+    http_port              = 80
+    https_port             = 443
+    ip_address_type        = "dualstack"
+    origin_protocol_policy = "https-only"
+
+    origin_ssl_protocols {
+      items    = ["TLSv1.2"]
+      quantity = 1
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -51,6 +73,7 @@ The following arguments are optional:
 * `arn` (Required) - The ARN of the CloudFront VPC origin endpoint configuration.
 * `http_port` (Required) - The HTTP port for the CloudFront VPC origin endpoint configuration.
 * `https_port` (Required) - The HTTPS port for the CloudFront VPC origin endpoint configuration.
+* `ip_address_type` (Optional) - IP address type that CloudFront uses to connect to the VPC origin. Valid values are `ipv4` and `dualstack`. Defaults to `ipv4`. IPv6-only is not supported for VPC origins.
 * `name` (Required) - The name of the CloudFront VPC origin endpoint configuration.
 * `origin_protocol_policy` (Required) - The origin protocol policy for the CloudFront VPC origin endpoint configuration.
 * `origin_ssl_protocols` (Required) - A complex type that contains information about the SSL/TLS protocols that CloudFront can use when establishing an HTTPS connection with your origin.
