@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appintegrations/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -62,7 +62,7 @@ func resourceDataIntegration() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z\/\._\-]+$`, "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 					),
 				},
 				"schedule_config": {
@@ -84,7 +84,7 @@ func resourceDataIntegration() *schema.Resource {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 255),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]+$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z\/\._\-]+$`, "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 								),
 							},
 							names.AttrScheduleExpression: {
@@ -102,7 +102,7 @@ func resourceDataIntegration() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1000),
-						validation.StringMatch(regexache.MustCompile(`^(\w+\:\/\/[\w.-]+[\w/!@#+=.-]+$)|(\w+\:\/\/[\w.-]+[\w/!@#+=.-]+[\w/!@#+=.-]+[\w/!@#+=.,-]+$)`), "should be a valid source uri"),
+						lazyvalidation.StringMatch(`^(\w+\:\/\/[\w.-]+[\w/!@#+=.-]+$)|(\w+\:\/\/[\w.-]+[\w/!@#+=.-]+[\w/!@#+=.-]+[\w/!@#+=.,-]+$)`, "should be a valid source uri"),
 					),
 				},
 				names.AttrTags:    tftags.TagsSchema(),

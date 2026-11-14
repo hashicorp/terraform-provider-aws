@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -84,7 +84,7 @@ func resourceSecurityGroup() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 255),
-						validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
+						lazyvalidation.StringDoesNotMatch(`^sg-`, "cannot begin with sg-"),
 					),
 				},
 				names.AttrNamePrefix: {
@@ -95,7 +95,7 @@ func resourceSecurityGroup() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 255-sdkid.UniqueIDSuffixLength),
-						validation.StringDoesNotMatch(regexache.MustCompile(`^sg-`), "cannot begin with sg-"),
+						lazyvalidation.StringDoesNotMatch(`^sg-`, "cannot begin with sg-"),
 					),
 				},
 				names.AttrOwnerID: {

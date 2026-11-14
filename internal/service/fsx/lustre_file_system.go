@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -96,7 +96,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(5, 5),
-						validation.StringMatch(regexache.MustCompile(`^([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format HH:MM"),
+						lazyvalidation.StringMatch(`^([01]\d|2[0-3]):?([0-5]\d)$`, "must be in the format HH:MM"),
 					),
 				},
 				"data_compression_type": {
@@ -154,7 +154,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 900),
-						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+						lazyvalidation.StringMatch(`^s3://`, "must begin with s3://"),
 					),
 				},
 				"file_system_type_version": {
@@ -163,7 +163,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 20),
-						validation.StringMatch(regexache.MustCompile(`^[0-9].[0-9]+$`), "must be in format x.y"),
+						lazyvalidation.StringMatch(`^[0-9].[0-9]+$`, "must be in format x.y"),
 					),
 				},
 				"final_backup_tags": tftags.TagsSchema(),
@@ -173,7 +173,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 900),
-						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+						lazyvalidation.StringMatch(`^s3://`, "must begin with s3://"),
 					),
 				},
 				"imported_file_chunk_size": {
@@ -278,13 +278,13 @@ func resourceLustreFileSystem() *schema.Resource {
 								Optional: true,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9\[\]\-]*\.){3}([0-9\[\]\-]*)@tcp$`), "must be in the standard Lustre NID foramt"),
+									ValidateFunc: lazyvalidation.StringMatch(`^([0-9\[\]\-]*\.){3}([0-9\[\]\-]*)@tcp$`, "must be in the standard Lustre NID foramt"),
 								},
 							},
 							"root_squash": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([0-9]{1,10}):([0-9]{1,10})$`), "must be in the format UID:GID"),
+								ValidateFunc: lazyvalidation.StringMatch(`^([0-9]{1,10}):([0-9]{1,10})$`, "must be in the format UID:GID"),
 							},
 						},
 					},
@@ -338,7 +338,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(7, 7),
-						validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "must be in the format d:HH:MM"),
+						lazyvalidation.StringMatch(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`, "must be in the format d:HH:MM"),
 					),
 				},
 			}

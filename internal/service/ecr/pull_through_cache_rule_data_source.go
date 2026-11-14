@@ -8,13 +8,13 @@ package ecr
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 // @SDKDataSource("aws_ecr_pull_through_cache_rule", name="Pull Through Cache Rule")
@@ -38,9 +38,7 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 30),
-						validation.StringMatch(
-							regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`),
-							"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
+						lazyvalidation.StringMatch(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`, "must only include alphanumeric, underscore, period, hyphen, or slash characters"),
 					),
 				},
 				"registry_id": {

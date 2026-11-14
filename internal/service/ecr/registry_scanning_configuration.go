@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,7 +60,7 @@ func resourceRegistryScanningConfiguration() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 256),
-												validation.StringMatch(regexache.MustCompile(`^[0-9a-z*](?:[0-9a-z_./*-]?[0-9a-z*]+)*$`), "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
+												lazyvalidation.StringMatch(`^[0-9a-z*](?:[0-9a-z_./*-]?[0-9a-z*]+)*$`, "must contain only lowercase alphanumeric, dot, underscore, hyphen, wildcard, and colon characters"),
 											),
 										},
 										"filter_type": {

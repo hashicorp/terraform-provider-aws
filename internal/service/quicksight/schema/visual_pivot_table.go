@@ -6,13 +6,12 @@ package schema
 import (
 	"sync"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -665,7 +664,7 @@ var rowAlternateColorOptionsSchema = sync.OnceValue(func() *schema.Schema {
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 1,
-					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")},
+					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: lazyvalidation.StringMatch(`^#[0-9A-F]{6}$`, "")},
 				},
 				names.AttrStatus: sdkschema.StringEnumSchema[awstypes.Status](sdkschema.AttrOptional),
 			},

@@ -12,7 +12,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -67,19 +67,18 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+					ValidateFunc: lazyvalidation.StringMatch(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`, "must be a number without leading zeros or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 				},
 				"max_errors": {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
+					ValidateFunc: lazyvalidation.StringMatch(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`, "must be zero, a number without leading zeros, or a percentage between 1% and 100% without leading zeros and ending with the percentage symbol"),
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Optional: true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`),
-						"Only alphanumeric characters, hyphens, dots & underscores allowed."),
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{3,128}$`, "Only alphanumeric characters, hyphens, dots & underscores allowed."),
 				},
 				names.AttrPriority: {
 					Type:         schema.TypeInt,
@@ -130,7 +129,7 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 										"document_version": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
+											ValidateFunc: lazyvalidation.StringMatch("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)", "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
 										},
 										names.AttrParameter: {
 											Type:     schema.TypeSet,
@@ -219,7 +218,7 @@ func resourceMaintenanceWindowTask() *schema.Resource {
 										"document_version": {
 											Type:         schema.TypeString,
 											Optional:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`), "must be $DEFAULT, $LATEST, or a version number"),
+											ValidateFunc: lazyvalidation.StringMatch(`([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)`, "must be $DEFAULT, $LATEST, or a version number"),
 										},
 										"notification_config": {
 											Type:     schema.TypeList,

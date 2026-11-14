@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,7 +51,7 @@ func resourceServiceSetting() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.Any(
 						verify.ValidARN,
-						validation.StringMatch(regexache.MustCompile(`^/ssm/`), "setting_id must begin with '/ssm/'"),
+						lazyvalidation.StringMatch(`^/ssm/`, "setting_id must begin with '/ssm/'"),
 					),
 				},
 				"setting_value": {

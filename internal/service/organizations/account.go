@@ -13,7 +13,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
@@ -27,6 +26,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +80,7 @@ func resourceAccount() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(6, 64),
-						validation.StringMatch(regexache.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`), "must be a valid email address"),
+						lazyvalidation.StringMatch(`^[^\s@]+@[^\s@]+\.[^\s@]+$`, "must be a valid email address"),
 					),
 				},
 				"govcloud_id": {
@@ -110,13 +110,13 @@ func resourceAccount() *schema.Resource {
 					Type:         schema.TypeString,
 					Computed:     true,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$"), "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
+					ValidateFunc: lazyvalidation.StringMatch("^(r-[0-9a-z]{4,32})|(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32})$", "see https://docs.aws.amazon.com/organizations/latest/APIReference/API_MoveAccount.html#organizations-MoveAccount-request-DestinationParentId"),
 				},
 				"role_name": {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w+=,.@-]{1,64}$`), "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[\w+=,.@-]{1,64}$`, "must consist of uppercase letters, lowercase letters, digits with no spaces, and any of the following characters"),
 				},
 				names.AttrStatus: {
 					Type:       schema.TypeString,

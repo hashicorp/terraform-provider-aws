@@ -11,7 +11,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -58,7 +58,7 @@ func resourcePatchBaseline() *schema.Resource {
 							"approve_until_date": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`), "must be formatted YYYY-MM-DD"),
+								ValidateFunc: lazyvalidation.StringMatch(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`, "must be formatted YYYY-MM-DD"),
 							},
 							"compliance_level": {
 								Type:             schema.TypeString,
@@ -165,7 +165,7 @@ func resourcePatchBaseline() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{3,128}$`, "must contain only alphanumeric, underscore, hyphen, or period characters"),
 					),
 				},
 				"operating_system": {
@@ -206,7 +206,7 @@ func resourcePatchBaseline() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(3, 50),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{3,50}$`, "must contain only alphanumeric, underscore, hyphen, or period characters"),
 								),
 							},
 							"products": {

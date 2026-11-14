@@ -6,13 +6,13 @@ package pipes
 import (
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pipes/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +24,7 @@ import (
 var secretsManagerARNPattern = `^(^arn:aws([a-z]|\-)*:secretsmanager:(` + inttypes.CanonicalRegionPatternNoAnchors + `):(\d{12}):secret:.+)$`
 
 func sourceParametersSchema() *schema.Schema {
-	verifySecretsManagerARN := validation.StringMatch(regexache.MustCompile(secretsManagerARNPattern), "")
+	verifySecretsManagerARN := lazyvalidation.StringMatch(secretsManagerARNPattern, "")
 
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -80,7 +80,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 1000),
-									validation.StringMatch(regexache.MustCompile(`^[\s\S]*$`), ""),
+									lazyvalidation.StringMatch(`^[\s\S]*$`, ""),
 								),
 							},
 						},
@@ -292,7 +292,7 @@ func sourceParametersSchema() *schema.Schema {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 200),
-									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
+									lazyvalidation.StringMatch(`^[^.]([0-9A-Za-z_.-]+)$`, ""),
 								),
 							},
 							"credentials": {
@@ -332,7 +332,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 249),
-									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
+									lazyvalidation.StringMatch(`^[^.]([0-9A-Za-z_.-]+)$`, ""),
 								),
 							},
 						},
@@ -385,7 +385,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 1000),
-									validation.StringMatch(regexache.MustCompile(`^[\s\S]*$`), ""),
+									lazyvalidation.StringMatch(`^[\s\S]*$`, ""),
 								),
 							},
 							"virtual_host": {
@@ -394,7 +394,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 200),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\/*:+=.@-]*$`), ""),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z_\/*:+=.@-]*$`, ""),
 								),
 							},
 						},
@@ -424,7 +424,7 @@ func sourceParametersSchema() *schema.Schema {
 									Type: schema.TypeString,
 									ValidateFunc: validation.All(
 										validation.StringLenBetween(1, 300),
-										validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}$`), ""),
+										lazyvalidation.StringMatch(`^(([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z]|[0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z]):[0-9]{1,5}$`, ""),
 									),
 								},
 							},
@@ -440,7 +440,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 200),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\/*:+=.@-]*$`), ""),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z_\/*:+=.@-]*$`, ""),
 								),
 							},
 							"credentials": {
@@ -495,7 +495,7 @@ func sourceParametersSchema() *schema.Schema {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 249),
-									validation.StringMatch(regexache.MustCompile(`^[^.]([0-9A-Za-z_.-]+)$`), ""),
+									lazyvalidation.StringMatch(`^[^.]([0-9A-Za-z_.-]+)$`, ""),
 								),
 							},
 							"vpc": {
@@ -512,7 +512,7 @@ func sourceParametersSchema() *schema.Schema {
 												Type: schema.TypeString,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(1, 1024),
-													validation.StringMatch(regexache.MustCompile(`^sg-[0-9A-Za-z]*$`), ""),
+													lazyvalidation.StringMatch(`^sg-[0-9A-Za-z]*$`, ""),
 												),
 											},
 										},
@@ -524,7 +524,7 @@ func sourceParametersSchema() *schema.Schema {
 												Type: schema.TypeString,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(1, 1024),
-													validation.StringMatch(regexache.MustCompile(`^subnet-[0-9a-z]*$`), ""),
+													lazyvalidation.StringMatch(`^subnet-[0-9a-z]*$`, ""),
 												),
 											},
 										},

@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -98,7 +98,7 @@ func resourceImageVersion() *schema.Resource {
 				"ml_framework": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`, ""),
 				},
 				"processor": {
 					Type:             schema.TypeString,
@@ -108,7 +108,7 @@ func resourceImageVersion() *schema.Resource {
 				"programming_lang": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`, ""),
 				},
 				"release_notes": {
 					Type:         schema.TypeString,

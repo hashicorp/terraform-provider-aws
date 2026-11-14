@@ -12,13 +12,13 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -114,10 +114,9 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrName: {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-									"must begin with a letter and contain only alphanumeric characters"),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z][0-9A-Za-z]{0,63}$`, "must begin with a letter and contain only alphanumeric characters"),
 							},
 							names.AttrDescription: {
 								Type:     schema.TypeString,
@@ -145,18 +144,16 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Schema{
-									Type: schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-										"must begin with a letter and contain only alphanumeric characters"),
+									Type:         schema.TypeString,
+									ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z][0-9A-Za-z]{0,63}$`, "must begin with a letter and contain only alphanumeric characters"),
 								},
 							},
 							"allow_filter": {
 								Type:     schema.TypeSet,
 								Optional: true,
 								Elem: &schema.Schema{
-									Type: schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-										"must begin with a letter and contain only alphanumeric characters"),
+									Type:         schema.TypeString,
+									ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z][0-9A-Za-z]{0,63}$`, "must begin with a letter and contain only alphanumeric characters"),
 								},
 							},
 						},
@@ -199,10 +196,9 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								}, false),
 							},
 							"segment": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-									"must begin with a letter and contain only alphanumeric characters"),
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z][0-9A-Za-z]{0,63}$`, "must begin with a letter and contain only alphanumeric characters"),
 							},
 							names.AttrMode: {
 								Type:     schema.TypeString,
@@ -236,8 +232,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 										validation.StringInSlice([]string{
 											"blackhole",
 										}, false),
-										validation.StringMatch(regexache.MustCompile(`^attachment-[0-9a-f]{17}$`),
-											"must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
+										lazyvalidation.StringMatch(`^attachment-[0-9a-f]{17}$`, "must be a list of valid attachment ids or a list with only the word \"blackhole\"."),
 									),
 								},
 							},
@@ -393,10 +388,9 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 											}, false),
 										},
 										"segment": {
-											Type:     schema.TypeString,
-											Optional: true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z]{0,63}$`),
-												"must begin with a letter and contain only alphanumeric characters"),
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z][0-9A-Za-z]{0,63}$`, "must begin with a letter and contain only alphanumeric characters"),
 										},
 										"tag_value_of_key": {
 											Type:     schema.TypeString,
@@ -482,8 +476,7 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 100),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`),
-										"must contain only alphanumeric characters"),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, "must contain only alphanumeric characters"),
 								),
 							},
 							"routing_policy_description": {

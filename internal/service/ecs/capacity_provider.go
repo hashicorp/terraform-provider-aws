@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -331,7 +331,7 @@ func resourceCapacityProvider() *schema.Resource {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 30),
-																validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\.\*\-]+$`), "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
+																lazyvalidation.StringMatch(`^[a-zA-Z0-9\.\*\-]+$`, "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
 															),
 														},
 													},
@@ -380,7 +380,7 @@ func resourceCapacityProvider() *schema.Resource {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 30),
-																validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\.\*\-]+$`), "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
+																lazyvalidation.StringMatch(`^[a-zA-Z0-9\.\*\-]+$`, "must contain only alphanumeric characters, dots, asterisks, and hyphens"),
 															),
 														},
 													},

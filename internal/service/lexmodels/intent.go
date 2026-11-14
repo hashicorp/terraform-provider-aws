@@ -12,7 +12,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -159,7 +159,7 @@ func resourceIntent() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+						lazyvalidation.StringMatch(`^([A-Za-z]_?)+$`, ""),
 					),
 				},
 				"parent_intent_signature": {
@@ -202,7 +202,7 @@ func resourceIntent() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 100),
-									validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+									lazyvalidation.StringMatch(`^([A-Za-z]_?)+$`, ""),
 								),
 							},
 							names.AttrPriority: {
@@ -236,7 +236,7 @@ func resourceIntent() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 100),
-									validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+									lazyvalidation.StringMatch(`^((AMAZON\.)_?|[A-Za-z]_?)+`, ""),
 								),
 							},
 							"slot_type_version": {
@@ -244,7 +244,7 @@ func resourceIntent() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+									lazyvalidation.StringMatch(`\$LATEST|[0-9]+`, ""),
 								),
 							},
 							"value_elicitation_prompt": {

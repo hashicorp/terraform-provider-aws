@@ -12,7 +12,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -128,7 +128,7 @@ func resourceBot() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 100),
-									validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+									lazyvalidation.StringMatch(`^([A-Za-z]_?)+$`, ""),
 								),
 							},
 							"intent_version": {
@@ -136,7 +136,7 @@ func resourceBot() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 64),
-									validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+									lazyvalidation.StringMatch(`\$LATEST|[0-9]+`, ""),
 								),
 							},
 						},
@@ -218,12 +218,12 @@ func hasBotConfigChanges(d sdkv2.ResourceDiffer) bool {
 
 var validBotName = validation.All(
 	validation.StringLenBetween(2, 50),
-	validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+	lazyvalidation.StringMatch(`^([A-Za-z]_?)+$`, ""),
 )
 
 var validBotVersion = validation.All(
 	validation.StringLenBetween(1, 64),
-	validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+	lazyvalidation.StringMatch(`\$LATEST|[0-9]+`, ""),
 )
 
 func resourceBotCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

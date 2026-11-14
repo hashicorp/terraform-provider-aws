@@ -4,8 +4,6 @@
 package schema
 
 import (
-	"regexp"
-
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -16,6 +14,7 @@ import (
 	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -53,7 +52,9 @@ func AWSAccountIDDataSourceSchema() *sdkschema.Schema { // nosemgrep:ci.aws-in-f
 }
 
 const (
-	DefaultNamespace = "default"
+	DefaultNamespace          = "default"
+	namespacePattern          = `^[0-9A-Za-z_.-]*$`
+	namespaceValidationReason = "must contain only alphanumeric characters, hyphens, underscores, and periods"
 )
 
 func NamespaceAttribute() fwschema.StringAttribute {
@@ -63,7 +64,7 @@ func NamespaceAttribute() fwschema.StringAttribute {
 		Default:  stringdefault.StaticString(DefaultNamespace),
 		Validators: []validator.String{
 			stringvalidator.LengthBetween(1, 64),
-			stringvalidator.RegexMatches(namespaceRegex()),
+			stringvalidator.RegexMatches(regexache.MustCompile(namespacePattern), namespaceValidationReason),
 		},
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.RequiresReplace(),
@@ -79,7 +80,7 @@ func NamespaceSchema() *sdkschema.Schema {
 		Default:  DefaultNamespace,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 64),
-			validation.StringMatch(namespaceRegex()),
+			lazyvalidation.StringMatch(namespacePattern, namespaceValidationReason),
 		),
 	}
 }
@@ -91,11 +92,7 @@ func NamespaceDataSourceSchema() *sdkschema.Schema {
 		Default:  DefaultNamespace,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 64),
-			validation.StringMatch(namespaceRegex()),
+			lazyvalidation.StringMatch(namespacePattern, namespaceValidationReason),
 		),
 	}
-}
-
-func namespaceRegex() (*regexp.Regexp, string) {
-	return regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"
 }

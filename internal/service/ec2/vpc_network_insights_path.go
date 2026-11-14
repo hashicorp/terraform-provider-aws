@@ -10,7 +10,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,9 +50,7 @@ func networkInsightsPathFilterSchema() map[string]*schema.Schema {
 			Optional: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(0, 15),
-				validation.StringMatch(
-					regexache.MustCompile(`^([0-9]{1,3}.){3}[0-9]{1,3}$`),
-					"must be a valid IPv4 address"),
+				lazyvalidation.StringMatch(`^([0-9]{1,3}.){3}[0-9]{1,3}$`, "must be a valid IPv4 address"),
 			),
 		},
 		"destination_port_range": {
@@ -69,9 +67,7 @@ func networkInsightsPathFilterSchema() map[string]*schema.Schema {
 			Optional: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(0, 15),
-				validation.StringMatch(
-					regexache.MustCompile(`^([0-9]{1,3}.){3}[0-9]{1,3}$`),
-					"must be a valid IPv4 address"),
+				lazyvalidation.StringMatch(`^([0-9]{1,3}.){3}[0-9]{1,3}$`, "must be a valid IPv4 address"),
 			),
 		},
 		"source_port_range": {

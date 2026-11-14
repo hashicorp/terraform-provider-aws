@@ -12,7 +12,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -262,6 +262,6 @@ func lfTagParseResourceID(id string) (string, string, error) {
 func validateLFTagValues() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
-		validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+		lazyvalidation.StringMatch(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`, ""),
 	)
 }

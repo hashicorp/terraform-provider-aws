@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -22,20 +23,20 @@ func validFunctionName() schema.SchemaValidateFunc {
 	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2,4}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 	return validation.All(
-		validation.StringMatch(regexache.MustCompile(pattern), "must be valid function name or function ARN"),
+		lazyvalidation.StringMatch(pattern, "must be valid function name or function ARN"),
 		validation.StringLenBetween(1, 140),
 	)
 }
 
 func validPermissionAction() schema.SchemaValidateFunc {
 	pattern := `^(lambda:[*]|lambda:[A-Za-z]+|[*])$`
-	return validation.StringMatch(regexache.MustCompile(pattern), "must be a valid action (usually starts with lambda:)")
+	return lazyvalidation.StringMatch(pattern, "must be a valid action (usually starts with lambda:)")
 }
 
 func validPermissionEventSourceToken() schema.SchemaValidateFunc {
 	// https://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	return validation.All(
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain alphanumeric, periods, underscores or dashes only"),
+		lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must contain alphanumeric, periods, underscores or dashes only"),
 		validation.StringLenBetween(1, 256),
 	)
 }
@@ -43,7 +44,7 @@ func validPermissionEventSourceToken() schema.SchemaValidateFunc {
 func validQualifier() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	return validation.All(
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_$-]+$`), "must contain alphanumeric, dollar signs, underscores or dashes only"),
+		lazyvalidation.StringMatch(`^[0-9A-Za-z_$-]+$`, "must contain alphanumeric, dollar signs, underscores or dashes only"),
 		validation.StringLenBetween(1, 128),
 	)
 }
@@ -51,7 +52,7 @@ func validQualifier() schema.SchemaValidateFunc {
 func validPolicyStatementID() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
 	return validation.All(
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain alphanumeric, underscores or dashes only"),
+		lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain alphanumeric, underscores or dashes only"),
 		validation.StringLenBetween(1, 100),
 	)
 }
@@ -59,7 +60,7 @@ func validPolicyStatementID() schema.SchemaValidateFunc {
 func validLogGroupName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_CreateLogGroup.html
 	return validation.All(
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]+$`), "must contain alphanumeric characters, underscores,"+
+		lazyvalidation.StringMatch(`^[0-9A-Za-z_./#-]+$`, "must contain alphanumeric characters, underscores,"+
 			" hyphens, slashes, hash signs and dots only"),
 		validation.StringLenBetween(1, 512),
 	)

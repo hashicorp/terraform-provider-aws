@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -129,10 +129,10 @@ func resourceCluster() *schema.Resource {
 					},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 50),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-						validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+						lazyvalidation.StringMatch(`^[0-9a-z-]+$`, "must contain only lowercase alphanumeric characters and hyphens"),
+						lazyvalidation.StringMatch(`^[a-z]`, "must begin with a lowercase letter"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end with a hyphen"),
 					),
 				},
 				"configuration_endpoint": {

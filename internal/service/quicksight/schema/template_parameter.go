@@ -7,13 +7,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +31,7 @@ var dateTimeParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, ""),
 					),
 				},
 				"default_values": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeDefaultValues.html
@@ -129,7 +129,7 @@ var decimalParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, ""),
 					),
 				},
 				"parameter_value_type": sdkschema.StringEnumSchema[awstypes.ParameterValueType](sdkschema.AttrRequired),
@@ -223,7 +223,7 @@ var integerParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, ""),
 					),
 				},
 				"parameter_value_type": sdkschema.StringEnumSchema[awstypes.ParameterValueType](sdkschema.AttrRequired),
@@ -317,7 +317,7 @@ var stringParameterDeclarationSchema = sync.OnceValue(func() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 2048),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, ""),
 					),
 				},
 				"parameter_value_type": sdkschema.StringEnumSchema[awstypes.ParameterValueType](sdkschema.AttrRequired),
@@ -685,7 +685,7 @@ func parameterNameSchema(required bool) *schema.Schema {
 		Optional: !required,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 2048),
-			validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), ""),
+			lazyvalidation.StringMatch(`^[0-9A-Za-z]+$`, ""),
 		),
 	}
 }

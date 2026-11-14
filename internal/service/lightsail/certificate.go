@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -58,7 +58,7 @@ func ResourceCertificate() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					ValidateFunc: lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 				},
 				"domain_validation_options": {
 					Type:     schema.TypeSet,
@@ -91,8 +91,8 @@ func ResourceCertificate() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 255),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with an alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+[^_.-]$`, "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 					),
 				},
 				"subject_alternative_names": {
@@ -104,7 +104,7 @@ func ResourceCertificate() *schema.Resource {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 253),
-							validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+							lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 						),
 					},
 					Set: schema.HashString,

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/firehose"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -781,7 +781,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(0, 50),
-									validation.StringMatch(regexache.MustCompile(`^$|\.[0-9a-z!\-_.*'()]+`), ""),
+									lazyvalidation.StringMatch(`^$|\.[0-9a-z!\-_.*'()]+`, ""),
 								),
 							},
 							names.AttrKMSKeyARN: {
@@ -867,7 +867,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 1000),
-									validation.StringMatch(regexache.MustCompile(`^https://.*$`), ""),
+									lazyvalidation.StringMatch(`^https://.*$`, ""),
 								),
 							},
 						},

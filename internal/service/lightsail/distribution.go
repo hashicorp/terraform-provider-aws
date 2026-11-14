@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -99,13 +99,13 @@ func ResourceDistribution() *schema.Resource {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Description:  "The HTTP methods that are processed and forwarded to the distribution's origin.",
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+								ValidateFunc: lazyvalidation.StringMatch(`.*\S.*`, "Value must match regex: .*\\S.*"),
 							},
 							"cached_http_methods": {
 								Type:         schema.TypeString,
 								Optional:     true,
 								Description:  "The HTTP method responses that are cached by your distribution.",
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`.*\S.*`), "Value must match regex: .*\\S.*"),
+								ValidateFunc: lazyvalidation.StringMatch(`.*\S.*`, "Value must match regex: .*\\S.*"),
 							},
 							"default_ttl": {
 								Type:        schema.TypeInt,
@@ -197,7 +197,7 @@ func ResourceDistribution() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Description:  "The name of the SSL/TLS certificate attached to the distribution, if any.",
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Certificate name must match regex: \\w[\\w\\-]*\\w"),
+					ValidateFunc: lazyvalidation.StringMatch(`\w[\w\-]*\w`, "Certificate name must match regex: \\w[\\w\\-]*\\w"),
 				},
 				names.AttrCreatedAt: {
 					Type:        schema.TypeString,
@@ -262,7 +262,7 @@ func ResourceDistribution() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					Description:  "The name of the distribution.",
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "name must match regex: \\w[\\w\\-]*\\w"),
+					ValidateFunc: lazyvalidation.StringMatch(`\w[\w\-]*\w`, "name must match regex: \\w[\\w\\-]*\\w"),
 				},
 				"origin": {
 					Type:        schema.TypeList,
@@ -274,7 +274,7 @@ func ResourceDistribution() *schema.Resource {
 							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Name must match regex: \\w[\\w\\-]*\\w"),
+								ValidateFunc: lazyvalidation.StringMatch(`\w[\w\-]*\w`, "Name must match regex: \\w[\\w\\-]*\\w"),
 								Description:  "The name of the origin resource.",
 							},
 							"protocol_policy": {

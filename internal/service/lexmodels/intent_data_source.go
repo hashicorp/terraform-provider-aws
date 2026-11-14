@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -54,7 +54,7 @@ func dataSourceIntent() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+						lazyvalidation.StringMatch(`^([A-Za-z]_?)+$`, ""),
 					),
 				},
 				"parent_intent_signature": {
@@ -67,7 +67,7 @@ func dataSourceIntent() *schema.Resource {
 					Default:  IntentVersionLatest,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+						lazyvalidation.StringMatch(`\$LATEST|[0-9]+`, ""),
 					),
 				},
 			}

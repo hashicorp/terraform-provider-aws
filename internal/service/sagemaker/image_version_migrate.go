@@ -7,11 +7,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -52,7 +52,7 @@ func resourceImageVersionV0() *schema.Resource {
 			"ml_framework": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+				ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`, ""),
 			},
 			"processor": {
 				Type:             schema.TypeString,
@@ -62,7 +62,7 @@ func resourceImageVersionV0() *schema.Resource {
 			"programming_lang": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`), ""),
+				ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z]+ ?\d+\.\d+(\.\d+)?$`, ""),
 			},
 			"release_notes": {
 				Type:         schema.TypeString,
