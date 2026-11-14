@@ -124,23 +124,31 @@ func resourceAccountPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Account Policy (%s): %s", d.Id(), err)
 	}
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(output.PolicyDocument))
-	if err != nil {
+	if err := resourceAccountPolicyFlatten(d, output); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceAccountPolicyFlatten(d *schema.ResourceData, policy *awstypes.AccountPolicy) error {
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(policy.PolicyDocument))
+	if err != nil {
+		return err
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+		return err
 	}
 
 	d.Set("policy_document", policyToSet)
-	d.Set("policy_name", output.PolicyName)
-	d.Set("policy_type", output.PolicyType)
-	d.Set(names.AttrScope, output.Scope)
-	d.Set("selection_criteria", output.SelectionCriteria)
+	d.Set("policy_name", policy.PolicyName)
+	d.Set("policy_type", policy.PolicyType)
+	d.Set(names.AttrScope, policy.Scope)
+	d.Set("selection_criteria", policy.SelectionCriteria)
 
-	return diags
+	return nil
 }
 
 func resourceAccountPolicyDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

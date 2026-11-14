@@ -297,6 +297,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
 	return slices.Values([]*inttypes.ServicePackageSDKListResource{
 		{
+			Factory:  newAccountPolicyResourceAsListResource,
+			TypeName: "aws_cloudwatch_log_account_policy",
+			Name:     "Account Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("policy_name", true),
+				inttypes.StringIdentityAttribute("policy_type", true),
+			}),
+		},
+		{
 			Factory:  newLogGroupResourceAsListResource,
 			TypeName: "aws_cloudwatch_log_group",
 			Name:     "Log Group",
