@@ -32,5 +32,6 @@ var (
 	FindResourceDataSyncByName                         = findResourceDataSyncByName
 	FindServiceSettingByID                             = findServiceSettingByID
 
-	ExtractPatchBaselineIDFromARN = extractPatchBaselineIDFromARN
+	ExtractPatchBaselineIDFromARN          = extractPatchBaselineIDFromARN
+	ParameterDataTypeChangeRequiresReplace = parameterDataTypeChangeRequiresReplace
 )
