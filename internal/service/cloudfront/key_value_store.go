@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,10 +77,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9-_]{1,64}$`),
-						"must contain only alphanumeric characters, hyphens, and underscores",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9-_]{1,64}$`, "must contain only alphanumeric characters, hyphens, and underscores"),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

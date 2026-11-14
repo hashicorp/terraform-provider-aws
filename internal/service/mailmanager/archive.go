@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -95,10 +95,7 @@ func (r *archiveResource) Schema(ctx context.Context, _ resource.SchemaRequest, 
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9-_]+$`),
-						"must contain only alphanumeric characters, hyphens, and underscores",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9-_]+$`, "must contain only alphanumeric characters, hyphens, and underscores"),
 				},
 			},
 			"retention_actual": framework.ResourceComputedListOfObjectsAttribute[archiveRetentionModel](ctx, tflistplanmodifier.UnknownWhenOtherValueChanges(path.Root("retention"))),

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
@@ -27,6 +26,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -83,13 +83,13 @@ func (r *dashboardResource) Schema(ctx context.Context, req resource.SchemaReque
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_.@~()-]+$`), "must contain only letters, numbers, and the characters _ . @ ~ ( ) -"),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z_.@~()-]+$`, "must contain only letters, numbers, and the characters _ . @ ~ ( ) -"),
 				},
 			},
 			"space_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must be a space ID"),
+					lazystringvalidator.RegexMatches(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`, "must be a space ID"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

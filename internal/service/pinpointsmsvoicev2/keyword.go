@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -80,8 +80,8 @@ func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 30),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^\S([ \S]*\S)?$`), "must not start or end with a space, or contain tabs or newlines"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[^a-z]*$`), "must be upper-case; AWS stores keywords in upper-case"),
+					lazystringvalidator.RegexMatches(`^\S([ \S]*\S)?$`, "must not start or end with a space, or contain tabs or newlines"),
+					lazystringvalidator.RegexMatches(`^[^a-z]*$`, "must be upper-case; AWS stores keywords in upper-case"),
 				},
 			},
 			"keyword_action": schema.StringAttribute{
@@ -98,7 +98,7 @@ func (r *keywordResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1600),
-					stringvalidator.RegexMatches(regexache.MustCompile(`\S`), "must not be entirely whitespace"),
+					lazystringvalidator.RegexMatches(`\S`, "must not be entirely whitespace"),
 				},
 			},
 			"origination_identity_arn": schema.StringAttribute{

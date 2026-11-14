@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -26,6 +25,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -64,7 +64,7 @@ func (r *ipRestrictionResource) Schema(ctx context.Context, request resource.Sch
 				ElementType: types.StringType,
 				Optional:    true,
 				Validators: []validator.Map{
-					mapvalidator.KeysAre(stringvalidator.RegexMatches(regexache.MustCompile(`^vpce-[0-9a-z]*$`), "value must be a VPC endpoint ID")),
+					mapvalidator.KeysAre(lazystringvalidator.RegexMatches(`^vpce-[0-9a-z]*$`, "value must be a VPC endpoint ID")),
 					mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 150)),
 				},
 			},
@@ -73,7 +73,7 @@ func (r *ipRestrictionResource) Schema(ctx context.Context, request resource.Sch
 				ElementType: types.StringType,
 				Optional:    true,
 				Validators: []validator.Map{
-					mapvalidator.KeysAre(stringvalidator.RegexMatches(regexache.MustCompile(`^vpc-[0-9a-z]*$`), "value must be a VPC ID")),
+					mapvalidator.KeysAre(lazystringvalidator.RegexMatches(`^vpc-[0-9a-z]*$`, "value must be a VPC ID")),
 					mapvalidator.ValueStringsAre(stringvalidator.LengthBetween(0, 150)),
 				},
 			},

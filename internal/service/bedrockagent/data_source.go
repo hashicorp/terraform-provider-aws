@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
@@ -45,6 +44,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -168,7 +168,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+					lazystringvalidator.RegexMatches(`^([0-9a-zA-Z][_-]?){1,100}$`, "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
 				},
 			},
 		},
@@ -244,7 +244,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 												"host_url": schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+														lazystringvalidator.RegexMatches(`^https://[A-Za-z0-9][^\s]*$`, "must provide a valid HTTPS url"),
 													},
 												},
 											},
@@ -487,7 +487,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 256),
-														stringvalidator.RegexMatches(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+														lazystringvalidator.RegexMatches(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`, "must provide a valid HTTPS url"),
 													},
 												},
 											},
@@ -542,7 +542,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Validators: []validator.Set{
 														setvalidator.SizeBetween(1, 100),
 														setvalidator.ValueStringsAre(
-															stringvalidator.RegexMatches(regexache.MustCompile(`^https://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+															lazystringvalidator.RegexMatches(`^https://[A-Za-z0-9][^\s]*$`, "must provide a valid HTTPS url"),
 														),
 													},
 												},
@@ -550,7 +550,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 													Optional: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(36, 36),
-														stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must provide a valid tenant ID"),
+														lazystringvalidator.RegexMatches(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`, "must provide a valid tenant ID"),
 													},
 												},
 											},
@@ -658,7 +658,7 @@ func (r *dataSourceResource) Schema(ctx context.Context, request resource.Schema
 																		names.AttrURL: schema.StringAttribute{
 																			Optional: true,
 																			Validators: []validator.String{
-																				stringvalidator.RegexMatches(regexache.MustCompile(`^https?://[A-Za-z0-9][^\s]*$`), "must provide a valid HTTPS url"),
+																				lazystringvalidator.RegexMatches(`^https?://[A-Za-z0-9][^\s]*$`, "must provide a valid HTTPS url"),
 																			},
 																		},
 																	},

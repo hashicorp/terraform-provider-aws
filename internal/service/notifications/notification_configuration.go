@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/notifications/types"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -62,14 +62,14 @@ func (r *notificationConfigurationResource) Schema(ctx context.Context, request 
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[^\x01-\x1F\x7F-\x9F]*`), ""),
+					lazystringvalidator.RegexMatches(`[^\x01-\x1F\x7F-\x9F]*`, ""),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[A-Za-z0-9_\-]+`), ""),
+					lazystringvalidator.RegexMatches(`[A-Za-z0-9_\-]+`, ""),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

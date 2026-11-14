@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -412,7 +412,7 @@ func inferenceComponentSpecificationSchema(ctx context.Context) schema.NestedBlo
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(1, 256),
-														stringvalidator.RegexMatches(regexache.MustCompile(`^/`), "must start with '/'"),
+														lazystringvalidator.RegexMatches(`^/`, "must start with '/'"),
 													},
 												},
 											},
@@ -924,10 +924,7 @@ func waitInferenceComponentDeleted(ctx context.Context, conn *sagemaker.Client, 
 
 var inferenceComponentNameValidator = stringvalidator.All(
 	stringvalidator.LengthBetween(1, 63),
-	stringvalidator.RegexMatches(
-		regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`),
-		"must contain only alphanumeric characters and hyphens, and must not begin or end with a hyphen",
-	),
+	lazystringvalidator.RegexMatches(`^[0-9A-Za-z](-*[0-9A-Za-z])*$`, "must contain only alphanumeric characters and hyphens, and must not begin or end with a hyphen"),
 )
 
 type inferenceComponentResourceModel struct {

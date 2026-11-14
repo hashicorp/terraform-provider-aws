@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -42,6 +41,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -89,7 +89,7 @@ func (r *hyperParameterTuningJobResource) Schema(ctx context.Context, req resour
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,31}$`), "must be 1-32 characters long, start and end with an alphanumeric character, and contain only letters, numbers, and hyphens"),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,31}$`, "must be 1-32 characters long, start and end with an alphanumeric character, and contain only letters, numbers, and hyphens"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -588,7 +588,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 64),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}$`), "must be 1-64 characters long, start with an alphanumeric character, and contain only letters, numbers, and hyphens"),
+						lazystringvalidator.RegexMatches(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,63}$`, "must be 1-64 characters long, start with an alphanumeric character, and contain only letters, numbers, and hyphens"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -626,7 +626,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 						mapvalidator.SizeAtMost(48),
 						mapvalidator.KeysAre(
 							stringvalidator.LengthAtMost(512),
-							stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*$`), "must start with a letter or underscore and contain only letters, numbers, and underscores"),
+							lazystringvalidator.RegexMatches(`^[a-zA-Z_][a-zA-Z0-9_]*$`, "must start with a letter or underscore and contain only letters, numbers, and underscores"),
 						),
 						mapvalidator.ValueStringsAre(
 							stringvalidator.LengthAtMost(512),
@@ -642,7 +642,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 					Required:   true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(20, 2048),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`), "must be a valid IAM role ARN"),
+						lazystringvalidator.RegexMatches(`^arn:aws[a-z\-]*:iam::\d{12}:role/?[a-zA-Z_0-9+=,.@\-_/]+$`, "must be a valid IAM role ARN"),
 					},
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -692,7 +692,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								Computed: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 170),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:algorithm/[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`), "must be a valid SageMaker algorithm ARN"),
+									lazystringvalidator.RegexMatches(`^arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:algorithm/[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$`, "must be a valid SageMaker algorithm ARN"),
 									stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("training_image")),
 								},
 								PlanModifiers: []planmodifier.String{
@@ -821,7 +821,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								Optional: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(0, 2048),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9:/_-]*$`), "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+									lazystringvalidator.RegexMatches(`^[a-zA-Z0-9:/_-]*$`, "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
@@ -898,7 +898,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(1, 64),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9\.\-_]+$`), "must contain only letters, numbers, periods, hyphens, and underscores"),
+									lazystringvalidator.RegexMatches(`^[A-Za-z0-9\.\-_]+$`, "must contain only letters, numbers, periods, hyphens, and underscores"),
 								},
 								PlanModifiers: []planmodifier.String{
 									stringplanmodifier.RequiresReplace(),
@@ -977,7 +977,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 													Required: true,
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(11, 21),
-														stringvalidator.RegexMatches(regexache.MustCompile(`^(fs-[0-9a-f]{8,})$`), "must be a valid file system ID"),
+														lazystringvalidator.RegexMatches(`^(fs-[0-9a-f]{8,})$`, "must be a valid file system ID"),
 													},
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
@@ -1139,7 +1139,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(0, 2048),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9:/_-]*$`), "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+								lazystringvalidator.RegexMatches(`^[a-zA-Z0-9:/_-]*$`, "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -1193,7 +1193,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(50, 2048),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*$`), "must be a valid SageMaker training plan ARN"),
+								lazystringvalidator.RegexMatches(`^arn:aws[a-z\-]*:sagemaker:[a-z0-9\-]*:[0-9]{12}:training-plan/.*$`, "must be a valid SageMaker training plan ARN"),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -1203,7 +1203,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(0, 2048),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9:/_-]*$`), "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
+								lazystringvalidator.RegexMatches(`^[a-zA-Z0-9:/_-]*$`, "must contain only letters, numbers, colons, slashes, underscores, and hyphens"),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -1360,7 +1360,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 255),
-								stringvalidator.RegexMatches(regexache.MustCompile(`.+`), "must not be empty"),
+								lazystringvalidator.RegexMatches(`.+`, "must not be empty"),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -1390,7 +1390,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								setvalidator.SizeBetween(1, 5),
 								setvalidator.ValueStringsAre(
 									stringvalidator.LengthBetween(0, 32),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[-0-9a-zA-Z]+$`), "must contain only letters, numbers, and hyphens"),
+									lazystringvalidator.RegexMatches(`^[-0-9a-zA-Z]+$`, "must contain only letters, numbers, and hyphens"),
 								),
 							},
 							PlanModifiers: []planmodifier.Set{
@@ -1405,7 +1405,7 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 								setvalidator.SizeBetween(1, 16),
 								setvalidator.ValueStringsAre(
 									stringvalidator.LengthBetween(0, 32),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[-0-9a-zA-Z]+$`), "must contain only letters, numbers, and hyphens"),
+									lazystringvalidator.RegexMatches(`^[-0-9a-zA-Z]+$`, "must contain only letters, numbers, and hyphens"),
 								),
 							},
 							PlanModifiers: []planmodifier.Set{

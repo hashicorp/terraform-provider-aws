@@ -6,7 +6,6 @@ package directoryservicedata
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directoryservicedata"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -58,7 +58,7 @@ func (r *groupResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"directory_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^d-[0-9a-f]{10}$`), "must be a valid Directory Service directory ID"),
+					lazystringvalidator.RegexMatches(`^d-[0-9a-f]{10}$`, "must be a valid Directory Service directory ID"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -81,7 +81,7 @@ func (r *groupResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[^:;|=+"*?<>/\\,\[\]@]+$`), "must not contain any of the following characters: : ; | = + \" * ? < > / \\ , [ ] @"),
+					lazystringvalidator.RegexMatches(`^[^:;|=+"*?<>/\\,\[\]@]+$`, "must not contain any of the following characters: : ; | = + \" * ? < > / \\ , [ ] @"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

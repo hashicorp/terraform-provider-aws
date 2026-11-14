@@ -9,13 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -81,7 +80,7 @@ func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRe
 			"iso_country_code": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z]{2}$`), "must be in ISO 3166-1 alpha-2 format"),
+					lazystringvalidator.RegexMatches(`^[A-Z]{2}$`, "must be in ISO 3166-1 alpha-2 format"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,8 +117,8 @@ func (r *senderIDResource) Schema(ctx context.Context, request resource.SchemaRe
 			"sender_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z0-9-]{3,11}$`), "must be between 3 and 11 characters and contain only uppercase letters, numbers, and dashes"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[A-Z]`), "must contain at least one letter (numeric-only sender IDs are not supported)"),
+					lazystringvalidator.RegexMatches(`^[A-Z0-9-]{3,11}$`, "must be between 3 and 11 characters and contain only uppercase letters, numbers, and dashes"),
+					lazystringvalidator.RegexMatches(`[A-Z]`, "must contain at least one letter (numeric-only sender IDs are not supported)"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

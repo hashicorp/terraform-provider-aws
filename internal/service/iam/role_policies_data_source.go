@@ -8,7 +8,6 @@ package iam
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
 
@@ -41,7 +41,7 @@ func (d *rolePoliciesDataSource) Schema(ctx context.Context, request datasource.
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, roleNameMaxLen),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+					lazystringvalidator.RegexMatches(`^[\w+=,.@-]*$`, "must match [\\w+=,.@-]"),
 				},
 			},
 		},

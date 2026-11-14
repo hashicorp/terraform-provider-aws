@@ -1,0 +1,10 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-lazystringvalidator-regex-matches
+    languages: [go]
+    message: Prefer `lazystringvalidator.RegexMatches` to `stringvalidator.RegexMatches(regexache.MustCompile(...), ...)`
+    pattern: stringvalidator.RegexMatches(regexache.MustCompile($PATTERN), $MESSAGE)
+    fix: lazystringvalidator.RegexMatches($PATTERN, $MESSAGE)
+    severity: WARNING

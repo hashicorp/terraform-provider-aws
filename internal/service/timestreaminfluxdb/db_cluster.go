@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
@@ -38,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -85,10 +85,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[^_][^\"]*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[^_][^\"]*$", ""),
 				},
 				Description: `Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket.
 					A bucket combines the concept of a database and a retention period (the duration of time
@@ -111,10 +108,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z0-9]+$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `The ID of the DB parameter group to assign to your DB cluster. 
 					DB parameter groups specify how the database is configured. For example, DB parameter groups 
@@ -186,10 +180,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 40),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$", ""),
 				},
 				Description: `The name that uniquely identifies the DB cluster when interacting with the 
 					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a 
@@ -230,7 +221,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(8, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `Password of the initial admin user created in InfluxDB. This password will
 					allow you to access the InfluxDB UI to perform various administrative tasks and
@@ -276,11 +267,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$"),
-						`Must start with a letter and can't end with a hyphen or contain two 
-						consecutive hyphens`,
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$", `Must start with a letter and can't end with a hyphen or contain two consecutive hyphens`),
 				},
 				Description: `Username of the initial admin user created in InfluxDB. Must start with a letter
 					and can't end with a hyphen or contain two consecutive hyphens. This username will allow
@@ -299,7 +286,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					setvalidator.SizeBetween(1, 5),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^sg-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^sg-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC security group IDs to associate with the Timestream for InfluxDB cluster.`,
@@ -314,7 +301,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					setvalidator.SizeBetween(1, 3),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^subnet-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^subnet-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC subnet IDs to associate with the DB cluster. Provide at least 
@@ -341,7 +328,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(3, 63),
-											stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$"), ""),
+											lazystringvalidator.RegexMatches("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$", ""),
 										},
 										Description: `The name of the S3 bucket to deliver logs to.`,
 									},
@@ -370,10 +357,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(19),
-								stringvalidator.RegexMatches(
-									regexache.MustCompile(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`),
-									"must be in the format ddd:HH:MM-ddd:HH:MM or an empty string",
-								),
+								lazystringvalidator.RegexMatches(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`, "must be in the format ddd:HH:MM-ddd:HH:MM or an empty string"),
 							},
 							Description: `The preferred maintenance window in the format ddd:HH:MM-ddd:HH:MM.
 								Day must be one of Mon, Tue, Wed, Thu, Fri, Sat, or Sun. Provide an empty

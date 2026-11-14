@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -395,7 +395,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
+											lazystringvalidator.RegexMatches(`^@message$`, "must be '@message'"),
 										},
 									},
 								},
@@ -492,7 +492,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
+											lazystringvalidator.RegexMatches(`^@message$`, "must be '@message'"),
 										},
 									},
 								},
@@ -509,7 +509,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
+											lazystringvalidator.RegexMatches(`^@message$`, "must be '@message'"),
 										},
 									},
 								},
@@ -534,7 +534,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
+											lazystringvalidator.RegexMatches(`^@message$`, "must be '@message'"),
 										},
 									},
 								},
@@ -551,7 +551,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
+											lazystringvalidator.RegexMatches(`^@message$`, "must be '@message'"),
 										},
 									},
 								},
@@ -568,7 +568,7 @@ func (r *transformerResource) Schema(ctx context.Context, req resource.SchemaReq
 										Optional: true,
 										Computed: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^@message$`), "must be '@message'"),
+											lazystringvalidator.RegexMatches(`^@message$`, "must be '@message'"),
 										},
 									},
 								},

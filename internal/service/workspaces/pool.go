@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/workspaces/types"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -73,10 +73,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^wsb-[0-9a-z]{8,63}$`),
-						"Bundle ID must be in the format 'wsb-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers",
-					),
+					lazystringvalidator.RegexMatches(`^wsb-[0-9a-z]{8,63}$`, "Bundle ID must be in the format 'wsb-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers"),
 				},
 			},
 			"capacity_status": framework.ResourceComputedListOfObjectsAttribute[capacityStatusModel](ctx, listplanmodifier.UseStateForUnknown()),
@@ -94,10 +91,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9_./() -]+$`),
-						"Description must contain only alphanumeric characters, underscores, periods, forward slashes, parentheses, spaces, and hyphens",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_./() -]+$`, "Description must contain only alphanumeric characters, underscores, periods, forward slashes, parentheses, spaces, and hyphens"),
 				},
 			},
 			"directory_id": schema.StringAttribute{
@@ -106,10 +100,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^(d-[0-9a-f]{8,63}$)|(wsd-[0-9a-z]{8,63}$)`),
-						"Directory ID must be in the format 'wsd-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers",
-					),
+					lazystringvalidator.RegexMatches(`^(d-[0-9a-f]{8,63}$)|(wsd-[0-9a-z]{8,63}$)`, "Directory ID must be in the format 'wsd-xxxxxxxx' where 'xxxxxxxx' is a 8-63 character long string of lowercase letters and numbers"),
 				},
 			},
 			"pool_arn": schema.StringAttribute{
@@ -131,10 +122,7 @@ func (r *resourcePool) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`),
-						"Name must start with an alphanumeric character and can only contain alphanumeric characters, underscores, periods, and hyphens",
-					),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_.-]*$`, "Name must start with an alphanumeric character and can only contain alphanumeric characters, underscores, periods, and hyphens"),
 				},
 			},
 			"running_mode": schema.StringAttribute{

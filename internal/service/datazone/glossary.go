@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -61,7 +61,7 @@ func (r *glossaryResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[\x21-\x7E]+$`), "must conform to: ^[\x21-\x7E]+$ "),
+					lazystringvalidator.RegexMatches(`^[\x21-\x7E]+$`, "must conform to: ^[\x21-\x7E]+$ "),
 					stringvalidator.LengthBetween(1, 128),
 				},
 			},
@@ -72,7 +72,7 @@ func (r *glossaryResource) Schema(ctx context.Context, req resource.SchemaReques
 			"owning_project_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$ "),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_-]{1,36}$`, "must conform to: ^[a-zA-Z0-9_-]{1,36}$ "),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

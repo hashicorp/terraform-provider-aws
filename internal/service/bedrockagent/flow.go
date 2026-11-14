@@ -9,7 +9,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/document"
@@ -34,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -92,7 +92,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "must only contain alphanumeric characters, hyphens and underscores"),
+					lazystringvalidator.RegexMatches(`^([0-9a-zA-Z][_-]?){1,100}$`, "must only contain alphanumeric characters, hyphens and underscores"),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -124,18 +124,18 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 									names.AttrName: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,100}$`), "must only contain alphanumeric characters"),
+											lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,100}$`, "must only contain alphanumeric characters"),
 										},
 									},
 									names.AttrSource: schema.StringAttribute{
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+											lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 										},
 										Required: true,
 									},
 									names.AttrTarget: schema.StringAttribute{
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+											lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 										},
 										Required: true,
 									},
@@ -162,7 +162,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 															names.AttrCondition: schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+																	lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 																},
 															},
 														},
@@ -182,13 +182,13 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 															"source_output": schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+																	lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 																},
 															},
 															"target_input": schema.StringAttribute{
 																Required: true,
 																Validators: []validator.String{
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+																	lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 																},
 															},
 														},
@@ -207,7 +207,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 									names.AttrName: schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+											lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 										},
 									},
 									names.AttrType: schema.StringAttribute{
@@ -281,7 +281,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 																		names.AttrName: schema.StringAttribute{
 																			Required: true,
 																			Validators: []validator.String{
-																				stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+																				lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 																			},
 																		},
 																	},
@@ -915,7 +915,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 												names.AttrName: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+														lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 													},
 												},
 												names.AttrType: schema.StringAttribute{
@@ -935,7 +935,7 @@ func (r *flowResource) Schema(ctx context.Context, request resource.SchemaReques
 												names.AttrName: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`), "must only contain alphanumeric characters"),
+														lazystringvalidator.RegexMatches(`^[a-zA-Z]([_]?[0-9a-zA-Z]){1,50}$`, "must only contain alphanumeric characters"),
 													},
 												},
 												names.AttrType: schema.StringAttribute{

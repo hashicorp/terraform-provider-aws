@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -34,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -143,7 +143,7 @@ func (r *refreshScheduleResource) Schema(ctx context.Context, req resource.Schem
 												"day_of_month": schema.StringAttribute{
 													Optional: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(regexache.MustCompile(dayOfMonthRegex), "day of month must match regex: "+dayOfMonthRegex),
+														lazystringvalidator.RegexMatches(dayOfMonthRegex, "day of month must match regex: "+dayOfMonthRegex),
 														stringvalidator.ConflictsWith(
 															path.MatchRelative().AtParent().AtName("day_of_week"),
 														),

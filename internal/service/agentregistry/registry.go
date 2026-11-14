@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -39,6 +38,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -176,10 +176,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_\-\.\/]{0,63}$`),
-						"Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters.",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9][a-zA-Z0-9_\-\.\/]{0,63}$`, "Must start with a letter or digit. Valid characters are a-z, A-Z, 0-9, _ (underscore), - (hyphen), . (dot), and / (forward slash). The name can have up to 64 characters."),
 				},
 			},
 			"registry_arn":    framework.ARNAttributeComputedOnly(),
@@ -332,7 +329,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(1, 255),
-																	stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																	lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.:-]+$`, "must contain only letters, numbers, and the characters _ . - :"),
 																},
 																PlanModifiers: []planmodifier.String{
 																	stringplanmodifier.RequiresReplace(),
@@ -390,7 +387,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																						Optional: true,
 																						Validators: []validator.String{
 																							stringvalidator.LengthBetween(1, 255),
-																							stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																							lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.:-]+$`, "must contain only letters, numbers, and the characters _ . - :"),
 																						},
 																						PlanModifiers: []planmodifier.String{
 																							stringplanmodifier.RequiresReplace(),
@@ -402,7 +399,7 @@ func (r *registryResource) Schema(ctx context.Context, req resource.SchemaReques
 																						Validators: []validator.Set{
 																							setvalidator.ValueStringsAre(
 																								stringvalidator.LengthBetween(1, 255),
-																								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																								lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.:-]+$`, "must contain only letters, numbers, and the characters _ . - :"),
 																							),
 																						},
 																						PlanModifiers: []planmodifier.Set{
