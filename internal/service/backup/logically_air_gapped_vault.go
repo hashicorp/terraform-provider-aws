@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -34,6 +35,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -46,6 +48,7 @@ func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWit
 	r := &logicallyAirGappedVaultResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -99,6 +102,7 @@ func (r *logicallyAirGappedVaultResource) Schema(ctx context.Context, request re
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
+				Delete: true,
 			}),
 		},
 	}
@@ -206,7 +210,13 @@ func (r *logicallyAirGappedVaultResource) Delete(ctx context.Context, request re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Backup Logically Air Gapped Vault (%s)", name), err.Error())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
+
+		return
+	}
+
+	if _, err := waitLogicallyAirGappedVaultDeleted(ctx, conn, name, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
 
 		return
 	}
@@ -270,4 +280,36 @@ func waitLogicallyAirGappedVaultCreated(ctx context.Context, conn *backup.Client
 	}
 
 	return nil, err
+}
+
+func waitLogicallyAirGappedVaultDeleted(ctx context.Context, conn *backup.Client, name string, timeout time.Duration) (*backup.DescribeBackupVaultOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"present"},
+		Target:  []string{},
+		Refresh: statusLogicallyAirGappedVaultDeleted(conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if output, ok := outputRaw.(*backup.DescribeBackupVaultOutput); ok {
+		return output, smarterr.NewError(err)
+	}
+
+	return nil, smarterr.NewError(err)
+}
+
+func statusLogicallyAirGappedVaultDeleted(conn *backup.Client, name string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findLogicallyAirGappedBackupVaultByName(ctx, conn, name)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", smarterr.NewError(err)
+		}
+
+		return output, "present", nil
+	}
 }
