@@ -131,6 +131,26 @@ func dataSourceService() *schema.Resource {
 									},
 								},
 							},
+							"early_success_criteria": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enable": {
+											Type:     schema.TypeBool,
+											Computed: true,
+										},
+										"healthy_percent": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"source_service_revision_cleanup": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 							"linear_configuration": {
 								Type:     schema.TypeList,
 								Computed: true,
@@ -615,6 +635,10 @@ func flattenDeploymentConfigurationForDataSource(apiObject *awstypes.DeploymentC
 
 	if v := apiObject.DeploymentCircuitBreaker; v != nil {
 		tfMap["deployment_circuit_breaker"] = []map[string]any{flattenDeploymentCircuitBreakerForDataSource(v)}
+	}
+
+	if v := apiObject.EarlySuccessCriteria; v != nil {
+		tfMap["early_success_criteria"] = flattenDeploymentEarlySuccessCriteria(v)
 	}
 
 	if v := apiObject.LinearConfiguration; v != nil {

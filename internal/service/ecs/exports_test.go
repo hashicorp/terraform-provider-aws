@@ -5,6 +5,11 @@ package ecs
 
 // Exports for use in tests only.
 var (
+	DataSourceService                           = dataSourceService
+	ExpandDeploymentEarlySuccessCriteria        = expandDeploymentEarlySuccessCriteria
+	FlattenDeploymentConfiguration              = flattenDeploymentConfiguration
+	FlattenDeploymentConfigurationForDataSource = flattenDeploymentConfigurationForDataSource
+
 	ResourceAccountSettingDefault    = resourceAccountSettingDefault
 	ResourceCapacityProvider         = resourceCapacityProvider
 	ResourceCluster                  = resourceCluster
