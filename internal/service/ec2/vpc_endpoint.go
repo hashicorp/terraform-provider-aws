@@ -256,6 +256,42 @@ func resourceVPCEndpoint() *schema.Resource {
 			customdiff.ComputedIf("network_interface_ids", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("subnet_configuration") || diff.HasChange(names.AttrSubnetIDs)
 			}),
+			// Detect removal of the `policy` block from configuration.
+			//
+			// `policy` is `Optional + Computed` because the AWS API auto-assigns a
+			// default permissive policy at creation time. The Computed flag causes
+			// SDKv2 to silently keep the prior state value when the attribute is
+			// absent from configuration, which suppresses the diff and prevents the
+			// update path from emitting `ResetPolicy`. The result is that removing
+			// the `policy` block from a user's HCL is a no-op until the user also
+			// reapplies a default policy by hand.
+			//
+			// Inspecting the raw config (which reflects the user's HCL exactly,
+			// before any computed fill-in) lets us recognize the unset case and
+			// mark the attribute as changed, so the update path can call
+			// ModifyVpcEndpoint with `ResetPolicy: true`.
+			//
+			// Resolves https://github.com/hashicorp/terraform-provider-aws/issues/40973.
+			func(_ context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+				rawConfig := diff.GetRawConfig()
+				if !rawConfig.IsKnown() || rawConfig.IsNull() {
+					return nil
+				}
+				policyAttr := rawConfig.GetAttr(names.AttrPolicy)
+				if !policyAttr.IsKnown() {
+					return nil
+				}
+				stateHasPolicy := diff.Get(names.AttrPolicy).(string) != ""
+				if policyAttr.IsNull() && stateHasPolicy {
+					if err := diff.SetNew(names.AttrPolicy, ""); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
 		),
 
 		Timeouts: &schema.ResourceTimeout{
