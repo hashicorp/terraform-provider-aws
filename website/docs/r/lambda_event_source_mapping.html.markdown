@@ -138,6 +138,36 @@ resource "aws_lambda_event_source_mapping" "example" {
 }
 ```
 
+### Self-Managed Apache Kafka with Queue Consumption Mode
+
+```terraform
+resource "aws_lambda_event_source_mapping" "example" {
+  function_name = aws_lambda_function.example.arn
+  topics        = ["orders"]
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "kafka1.example.com:9092,kafka2.example.com:9092"
+    }
+  }
+
+  self_managed_kafka_event_source_config {
+    consumer_group_id = "lambda-share-group"
+    consumption_mode  = "Queue"
+  }
+
+  source_access_configuration {
+    type = "VPC_SUBNET"
+    uri  = "subnet:${aws_subnet.example1.id}"
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = "security_group:${aws_security_group.example.id}"
+  }
+}
+```
+
 ### Amazon MQ (ActiveMQ)
 
 ```terraform
@@ -226,7 +256,7 @@ The following arguments are optional:
 * `self_managed_event_source` - (Optional) For Self Managed Kafka sources, the location of the self managed cluster. If set, configuration must also include `source_access_configuration`. [See below](#self_managed_event_source-block).
 * `self_managed_kafka_event_source_config` - (Optional) Additional configuration block for Self Managed Kafka sources. Incompatible with `event_source_arn` and `amazon_managed_kafka_event_source_config`. [See below](#self_managed_kafka_event_source_config-block).
 * `source_access_configuration` - (Optional) For Self Managed Kafka sources, the access configuration for the source. If set, configuration must also include `self_managed_event_source`. [See below](#source_access_configuration-block).
-* `starting_position` - (Optional) Position in the stream where AWS Lambda should start reading. Must be one of `AT_TIMESTAMP` (Kinesis only), `LATEST` or `TRIM_HORIZON` if getting events from Kinesis, DynamoDB, MSK or Self Managed Apache Kafka. Must not be provided if getting events from SQS. More information about these positions can be found in the [AWS DynamoDB Streams API Reference](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html) and [AWS Kinesis API Reference](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType).
+* `starting_position` - (Optional) Position in the stream where AWS Lambda should start reading. Must be one of `AT_TIMESTAMP` (Kinesis only), `LATEST` or `TRIM_HORIZON` if getting events from Kinesis, DynamoDB, MSK or Self Managed Apache Kafka. Must not be provided if getting events from SQS, or from Self Managed Apache Kafka when `self_managed_kafka_event_source_config.consumption_mode` is `Queue`. More information about these positions can be found in the [AWS DynamoDB Streams API Reference](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_streams_GetShardIterator.html) and [AWS Kinesis API Reference](https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType).
 * `starting_position_timestamp` - (Optional) Timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) of the data record which to start reading when using `starting_position` set to `AT_TIMESTAMP`. If a record with this exact timestamp does not exist, the next later record is chosen. If the timestamp is older than the current trim horizon, the oldest available record is chosen.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topics` - (Optional) Name of the Kafka topics. Only available for MSK sources. A single topic name must be specified.
@@ -281,6 +311,7 @@ The following arguments are optional:
 ### `self_managed_kafka_event_source_config` Block
 
 * `consumer_group_id` - (Optional) Kafka consumer group ID between 1 and 200 characters for use when creating this event source mapping. If one is not specified, this value will be automatically generated. See [SelfManagedKafkaEventSourceConfig Syntax](https://docs.aws.amazon.com/lambda/latest/dg/API_SelfManagedKafkaEventSourceConfig.html).
+* `consumption_mode` - (Optional) How Lambda consumes records from the Kafka topic. Valid values are `Stream` and `Queue`. `Stream` uses a Kafka consumer group and preserves record order within each partition. `Queue` uses a Kafka share group, so several consumers can process records from the same partition at the same time, and record order is not preserved. `Queue` requires Apache Kafka 4.2 or later with share groups enabled. When `consumption_mode` is `Queue`, `starting_position`, `starting_position_timestamp`, and `maximum_batching_window_in_seconds` must not be set. If not specified, Lambda uses `Stream`. Changing this value forces a new resource to be created.
 * `schema_registry_config` - (Optional) Block for a Kafka schema registry setting. [See below](#schema_registry_config-block).
 
 ### `source_access_configuration` Block
