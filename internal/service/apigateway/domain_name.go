@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -202,8 +203,26 @@ func resourceDomainName() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: endpointConfigurationPlantimeValidate,
+		CustomizeDiff: customdiff.All(
+			endpointConfigurationPlantimeValidate,
+			// A public custom domain name can't be migrated to a private one, or back.
+			customdiff.ForceNewIfChange("endpoint_configuration.0.types", func(_ context.Context, old, new, meta any) bool {
+				return domainNameEndpointTypesIncludePrivate(old) != domainNameEndpointTypesIncludePrivate(new)
+			}),
+		),
 	}
+}
+
+func domainNameEndpointTypesIncludePrivate(v any) bool {
+	endpointTypes, _ := v.([]any)
+
+	for _, endpointType := range endpointTypes {
+		if endpointType == string(types.EndpointTypePrivate) {
+			return true
+		}
+	}
+
+	return false
 }
 
 func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
