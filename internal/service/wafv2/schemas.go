@@ -786,6 +786,61 @@ var monetizationConfigSchema = sync.OnceValue(func() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"connected_account_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"connected_account_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(56, 140),
+									validation.StringMatch(regexache.MustCompile(`^arn:aws(-[a-z]+)*:payments::[0-9]{12}:connectedaccount/[0-9A-Za-z][0-9A-Za-z_-]{0,63}-[0-9A-Za-z]{6}$`), "must be a connected account ARN"),
+								),
+							},
+							"payment_network": {
+								Type:     schema.TypeList,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"chain": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ConnectedAccountChain](),
+										},
+										"prices": {
+											Type:     schema.TypeList,
+											Required: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"amount": {
+														Type:     schema.TypeString,
+														Required: true,
+														ValidateFunc: validation.All(
+															validation.StringLenBetween(1, 9),
+															validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]{0,5}(\.[0-9]{1,2})?|0\.(0[1-9]|[1-9][0-9]?))$`), "must be a decimal amount between 0.01 and 999999.99 with up to 2 decimal places"),
+														),
+													},
+													"currency": {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[awstypes.CryptoCurrency](),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"crypto_config": {
 					Type:     schema.TypeList,
 					Optional: true,

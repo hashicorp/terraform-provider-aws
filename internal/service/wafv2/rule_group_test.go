@@ -2731,6 +2731,7 @@ func TestAccWAFV2RuleGroup_monetize(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.0.price_multiplier", "2"),
@@ -2741,6 +2742,69 @@ func TestAccWAFV2RuleGroup_monetize(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_monetizeConnectedAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectedAccountARN := acctest.SkipIfEnvVarNotSet(t, "WAFV2_CONNECTED_ACCOUNT_ARN")
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_monetizeConnectedAccount(ruleGroupName, connectedAccountARN),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "REAL"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.connected_account_arn", connectedAccountARN),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.chain", "SOLANA"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.prices.0.amount", "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.prices.0.currency", "USDC"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccRuleGroupImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+// A connected account that does not exist is rejected by the API, which shows that
+// connected_account_config reaches CreateRuleGroup.
+func TestAccWAFV2RuleGroup_monetizeConnectedAccountNotFound(t *testing.T) {
+	ctx := acctest.Context(t)
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRuleGroupConfig_monetizeConnectedAccount(ruleGroupName, testAccConnectedAccountARNNotFound),
+				ExpectError: regexache.MustCompile(`WAFNonexistentItemException: The specified connected account does not exist`),
 			},
 		},
 	})
@@ -5995,4 +6059,74 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccRuleGroupConfig_monetizeConnectedAccount(rName, connectedAccountARN string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 2
+  name     = %[1]q
+  scope    = "CLOUDFRONT"
+
+  monetization_config {
+    currency_mode = "REAL"
+
+    connected_account_config {
+      connected_account_arn = "%[2]s"
+
+      payment_network {
+        chain = "SOLANA"
+
+        prices {
+          amount   = "1.5"
+          currency = "USDC"
+        }
+      }
+    }
+  }
+
+  rule {
+    name     = "monetize-api"
+    priority = 1
+
+    statement {
+      byte_match_statement {
+        search_string         = "/api"
+        positional_constraint = "STARTS_WITH"
+
+        field_to_match {
+          uri_path {}
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    action {
+      monetize {
+        price_multiplier = "2"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "monetize-api"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, connectedAccountARN)
 }

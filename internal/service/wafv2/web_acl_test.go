@@ -4041,6 +4041,7 @@ func TestAccWAFV2WebACL_monetize(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "TEST"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.chain", "BASE_SEPOLIA"),
 					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.0.payment_network.0.prices.0.amount", "0.001"),
@@ -4058,6 +4059,111 @@ func TestAccWAFV2WebACL_monetize(t *testing.T) {
 		},
 	})
 }
+
+func TestAccWAFV2WebACL_monetizeConnectedAccount(t *testing.T) {
+	ctx := acctest.Context(t)
+	connectedAccountARN := acctest.SkipIfEnvVarNotSet(t, "WAFV2_CONNECTED_ACCOUNT_ARN")
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_monetizeConnectedAccount(webACLName, connectedAccountARN, "0.01"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.currency_mode", "REAL"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.crypto_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.connected_account_arn", connectedAccountARN),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.chain", "BASE"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.prices.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.prices.0.amount", "0.01"),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.prices.0.currency", "USDC"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.action.0.monetize.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccWebACLConfig_monetizeConnectedAccount(webACLName, connectedAccountARN, "0.02"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "monetization_config.0.connected_account_config.0.payment_network.0.prices.0.amount", "0.02"),
+				),
+			},
+		},
+	})
+}
+
+// A connected account that does not exist is rejected by the API, which shows that
+// connected_account_config reaches CreateWebACL.
+func TestAccWAFV2WebACL_monetizeConnectedAccountNotFound(t *testing.T) {
+	ctx := acctest.Context(t)
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLConfig_monetizeConnectedAccount(webACLName, testAccConnectedAccountARNNotFound, "0.01"),
+				ExpectError: regexache.MustCompile(`WAFNonexistentItemException: The specified connected account does not exist`),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_monetizeConnectedAccountValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	connectedAccountARN := "arn:aws:payments::123456789012:connectedaccount/tfacctest-a1b2c3" //lintignore:AWSAT005
+	invalidConnectedAccountARN := "arn:aws:payments::123456789012:connectedaccount/tfacctest" //lintignore:AWSAT005
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLConfig_monetizeConnectedAccount(webACLName, invalidConnectedAccountARN, "0.01"),
+				ExpectError: regexache.MustCompile(`must be a connected account ARN`),
+			},
+			{
+				Config:      testAccWebACLConfig_monetizeConnectedAccount(webACLName, connectedAccountARN, "0.001"),
+				ExpectError: regexache.MustCompile(`must be a decimal amount between 0.01 and 999999.99`),
+			},
+			{
+				Config:      testAccWebACLConfig_monetizeConnectedAccount(webACLName, connectedAccountARN, "1000000"),
+				ExpectError: regexache.MustCompile(`must be a decimal amount between 0.01 and 999999.99`),
+			},
+		},
+	})
+}
+
+// testAccConnectedAccountARNNotFound is a well-formed connected account ARN in the current account
+// that does not exist.
+const testAccConnectedAccountARNNotFound = "arn:${data.aws_partition.current.partition}:payments::${data.aws_caller_identity.current.account_id}:connectedaccount/tfacctest-a1b2c3"
 
 func testAccCheckWebACLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -8177,4 +8283,77 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWebACLConfig_monetizeConnectedAccount(rName, connectedAccountARN, amount string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  monetization_config {
+    currency_mode = "REAL"
+
+    connected_account_config {
+      connected_account_arn = "%[2]s"
+
+      payment_network {
+        chain = "BASE"
+
+        prices {
+          amount   = %[3]q
+          currency = "USDC"
+        }
+      }
+    }
+  }
+
+  rule {
+    name     = "monetize-api"
+    priority = 1
+
+    statement {
+      byte_match_statement {
+        search_string         = "/api"
+        positional_constraint = "STARTS_WITH"
+
+        field_to_match {
+          uri_path {}
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+      }
+    }
+
+    action {
+      monetize {
+        price_multiplier = "5"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "monetize-api"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, connectedAccountARN, amount)
 }
