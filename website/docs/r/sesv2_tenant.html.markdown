@@ -24,6 +24,20 @@ resource "aws_sesv2_tenant" "example" {
 }
 ```
 
+### With a Reputation Management Policy
+
+```terraform
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_sesv2_tenant" "example" {
+  tenant_name = "example-tenant"
+
+  reputation_entity_policy = "arn:${data.aws_partition.current.partition}:ses:${data.aws_region.current.region}:aws:reputation-policy/standard"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -33,6 +47,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `reputation_entity_policy` - (Optional) ARN of the Amazon SES-managed reputation management policy to apply to the tenant. The policy determines how the tenant responds to reputation findings, such as automatically pausing sending when thresholds are exceeded. Valid policy ARNs take the form `arn:<partition>:ses:<region>:aws:reputation-policy/<policy>`, where `<policy>` is one of `none`, `standard`, or `strict`. If not configured, AWS applies a default policy. Removing this argument does not reset the policy; to disable reputation management, set the `none` policy ARN explicitly.
 * `tags` - (Optional) Map of tags to assign to the tenant.
 
 ## Attribute Reference
