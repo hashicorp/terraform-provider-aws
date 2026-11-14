@@ -25,15 +25,15 @@ type regexMatchesValidator struct {
 	message string
 }
 
-func (validator regexMatchesValidator) Description(_ context.Context) string {
-	if validator.message != "" {
-		return validator.message
+func (v regexMatchesValidator) Description(_ context.Context) string {
+	if v.message != "" {
+		return v.message
 	}
-	return fmt.Sprintf("value must match regular expression '%s'", validator.regexp)
+	return fmt.Sprintf("value must match regular expression '%s'", v.regexp)
 }
 
-func (validator regexMatchesValidator) MarkdownDescription(ctx context.Context) string {
-	return validator.Description(ctx)
+func (v regexMatchesValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
 }
 
 func (v regexMatchesValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
@@ -72,8 +72,8 @@ func (v regexMatchesValidator) ValidateParameterString(ctx context.Context, requ
 	fwstringvalidator.RegexMatches(re, v.message).ValidateParameterString(ctx, request, response)
 }
 
-func (validator regexMatchesValidator) invalidUsageMessage(err error) string {
-	return fmt.Sprintf("The regular expression %q is invalid: %v", validator.regexp, err)
+func (v regexMatchesValidator) invalidUsageMessage(err error) string {
+	return fmt.Sprintf("The regular expression %q is invalid: %v", v.regexp, err)
 }
 
 // RegexMatches is a lazy equivalent of `stringvalidator.RegexMatches`.
