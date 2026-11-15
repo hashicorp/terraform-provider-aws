@@ -194,7 +194,7 @@ func resourceRuleGroup() *schema.Resource {
 														},
 													},
 													"rule_option": {
-														Type:     schema.TypeSet,
+														Type:     schema.TypeList,
 														Required: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
@@ -203,7 +203,7 @@ func resourceRuleGroup() *schema.Resource {
 																	Required: true,
 																},
 																"settings": {
-																	Type:     schema.TypeSet,
+																	Type:     schema.TypeList,
 																	Optional: true,
 																	Elem:     &schema.Schema{Type: schema.TypeString},
 																},
@@ -739,8 +739,8 @@ func expandStatefulRuleOptions(tfList []any) []awstypes.RuleOption {
 			Keyword: aws.String(tfMap["keyword"].(string)),
 		}
 
-		if v, ok := tfMap["settings"].(*schema.Set); ok && v.Len() > 0 {
-			apiObject.Settings = flex.ExpandStringValueSet(v)
+		if v, ok := tfMap["settings"].([]any); ok && len(v) > 0 {
+			apiObject.Settings = flex.ExpandStringValueList(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
@@ -795,8 +795,8 @@ func expandStatefulRules(tfList []any) []awstypes.StatefulRule {
 		if v, ok := tfMap[names.AttrHeader].([]any); ok && len(v) > 0 && v[0] != nil {
 			apiObject.Header = expandStatefulRuleHeader(v)
 		}
-		if v, ok := tfMap["rule_option"].(*schema.Set); ok && v.Len() > 0 {
-			apiObject.RuleOptions = expandStatefulRuleOptions(v.List())
+		if v, ok := tfMap["rule_option"].([]any); ok && len(v) > 0 {
+			apiObject.RuleOptions = expandStatefulRuleOptions(v)
 		}
 
 		apiObjects = append(apiObjects, apiObject)
