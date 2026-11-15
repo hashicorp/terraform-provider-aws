@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Fix "inconsistent result after apply" when removing `tool`, `skill`, `environment_artifact` or `authorizer_configuration`
+```
