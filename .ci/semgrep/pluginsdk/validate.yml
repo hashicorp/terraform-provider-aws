@@ -11,17 +11,19 @@ rules:
     fix: lazyvalidation.StringMatch($PATTERN, $MESSAGE)
     severity: WARNING
 
-  - id: use-lazyvalidation-string-match-function-regex
-    languages: [go]
-    message: Replace the function-returned regular expression with a pattern string and use `lazyvalidation.StringMatch`
-    pattern: validation.StringMatch($REGEX(), $...ARGS)
-    severity: WARNING
-
   - id: use-lazyvalidation-string-match-diag
     languages: [go]
     message: Prefer `lazyvalidation.StringMatchDiag` to `validation.ToDiagFunc(validation.StringMatch(...))`
     pattern: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile($PATTERN), $MESSAGE))
     fix: lazyvalidation.StringMatchDiag($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-match-precompiled-regex
+    languages: [go]
+    message: Replace the regular expression with a pattern string and use `lazyvalidation.StringMatch`
+    patterns:
+      - pattern: validation.StringMatch($REGEX, $...ARGS)
+      - pattern-not: validation.StringMatch(regexache.MustCompile(...), ...)
     severity: WARNING
 
   - id: use-lazyvalidation-string-does-not-match
@@ -33,15 +35,17 @@ rules:
     fix: lazyvalidation.StringDoesNotMatch($PATTERN, $MESSAGE)
     severity: WARNING
 
-  - id: use-lazyvalidation-string-does-not-match-function-regex
-    languages: [go]
-    message: Replace the function-returned regular expression with a pattern string and use `lazyvalidation.StringDoesNotMatch`
-    pattern: validation.StringDoesNotMatch($REGEX(), $...ARGS)
-    severity: WARNING
-
   - id: use-lazyvalidation-string-does-not-match-diag
     languages: [go]
     message: Prefer `lazyvalidation.StringDoesNotMatchDiag` to `validation.ToDiagFunc(validation.StringDoesNotMatch(...))`
     pattern: validation.ToDiagFunc(validation.StringDoesNotMatch(regexache.MustCompile($PATTERN), $MESSAGE))
     fix: lazyvalidation.StringDoesNotMatchDiag($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-does-not-match-precompiled-regex
+    languages: [go]
+    message: Replace the regular expression with a pattern string and use `lazyvalidation.StringDoesNotMatch`
+    patterns:
+      - pattern: validation.StringDoesNotMatch($REGEX, $...ARGS)
+      - pattern-not: validation.StringDoesNotMatch(regexache.MustCompile(...), ...)
     severity: WARNING
