@@ -37,12 +37,13 @@ import (
 )
 
 const (
+	directoryBucketNameRegexPattern       = `^(?:[0-9a-z.-]+)` + directoryBucketNameSuffixRegexPattern + `$`
 	directoryBucketNameSuffixRegexPattern = `--(?:[0-9a-z]+(?:-[0-9a-z]+)+)--x-s3`
 )
 
 // e.g. example--usw2-az2--x-s3
 func directoryBucketNameRegex() *regexp.Regexp {
-	return regexache.MustCompile(`^(?:[0-9a-z.-]+)` + directoryBucketNameSuffixRegexPattern + `$`)
+	return regexache.MustCompile(directoryBucketNameRegexPattern)
 }
 
 func isDirectoryBucket(bucket string) bool {

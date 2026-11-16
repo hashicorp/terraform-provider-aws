@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -95,7 +95,7 @@ func resourceClusterInstance() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+					ValidateFunc: lazyvalidation.StringMatch(`^AWSRDSCustom.*$`, "must begin with AWSRDSCustom"),
 				},
 				"db_parameter_group_name": {
 					Type:     schema.TypeString,
@@ -121,7 +121,7 @@ func resourceClusterInstance() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.Any(
-						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						lazyvalidation.StringMatch(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
 						validation.StringInSlice(clusterInstanceEngine_Values(), false),
 					),
 				},

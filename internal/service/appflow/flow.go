@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -54,7 +55,7 @@ func resourceFlow() *schema.Resource {
 				names.AttrDescription: {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
+					ValidateFunc: lazyvalidation.StringMatch(`[\w!@#\-.?,\s]*`, "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
 				},
 				"destination_flow_config": {
 					Type:     schema.TypeList,
@@ -64,12 +65,12 @@ func resourceFlow() *schema.Resource {
 							"api_version": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
+								ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
 							},
 							"connector_profile_name": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[\w\/!@#+=.-]+`), "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
+								ValidateFunc: validation.All(lazyvalidation.StringMatch(`[\w\/!@#+=.-]+`, "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 							},
 							"connector_type": {
 								Type:             schema.TypeString,
@@ -97,13 +98,13 @@ func resourceFlow() *schema.Resource {
 														),
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+															ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
 														},
 													},
 													"entity_name": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
 													},
 													"error_handling_config": {
 														Type:     schema.TypeList,
@@ -114,7 +115,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -133,7 +134,7 @@ func resourceFlow() *schema.Resource {
 														Optional: true,
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+															ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 														},
 													},
 													"write_operation_type": {
@@ -153,12 +154,12 @@ func resourceFlow() *schema.Resource {
 													names.AttrDomainName: {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 64)),
 													},
 													"object_type_name": {
 														Type:         schema.TypeString,
 														Optional:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 255)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 255)),
 													},
 												},
 											},
@@ -178,7 +179,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -195,7 +196,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -215,7 +216,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -232,7 +233,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -260,7 +261,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -277,7 +278,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -302,7 +303,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -319,12 +320,12 @@ func resourceFlow() *schema.Resource {
 													"intermediate_bucket_name": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 													},
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -339,7 +340,7 @@ func resourceFlow() *schema.Resource {
 													names.AttrBucketName: {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 													},
 													names.AttrBucketPrefix: {
 														Type:         schema.TypeString,
@@ -440,7 +441,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -459,13 +460,13 @@ func resourceFlow() *schema.Resource {
 														Optional: true,
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+															ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 														},
 													},
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 													"write_operation_type": {
 														Type:             schema.TypeString,
@@ -490,7 +491,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -509,13 +510,13 @@ func resourceFlow() *schema.Resource {
 														Optional: true,
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+															ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 														},
 													},
 													"object_path": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 													"success_response_handling_config": {
 														Type:     schema.TypeList,
@@ -526,7 +527,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -564,7 +565,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -581,12 +582,12 @@ func resourceFlow() *schema.Resource {
 													"intermediate_bucket_name": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 													},
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -600,7 +601,7 @@ func resourceFlow() *schema.Resource {
 													names.AttrBucketName: {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`^(upsolver-appflow)\S*`), "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`^(upsolver-appflow)\S*`, "must start with 'upsolver-appflow' and can not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 													},
 													names.AttrBucketPrefix: {
 														Type:         schema.TypeString,
@@ -681,7 +682,7 @@ func resourceFlow() *schema.Resource {
 																names.AttrBucketName: {
 																	Type:         schema.TypeString,
 																	Optional:     true,
-																	ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+																	ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 																},
 																names.AttrBucketPrefix: {
 																	Type:         schema.TypeString,
@@ -700,13 +701,13 @@ func resourceFlow() *schema.Resource {
 														Optional: true,
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
+															ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 														},
 													},
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 													"write_operation_type": {
 														Type:             schema.TypeString,
@@ -731,13 +732,13 @@ func resourceFlow() *schema.Resource {
 					Optional:     true,
 					Computed:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`arn:.*:kms:.*:[0-9]+:.*`), "must be a valid ARN of a Key Management Services (KMS) key"),
+					ValidateFunc: lazyvalidation.StringMatch(`arn:.*:kms:.*:[0-9]+:.*`, "must be a valid ARN of a Key Management Services (KMS) key"),
 				},
 				names.AttrName: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
+					ValidateFunc: validation.All(lazyvalidation.StringMatch(`[0-9A-Za-z][\w!@#.-]+`, "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 				},
 				"source_flow_config": {
 					Type:     schema.TypeList,
@@ -748,12 +749,12 @@ func resourceFlow() *schema.Resource {
 							"api_version": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
+								ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 256)),
 							},
 							"connector_profile_name": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[\w\/!@#+=.-]+`), "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
+								ValidateFunc: validation.All(lazyvalidation.StringMatch(`[\w\/!@#+=.-]+`, "must contain only alphanumeric, underscore (_), forward slash (/), exclamation point (!), at sign (@), number sign (#), plus sign (+), equals sign (=), period (.), and hyphen (-) characters"), validation.StringLenBetween(1, 256)),
 							},
 							"connector_type": {
 								Type:             schema.TypeString,
@@ -789,7 +790,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -809,13 +810,13 @@ func resourceFlow() *schema.Resource {
 														),
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
+															ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(0, 2048)),
 														},
 													},
 													"entity_name": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 1024)),
 													},
 												},
 											},
@@ -829,7 +830,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -843,7 +844,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -857,7 +858,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -871,7 +872,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -885,7 +886,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -901,7 +902,7 @@ func resourceFlow() *schema.Resource {
 														Type:         schema.TypeString,
 														Required:     true,
 														ForceNew:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 													},
 													names.AttrBucketPrefix: {
 														Type:         schema.TypeString,
@@ -948,7 +949,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -962,7 +963,7 @@ func resourceFlow() *schema.Resource {
 													"object_path": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 													"pagination_config": {
 														Type:     schema.TypeList,
@@ -1004,7 +1005,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -1018,7 +1019,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -1032,7 +1033,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -1046,7 +1047,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -1060,7 +1061,7 @@ func resourceFlow() *schema.Resource {
 													"document_type": {
 														Type:         schema.TypeString,
 														Optional:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`[\s\w_-]+`), "must contain only alphanumeric, underscore (_), and hyphen (-) characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`[\s\w_-]+`, "must contain only alphanumeric, underscore (_), and hyphen (-) characters"), validation.StringLenBetween(1, 512)),
 													},
 													"include_all_versions": {
 														Type:     schema.TypeBool,
@@ -1077,7 +1078,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},
@@ -1091,7 +1092,7 @@ func resourceFlow() *schema.Resource {
 													"object": {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
+														ValidateFunc: validation.All(lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
 													},
 												},
 											},

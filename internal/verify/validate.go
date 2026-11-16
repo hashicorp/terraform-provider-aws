@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
@@ -391,7 +392,7 @@ func ValidUTCTimestamp(v any, k string) (ws []string, errors []error) {
 
 var ValidStringDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
-	validation.StringMatch(regexache.MustCompile(`^\d+$`), "must be a positive integer value"),
+	lazyvalidation.StringMatch(`^\d+$`, "must be a positive integer value"),
 )
 
 func ValidDuration(v any, k string) (ws []string, errors []error) {

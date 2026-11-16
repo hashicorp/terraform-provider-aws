@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -823,7 +823,7 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "A unique identifier that might be required when you assume a role in another account.",
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 1224),
-						validation.StringMatch(regexache.MustCompile(`[\w+=,.@:\/\-]*`), ""),
+						lazyvalidation.StringMatch(`[\w+=,.@:\/\-]*`, ""),
 					),
 				},
 				"policy": {

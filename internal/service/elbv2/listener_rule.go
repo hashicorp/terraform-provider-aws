@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -209,7 +210,7 @@ func resourceListenerRule() *schema.Resource {
 											Type:         schema.TypeString,
 											Optional:     true,
 											Computed:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
+											ValidateFunc: lazyvalidation.StringMatch(`^[245]\d\d$`, ""),
 										},
 									},
 								},
@@ -421,7 +422,7 @@ func resourceListenerRule() *schema.Resource {
 										"http_header_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
+											ValidateFunc: lazyvalidation.StringMatch("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$", ""), // was "," meant to be included? +-. creates a range including: +,-.
 										},
 										"regex_values": {
 											Type:     schema.TypeSet,
@@ -452,7 +453,7 @@ func resourceListenerRule() *schema.Resource {
 											Type: schema.TypeSet,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
+												ValidateFunc: lazyvalidation.StringMatch(`^[A-Za-z-_]{1,40}$`, ""),
 											},
 											Required: true,
 										},

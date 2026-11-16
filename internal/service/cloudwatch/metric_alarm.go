@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -31,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -187,11 +187,7 @@ func resourceMetricAlarm() *schema.Resource {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ConflictsWith: []string{"statistic", "metric_query"},
-					ValidateFunc: validation.StringMatch(
-						// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-						regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-						"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-					),
+					ValidateFunc:  lazyvalidation.StringMatch(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`, "invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html"),
 				},
 				"insufficient_data_actions": {
 					Type:     schema.TypeSet,
@@ -253,7 +249,7 @@ func resourceMetricAlarm() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 255),
-												validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
+												lazyvalidation.StringMatch(`[^:].*`, "must not contain colon characters"),
 											),
 										},
 										"period": {
@@ -269,13 +265,8 @@ func resourceMetricAlarm() *schema.Resource {
 											Required: true,
 											ValidateDiagFunc: validation.AnyDiag(
 												enum.Validate[awstypes.Statistic](),
-												validation.ToDiagFunc(
-													validation.StringMatch(
-														// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-														regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-														"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-													),
-												),
+												// Doesn't catch PR with percentage values, or TM/WM/PR/TC/TS with no values.
+												lazyvalidation.StringMatchDiag(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`, "invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html"),
 											),
 										},
 										names.AttrUnit: {
@@ -312,7 +303,7 @@ func resourceMetricAlarm() *schema.Resource {
 					ConflictsWith: []string{"metric_query"},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
+						lazyvalidation.StringMatch(`[^:].*`, "must not contain colon characters"),
 					),
 				},
 				"ok_actions": {

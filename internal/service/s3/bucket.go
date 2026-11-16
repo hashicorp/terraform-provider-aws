@@ -40,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -130,7 +131,7 @@ func resourceBucket() *schema.Resource {
 					ConflictsWith: []string{names.AttrBucketPrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 63),
-						validation.StringDoesNotMatch(directoryBucketNameRegex(), `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+						lazyvalidation.StringDoesNotMatch(directoryBucketNameRegexPattern, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
 					),
 				},
 				"bucket_domain_name": {

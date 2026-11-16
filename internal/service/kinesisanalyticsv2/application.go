@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -174,7 +174,7 @@ func resourceApplication() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 50),
-															validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+															lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must only include alphanumeric, underscore, period, or hyphen characters"),
 														),
 													},
 													"property_map": {
@@ -416,7 +416,7 @@ func resourceApplication() *schema.Resource {
 																			names.AttrName: {
 																				Type:         schema.TypeString,
 																				Required:     true,
-																				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+																				ValidateFunc: lazyvalidation.StringMatch(`^[^-\s<>&]+$`, "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 																			},
 																			"sql_type": {
 																				Type:     schema.TypeString,
@@ -549,7 +549,7 @@ func resourceApplication() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 32),
-															validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+															lazyvalidation.StringMatch(`^[^-\s<>&]+$`, "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 														),
 													},
 												},
@@ -622,7 +622,7 @@ func resourceApplication() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 32),
-															validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+															lazyvalidation.StringMatch(`^[^-\s<>&]+$`, "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 														),
 													},
 													"output_id": {
@@ -661,7 +661,7 @@ func resourceApplication() *schema.Resource {
 																			names.AttrName: {
 																				Type:         schema.TypeString,
 																				Required:     true,
-																				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[^-\s<>&]+$`), "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
+																				ValidateFunc: lazyvalidation.StringMatch(`^[^-\s<>&]+$`, "must not include hyphen, whitespace, angle bracket, or ampersand characters"),
 																			},
 																			"sql_type": {
 																				Type:     schema.TypeString,
@@ -862,7 +862,7 @@ func resourceApplication() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must only include alphanumeric, underscore, period, or hyphen characters"),
 					),
 				},
 				"runtime_environment": {

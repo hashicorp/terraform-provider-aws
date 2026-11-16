@@ -5,13 +5,13 @@ package sagemaker
 
 import (
 	"fmt"
-	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 func validEnvironment(v any, k string) (ws []string, errors []error) {
@@ -52,19 +52,17 @@ func validImage(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-func httpsOrS3URIRegexp() *regexp.Regexp {
-	return regexache.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`)
-}
+const httpsOrS3URIPattern = `^(https|s3)://([^/]+)/?(.*)$`
 
 var (
 	validHTTPSOrS3URI = validation.All(
-		validation.StringMatch(httpsOrS3URIRegexp(), "must be HTTPS or Amazon S3 URI"),
+		lazyvalidation.StringMatch(httpsOrS3URIPattern, "must be HTTPS or Amazon S3 URI"),
 		validation.StringLenBetween(0, 1024),
 	)
 
 	// validHTTPSOrS3URIFramework is the Plugin Framework equivalent of validHTTPSOrS3URI.
 	validHTTPSOrS3URIFramework = []validator.String{
-		stringvalidator.RegexMatches(httpsOrS3URIRegexp(), "must be HTTPS or Amazon S3 URI"),
+		stringvalidator.RegexMatches(regexache.MustCompile(httpsOrS3URIPattern), "must be HTTPS or Amazon S3 URI"),
 		stringvalidator.LengthAtMost(1024),
 	}
 )

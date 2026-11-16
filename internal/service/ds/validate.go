@@ -7,7 +7,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 var directoryIDValidator validator.String = stringvalidator.RegexMatches(
@@ -15,10 +15,7 @@ var directoryIDValidator validator.String = stringvalidator.RegexMatches(
 	"must be a valid Directory Service Directory ID",
 )
 
-var domainValidator = validation.StringMatch(
-	regexache.MustCompile(`^([0-9A-Za-z]+[\\.-])+([0-9A-Za-z])+$`),
-	"must be a fully qualified domain name and cannot end with a trailing period",
-)
+var domainValidator = lazyvalidation.StringMatch(`^([0-9A-Za-z]+[\\.-])+([0-9A-Za-z])+$`, "must be a fully qualified domain name and cannot end with a trailing period")
 
 var domainWithTrailingDotValidator validator.String = stringvalidator.RegexMatches(
 	regexache.MustCompile(`^([0-9A-Za-z]+[\\.-])+([0-9A-Za-z])+[.]?$`),

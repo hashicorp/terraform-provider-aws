@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -123,7 +123,7 @@ func ResourceCanary() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
+						lazyvalidation.StringMatch(`^[0-9a-z_\-]+$`, "must contain only lowercase alphanumeric, hyphen, or underscore."),
 					),
 				},
 				"run_config": {

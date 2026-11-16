@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -52,7 +52,7 @@ func ResourceRepository() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 205),
-						validation.StringMatch(regexache.MustCompile(`(?:[0-9a-z]+(?:[._-][0-9a-z]+)*/)*[0-9a-z]+(?:[._-][0-9a-z]+)*`), "see: https://docs.aws.amazon.com/AmazonECRPublic/latest/APIReference/API_CreateRepository.html#API_CreateRepository_RequestSyntax"),
+						lazyvalidation.StringMatch(`(?:[0-9a-z]+(?:[._-][0-9a-z]+)*/)*[0-9a-z]+(?:[._-][0-9a-z]+)*`, "see: https://docs.aws.amazon.com/AmazonECRPublic/latest/APIReference/API_CreateRepository.html#API_CreateRepository_RequestSyntax"),
 					),
 				},
 				"catalog_data": {
