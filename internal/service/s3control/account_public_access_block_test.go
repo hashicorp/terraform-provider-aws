@@ -33,6 +33,7 @@ func TestAccS3ControlAccountPublicAccessBlock_serial(t *testing.T) {
 			"BlockPublicPolicy":     testAccAccountPublicAccessBlock_BlockPublicPolicy,
 			"IgnorePublicAcls":      testAccAccountPublicAccessBlock_IgnorePublicACLs,
 			"RestrictPublicBuckets": testAccAccountPublicAccessBlock_RestrictPublicBuckets,
+			"SkipDestroy":           testAccAccountPublicAccessBlock_skipDestroy,
 			"DataSourceBasic":       testAccAccountPublicAccessBlockDataSource_basic,
 			"Identity":              testAccS3ControlAccountPublicAccessBlock_identitySerial,
 		},
@@ -296,6 +297,54 @@ func testAccAccountPublicAccessBlock_RestrictPublicBuckets(t *testing.T) {
 	})
 }
 
+// Unlike a bucket-level public access block, nothing cleans up an account-level
+// public access block left behind by skipped destruction, so the last step adds
+// the resource back with skip_destroy disabled and the normal test destroy
+// removes the configuration from the account.
+func testAccAccountPublicAccessBlock_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.PublicAccessBlockConfiguration
+	resourceName := "aws_s3_account_public_access_block.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPublicAccessBlockDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountPublicAccessBlockConfig_skipDestroy(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccAccountPublicAccessBlockConfig_skipDestroy(true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+				),
+			},
+			// Remove the public access block resource from configuration.
+			{
+				Config: testAccAccountPublicAccessBlockConfig_skipDestroyPostRemoval(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExistsByAccountID(ctx, t),
+				),
+			},
+			// Add the resource back so that the configuration is destroyed.
+			{
+				Config: testAccAccountPublicAccessBlockConfig_skipDestroy(false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPublicAccessBlockExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccountPublicAccessBlockExists(ctx context.Context, t *testing.T, n string, v *types.PublicAccessBlockConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -314,6 +363,19 @@ func testAccCheckAccountPublicAccessBlockExists(ctx context.Context, t *testing.
 		*v = *output
 
 		return nil
+	}
+}
+
+// testAccCheckAccountPublicAccessBlockExistsByAccountID verifies that a public
+// access block is in place for the provider's account after the resource has
+// been removed from state by a skip_destroy destruction.
+func testAccCheckAccountPublicAccessBlockExistsByAccountID(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).S3ControlClient(ctx)
+
+		_, err := tfs3control.FindPublicAccessBlockByAccountID(ctx, conn, acctest.AccountID(ctx))
+
+		return err
 	}
 }
 
@@ -387,4 +449,21 @@ resource "aws_s3_account_public_access_block" "test" {
   restrict_public_buckets = %[1]t
 }
 `, restrictPublicBuckets)
+}
+
+func testAccAccountPublicAccessBlockConfig_skipDestroy(skipDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_s3_account_public_access_block" "test" {
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+
+  skip_destroy = %[1]t
+}
+`, skipDestroy)
+}
+
+func testAccAccountPublicAccessBlockConfig_skipDestroyPostRemoval() string {
+	return `data "aws_caller_identity" "test" {}`
 }
