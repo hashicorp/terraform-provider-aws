@@ -12102,6 +12102,8 @@ resource "aws_db_instance" "test" {
 }
 
 func testAccInstanceConfig_ReplicateSourceDBClusterARN() string {
+	// The ARN only needs to fail validation, so it must be a known value at plan time.
+	//lintignore:AWSAT003,AWSAT005
 	return `
 resource "aws_db_instance" "test" {
   instance_class              = "db.m6gd.large"
