@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_flow_log: Add `core_network_id`, `core_network_edge_id`, and `core_network_attachment_id` arguments to support AWS Cloud WAN flow logs
+```
+
+```release-note:bug
+resource/aws_networkmanager_core_network: Fix `ValidationException: Core Network ... cannot be deleted due to existing resource associations of type ec2:vpc-flow-log` errors when deleting a core network shortly after its flow logs
+```
+
+```release-note:bug
+resource/aws_networkmanager_vpc_attachment: Fix `ValidationException: Core network attachment state is invalid` errors when deleting an attachment shortly after its flow logs
+```
