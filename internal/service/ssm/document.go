@@ -173,6 +173,7 @@ func resourceDocument() *schema.Resource {
 					Elem: &schema.Schema{
 						Type: schema.TypeString,
 					},
+					DiffSuppressFunc: suppressEquivalentDocumentPermissions,
 				},
 				"platform_types": {
 					Type:     schema.TypeList,
@@ -742,4 +743,19 @@ func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.Re
 	setTagsOut(ctx, output.Tags)
 
 	return diags
+}
+
+// suppressEquivalentDocumentPermissions suppresses differences in the order of
+// the comma-separated "account_ids" in permissions, as DescribeDocumentPermission
+// does not return the account IDs in the configured order.
+func suppressEquivalentDocumentPermissions(k, old, new string, _ *schema.ResourceData) bool {
+	if k != names.AttrPermissions+".account_ids" {
+		return false
+	}
+
+	oldAccountIDs, newAccountIDs := strings.Split(old, ","), strings.Split(new, ",")
+	slices.Sort(oldAccountIDs)
+	slices.Sort(newAccountIDs)
+
+	return slices.Equal(oldAccountIDs, newAccountIDs)
 }
