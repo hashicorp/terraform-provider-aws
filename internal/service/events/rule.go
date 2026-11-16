@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -335,10 +336,13 @@ func findRule(ctx context.Context, conn *eventbridge.Client, input *eventbridge.
 	return output, nil
 }
 
-var (
-	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
-)
+func eventBusARNPattern() *regexp.Regexp {
+	return regexache.MustCompile(`^arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
+}
+
+func partnerEventBusPattern() *regexp.Regexp {
+	return regexache.MustCompile(`^(?:arn:aws[\w-]*:events:` + inttypes.CanonicalRegionPatternNoAnchors + `:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
+}
 
 const ruleResourceIDSeparator = "/"
 
@@ -366,10 +370,10 @@ func ruleParseResourceID(id string) (string, string, error) {
 		i := strings.LastIndex(id, ruleResourceIDSeparator)
 		eventBusName := id[:i]
 		ruleName := id[i+1:]
-		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" {
+		if eventBusARNPattern().MatchString(eventBusName) && ruleName != "" {
 			return eventBusName, ruleName, nil
 		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" {
+		if partnerEventBusPattern().MatchString(eventBusName) && ruleName != "" {
 			return eventBusName, ruleName, nil
 		}
 	}

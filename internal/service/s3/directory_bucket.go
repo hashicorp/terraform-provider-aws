@@ -8,6 +8,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -35,11 +36,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	// e.g. example--usw2-az2--x-s3
-	directoryBucketNameRegex              = regexache.MustCompile(`^(?:[0-9a-z.-]+)` + directoryBucketNameSuffixRegexPattern + `$`)
+const (
 	directoryBucketNameSuffixRegexPattern = `--(?:[0-9a-z]+(?:-[0-9a-z]+)+)--x-s3`
 )
+
+// e.g. example--usw2-az2--x-s3
+func directoryBucketNameRegex() *regexp.Regexp {
+	return regexache.MustCompile(`^(?:[0-9a-z.-]+)` + directoryBucketNameSuffixRegexPattern + `$`)
+}
 
 func isDirectoryBucket(bucket string) bool {
 	return bucketNameTypeFor(bucket) == bucketNameTypeDirectoryBucket
@@ -75,7 +79,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(directoryBucketNameRegex, `must be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_bucket resource to manage general purpose buckets`),
+					stringvalidator.RegexMatches(directoryBucketNameRegex(), `must be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_bucket resource to manage general purpose buckets`),
 				},
 			},
 			"data_redundancy": schema.StringAttribute{

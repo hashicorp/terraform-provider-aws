@@ -33,11 +33,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names.
-	rfc1123LabelNameRelaxed = regexache.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
-)
-
 // @SDKResource("aws_eks_addon", name="Add-On")
 // @IdentityAttribute("cluster_name")
 // @IdentityAttribute("addon_name")
@@ -109,11 +104,12 @@ func resourceAddon() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrNamespace: {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ForceNew:     true,
-								ValidateFunc: validation.StringMatch(rfc1123LabelNameRelaxed, "must be a valid RFC 1123 DNS label"),
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names.
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`), "must be a valid RFC 1123 DNS label"),
 							},
 						},
 					},

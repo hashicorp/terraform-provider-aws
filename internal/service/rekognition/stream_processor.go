@@ -69,11 +69,6 @@ func labelsEnumValues() []string {
 	}
 }
 
-var (
-	nameRegex         = regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
-	collectionIdRegex = regexache.MustCompile(`[a-zA-Z0-9_.\-]+`)
-)
-
 // @FrameworkResource("aws_rekognition_stream_processor", name="Stream Processor")
 // @Tags(identifierAttribute="arn")
 // @IdentityAttribute("name")
@@ -120,7 +115,7 @@ func (r *streamProcessorResource) Schema(ctx context.Context, req resource.Schem
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(128),
-					stringvalidator.RegexMatches(nameRegex, ""),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9_.\-]+`), ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -414,7 +409,7 @@ func (r *streamProcessorResource) Schema(ctx context.Context, req resource.Schem
 										Description: "The ID of a collection that contains faces that you want to search for.",
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(2048),
-											stringvalidator.RegexMatches(collectionIdRegex, ""),
+											stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9_.\-]+`), ""),
 										},
 										Required: true,
 										PlanModifiers: []planmodifier.String{
