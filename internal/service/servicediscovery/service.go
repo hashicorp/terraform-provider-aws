@@ -128,6 +128,7 @@ func resourceService() *schema.Resource {
 							"failure_threshold": {
 								Type:     schema.TypeInt,
 								Optional: true,
+								Computed: true,
 								ForceNew: true,
 								Deprecated: "failure_threshold is deprecated. The argument is no longer supported by AWS and the " +
 									"value is always set to 1. The attribute will be removed in a future major version.",
@@ -183,8 +184,12 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.HealthCheckConfig = expandHealthCheckConfig(v.([]any)[0].(map[string]any))
 	}
 
-	if v, ok := d.GetOk("health_check_custom_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		input.HealthCheckCustomConfig = expandHealthCheckCustomConfig(v.([]any)[0].(map[string]any))
+	if v, ok := d.GetOk("health_check_custom_config"); ok && len(v.([]any)) > 0 {
+		var tfMap map[string]any
+		if v.([]any)[0] != nil {
+			tfMap = v.([]any)[0].(map[string]any)
+		}
+		input.HealthCheckCustomConfig = expandHealthCheckCustomConfig(tfMap)
 	}
 
 	if v, ok := d.GetOk("namespace_id"); ok {
@@ -587,10 +592,6 @@ func flattenHealthCheckConfig(apiObject *awstypes.HealthCheckConfig) map[string]
 }
 
 func expandHealthCheckCustomConfig(tfMap map[string]any) *awstypes.HealthCheckCustomConfig {
-	if len(tfMap) < 1 {
-		return nil
-	}
-
 	apiObject := &awstypes.HealthCheckCustomConfig{}
 
 	if v, ok := tfMap["failure_threshold"].(int); ok && v != 0 {

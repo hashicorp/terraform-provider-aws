@@ -34,7 +34,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_private(rName, 1),
+				Config: testAccServiceConfig_private(rName, "failure_threshold = 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
@@ -59,7 +59,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
 			{
-				Config: testAccServiceConfig_privateUpdate(rName, 1),
+				Config: testAccServiceConfig_privateUpdate(rName, "failure_threshold = 1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicediscovery", regexache.MustCompile(`service/.+`)),
@@ -77,6 +77,55 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "DNS_HTTP"),
 				),
+			},
+			{
+				Config: testAccServiceConfig_privateUpdate(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccServiceDiscoveryService_privateCustomHealthConfigEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_service_discovery_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceDiscoveryEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_private(rName, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_custom_config.0.failure_threshold", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+			{
+				Config: testAccServiceConfig_private(rName, "failure_threshold = null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -341,7 +390,7 @@ func testAccCheckServiceExists(ctx context.Context, t *testing.T, n string) reso
 	}
 }
 
-func testAccServiceConfig_private(rName string, th int) string {
+func testAccServiceConfig_private(rName, customHealthConfig string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -369,13 +418,13 @@ resource "aws_service_discovery_service" "test" {
   }
 
   health_check_custom_config {
-    failure_threshold = %[2]d
+    %[2]s
   }
 }
-`, rName, th)
+`, rName, customHealthConfig)
 }
 
-func testAccServiceConfig_privateUpdate(rName string, th int) string {
+func testAccServiceConfig_privateUpdate(rName, customHealthConfig string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -412,10 +461,10 @@ resource "aws_service_discovery_service" "test" {
   }
 
   health_check_custom_config {
-    failure_threshold = %[2]d
+    %[2]s
   }
 }
-`, rName, th)
+`, rName, customHealthConfig)
 }
 
 func testAccServiceConfig_private_http(rName string) string {
