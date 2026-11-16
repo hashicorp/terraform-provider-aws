@@ -700,7 +700,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, state := configuredString(d.GetRawConfig(), "object_lock_retain_until_date"); state == attrSet {
 		input.ObjectLockRetainUntilDate = expandObjectDate(v)
-	} else if input.ObjectLockEventHold == "" {
+	} else if input.ObjectLockEventHold != types.ObjectLockEventHoldOn {
 		// Outside an event hold the stored date is stable, so resending it is
 		// preserved. Under a hold it is a moving value and would be stale here.
 		if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
