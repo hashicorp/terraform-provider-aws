@@ -95,9 +95,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			acctest.CtBasic:      testAccPublishingDestination_basic,
-			acctest.CtDisappears: testAccPublishingDestination_disappears,
-			"tags":               testAccPublishingDestination_tags,
+			acctest.CtBasic:       testAccPublishingDestination_basic,
+			acctest.CtDisappears:  testAccPublishingDestination_disappears,
+			"expectedBucketOwner": testAccPublishingDestination_expectedBucketOwner,
+			"tags":                testAccPublishingDestination_tags,
 		},
 	}
 

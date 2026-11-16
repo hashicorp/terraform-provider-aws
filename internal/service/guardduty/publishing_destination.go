@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -68,6 +69,11 @@ func resourcePublishingDestination() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
 				names.AttrKMSKeyARN: {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -77,6 +83,12 @@ func resourcePublishingDestination() *schema.Resource {
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
+
+		// UpdatePublishingDestination leaves the stored expected bucket owner unchanged
+		// when the field is omitted, so the value can only be removed by replacement.
+		CustomizeDiff: customdiff.ForceNewIfChange(names.AttrExpectedBucketOwner, func(_ context.Context, old, new, meta any) bool {
+			return old.(string) != "" && new.(string) == ""
+		}),
 	}
 }
 
@@ -93,6 +105,10 @@ func resourcePublishingDestinationCreate(ctx context.Context, d *schema.Resource
 		},
 		DestinationType: awstypes.DestinationType(d.Get("destination_type").(string)),
 		Tags:            getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
+		input.DestinationProperties.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
 	output, err := conn.CreatePublishingDestination(ctx, &input)
@@ -135,6 +151,7 @@ func resourcePublishingDestinationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("destination_id", destinationID)
 	d.Set("destination_type", gdo.DestinationType)
 	d.Set("detector_id", detectorID)
+	d.Set(names.AttrExpectedBucketOwner, gdo.DestinationProperties.ExpectedBucketOwner)
 	d.Set(names.AttrKMSKeyARN, gdo.DestinationProperties.KmsKeyArn)
 
 	setTagsOut(ctx, gdo.Tags)
@@ -159,6 +176,10 @@ func resourcePublishingDestinationUpdate(ctx context.Context, d *schema.Resource
 				DestinationArn: aws.String(d.Get(names.AttrDestinationARN).(string)),
 				KmsKeyArn:      aws.String(d.Get(names.AttrKMSKeyARN).(string)),
 			},
+		}
+
+		if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
+			input.DestinationProperties.ExpectedBucketOwner = aws.String(v.(string))
 		}
 
 		_, err = conn.UpdatePublishingDestination(ctx, &input)

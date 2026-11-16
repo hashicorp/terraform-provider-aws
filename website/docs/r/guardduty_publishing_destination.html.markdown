@@ -131,6 +131,7 @@ This resource supports the following arguments:
 * `destination_arn` - (Required) Bucket ARN and prefix under which the findings get exported. Bucket-ARN is required, the prefix is optional and will be `AWSLogs/[Account-ID]/GuardDuty/[Region]/` if not provided
 * `destination_type` - (Optional) Currently there is only "S3" available as destination type which is also the default value
 * `detector_id` - (Required) Detector ID of the GuardDuty.
+* `expected_bucket_owner` - (Optional) Account ID of the expected owner of the S3 bucket in `destination_arn`. When set, GuardDuty verifies that this account owns the bucket before exporting findings. Removing this argument forces a new resource, because the GuardDuty API keeps the stored value when it is omitted from an update.
 * `kms_key_arn` - (Required) ARN of the KMS key used to encrypt GuardDuty findings. GuardDuty enforces this to be encrypted.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

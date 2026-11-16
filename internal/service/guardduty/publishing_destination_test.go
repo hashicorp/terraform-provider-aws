@@ -138,6 +138,60 @@ func testAccPublishingDestination_tags(t *testing.T) {
 	})
 }
 
+func testAccPublishingDestination_expectedBucketOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_publishing_destination.test"
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPublishingDestinationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPublishingDestinationConfig_basic(bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublishingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+				),
+			},
+			{
+				Config: testAccPublishingDestinationConfig_expectedBucketOwner(bucketName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublishingDestinationExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrExpectedBucketOwner),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPublishingDestinationConfig_basic(bucketName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPublishingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrExpectedBucketOwner, ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPublishingDestinationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -286,6 +340,23 @@ resource "aws_guardduty_publishing_destination" "test" {
   detector_id     = aws_guardduty_detector.test_gd.id
   destination_arn = aws_s3_bucket.gd_bucket.arn
   kms_key_arn     = aws_kms_key.gd_key.arn
+
+  depends_on = [
+    aws_s3_bucket_policy.gd_bucket_policy,
+  ]
+}
+`)
+}
+
+func testAccPublishingDestinationConfig_expectedBucketOwner(bucketName string) string {
+	return acctest.ConfigCompose(
+		testAccPublishingDestinationConfig_base(bucketName),
+		`
+resource "aws_guardduty_publishing_destination" "test" {
+  detector_id           = aws_guardduty_detector.test_gd.id
+  destination_arn       = aws_s3_bucket.gd_bucket.arn
+  expected_bucket_owner = data.aws_caller_identity.current.account_id
+  kms_key_arn           = aws_kms_key.gd_key.arn
 
   depends_on = [
     aws_s3_bucket_policy.gd_bucket_policy,
