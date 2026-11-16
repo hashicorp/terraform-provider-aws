@@ -407,9 +407,20 @@ func resourceVPCAttachmentDelete(ctx context.Context, d *schema.ResourceData, me
 	input := networkmanager.DeleteAttachmentInput{
 		AttachmentId: aws.String(d.Id()),
 	}
-	_, err = tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, timeout, func(ctx context.Context) (any, error) {
+	_, err = tfresource.RetryWhen(ctx, timeout, func(ctx context.Context) (any, error) {
 		return conn.DeleteAttachment(ctx, &input)
-	}, "cannot be deleted due to existing Connect attachment")
+	}, func(err error) (bool, error) {
+		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "cannot be deleted due to existing Connect attachment") {
+			return true, err
+		}
+
+		// The attachment is briefly UPDATING after an EC2 flow log on it is deleted.
+		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Core network attachment state is invalid") {
+			return true, err
+		}
+
+		return false, err
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags

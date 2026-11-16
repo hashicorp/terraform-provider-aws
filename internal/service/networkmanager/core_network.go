@@ -319,7 +319,10 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := networkmanager.DeleteCoreNetworkInput{
 		CoreNetworkId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteCoreNetwork(ctx, &input)
+	// A just-deleted EC2 flow log on the core network, an edge or an attachment is released asynchronously.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.DeleteCoreNetwork(ctx, &input)
+	}, "existing resource associations of type ec2:vpc-flow-log")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
