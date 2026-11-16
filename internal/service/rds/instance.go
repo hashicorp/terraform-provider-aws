@@ -575,8 +575,8 @@ func resourceInstance() *schema.Resource {
 				"replicate_source_db_cluster": {
 					Type:          schema.TypeString,
 					Optional:      true,
-					ValidateFunc:  validIdentifier,
-					ConflictsWith: []string{"replicate_source_db"},
+					ValidateFunc:  validation.Any(validation.StringIsEmpty, validIdentifier),
+					ConflictsWith: []string{"replicate_source_db", "snapshot_identifier"},
 				},
 				names.AttrResourceID: {
 					Type:     schema.TypeString,
@@ -2152,7 +2152,11 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 		}
 	}
 	d.Set("replicate_source_db", sourceDBIdentifier)
-	d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	// Only refresh a cluster source that is already in state (set on create or import). Populating it
+	// for replicas imported before this argument existed would plan its removal, which promotes the replica.
+	if d.Get("replicate_source_db_cluster").(string) != "" {
+		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	}
 
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
@@ -2565,6 +2569,12 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta an
 	// that final_snapshot_identifier is not required.
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
+
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+	if v, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil {
+		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	}
+
 	return []*schema.ResourceData{d}, nil
 }
 

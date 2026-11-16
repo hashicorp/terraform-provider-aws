@@ -3304,7 +3304,7 @@ func TestAccRDSInstance_ReplicateSourceDBCluster_promote(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDBCluster_promote(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_promote(rName, `""`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, t, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "replicate_source_db_cluster", ""),
@@ -3313,6 +3313,14 @@ func TestAccRDSInstance_ReplicateSourceDBCluster_promote(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDBCluster_promote(rName, "null"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 			},
@@ -3380,6 +3388,10 @@ func TestAccRDSInstance_ReplicateSourceDBCluster_invalid(t *testing.T) {
 			{
 				Config:      testAccInstanceConfig_ReplicateSourceDBCluster_invalid("blue_green_update {\n    enabled = true\n  }"),
 				ExpectError: regexache.MustCompile(`"blue_green_update.enabled" cannot be set when "replicate_source_db_cluster" is set`),
+			},
+			{
+				Config:      testAccInstanceConfig_ReplicateSourceDBCluster_invalid(`snapshot_identifier = "tf-acc-test-snapshot"`),
+				ExpectError: regexache.MustCompile(`"replicate_source_db_cluster": conflicts with snapshot_identifier`),
 			},
 		},
 	})
@@ -12057,18 +12069,19 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_ReplicateSourceDBCluster_promote(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDBCluster_promote(rName, source string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_ReplicateSourceDBCluster_base(rName),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  backup_retention_period = 1
-  identifier              = %[1]q
-  instance_class          = aws_rds_cluster.test.db_cluster_instance_class
-  skip_final_snapshot     = true
-  storage_encrypted       = true
+  backup_retention_period     = 1
+  identifier                  = %[1]q
+  instance_class              = aws_rds_cluster.test.db_cluster_instance_class
+  replicate_source_db_cluster = %[2]s
+  skip_final_snapshot         = true
+  storage_encrypted           = true
 }
-`, rName))
+`, rName, source))
 }
 
 func testAccInstanceConfig_ReplicateSourceDBCluster_modifyAfterCreate(rName string) string {
