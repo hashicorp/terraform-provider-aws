@@ -643,7 +643,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	createTimeout := d.Timeout(schema.TimeoutCreate)
-	propagationTimeout := lambdaPropagationTimeout
+	propagationTimeout := eventSourceMappingTimeout
 	if d.Get("use_resource_timeout_for_propagation").(bool) {
 		propagationTimeout = createTimeout
 	}
@@ -919,7 +919,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		updateTimeout := d.Timeout(schema.TimeoutUpdate)
-		propagationTimeout := lambdaPropagationTimeout
+		propagationTimeout := eventSourceMappingTimeout
 		if d.Get("use_resource_timeout_for_propagation").(bool) {
 			propagationTimeout = updateTimeout
 		}
@@ -946,7 +946,7 @@ func resourceEventSourceMappingDelete(ctx context.Context, d *schema.ResourceDat
 	log.Printf("[INFO] Deleting Lambda Event Source Mapping: %s", d.Id())
 
 	deleteTimeout := d.Timeout(schema.TimeoutDelete)
-	propagationTimeout := lambdaPropagationTimeout
+	propagationTimeout := eventSourceMappingTimeout
 	if d.Get("use_resource_timeout_for_propagation").(bool) {
 		propagationTimeout = deleteTimeout
 	}

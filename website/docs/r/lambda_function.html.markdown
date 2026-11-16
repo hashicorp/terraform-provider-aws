@@ -710,6 +710,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `accelerator_config` - (Optional) Configuration block for accelerator (GPU) resource requirements. Requires a `capacity_provider_config` that points to an accelerator (GPU) Capacity Provider. Adding or removing `accelerator_config` forces a new function; modifying `accelerator_memory_size` on an existing function is updated in place. [See below](#accelerator_config-block).
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
 * `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-block).
 * `code_sha256` - (Optional) Base64-encoded representation the source code package file. Use this argument to trigger updates when the function source code changes. For OCI, this value is relayed directly from the image digest. For zip files, this value is the Base64 encoded SHA-256 hash of the `.zip` file. Layers are not included in the calculation. To trigger updates using a non-standard hashing algorithm, use the `source_code_hash` argument instead.
@@ -749,6 +750,10 @@ The following arguments are optional:
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-block).
 * `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-block).
+
+### `accelerator_config` Block
+
+* `accelerator_memory_size` - (Required) Minimum accelerator (GPU) memory per execution environment, in GiB. The system provisions instances with at least this amount of accelerator memory. Valid values are `3`, `6`, `12`, `16`, `24`, and `48`.
 
 ### `capacity_provider_config` Block
 
