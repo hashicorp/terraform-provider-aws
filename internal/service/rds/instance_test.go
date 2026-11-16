@@ -12091,14 +12091,14 @@ resource "aws_db_instance" "test" {
 func testAccInstanceConfig_ReplicateSourceDBCluster_invalid(extra string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  engine                      = %[1]q
+  engine                      = "mysql"
   instance_class              = "db.m6gd.large"
   replicate_source_db_cluster = "tf-acc-test-source"
   skip_final_snapshot         = true
 
-  %[2]s
+  %[1]s
 }
-`, tfrds.ClusterEngineMySQL, extra)
+`, extra)
 }
 
 func testAccInstanceConfig_ReplicateSourceDBClusterARN() string {
