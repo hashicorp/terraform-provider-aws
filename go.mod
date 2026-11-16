@@ -343,7 +343,7 @@ require (
 	golang.org/x/crypto v0.58.0
 	golang.org/x/text v0.43.0
 	golang.org/x/tools v0.52.0
-	gopkg.in/dnaeon/go-vcr.v4 v4.0.7
+	gopkg.in/dnaeon/go-vcr.v4 v4.0.8
 )
 
 require (
@@ -405,7 +405,7 @@ require (
 	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/trace v1.47.0 // indirect
-	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
+	go.yaml.in/yaml/v4 v4.0.0 // indirect
 	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/net v0.62.0 // indirect
