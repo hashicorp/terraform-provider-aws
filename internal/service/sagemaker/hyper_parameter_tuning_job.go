@@ -770,11 +770,8 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							},
 						},
 						"s3_uri": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthAtMost(1024),
-								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-							},
+							Required:   true,
+							Validators: validHTTPSOrS3URIFramework,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
@@ -1047,11 +1044,8 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 													},
 												},
 												"s3_uri": schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.LengthAtMost(1024),
-														stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-													},
+													Required:   true,
+													Validators: validHTTPSOrS3URIFramework,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
@@ -1152,11 +1146,8 @@ func hyperParameterTrainingJobDefinitionBlock(ctx context.Context, plural bool) 
 							},
 						},
 						"s3_output_path": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(0, 1024),
-								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-							},
+							Required:   true,
+							Validators: validHTTPSOrS3URIFramework,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},

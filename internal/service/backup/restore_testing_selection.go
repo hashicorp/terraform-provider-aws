@@ -110,7 +110,7 @@ func (r *restoreTestingSelectionResource) Schema(ctx context.Context, request re
 				Optional: true,
 				Computed: true,
 				Validators: []validator.Int64{
-					int64validator.Between(1, 168),
+					int64validator.Between(0, 168),
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),

@@ -51,11 +51,6 @@ const (
 	ResNameAssociation = "Association"
 )
 
-var (
-	// Converted from (?!^[0-9]+$)([a-zA-Z0-9\-_' ']+) because of the negative lookahead.
-	resourceAssociationNameRegex = regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)")
-)
-
 type associationResource struct {
 	framework.ResourceWithModel[associationResourceModel]
 	framework.WithTimeouts
@@ -70,7 +65,8 @@ func (r *associationResource) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(resourceAssociationNameRegex, ""),
+					// Converted from (?!^[0-9]+$)([a-zA-Z0-9\-_' ']+) because of the negative lookahead.
+					stringvalidator.RegexMatches(regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)"), ""),
 					stringvalidator.LengthBetween(0, 64),
 				},
 				PlanModifiers: []planmodifier.String{

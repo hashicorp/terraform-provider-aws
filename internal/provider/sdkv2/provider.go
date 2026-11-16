@@ -683,24 +683,26 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						interceptor: resourceValidateRegion(),
 					})
 				}
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: defaultRegion(),
-				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        After,
-					why:         Read,
-					interceptor: setRegionInState(),
-				})
-				// We can't just set the injected "region" attribute to ForceNew because if
-				// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
-				// the region attribute is not set in state and its value shows a change.
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: forceNewIfRegionChanges(),
-				})
+				interceptors = append(interceptors,
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: defaultRegion(),
+					},
+					interceptorInvocation{
+						when:        After,
+						why:         Read,
+						interceptor: setRegionInState(),
+					},
+					// We can't just set the injected "region" attribute to ForceNew because if
+					// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
+					// the region attribute is not set in state and its value shows a change.
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: forceNewIfRegionChanges(),
+					},
+				)
 				if resource.Identity.HasInherentRegion() {
 					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
@@ -709,21 +711,23 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			}
 
 			if resource.Tags.Enabled() {
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before | After | Finally,
-					why:         Create | Read | Update,
-					interceptor: resourceTransparentTagging(resource.Tags),
-				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: setTagsAll(),
-				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: validateRequiredTags(),
-				})
+				interceptors = append(interceptors,
+					interceptorInvocation{
+						when:        Before | After | Finally,
+						why:         Create | Read | Update,
+						interceptor: resourceTransparentTagging(resource.Tags),
+					},
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: setTagsAll(),
+					},
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: validateRequiredTags(),
+					},
+				)
 			}
 
 			if len(resource.Identity.Attributes) > 0 {

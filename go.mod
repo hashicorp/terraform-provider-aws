@@ -9,7 +9,7 @@ godebug tlsmlkem=0
 require (
 	github.com/ProtonMail/go-crypto v1.5.2
 	github.com/YakDriver/go-version v0.2.0
-	github.com/YakDriver/regexache v0.25.0
+	github.com/YakDriver/regexache v0.26.0
 	github.com/YakDriver/smarterr v0.10.0
 	github.com/aws/aws-sdk-go-v2 v1.47.4
 	github.com/aws/aws-sdk-go-v2/config v1.33.10

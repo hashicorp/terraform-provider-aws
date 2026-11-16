@@ -12,8 +12,8 @@ github.com/ProtonMail/go-crypto v1.5.2 h1:cucYnvqcY7UOXVD//mSyjeaPY0SSN3v5cDkYPx
 github.com/ProtonMail/go-crypto v1.5.2/go.mod h1:/RaSu30DaKO4RY+XdV/ACcCcZkGr7AhUIduq5sjzzCo=
 github.com/YakDriver/go-version v0.2.0 h1:0jlIXRn7IFMUg8mGiyPKfEzYzCOiknlCrVNjikoK98E=
 github.com/YakDriver/go-version v0.2.0/go.mod h1:+Zt/moP5cBKVefqwqk6XtB6pf6LvWuMZufsLN20JB4Y=
-github.com/YakDriver/regexache v0.25.0 h1:uggvmj09EhXQgaXYmdGsKuDARbmdOIqICiO+PIwhlTA=
-github.com/YakDriver/regexache v0.25.0/go.mod h1:4xOFrfggN3UAGlhcvNpM/kuedpJL+48DrUs0CcCxPv8=
+github.com/YakDriver/regexache v0.26.0 h1:Tiz/H1EzGvidhWnqt49yi1tkrn1ON8MIMy8aSu7FzHM=
+github.com/YakDriver/regexache v0.26.0/go.mod h1:ylQEU071rWsUt4C1U3vcet4Jwign8cMUAihGxzxxw2w=
 github.com/YakDriver/smarterr v0.10.0 h1:iMWnZPWv/42act2lKDpNXl51mxj+wlfAVEMQ/19traQ=
 github.com/YakDriver/smarterr v0.10.0/go.mod h1:+FGdMIFM77gDDVuSPu+9mrBpP7nuKNbDUGxKehrbAio=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=

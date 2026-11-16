@@ -71,10 +71,6 @@ const (
 	ResNameTrainingJob = "Training Job"
 )
 
-var (
-	serverlessBaseModelARNVersionRegex = regexache.MustCompile(`/\d{1,4}\.\d{1,4}\.\d{1,4}$`)
-)
-
 type resourceTrainingJob struct {
 	framework.ResourceWithModel[resourceTrainingJobModel]
 	framework.WithImportByIdentity
@@ -1912,7 +1908,7 @@ func serverlessBaseModelARNsEqual(oldValue, newValue types.String) bool {
 }
 
 func normalizeServerlessBaseModelARN(v string) string {
-	return serverlessBaseModelARNVersionRegex.ReplaceAllString(v, "")
+	return regexache.MustCompile(`/\d{1,4}\.\d{1,4}\.\d{1,4}$`).ReplaceAllString(v, "")
 }
 
 func findTrainingJobByName(ctx context.Context, conn *sagemaker.Client, id string) (*sagemaker.DescribeTrainingJobOutput, error) {

@@ -1620,11 +1620,13 @@ func testAccSecurityGroupRuleImportStateIdFunc(resourceName string) resource.Imp
 		}
 
 		var parts []string
-		parts = append(parts, sgID)
-		parts = append(parts, ruleType)
-		parts = append(parts, protocol)
-		parts = append(parts, fromPort)
-		parts = append(parts, toPort)
+		parts = append(parts,
+			sgID,
+			ruleType,
+			protocol,
+			fromPort,
+			toPort,
+		)
 		parts = append(parts, *cidrs...)
 		parts = append(parts, *ipv6CIDRs...)
 		parts = append(parts, *prefixes...)

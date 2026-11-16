@@ -72,10 +72,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"label_category_config_s3_uri": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-				},
+				Optional:   true,
+				Validators: validHTTPSOrS3URIFramework,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -283,10 +281,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 										},
 									},
 									"ui_template_s3_uri": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-										},
+										Optional:   true,
+										Validators: validHTTPSOrS3URIFramework,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -352,10 +348,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"manifest_s3_uri": schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-													},
+													Required:   true,
+													Validators: validHTTPSOrS3URIFramework,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
@@ -488,10 +482,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 							},
 						},
 						"s3_output_path": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-							},
+							Required:   true,
+							Validators: validHTTPSOrS3URIFramework,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},

@@ -1,4 +1,28 @@
-## 6.73.0 (Unreleased)
+## 6.74.0 (Unreleased)
+
+FEATURES:
+
+* **New List Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+* **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
+* **New List Resource:** `aws_ssoadmin_managed_policy_attachment` ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
+* **New Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+* **New Resource:** `aws_pinpointsmsvoicev2_account_default_protect_configuration` ([#50934](https://github.com/hashicorp/terraform-provider-aws/issues/50934))
+* **New Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
+
+ENHANCEMENTS:
+
+* resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
+* resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
+* resource/aws_ssoadmin_managed_policy_attachment: Add resource identity support ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
+
+BUG FIXES:
+
+* resource/aws_kms_grant: Accepts `<service>.amazonaws.com.cn` as service principal. ([#50946](https://github.com/hashicorp/terraform-provider-aws/issues/50946))
+* resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_sagemaker_endpoint: Prevent orphaned endpoints when the create waiter returns an error ([#50959](https://github.com/hashicorp/terraform-provider-aws/issues/50959))
+
+## 6.73.0 (November 11, 2026)
 
 BREAKING CHANGES:
 
@@ -12,21 +36,28 @@ NOTES:
 
 FEATURES:
 
+* **New List Resource:** `aws_bedrock_guardrail_resource_policy` ([#48697](https://github.com/hashicorp/terraform-provider-aws/issues/48697))
 * **New List Resource:** `aws_dsql_stream` ([#50813](https://github.com/hashicorp/terraform-provider-aws/issues/50813))
 * **New List Resource:** `aws_networksecuritymanager_admin_account` ([#50164](https://github.com/hashicorp/terraform-provider-aws/issues/50164))
 * **New List Resource:** `aws_networksecuritymanager_deployment` ([#50815](https://github.com/hashicorp/terraform-provider-aws/issues/50815))
 * **New List Resource:** `aws_networksecuritymanager_policy` ([#50789](https://github.com/hashicorp/terraform-provider-aws/issues/50789))
 * **New List Resource:** `aws_networksecuritymanager_template` ([#50799](https://github.com/hashicorp/terraform-provider-aws/issues/50799))
+* **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration` ([#50908](https://github.com/hashicorp/terraform-provider-aws/issues/50908))
+* **New Resource:** `aws_bedrock_guardrail_resource_policy` ([#48697](https://github.com/hashicorp/terraform-provider-aws/issues/48697))
 * **New Resource:** `aws_config_connector` ([#49559](https://github.com/hashicorp/terraform-provider-aws/issues/49559))
 * **New Resource:** `aws_dsql_stream` ([#50813](https://github.com/hashicorp/terraform-provider-aws/issues/50813))
 * **New Resource:** `aws_networksecuritymanager_admin_account` ([#50164](https://github.com/hashicorp/terraform-provider-aws/issues/50164))
 * **New Resource:** `aws_networksecuritymanager_deployment` ([#50815](https://github.com/hashicorp/terraform-provider-aws/issues/50815))
 * **New Resource:** `aws_networksecuritymanager_policy` ([#50789](https://github.com/hashicorp/terraform-provider-aws/issues/50789))
 * **New Resource:** `aws_networksecuritymanager_template` ([#50799](https://github.com/hashicorp/terraform-provider-aws/issues/50799))
+* **New Resource:** `aws_pinpointsmsvoicev2_protect_configuration` ([#50908](https://github.com/hashicorp/terraform-provider-aws/issues/50908))
 
 ENHANCEMENTS:
 
+* data-source/aws_elasticache_serverless_cache: Add `connection_type` attribute ([#50454](https://github.com/hashicorp/terraform-provider-aws/issues/50454))
+* resource/aws_backup_restore_testing_selection: Allow `validation_window_hours` to be `0` ([#50272](https://github.com/hashicorp/terraform-provider-aws/issues/50272))
 * resource/aws_efs_file_system: Support new default of `encrypted = true` for new file systems. `kms_key_id` no longer requires `encrypted` to be set explicitly to `true`, and setting `encrypted = false` no longer forces resource replacement ([#49999](https://github.com/hashicorp/terraform-provider-aws/issues/49999))
+* resource/aws_elasticache_serverless_cache: Add `connection_type` argument to support public endpoints ([#50454](https://github.com/hashicorp/terraform-provider-aws/issues/50454))
 * resource/aws_securityhub_connector_v2: Add `azure` configuration block to `connector_provider` for Microsoft Azure multi-cloud coverage ([#49560](https://github.com/hashicorp/terraform-provider-aws/issues/49560))
 * resource/aws_synthetics_canary: Add additional validation to `memory_in_mb` ([#49826](https://github.com/hashicorp/terraform-provider-aws/issues/49826))
 * resource/aws_vpn_connection: Support in-place updates for `tunnel_bandwidth` argument ([#47843](https://github.com/hashicorp/terraform-provider-aws/issues/47843))
@@ -35,6 +66,8 @@ BUG FIXES:
 
 * data-source/aws_ce_tags: Remove incomplete `sort_by.key` validation ([#50814](https://github.com/hashicorp/terraform-provider-aws/issues/50814))
 * list-resource/aws_ssm_document: Fix `InvalidDocumentOperation` exceptions during Read when sharing is managed through AWS RAM ([#50416](https://github.com/hashicorp/terraform-provider-aws/issues/50416))
+* provider: Fix `net/http: TLS handshake timeout` errors when making AWS API calls from networks where TLS traffic is inspected by middleboxes such as AWS Network Firewall, corporate proxies and firewalls. **v6.71.0** and **v6.72.0** were built with Go `1.27.3`, which advertises the post-quantum ML-DSA signature algorithms in the TLS 1.3 `ClientHello` `signature_algorithms_cert` extension, and such middleboxes are known to drop those `ClientHello` messages silently. The provider is now built with Go `1.27.4`, which omits ML-DSA from `signature_algorithms_cert`, and a regression test guards the `ClientHello` against future toolchain changes ([#50816](https://github.com/hashicorp/terraform-provider-aws/issues/50816))
+* resource/aws_elasticache_user_group: Fix `user_ids` additions being silently dropped when the same update also removes an already-detached user ([#49948](https://github.com/hashicorp/terraform-provider-aws/issues/49948))
 * resource/aws_networksecuritymanager_rule: Fix the first apply of more than one rule in an account that has never used AWS Network Security Manager failing with `ConflictException: Account or org is already onboarded` ([#50807](https://github.com/hashicorp/terraform-provider-aws/issues/50807))
 * resource/aws_organizations_policy: Fix infinite drift in `content` when AWS returns policy statement elements in a different order ([#47190](https://github.com/hashicorp/terraform-provider-aws/issues/47190))
 * resource/aws_ssm_document: Fix `InvalidDocumentOperation` exceptions during Read when sharing is managed through AWS RAM ([#50416](https://github.com/hashicorp/terraform-provider-aws/issues/50416))
