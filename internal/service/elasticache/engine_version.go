@@ -62,6 +62,13 @@ const (
 )
 
 var (
+	engineDefaultVersions = map[string]string{
+		"valkey": "7.2",
+		"redis":  "7.1",
+	}
+)
+
+var (
 	valkeyVersionRegexp = regexache.MustCompile(valkeyVersionRegexpPattern)
 )
 

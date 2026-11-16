@@ -2048,6 +2048,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type            = "cache.t3.medium"
   num_cache_clusters   = 1
   port                 = 6379
+  engine               = "redis"
 
   lifecycle {
     ignore_changes = [num_cache_clusters]
@@ -2070,6 +2071,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type                  = "cache.t3.medium"
   num_cache_clusters         = 1
   port                       = 6379
+  engine                     = "redis"
   transit_encryption_enabled = %[2]t
 
   lifecycle {
@@ -2093,6 +2095,7 @@ resource "aws_elasticache_replication_group" "test" {
   node_type            = "cache.t3.medium"
   num_cache_clusters   = 1
   port                 = 6379
+  engine               = "redis"
 
   lifecycle {
     ignore_changes = [num_cache_clusters]
