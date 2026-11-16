@@ -54,7 +54,7 @@ func TestSuppressEquivalentDocumentPermissions(t *testing.T) {
 		{
 			name:     "account ID added",
 			key:      "permissions.account_ids",
-			old:      "123456789012",
+			old:      acctest.Ct12Digit,
 			new:      "123456789013,123456789012",
 			expected: false,
 		},
@@ -62,7 +62,7 @@ func TestSuppressEquivalentDocumentPermissions(t *testing.T) {
 			name:     "from empty",
 			key:      "permissions.account_ids",
 			old:      "",
-			new:      "123456789012",
+			new:      acctest.Ct12Digit,
 			expected: false,
 		},
 		{
