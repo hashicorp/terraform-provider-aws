@@ -573,9 +573,10 @@ func resourceInstance() *schema.Resource {
 					ConflictsWith:         []string{"replicate_source_db_cluster"},
 				},
 				"replicate_source_db_cluster": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					ValidateFunc:  validation.Any(validation.StringIsEmpty, validIdentifier),
+					Type:     schema.TypeString,
+					Optional: true,
+					// An empty string promotes the replica, as with replicate_source_db.
+					ValidateFunc:  validation.Any(validation.StringIsEmpty, validIdentifier), // nosemgrep:ci.avoid-string-is-empty-validation
 					ConflictsWith: []string{"replicate_source_db", "snapshot_identifier"},
 				},
 				names.AttrResourceID: {
