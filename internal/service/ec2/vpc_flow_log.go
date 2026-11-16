@@ -30,6 +30,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var flowLogResourceIDAttributes = []string{
+	"core_network_attachment_id",
+	"core_network_edge_id",
+	"core_network_id",
+	"eni_id",
+	"regional_nat_gateway_id",
+	names.AttrSubnetID,
+	names.AttrTransitGatewayAttachmentID,
+	names.AttrTransitGatewayID,
+	names.AttrVPCID,
+}
+
 // @SDKResource("aws_flow_log", name="Flow Log")
 // @IdentityAttribute("id")
 // @Tags(identifierAttribute="id")
@@ -48,6 +60,27 @@ func resourceFlowLog() *schema.Resource {
 				names.AttrARN: {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"core_network_attachment_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ExactlyOneOf:  flowLogResourceIDAttributes,
+					ConflictsWith: []string{"traffic_type"},
+				},
+				"core_network_edge_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ExactlyOneOf:  flowLogResourceIDAttributes,
+					ConflictsWith: []string{"traffic_type"},
+				},
+				"core_network_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ExactlyOneOf:  flowLogResourceIDAttributes,
+					ConflictsWith: []string{"traffic_type"},
 				},
 				"deliver_cross_account_role": {
 					Type:         schema.TypeString,
@@ -89,7 +122,7 @@ func resourceFlowLog() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+					ExactlyOneOf: flowLogResourceIDAttributes,
 				},
 				names.AttrIAMRoleARN: {
 					Type:         schema.TypeString,
@@ -128,13 +161,13 @@ func resourceFlowLog() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+					ExactlyOneOf: flowLogResourceIDAttributes,
 				},
 				names.AttrSubnetID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+					ExactlyOneOf: flowLogResourceIDAttributes,
 				},
 				"tag_field_specification": {
 					Type:     schema.TypeSet,
@@ -169,22 +202,24 @@ func resourceFlowLog() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+					ExactlyOneOf: flowLogResourceIDAttributes,
 				},
 				names.AttrTransitGatewayID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+					ExactlyOneOf: flowLogResourceIDAttributes,
 				},
 				names.AttrVPCID: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ExactlyOneOf: []string{"eni_id", "regional_nat_gateway_id", names.AttrSubnetID, names.AttrVPCID, names.AttrTransitGatewayID, names.AttrTransitGatewayAttachmentID},
+					ExactlyOneOf: flowLogResourceIDAttributes,
 				},
 			}
 		},
+
+		CustomizeDiff: flowLogCustomizeDiff,
 
 		SchemaVersion: 1,
 		StateUpgraders: []schema.StateUpgrader{
@@ -195,6 +230,22 @@ func resourceFlowLog() *schema.Resource {
 			},
 		},
 	}
+}
+
+// flowLogCustomizeDiff catches at plan time a max_aggregation_interval that the API rejects
+// for Cloud WAN resource types. The schema default (600) is kept for backwards compatibility.
+func flowLogCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	for _, k := range []string{"core_network_attachment_id", "core_network_edge_id", "core_network_id"} {
+		if v, ok := d.GetOk(k); !ok || v.(string) == "" {
+			continue
+		}
+
+		if v := d.Get("max_aggregation_interval").(int); v != 60 {
+			return fmt.Errorf("max_aggregation_interval must be 60 when %s is set, got %d", k, v)
+		}
+	}
+
+	return nil
 }
 
 func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -231,6 +282,18 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 			ID:   d.Get("regional_nat_gateway_id").(string),
 			Type: awstypes.FlowLogsResourceTypeRegionalNatGateway,
 		},
+		{
+			ID:   d.Get("core_network_id").(string),
+			Type: awstypes.FlowLogsResourceTypeCoreNetwork,
+		},
+		{
+			ID:   d.Get("core_network_edge_id").(string),
+			Type: awstypes.FlowLogsResourceTypeCoreNetworkEdge,
+		},
+		{
+			ID:   d.Get("core_network_attachment_id").(string),
+			Type: awstypes.FlowLogsResourceTypeCoreNetworkAttachment,
+		},
 	} {
 		if v.ID != "" {
 			resourceID = v.ID
@@ -247,7 +310,14 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 		TagSpecifications:  getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcFlowLog),
 	}
 
-	if resourceType != awstypes.FlowLogsResourceTypeTransitGateway && resourceType != awstypes.FlowLogsResourceTypeTransitGatewayAttachment {
+	// TrafficType isn't supported for Transit Gateway or Cloud WAN resource types.
+	switch resourceType {
+	case awstypes.FlowLogsResourceTypeTransitGateway,
+		awstypes.FlowLogsResourceTypeTransitGatewayAttachment,
+		awstypes.FlowLogsResourceTypeCoreNetwork,
+		awstypes.FlowLogsResourceTypeCoreNetworkEdge,
+		awstypes.FlowLogsResourceTypeCoreNetworkAttachment:
+	default:
 		if v, ok := d.GetOk("traffic_type"); ok {
 			input.TrafficType = awstypes.TrafficType(v.(string))
 		}
@@ -360,8 +430,17 @@ func resourceFlowLogFlatten(ctx context.Context, awsClient *conns.AWSClient, out
 		d.Set("eni_id", resourceID)
 	case strings.HasPrefix(resourceID, "nat-"):
 		d.Set("regional_nat_gateway_id", resourceID)
+	case strings.HasPrefix(resourceID, "core-network-"):
+		// Core network edges are identified as "<core-network-id>/<region>".
+		if strings.Contains(resourceID, "/") {
+			d.Set("core_network_edge_id", resourceID)
+		} else {
+			d.Set("core_network_id", resourceID)
+		}
+	case strings.HasPrefix(resourceID, "attachment-"):
+		d.Set("core_network_attachment_id", resourceID)
 	}
-	if !strings.HasPrefix(aws.ToString(output.ResourceId), "tgw-") {
+	if resourceID := aws.ToString(output.ResourceId); !strings.HasPrefix(resourceID, "tgw-") && !strings.HasPrefix(resourceID, "core-network-") && !strings.HasPrefix(resourceID, "attachment-") {
 		d.Set("traffic_type", output.TrafficType)
 	}
 

@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -252,6 +253,141 @@ func TestAccVPCFlowLog_regionalNATGatewayID(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_coreNetworkID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	coreNetworkResourceName := "aws_networkmanager_core_network.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_coreNetworkID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_id", coreNetworkResourceName, names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "core_network_edge_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "core_network_attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "s3"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_coreNetworkEdgeID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_coreNetworkEdgeID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+					resource.TestMatchResourceAttr(resourceName, "core_network_edge_id", regexache.MustCompile(`^core-network-[0-9a-f]+/`+acctest.Region()+`$`)),
+					resource.TestCheckNoResourceAttr(resourceName, "core_network_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "core_network_attachment_id"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_coreNetworkAttachmentID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	attachmentResourceName := "aws_networkmanager_vpc_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_coreNetworkAttachmentID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+					resource.TestCheckResourceAttrPair(resourceName, "core_network_attachment_id", attachmentResourceName, names.AttrID),
+					resource.TestCheckNoResourceAttr(resourceName, "core_network_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "core_network_edge_id"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_CoreNetwork_maxAggregationIntervalInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCFlowLogConfig_coreNetworkInvalid(`max_aggregation_interval = 600`),
+				ExpectError: regexache.MustCompile(`max_aggregation_interval must be 60 when core_network_id is set`),
+			},
+			{
+				Config:      testAccVPCFlowLogConfig_coreNetworkInvalid(``),
+				ExpectError: regexache.MustCompile(`max_aggregation_interval must be 60 when core_network_id is set, got 600`),
+			},
+		},
+	})
+}
+
+func TestAccVPCFlowLog_CoreNetwork_trafficTypeConflict(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_coreNetworkInvalid(`max_aggregation_interval = 60
+  traffic_type             = "ALL"`),
+				ExpectError: regexache.MustCompile(`"core_network_id": conflicts with traffic_type`),
 			},
 		},
 	})
@@ -1732,4 +1868,132 @@ resource "aws_cloudwatch_log_group" "test" {
 
 data "aws_partition" "current" {}
 `, rName))
+}
+
+func testAccVPCFlowLogConfig_baseCoreNetwork(rName string) string {
+	return acctest.ConfigCompose(testAccFlowLogConfig_base(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_networkmanager_global_network" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network" "test" {
+  global_network_id = aws_networkmanager_global_network.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
+}
+
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    vpn_ecmp_support = false
+    asn_ranges       = ["64512-64555"]
+
+    edge_locations {
+      location = data.aws_region.current.region
+      asn      = 64512
+    }
+  }
+
+  segments {
+    name                          = "shared"
+    require_attachment_acceptance = false
+  }
+
+  attachment_policies {
+    rule_number = 1
+
+    conditions {
+      type = "any"
+    }
+
+    action {
+      association_method = "constant"
+      segment            = "shared"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_coreNetworkID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCFlowLogConfig_baseCoreNetwork(rName), fmt.Sprintf(`
+resource "aws_flow_log" "test" {
+  core_network_id          = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  log_destination          = aws_s3_bucket.test.arn
+  log_destination_type     = "s3"
+  max_aggregation_interval = 60
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_coreNetworkEdgeID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCFlowLogConfig_baseCoreNetwork(rName), fmt.Sprintf(`
+resource "aws_flow_log" "test" {
+  core_network_edge_id     = "${aws_networkmanager_core_network_policy_attachment.test.core_network_id}/${data.aws_region.current.region}"
+  log_destination          = aws_s3_bucket.test.arn
+  log_destination_type     = "s3"
+  max_aggregation_interval = 60
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_coreNetworkAttachmentID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCFlowLogConfig_baseCoreNetwork(rName), fmt.Sprintf(`
+resource "aws_networkmanager_vpc_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  subnet_arns     = aws_subnet.test[*].arn
+  vpc_arn         = aws_vpc.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_flow_log" "test" {
+  core_network_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  log_destination            = aws_s3_bucket.test.arn
+  log_destination_type       = "s3"
+  max_aggregation_interval   = 60
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_coreNetworkInvalid(extra string) string {
+	return fmt.Sprintf(`
+resource "aws_flow_log" "test" {
+  core_network_id      = "core-network-0123456789abcdef0"
+  log_destination      = "arn:${data.aws_partition.current.partition}:s3:::example-bucket"
+  log_destination_type = "s3"
+  %[1]s
+}
+
+data "aws_partition" "current" {}
+`, extra)
 }
