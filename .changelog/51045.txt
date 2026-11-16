@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_service_discovery_service: Fix empty `health_check_custom_config` blocks failing to enable custom health checks and causing repeated resource replacement plans
+```
