@@ -4,7 +4,6 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -14,6 +13,7 @@ import (
 	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -64,7 +64,7 @@ func NamespaceAttribute() fwschema.StringAttribute {
 		Default:  stringdefault.StaticString(DefaultNamespace),
 		Validators: []validator.String{
 			stringvalidator.LengthBetween(1, 64),
-			stringvalidator.RegexMatches(regexache.MustCompile(namespacePattern), namespaceValidationReason),
+			lazystringvalidator.RegexMatches(namespacePattern, namespaceValidationReason),
 		},
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.RequiresReplace(),

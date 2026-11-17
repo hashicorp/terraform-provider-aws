@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -115,7 +115,7 @@ func (r *streamProcessorResource) Schema(ctx context.Context, req resource.Schem
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9_.\-]+`), ""),
+					lazystringvalidator.RegexMatches(`[a-zA-Z0-9_.\-]+`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -409,7 +409,7 @@ func (r *streamProcessorResource) Schema(ctx context.Context, req resource.Schem
 										Description: "The ID of a collection that contains faces that you want to search for.",
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(2048),
-											stringvalidator.RegexMatches(regexache.MustCompile(`[a-zA-Z0-9_.\-]+`), ""),
+											lazystringvalidator.RegexMatches(`[a-zA-Z0-9_.\-]+`, ""),
 										},
 										Required: true,
 										PlanModifiers: []planmodifier.String{

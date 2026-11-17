@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
@@ -62,7 +63,7 @@ var (
 
 	// validHTTPSOrS3URIFramework is the Plugin Framework equivalent of validHTTPSOrS3URI.
 	validHTTPSOrS3URIFramework = []validator.String{
-		stringvalidator.RegexMatches(regexache.MustCompile(httpsOrS3URIPattern), "must be HTTPS or Amazon S3 URI"),
+		lazystringvalidator.RegexMatches(httpsOrS3URIPattern, "must be HTTPS or Amazon S3 URI"),
 		stringvalidator.LengthAtMost(1024),
 	}
 )

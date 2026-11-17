@@ -4,19 +4,15 @@
 package lambda
 
 import (
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-var functionNameValidator validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile("^(arn:(aws[a-zA-Z-]*)?:lambda:)?("+inttypes.CanonicalRegionPatternNoAnchors+":)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:([a-zA-Z0-9-_]+|\\$LATEST))?$"),
-	"must be a valid function name",
-)
+var functionNameValidator validator.String = lazystringvalidator.RegexMatches("^(arn:(aws[a-zA-Z-]*)?:lambda:)?("+inttypes.CanonicalRegionPatternNoAnchors+":)?(\\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:([a-zA-Z0-9-_]+|\\$LATEST))?$", "must be a valid function name")
 
 func validFunctionName() schema.SchemaValidateFunc {
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html

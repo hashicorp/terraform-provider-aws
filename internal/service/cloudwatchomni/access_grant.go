@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
@@ -34,6 +33,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -72,7 +72,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^d-[0-9a-z]{1,25}$`), "must be a CloudWatch Omni domain ID"),
+					lazystringvalidator.RegexMatches(`^d-[0-9a-z]{1,25}$`, "must be a CloudWatch Omni domain ID"),
 				},
 			},
 			"grant_id": framework.IDAttribute(),
@@ -90,7 +90,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]+$`), "use letters, numbers, underscores, and hyphens."),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_-]+$`, "use letters, numbers, underscores, and hyphens."),
 				},
 			},
 			"permission": schema.StringAttribute{
@@ -112,7 +112,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`), "must be a CloudWatch Omni space ID"),
+					lazystringvalidator.RegexMatches(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`, "must be a CloudWatch Omni space ID"),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -141,7 +141,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 2048),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9:/_+=,.@-]*$`), "start with a letter or number and use letters, numbers, and the characters :/_+=,.@-"),
+								lazystringvalidator.RegexMatches(`^[a-zA-Z0-9][a-zA-Z0-9:/_+=,.@-]*$`, "start with a letter or number and use letters, numbers, and the characters :/_+=,.@-"),
 							},
 						},
 						"principal_type": schema.StringAttribute{
@@ -198,7 +198,7 @@ func (r *accessGrantResource) Schema(ctx context.Context, request resource.Schem
 								listvalidator.SizeBetween(1, 50),
 								listvalidator.ValueStringsAre(
 									stringvalidator.LengthBetween(3, 256),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9][a-z0-9-]*:[A-Za-z][A-Za-z0-9]*$`), `use the form "vendor-code:Action", without wildcards.`),
+									lazystringvalidator.RegexMatches(`^[a-z0-9][a-z0-9-]*:[A-Za-z][A-Za-z0-9]*$`, `use the form "vendor-code:Action", without wildcards.`),
 								),
 							},
 						},
