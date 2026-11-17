@@ -1540,3 +1540,55 @@ resource "aws_security_group" "test2" {
 }
 `, rName, description, sgRef))
 }
+
+func TestAccElastiCacheServerlessCache_integrations(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var serverlessElasticCache awstypes.ServerlessCache
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ElastiCacheEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServerlessCacheDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_integrations(rName, "dynamodb"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, "integrations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "integrations.0.integration_type", "dynamodb"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccServerlessCacheConfig_integrations(rName, integrationType string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine = "valkey"
+  name   = %[1]q
+
+  # DynamoDB integration requires a user group whose users all use IAM auth; use the system-managed one.
+  user_group_id = "default.iam-user-group"
+
+  integrations {
+    integration_type = %[2]q
+  }
+}
+`, rName, integrationType)
+}
