@@ -17,6 +17,10 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_dx_hosted_private_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
+* resource/aws_dx_hosted_transit_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
+* resource/aws_dx_private_virtual_interface: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
+* resource/aws_dx_transit_virtual_interface: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
 * resource/aws_elasticache_replication_group: Fix destroy of a Global Datastore secondary timing out when the primary in another Region has the same replication group ID ([#50882](https://github.com/hashicorp/terraform-provider-aws/issues/50882))
 * resource/aws_kms_grant: Accepts `<service>.amazonaws.com.cn` as service principal. ([#50946](https://github.com/hashicorp/terraform-provider-aws/issues/50946))
 * resource/aws_msk_replicator: Fix import of a replicator with a `kafka_cluster.apache_kafka_cluster` block proposing to replace the replicator, caused by reading a `vpc_config` onto the `apache_kafka_cluster` entry ([#50071](https://github.com/hashicorp/terraform-provider-aws/issues/50071))
