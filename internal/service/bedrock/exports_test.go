@@ -9,6 +9,7 @@ var (
 	ResourceEnforcedGuardrailConfiguration      = newEnforcedGuardrailConfigurationResource
 	ResourceEvaluationJob                       = newEvaluationJobResource
 	ResourceGuardrail                           = newGuardrailResource
+	ResourceGuardrailResourcePolicy             = newGuardrailResourcePolicyResource
 	ResourceGuardrailVersion                    = newGuardrailVersionResource
 	ResourceModelInvocationLoggingConfiguration = newModelInvocationLoggingConfigurationResource
 	ResourceModelInvocationJob                  = newModelInvocationJobResource
@@ -19,6 +20,7 @@ var (
 	FindEnforcedGuardrailConfigurationByID  = findEnforcedGuardrailConfigurationByID
 	FindEvaluationJobByARN                  = findEvaluationJobByARN
 	FindGuardrailByTwoPartKey               = findGuardrailByTwoPartKey
+	FindGuardrailResourcePolicyByARN        = findGuardrailResourcePolicyByARN
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationJobByARN             = findModelInvocationJobByARN
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration

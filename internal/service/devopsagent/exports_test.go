@@ -6,6 +6,10 @@ package devopsagent
 // Exports for use in tests only.
 var (
 	ResourceAgentSpace = newAgentSpaceResource
+	ResourceAsset      = newAssetResource
+	ResourceAssetFile  = newAssetFileResource
 
-	FindAgentSpaceByID = findAgentSpaceByID
+	FindAgentSpaceByID          = findAgentSpaceByID
+	FindAssetByTwoPartKey       = findAssetByTwoPartKey
+	FindAssetFileByThreePartKey = findAssetFileByThreePartKey
 )

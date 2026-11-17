@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -104,7 +104,7 @@ func ResourceDatabase() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 255),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z-]+[0-9A-Za-z]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z][0-9A-Za-z-]+[0-9A-Za-z]$`, "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
 					),
 				},
 				"master_database_name": {
@@ -113,8 +113,8 @@ func ResourceDatabase() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "Must begin with a letter"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_]+$`, "Subsequent characters can be letters, underscores, or digits (0- 9)"),
 					),
 				},
 				"master_endpoint_address": {
@@ -131,7 +131,7 @@ func ResourceDatabase() *schema.Resource {
 					Sensitive: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(8, 128),
-						validation.StringMatch(regexache.MustCompile(`^[ -~][^@\/" ]+$`), "The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces."),
+						lazyvalidation.StringMatch(`^[ -~][^@\/" ]+$`, "The password can include any printable ASCII character except \"/\", \"\"\", or \"@\". It cannot contain spaces."),
 					),
 				},
 				"master_username": {
@@ -140,8 +140,8 @@ func ResourceDatabase() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "Must begin with a letter"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "Subsequent characters can be letters, underscores, or digits (0- 9)"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "Must begin with a letter"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_]+$`, "Subsequent characters can be letters, underscores, or digits (0- 9)"),
 					),
 				},
 				"preferred_backup_window": {
@@ -171,7 +171,7 @@ func ResourceDatabase() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 255),
-						validation.StringMatch(regexache.MustCompile(`^[^_.-]+[0-9A-Za-z-]+[^_.-]$`), "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
+						lazyvalidation.StringMatch(`^[^_.-]+[0-9A-Za-z-]+[^_.-]$`, "Must contain from 2 to 255 alphanumeric characters, or hyphens. The first and last character must be a letter or number"),
 					),
 				},
 				"secondary_availability_zone": {

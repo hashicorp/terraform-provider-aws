@@ -196,7 +196,7 @@ This resource supports the following arguments:
 * `iam_service_role_arn` - (Optional) AWS Identity and Access Management (IAM) service role for an Amplify app.
 * `job_config` - (Optional) Used to configure the [Amplify Application build instance compute type](https://docs.aws.amazon.com/amplify/latest/APIReference/API_JobConfig.html#amplify-Type-JobConfig-buildComputeType). See [`job_config` Block](#job_config-block) for details.
 * `oauth_token` - (Optional) OAuth token for a third-party source control system for an Amplify app. The OAuth token is used to create a webhook and a read-only deploy key. The OAuth token is not stored.
-* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`. Default value: `WEB`.
+* `platform` - (Optional) Platform or framework for an Amplify app. Valid values: `WEB`, `WEB_COMPUTE`, `WEB_DYNAMIC`. Default value: `WEB`.
 * `repository` - (Optional) Repository for an Amplify app.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

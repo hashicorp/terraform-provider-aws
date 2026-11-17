@@ -2890,6 +2890,59 @@ func TestAccLambdaFunction_durableConfigForceNew(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_durableConfigKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	kmsResourceName := "aws_kms_key.test"
+	kmsResourceName2 := "aws_kms_key.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID) // Durable Functions is only available in us-east-2
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_durableConfigKMSKey(rName, 300, 7, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.execution_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.retention_period", "7"),
+					resource.TestCheckResourceAttrPair(resourceName, "durable_config.0.kms_key_arn", kmsResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				// Rotating the customer managed key must update the function in place, not replace it.
+				Config: testAccFunctionConfig_durableConfigKMSKey(rName, 300, 7, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.execution_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.retention_period", "7"),
+					resource.TestCheckResourceAttrPair(resourceName, "durable_config.0.kms_key_arn", kmsResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionOutput
@@ -5256,4 +5309,103 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName, descriptionLine, executionTimeout, retentionPeriod))
+}
+
+func testAccFunctionConfig_durableConfigKMSKey(rName string, executionTimeout, retentionPeriod int, useSecondKey bool) string {
+	keyRef := "aws_kms_key.test.arn"
+	if useSecondKey {
+		keyRef = "aws_kms_key.test2.arn"
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "lambda-durable-kms"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowLambdaDurableService"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "lambda-durable-kms"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowLambdaDurableService"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs24.x"
+
+  durable_config {
+    kms_key_arn       = %[4]s
+    execution_timeout = %[2]d
+    retention_period  = %[3]d
+  }
+
+  timeouts {
+    delete = "60m"
+  }
+}
+`, rName, executionTimeout, retentionPeriod, keyRef))
 }

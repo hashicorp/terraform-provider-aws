@@ -5,6 +5,7 @@ ACCTEST_TIMEOUT              ?= 360m
 BASE_REF                     ?= main
 GOFMT                        ?= $(shell $(GO_VER) env GOROOT 2>/dev/null)/bin/gofmt
 GO_VER                       ?= $(shell echo go`cat .go-version | xargs`)
+GOVULNCHECK_ARGS             ?=
 P                            ?= 20
 PKG_NAME                     ?= internal
 SEMGREP_ARGS                 ?= --error
@@ -178,9 +179,9 @@ changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
 	@misspell -error -source text CHANGELOG.md .changelog
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint govulncheck import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 govulncheck import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -504,6 +505,10 @@ golangci-lint5: ## [CI] golangci-lint Checks / 5 of 5
 		--config .ci/.golangci5.yml \
 		$(TEST)
 
+govulncheck: ## Run govulncheck
+	@echo "make: Running govulncheck..."
+	@govulncheck $(GOVULNCHECK_ARGS) ./...
+
 help: ## Display this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | grep -v '## \[internal\]' | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-27s\033[0m %s\n", $$1, $$2}'
 
@@ -576,6 +581,9 @@ provider-lint: ## [CI] ProviderLint Checks / providerlint
 		-XS001=false \
 		-XS002=false \
 		$(SVC_DIR)/... ./internal/provider/...
+
+provider-memory: prereq-go ## Run provider memory benchmarks (SAMPLES=N)
+	@GO="$(GO_VER)" .ci/scripts/provider-memory.sh
 
 quick-fix-core-heading: ## [internal] Just a heading for quick-fix-core
 	@echo "make: Quick fixes for core (non-service) directories..."
@@ -1174,6 +1182,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/pavius/impi/cmd/impi
 	cd .ci/tools && $(GO_VER) install github.com/terraform-linters/tflint
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
+	cd .ci/tools && $(GO_VER) install golang.org/x/vuln/cmd/govulncheck
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
@@ -1378,6 +1387,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	golangci-lint3 \
 	golangci-lint4 \
 	golangci-lint5 \
+	govulncheck \
 	help \
 	import-lint \
 	install \
@@ -1392,6 +1402,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	prereq-go \
 	provider-lint \
 	provider-markdown-lint \
+	provider-memory \
 	quick-fix \
 	quick-fix-core \
 	quick-fix-core-heading \

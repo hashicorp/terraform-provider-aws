@@ -11,17 +11,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -75,7 +74,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 										names.AttrLogGroupName: {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./#-]{1,512}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_./#-]{1,512}$`, "must contain only lowercase alphanumeric characters, hyphen, dot, underscore, forward slash, or hash sign, and between 1 and 512 characters"),
 										},
 									},
 								},
@@ -98,7 +97,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 										"delivery_stream_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{1,64}$`, "must contain only lowercase alphanumeric characters, hyphen, dot, or underscore, and between 1 and 64 characters"),
 										},
 									},
 								},
@@ -121,7 +120,7 @@ func ResourceLoggingConfiguration() *schema.Resource {
 										names.AttrBucketName: {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z.-]{3,63}$`), "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9a-z.-]{3,63}$`, "must contain only lowercase alphanumeric characters, hyphen, or dot, and between 3 and 63 characters"),
 										},
 									},
 								},

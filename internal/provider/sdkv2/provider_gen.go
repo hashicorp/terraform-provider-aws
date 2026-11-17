@@ -310,6 +310,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// bedrockdataautomation
+
+				"bedrockdataautomation": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// bedrockruntime
 
 				"bedrockruntime": {
@@ -623,6 +631,14 @@ func endpointsSchema() *schema.Schema {
 				// connectcases
 
 				"connectcases": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// continuum
+
+				"continuum": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

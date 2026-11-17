@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -80,13 +81,10 @@ func resourceVirtualMFADevice() *schema.Resource {
 					Computed: true,
 				},
 				"virtual_mfa_device_name": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`[\w+=,.@-]+`),
-						"must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`[\w+=,.@-]+`, "must consist of upper and lowercase alphanumeric characters with no spaces. You can also include any of the following characters: _+=,.@-"),
 				},
 			}
 		},

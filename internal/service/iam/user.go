@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,12 +57,9 @@ func resourceUser() *schema.Resource {
 					Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
-						"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z=,.@\-_+]+$`, "must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs"),
 				},
 				names.AttrPath: {
 					Type:     schema.TypeString,

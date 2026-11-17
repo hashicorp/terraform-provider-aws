@@ -1,5 +1,5 @@
-github.com/YakDriver/regexache v0.25.0 h1:uggvmj09EhXQgaXYmdGsKuDARbmdOIqICiO+PIwhlTA=
-github.com/YakDriver/regexache v0.25.0/go.mod h1:4xOFrfggN3UAGlhcvNpM/kuedpJL+48DrUs0CcCxPv8=
+github.com/YakDriver/regexache v0.26.0 h1:Tiz/H1EzGvidhWnqt49yi1tkrn1ON8MIMy8aSu7FzHM=
+github.com/YakDriver/regexache v0.26.0/go.mod h1:ylQEU071rWsUt4C1U3vcet4Jwign8cMUAihGxzxxw2w=
 github.com/agext/levenshtein v1.2.3 h1:YB2fHEn0UJagG8T1rrWknE3ZQzWM06O8AMAatNn7lmo=
 github.com/agext/levenshtein v1.2.3/go.mod h1:JEDfjyjHDjOF/1e4FlBE/PkbqA9OfWu2ki2W0IB5558=
 github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew1u1fNQOlOtuGxQY=
@@ -13,8 +13,6 @@ github.com/go-test/deep v1.0.3 h1:ZrJSEWsXzPOxaZnFteGEfooLba+ju3FYIbOrS+rQd68=
 github.com/go-test/deep v1.0.3/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
-github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
-github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.76 h1:lv1kai0y585J8lMNBhyOoVQssXp3pBv5lLeKb38n+BY=
 github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.76/go.mod h1:LlNlsklP+YHM+y1x1SNdOgbXIih0fyqpvB8iGik/sDo=
 github.com/hashicorp/hcl/v2 v2.25.0 h1:HmmQVYRny4MaBo4b20TjmL46wyuUxpnMWkPZ4+NTbWk=

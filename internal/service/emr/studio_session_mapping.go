@@ -200,10 +200,8 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 
 const identityIDPattern = `([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}`
 
-var identityIDPatternRegexp = regexache.MustCompile(identityIDPattern)
-
 func isIdentityID(identityIdOrName string) bool {
-	return identityIDPatternRegexp.MatchString(identityIdOrName)
+	return regexache.MustCompile(identityIDPattern).MatchString(identityIdOrName)
 }
 
 const studioSessionMappingResourceIDSeparator = ":"

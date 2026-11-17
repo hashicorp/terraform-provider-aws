@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/transfer/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -147,7 +147,7 @@ func resourceConnector() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 100),
-						validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
+						lazyvalidation.StringMatch(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`, "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
 					),
 				},
 				"sftp_config": {

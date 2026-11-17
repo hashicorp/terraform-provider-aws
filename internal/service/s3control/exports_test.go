@@ -43,4 +43,6 @@ var (
 
 	AccessPointParseResourceID            = accessPointParseResourceID
 	MultiRegionAccessPointParseResourceID = multiRegionAccessPointParseResourceID
+
+	AccessPointForDirectoryBucketNameRegex = accessPointForDirectoryBucketNameRegex
 )

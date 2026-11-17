@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -162,6 +162,12 @@ func resourceFunction() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.IntBetween(1, 31622400),
 							},
+							names.AttrKMSKeyARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 							names.AttrRetentionPeriod: {
 								Type:         schema.TypeInt,
 								Optional:     true,
@@ -230,7 +236,7 @@ func resourceFunction() *schema.Resource {
 							"local_mount_path": {
 								Type:         schema.TypeString,
 								Required:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/mnt/[0-9A-Za-z_.-]+$`), "must start with '/mnt/'"),
+								ValidateFunc: lazyvalidation.StringMatch(`^/mnt/[0-9A-Za-z_.-]+$`, "must start with '/mnt/'"),
 							},
 						},
 					},
@@ -1838,10 +1844,16 @@ func expandDurableConfigs(tfList []any) *awstypes.DurableConfig {
 	}
 
 	tfMap := tfList[0].(map[string]any)
-	return &awstypes.DurableConfig{
+	apiObject := &awstypes.DurableConfig{
 		ExecutionTimeout:      aws.Int32(int32(tfMap["execution_timeout"].(int))),
 		RetentionPeriodInDays: aws.Int32(int32(tfMap[names.AttrRetentionPeriod].(int))),
 	}
+
+	if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
+		apiObject.KMSKeyArn = aws.String(v)
+	}
+
+	return apiObject
 }
 
 func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
@@ -1853,6 +1865,10 @@ func flattenDurableConfig(apiObject *awstypes.DurableConfig) []any {
 
 	if v := apiObject.ExecutionTimeout; v != nil {
 		tfMap["execution_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.KMSKeyArn; v != nil {
+		tfMap[names.AttrKMSKeyARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.RetentionPeriodInDays; v != nil {

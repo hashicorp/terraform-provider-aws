@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -159,13 +159,10 @@ func resourceTable() *schema.Resource {
 					},
 				},
 				"keyspace_name": {
-					Type:     schema.TypeString,
-					ForceNew: true,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`),
-						"The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
-					),
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z][0-9A-Za-z_]{0,47}$`, "The keyspace name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores."),
 				},
 				"point_in_time_recovery": {
 					Type:     schema.TypeList,
@@ -196,13 +193,10 @@ func resourceTable() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: {
-											Type:     schema.TypeString,
-											Required: true,
-											ForceNew: true,
-											ValidateFunc: validation.StringMatch(
-												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-											),
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9a-z_]{1,48}$`, "The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores."),
 										},
 										"order_by": {
 											Type:             schema.TypeString,
@@ -219,20 +213,14 @@ func resourceTable() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.StringMatch(
-												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-											),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9a-z_]{1,48}$`, "The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores."),
 										},
 										names.AttrType: {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.StringMatch(
-												regexache.MustCompile(`^[0-9a-z]+(\<[0-9a-z]+(, *[0-9a-z]+){0,1}\>)?$`),
-												"The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'.",
-											),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9a-z]+(\<[0-9a-z]+(, *[0-9a-z]+){0,1}\>)?$`, "The type must consist of lower case alphanumerics and an optional list of upto two lower case alphanumerics enclosed in angle brackets '<>'."),
 										},
 									},
 								},
@@ -244,13 +232,10 @@ func resourceTable() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: {
-											Type:     schema.TypeString,
-											Required: true,
-											ForceNew: true,
-											ValidateFunc: validation.StringMatch(
-												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-											),
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9a-z_]{1,48}$`, "The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores."),
 										},
 									},
 								},
@@ -262,13 +247,10 @@ func resourceTable() *schema.Resource {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrName: {
-											Type:     schema.TypeString,
-											Required: true,
-											ForceNew: true,
-											ValidateFunc: validation.StringMatch(
-												regexache.MustCompile(`^[0-9a-z_]{1,48}$`),
-												"The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores.",
-											),
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9a-z_]{1,48}$`, "The column name can have up to 48 characters. It can only contain lowercase alpha-numeric characters and underscores."),
 										},
 									},
 								},
@@ -277,13 +259,10 @@ func resourceTable() *schema.Resource {
 					},
 				},
 				names.AttrTableName: {
-					Type:     schema.TypeString,
-					ForceNew: true,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^[0-9A-Za-z_]{1,48}$`),
-						"The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores.",
-					),
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_]{1,48}$`, "The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores."),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),

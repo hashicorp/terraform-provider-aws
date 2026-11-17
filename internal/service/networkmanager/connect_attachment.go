@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -77,7 +77,7 @@ func resourceConnectAttachment() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 50),
-						validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
+						lazyvalidation.StringMatch(`^core-network-([0-9a-f]{8,17})$`, "Must start with core-network and then have 8 to 17 characters"),
 					),
 				},
 				"edge_location": {
@@ -86,7 +86,7 @@ func resourceConnectAttachment() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+						lazyvalidation.StringMatch(`[\s\S]*`, "Anything but whitespace"),
 					),
 				},
 				"options": {
@@ -133,7 +133,7 @@ func resourceConnectAttachment() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 50),
-						validation.StringMatch(regexache.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
+						lazyvalidation.StringMatch(`^attachment-([0-9a-f]{8,17})$`, "Must start with attachment- and then have 8 to 17 characters"),
 					),
 				},
 			}

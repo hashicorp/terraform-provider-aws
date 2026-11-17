@@ -60,7 +60,7 @@ func resourceApp() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Sensitive:    true,
-					ValidateFunc: validation.StringLenBetween(1, 255),
+					ValidateFunc: validation.StringLenBetween(1, 4096),
 				},
 				names.AttrARN: {
 					Type:     schema.TypeString,
@@ -293,7 +293,7 @@ func resourceApp() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Sensitive:    true,
-					ValidateFunc: validation.StringLenBetween(1, 1000),
+					ValidateFunc: validation.StringLenBetween(1, 4096),
 				},
 				"platform": {
 					Type:             schema.TypeString,

@@ -18,7 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mq/types"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1591,5 +1591,5 @@ func expandLDAPServerMetadata(tfList []any) *types.LdapServerMetadataInput {
 
 var validateBrokerName = validation.All(
 	validation.StringLenBetween(1, 50),
-	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), ""),
+	lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, ""),
 )

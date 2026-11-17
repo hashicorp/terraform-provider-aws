@@ -14,7 +14,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -95,7 +95,7 @@ func resourcePipeline() *schema.Resource {
 									Elem: &schema.Schema{
 										Type: schema.TypeString,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`[a-zA-Z0-9_\-]+`), ""),
+											lazyvalidation.StringMatch(`[a-zA-Z0-9_\-]+`, ""),
 											validation.StringLenBetween(1, 100),
 										),
 									},
@@ -103,7 +103,7 @@ func resourcePipeline() *schema.Resource {
 								names.AttrName: {
 									Type:         schema.TypeString,
 									Required:     true,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9.@\-_]+`), ""),
+									ValidateFunc: lazyvalidation.StringMatch(`[A-Za-z0-9.@\-_]+`, ""),
 								},
 								names.AttrRegion: {
 									Type:     schema.TypeString,
@@ -139,7 +139,7 @@ func resourcePipeline() *schema.Resource {
 												Optional: true,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(1, 9),
-													validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+													lazyvalidation.StringMatch(`[0-9A-Za-z_-]+`, ""),
 												),
 											},
 										},
@@ -349,7 +349,7 @@ func resourcePipeline() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+												lazyvalidation.StringMatch(`[0-9A-Za-z_.@-]+`, ""),
 											),
 										},
 									},
@@ -421,7 +421,7 @@ func resourcePipeline() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+						lazyvalidation.StringMatch(`[0-9A-Za-z_.@-]+`, ""),
 					),
 				},
 				"pipeline_type": {
@@ -480,7 +480,7 @@ func resourcePipeline() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+												lazyvalidation.StringMatch(`[0-9A-Za-z_.@-]+`, ""),
 											),
 										},
 										names.AttrNamespace: {
@@ -488,7 +488,7 @@ func resourcePipeline() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 100),
-												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_@-]+`), ""),
+												lazyvalidation.StringMatch(`[0-9A-Za-z_@-]+`, ""),
 											),
 										},
 										"output_artifacts": {
@@ -506,7 +506,7 @@ func resourcePipeline() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 100),
-															validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-]+$`), ""),
+															lazyvalidation.StringMatch(`^[a-zA-Z0-9_\-]+$`, ""),
 														),
 													},
 													"files": {
@@ -566,7 +566,7 @@ func resourcePipeline() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 9),
-												validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_-]+`), ""),
+												lazyvalidation.StringMatch(`[0-9A-Za-z_-]+`, ""),
 											),
 										},
 									},
@@ -594,7 +594,7 @@ func resourcePipeline() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 100),
-									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+									lazyvalidation.StringMatch(`[0-9A-Za-z_.@-]+`, ""),
 								),
 							},
 							"on_failure": {

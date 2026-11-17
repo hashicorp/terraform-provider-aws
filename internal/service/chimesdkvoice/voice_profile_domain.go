@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -71,7 +71,7 @@ func ResourceVoiceProfileDomain() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 200),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_ .-]+`), "Name must match expression: ^[0-9A-Za-z_ .-]+"),
+						lazyvalidation.StringMatch(`[0-9A-Za-z_ .-]+`, "Name must match expression: ^[0-9A-Za-z_ .-]+"),
 					),
 				},
 				"server_side_encryption_configuration": {

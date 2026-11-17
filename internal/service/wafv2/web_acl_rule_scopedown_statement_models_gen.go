@@ -19,16 +19,16 @@ import (
 
 // webACLRuleScopeDownStatementLevel0Model contains only leaf statements; no logical operators.
 type webACLRuleScopeDownStatementLevel0Model struct {
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // webACLRuleScopeDownAndStatementLevel0Model wraps level-0 statements for an AND operation.
@@ -51,16 +51,16 @@ type webACLRuleScopeDownStatementLevel1Model struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel0Model]       `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel0Model]       `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel0Model]        `tfsdk:"or_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // webACLRuleScopeDownAndStatementLevel1ChildModel contains leaf statements plus not/or at level 0.
@@ -68,16 +68,16 @@ type webACLRuleScopeDownStatementLevel1Model struct {
 type webACLRuleScopeDownAndStatementLevel1ChildModel struct {
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel0Model]       `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel0Model]        `tfsdk:"or_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // webACLRuleScopeDownOrStatementLevel1ChildModel contains leaf statements plus and/not at level 0.
@@ -85,16 +85,16 @@ type webACLRuleScopeDownAndStatementLevel1ChildModel struct {
 type webACLRuleScopeDownOrStatementLevel1ChildModel struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel0Model]       `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel0Model]       `tfsdk:"not_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // webACLRuleScopeDownAndStatementLevel1Model wraps level-1 statements for an AND operation.
@@ -117,16 +117,16 @@ type webACLRuleScopeDownStatementLevel2Model struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel1Model]       `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel1Model]       `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel1Model]        `tfsdk:"or_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // webACLRuleScopeDownAndStatementLevel2ChildModel contains leaf statements plus not/or at level 1.
@@ -134,16 +134,16 @@ type webACLRuleScopeDownStatementLevel2Model struct {
 type webACLRuleScopeDownAndStatementLevel2ChildModel struct {
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel1Model]       `tfsdk:"not_statement"`
 	OrStatement                       fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownOrStatementLevel1Model]        `tfsdk:"or_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // webACLRuleScopeDownOrStatementLevel2ChildModel contains leaf statements plus and/not at level 1.
@@ -151,16 +151,16 @@ type webACLRuleScopeDownAndStatementLevel2ChildModel struct {
 type webACLRuleScopeDownOrStatementLevel2ChildModel struct {
 	AndStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownAndStatementLevel1Model]       `tfsdk:"and_statement"`
 	NotStatement                      fwtypes.ListNestedObjectValueOf[webACLRuleScopeDownNotStatementLevel1Model]       `tfsdk:"not_statement"`
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
 	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
 	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
+	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
+	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
 }
 
 // Type aliases for the top-level statement model (used by the resource).
@@ -171,24 +171,6 @@ type webACLRuleScopeDownOrStatementModel = webACLRuleScopeDownOrStatementLevel1M
 
 // Schema block functions for each level.
 
-// scopeDownLeafStatementBlocks returns only leaf statements (no managed_rule_group, rate_based,
-// or rule_group_reference) to avoid initialization cycles when used inside scope_down_statement
-// which is itself referenced by managed_rule_group_statement and rate_based_statement.
-func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
-	return map[string]schema.Block{
-		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
-		"geo_match_statement":                   geoMatchStatementBlock(ctx),
-		"byte_match_statement":                  byteMatchStatementBlock(ctx),
-		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
-		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
-		"regex_match_statement":                 regexMatchStatementBlock(ctx),
-		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
-		"label_match_statement":                 labelMatchStatementBlock(ctx),
-		"asn_match_statement":                   asnMatchStatementBlock(ctx),
-	}
-}
-
 // Level-based scope_down blocks — mirrors web_acl_rule_statement_models_gen.go.
 // Level 0 blocks: leaf statements only (no and/not/or).
 // Level 1 blocks: leaf + and/not/or at level 0.
@@ -197,7 +179,19 @@ func scopeDownLeafStatementBlocks(ctx context.Context) map[string]schema.Block {
 
 // scopeDownStatementLevel0MultipleBlock: at least two level-0 statements, used by AND/OR at level 0.
 var scopeDownStatementLevel0MultipleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks := map[string]schema.Block{
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+	}
+
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
 		Validators: []validator.List{
@@ -221,7 +215,18 @@ func scopeDownOrStatementLevel0ChildBlock(ctx context.Context) schema.Block {
 
 // scopeDownNotStatementLevel0ChildBlock: exactly one level-0 statement, used by NOT at level 0.
 var scopeDownNotStatementLevel0ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
+	blocks := map[string]schema.Block{
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel0Model](ctx),
@@ -281,9 +286,20 @@ var scopeDownOrStatementLevel0Block = tfsync.OnceValueCtx(func(ctx context.Conte
 
 // scopeDownAndStatementLevel1ChildBlock: at least two level-1 statements (leaf + not/or at level 0), used by AND at level 1.
 var scopeDownAndStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
-	blocks["not_statement"] = scopeDownNotStatementLevel0Block(ctx)
-	blocks["or_statement"] = scopeDownOrStatementLevel0Block(ctx)
+	blocks := map[string]schema.Block{
+		"not_statement":                         scopeDownNotStatementLevel0Block(ctx),
+		"or_statement":                          scopeDownOrStatementLevel0Block(ctx),
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownAndStatementLevel1ChildModel](ctx),
@@ -300,9 +316,20 @@ var scopeDownAndStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context
 
 // scopeDownOrStatementLevel1ChildBlock: at least two level-1 statements (leaf + and/not at level 0), used by OR at level 1.
 var scopeDownOrStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
-	blocks["and_statement"] = scopeDownAndStatementLevel0Block(ctx)
-	blocks["not_statement"] = scopeDownNotStatementLevel0Block(ctx)
+	blocks := map[string]schema.Block{
+		"and_statement":                         scopeDownAndStatementLevel0Block(ctx),
+		"not_statement":                         scopeDownNotStatementLevel0Block(ctx),
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownOrStatementLevel1ChildModel](ctx),
@@ -319,11 +346,21 @@ var scopeDownOrStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.
 
 // scopeDownNotStatementLevel1ChildBlock: exactly one level-1 statement, used by NOT at level 1.
 var scopeDownNotStatementLevel1ChildBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
-	blocks["and_statement"] = scopeDownAndStatementLevel0Block(ctx)
-	blocks["not_statement"] = scopeDownNotStatementLevel0Block(ctx)
-	blocks["or_statement"] = scopeDownOrStatementLevel0Block(ctx)
-
+	blocks := map[string]schema.Block{
+		"and_statement":                         scopeDownAndStatementLevel0Block(ctx),
+		"not_statement":                         scopeDownNotStatementLevel0Block(ctx),
+		"or_statement":                          scopeDownOrStatementLevel0Block(ctx),
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+	}
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel1Model](ctx),
 		Validators: []validator.List{
@@ -382,10 +419,21 @@ var scopeDownOrStatementLevel1Block = tfsync.OnceValueCtx(func(ctx context.Conte
 
 // scopeDownStatementBlock returns the top-level scopedown statement block schema.
 var scopeDownStatementBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
-	blocks := scopeDownLeafStatementBlocks(ctx)
-	blocks["and_statement"] = scopeDownAndStatementLevel1Block(ctx)
-	blocks["not_statement"] = scopeDownNotStatementLevel1Block(ctx)
-	blocks["or_statement"] = scopeDownOrStatementLevel1Block(ctx)
+	blocks := map[string]schema.Block{
+		"and_statement":                         scopeDownAndStatementLevel1Block(ctx),
+		"not_statement":                         scopeDownNotStatementLevel1Block(ctx),
+		"or_statement":                          scopeDownOrStatementLevel1Block(ctx),
+		"asn_match_statement":                   asnMatchStatementBlock(ctx),
+		"byte_match_statement":                  byteMatchStatementBlock(ctx),
+		"geo_match_statement":                   geoMatchStatementBlock(ctx),
+		"ip_set_reference_statement":            ipSetReferenceStatementBlock(ctx),
+		"label_match_statement":                 labelMatchStatementBlock(ctx),
+		"regex_match_statement":                 regexMatchStatementBlock(ctx),
+		"regex_pattern_set_reference_statement": regexPatternSetReferenceStatementBlock(ctx),
+		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
+		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
+		"xss_match_statement":                   xssMatchStatementBlock(ctx),
+	}
 
 	return schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleScopeDownStatementLevel2Model](ctx),

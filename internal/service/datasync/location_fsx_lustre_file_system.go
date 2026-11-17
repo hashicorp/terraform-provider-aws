@@ -150,7 +150,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	subdirectory, err := subdirectoryFromLocationURI(uri)
+	_, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

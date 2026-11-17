@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -159,12 +159,16 @@ func resourcePlan() *schema.Resource {
 								},
 							},
 							"recovery_point_tags": tftags.TagsSchema(),
+							"rule_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							"rule_name": {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 50),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 								),
 							},
 							names.AttrSchedule: {
@@ -209,7 +213,7 @@ func resourcePlan() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(2, 50),
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric characters, hyphens, and underscores"),
 								),
 							},
 						},
@@ -231,7 +235,7 @@ func resourcePlan() *schema.Resource {
 								MinItems: 1,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9\-\_\.]{1,50}$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+									ValidateFunc: lazyvalidation.StringMatch(`^[a-zA-Z0-9\-\_\.]{1,50}$`, "must contain only alphanumeric characters, hyphens, underscores, and periods"),
 								},
 							},
 							"scanner_role_arn": {
@@ -584,12 +588,13 @@ func flattenBackupRules(ctx context.Context, apiObjects []awstypes.BackupRule) [
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
-			"completion_window":                            aws.ToInt64(apiObject.CompletionWindowMinutes),
-			"enable_continuous_backup":                     aws.ToBool(apiObject.EnableContinuousBackup),
-			"rule_name":                                    aws.ToString(apiObject.RuleName),
-			names.AttrSchedule:                             aws.ToString(apiObject.ScheduleExpression),
-			"schedule_expression_timezone":                 aws.ToString(apiObject.ScheduleExpressionTimezone),
-			"start_window":                                 aws.ToInt64(apiObject.StartWindowMinutes),
+			"completion_window":            aws.ToInt64(apiObject.CompletionWindowMinutes),
+			"enable_continuous_backup":     aws.ToBool(apiObject.EnableContinuousBackup),
+			"rule_id":                      aws.ToString(apiObject.RuleId),
+			"rule_name":                    aws.ToString(apiObject.RuleName),
+			names.AttrSchedule:             aws.ToString(apiObject.ScheduleExpression),
+			"schedule_expression_timezone": aws.ToString(apiObject.ScheduleExpressionTimezone),
+			"start_window":                 aws.ToInt64(apiObject.StartWindowMinutes),
 			"target_logically_air_gapped_backup_vault_arn": aws.ToString(apiObject.TargetLogicallyAirGappedBackupVaultArn),
 			"target_vault_name":                            aws.ToString(apiObject.TargetBackupVaultName),
 		}

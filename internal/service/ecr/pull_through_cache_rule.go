@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -54,9 +54,7 @@ func resourcePullThroughCacheRule() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 30),
-						validation.StringMatch(
-							regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
-							"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
+						lazyvalidation.StringMatch(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`, "must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
 					),
 				},
 				"registry_id": {
@@ -74,9 +72,7 @@ func resourcePullThroughCacheRule() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 30),
-						validation.StringMatch(
-							regexache.MustCompile(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`),
-							"must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
+						lazyvalidation.StringMatch(`^((?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*/?|ROOT)$`, "must be 'ROOT' or only include alphanumeric, underscore, period, hyphen, or slash characters"),
 					),
 				},
 			}

@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -149,8 +149,7 @@ func resourceFilter() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 64),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
-							"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+						lazyvalidation.StringMatch(`^[a-zA-Z0-9_.-]+$`, "only alphanumeric characters, hyphens, underscores, and periods are allowed"),
 					),
 				},
 				"rank": {
