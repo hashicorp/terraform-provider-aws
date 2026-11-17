@@ -23,6 +23,7 @@ func TestAccECRReplicationConfiguration_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccReplicationConfiguration_basic,
 		acctest.CtDisappears: testAccReplicationConfiguration_disappears,
+		"deleteReplication":  testAccReplicationConfiguration_deleteReplication,
 		"repositoryFilter":   testAccReplicationConfiguration_repositoryFilter,
 	}
 
@@ -191,6 +192,49 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 	})
 }
 
+func testAccReplicationConfiguration_deleteReplication(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecr_replication_configuration.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationConfig_deleteReplication(acctest.AlternateRegion(), true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.delete_replication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.delete_replication.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReplicationConfigurationConfig_deleteReplication(acctest.AlternateRegion(), false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.delete_replication.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.delete_replication.0.enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.delete_replication.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckReplicationConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
@@ -323,4 +367,30 @@ resource "aws_ecr_replication_configuration" "test" {
   }
 }
 `, region)
+}
+
+func testAccReplicationConfigurationConfig_deleteReplication(region string, enabled bool) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_ecr_replication_configuration" "test" {
+  replication_configuration {
+    rule {
+      destination {
+        region      = %[1]q
+        registry_id = data.aws_caller_identity.current.account_id
+      }
+
+      repository_filter {
+        filter      = "a-prefix"
+        filter_type = "PREFIX_MATCH"
+      }
+
+      delete_replication {
+        enabled = %[2]t
+      }
+    }
+  }
+}
+`, region, enabled)
 }
