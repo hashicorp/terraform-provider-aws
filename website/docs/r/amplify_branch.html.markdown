@@ -160,6 +160,7 @@ This resource supports the following arguments:
 * `branch_name` - (Required) Name for the branch.
 * `backend_environment_arn` - (Optional) ARN for a backend environment that is part of an Amplify app.
 * `basic_auth_credentials` - (Optional) Basic authorization credentials for the branch.
+* `compute_role_arn` - (Optional) ARN of the IAM role to use as the SSR compute role for the branch. Overrides the app-level `compute_role_arn` of the [`aws_amplify_app`](amplify_app.html) resource for this branch. See [Adding an SSR Compute role](https://docs.aws.amazon.com/amplify/latest/userguide/amplify-SSR-compute-role.html).
 * `description` - (Optional) Description for the branch.
 * `display_name` - (Optional) Display name for a branch. This is used as the default domain prefix.
 * `enable_auto_build` - (Optional) Enables auto building for the branch.
