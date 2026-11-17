@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -36,9 +35,10 @@ import (
 
 // @FrameworkResource("aws_continuum_integration", name="Integration")
 // @IdentityAttribute("id")
+// @Testing(preCheck="testAccPreCheck")
+// @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(generator=false)
-// @Testing(identityTest=false)
+// @Testing(importIgnore="s3.0.external_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/continuum;continuum.GetIntegrationOutput")
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &integrationResource{}, nil
@@ -98,7 +98,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 					oneOf(),
 				},
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					requiresReplaceIfAddedOrRemoved(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -106,6 +106,10 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 							Optional:    true,
 							Computed:    true,
 							Description: "GitHub organization that the integration installs into. Omit for a personal account.",
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -121,12 +125,21 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 										Required:    true,
 										Sensitive:   true,
 										Description: "Single-use OAuth authorization code returned by GitHub. Obtain it with `StartIntegrationAuthorization`.",
+										PlanModifiers: []planmodifier.String{
+											requiresReplaceUnlessImported(),
+										},
 									},
 									"redirect_url": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											requiresReplaceUnlessImported(),
+										},
 									},
 									names.AttrState: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											requiresReplaceUnlessImported(),
+										},
 									},
 								},
 							},
@@ -141,13 +154,16 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 					oneOf(),
 				},
 				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+					requiresReplaceIfAddedOrRemoved(),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"access_token": schema.StringAttribute{
 							Required:  true,
 							Sensitive: true,
+							PlanModifiers: []planmodifier.String{
+								requiresReplaceUnlessImported(),
+							},
 						},
 						"expires_at": schema.StringAttribute{
 							CustomType: timetypes.RFC3339Type{},
@@ -155,13 +171,22 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 						},
 						"instance_url": schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"target_path": schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"target_type": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.GitLabTargetType](),
 							Required:   true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 						"token_rotation": schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.GitLabTokenRotation](),
@@ -188,6 +213,9 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 							Optional:    true,
 							Sensitive:   true,
 							Description: "External ID that Continuum presents when assuming `role_arn`. The service does not return this value.",
+							PlanModifiers: []planmodifier.String{
+								requiresReplaceIfRemoved(),
+							},
 						},
 						names.AttrRoleARN: schema.StringAttribute{
 							CustomType:  fwtypes.ARNType,
@@ -218,7 +246,6 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	name := plan.Name.ValueString()
 	input := continuum.CreateIntegrationInput{
-		ClientToken:           aws.String(create.UniqueId(ctx)),
 		Name:                  aws.String(name),
 		ProviderConfiguration: providerConfig,
 	}
@@ -271,7 +298,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 
@@ -318,14 +345,14 @@ func (r *integrationResource) Update(ctx context.Context, request resource.Updat
 			isRoleNotAssumable,
 		)
 		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ID.String())
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 			return
 		}
 	}
 
 	output, err := findIntegrationByID(ctx, conn, plan.ID.ValueString())
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ID.ValueString())
 		return
 	}
 
@@ -354,7 +381,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.String())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.ValueString())
 		return
 	}
 }
@@ -553,7 +580,7 @@ func (m *integrationResourceModel) flatten(ctx context.Context, output *continuu
 		m.S3 = fwtypes.NewListNestedObjectValueOfNull[s3IntegrationModel](ctx)
 
 	default:
-		diags.AddError("Unexpected integration provider", enum.Slice(output.IntegrationType)[0])
+		diags.AddError("Unexpected integration provider", string(output.IntegrationType))
 	}
 
 	return diags
@@ -569,4 +596,40 @@ func isRoleNotAssumable(err error) (bool, error) {
 	}
 
 	return false, err
+}
+
+// requiresReplaceIfAddedOrRemoved replaces the integration when a provider block is added or removed.
+// Changes within the block are handled by attribute-level plan modifiers.
+func requiresReplaceIfAddedOrRemoved() planmodifier.List {
+	return listplanmodifier.RequiresReplaceIf(
+		func(_ context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
+			response.RequiresReplace = request.StateValue.IsNull() != request.PlanValue.IsNull()
+		},
+		"Requires replacement when the block is added or removed.",
+		"Requires replacement when the block is added or removed.",
+	)
+}
+
+// requiresReplaceUnlessImported replaces the integration when a secret changes. The service never returns
+// secrets, so they are null in state after import; filling them in from configuration is not a change.
+func requiresReplaceUnlessImported() planmodifier.String {
+	return stringplanmodifier.RequiresReplaceIf(
+		func(_ context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+			response.RequiresReplace = !request.StateValue.IsNull()
+		},
+		"Requires replacement when the value changes, unless there is no prior value.",
+		"Requires replacement when the value changes, unless there is no prior value.",
+	)
+}
+
+// requiresReplaceIfRemoved replaces the integration when the external ID is removed.
+// UpdateIntegration keeps the existing external ID when none is supplied, so it cannot be cleared in place.
+func requiresReplaceIfRemoved() planmodifier.String {
+	return stringplanmodifier.RequiresReplaceIf(
+		func(_ context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+			response.RequiresReplace = !request.StateValue.IsNull() && request.PlanValue.IsNull()
+		},
+		"Requires replacement when the value is removed.",
+		"Requires replacement when the value is removed.",
+	)
 }
