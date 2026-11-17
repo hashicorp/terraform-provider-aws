@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write       # required to push commits
+  issues: read          # required to find related open issues
   pull-requests: write  # required to create or update the automation pull request
 
 concurrency:
@@ -96,7 +97,17 @@ jobs:
                   end
               ]
           ' > "$RUNNER_TEMP/sdk-module-tags.json"
-          module_tags=$(jq -r '.[]' "$RUNNER_TEMP/sdk-module-tags.json")
+          jq '
+            "github.com/aws/aws-sdk-go-v2" as $prefix
+            | [
+                .Require[]
+                | select(.Path == $prefix or (.Path | startswith($prefix + "/")))
+                | if .Path == $prefix then .Version
+                  else (.Path | ltrimstr($prefix + "/") | sub("/v([2-9]|[1-9][0-9]+)$"; "")) + "/" + .Version
+                  end
+              ]
+          ' "$RUNNER_TEMP/go-mod.json" > "$RUNNER_TEMP/sdk-previous-module-tags.json"
+          module_tags=$(jq -sr 'add | unique[]' "$RUNNER_TEMP/sdk-module-tags.json" "$RUNNER_TEMP/sdk-previous-module-tags.json")
           patterns=('refs/tags/release-*')
           while IFS= read -r tag; do
             [[ -n "$tag" ]] || continue
@@ -106,16 +117,18 @@ jobs:
             echo "::warning::Unable to look up AWS SDK for Go v2 tags"
             : > "$RUNNER_TEMP/sdk-tags"
           fi
-          jq -Rs --slurpfile modules "$RUNNER_TEMP/sdk-module-tags.json" '
-            # Compare revisions numerically: .10 follows .2, and an unsuffixed date is revision 0.
-            def release_key:
-              ltrimstr("refs/tags/release-") | split(".") | [.[0], (.[1] // "0" | tonumber)];
+          jq -Rs '
             split("\n")
             | map(select(length > 0) | split("\t") | {sha: .[0], ref: .[1]})
             # Annotated tags have separate object IDs; prefer their peeled ^{} commit IDs.
             | group_by(.ref | rtrimstr("^{}"))
             | map(sort_by(.ref | endswith("^{}")) | last | .ref |= rtrimstr("^{}"))
-            | . as $tags
+          ' "$RUNNER_TEMP/sdk-tags" > "$RUNNER_TEMP/sdk-tag-index.json"
+          jq --slurpfile modules "$RUNNER_TEMP/sdk-module-tags.json" '
+            # Compare revisions numerically: .10 follows .2, and an unsuffixed date is revision 0.
+            def release_key:
+              ltrimstr("refs/tags/release-") | split(".") | [.[0], (.[1] // "0" | tonumber)];
+            . as $tags
             | ($tags | INDEX(.ref)) as $index
             | ($tags
                 | map(select(.ref | test("^refs/tags/release-[0-9]{4}-[0-9]{2}-[0-9]{2}(\\.[0-9]+)?$")))
@@ -132,7 +145,7 @@ jobs:
                 releases: ([$matches[] | select(. != null)] | unique_by(.ref)
                   | sort_by(.ref | release_key) | reverse | map(.ref | ltrimstr("refs/tags/")))
               }
-          ' "$RUNNER_TEMP/sdk-tags" > "$RUNNER_TEMP/sdk-release-matches.json"
+          ' "$RUNNER_TEMP/sdk-tag-index.json" > "$RUNNER_TEMP/sdk-release-matches.json"
           title="deps: update AWS SDK for Go v2"
           target=$(jq -r '.releases[0] // empty' "$RUNNER_TEMP/sdk-release-matches.json")
           unmatched=$(jq -r '.unmatched' "$RUNNER_TEMP/sdk-release-matches.json")
@@ -165,6 +178,26 @@ jobs:
             printf 'title=%s\n' "$title"
             echo 'notes<<EOF'
             cat "$RUNNER_TEMP/sdk-release-notes"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Identify related issues
+        id: related_issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh api "repos/$GH_REPO/issues?state=open&per_page=100" --paginate \
+            --jq '.[] | select(.pull_request == null) | {number, title, body, state}' > "$RUNNER_TEMP/sdk-issues.json"
+          relations=$(jq -sr \
+            --slurpfile before "$RUNNER_TEMP/go-mod.json" \
+            --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
+            --slurpfile tags "$RUNNER_TEMP/sdk-tag-index.json" \
+            -f .ci/scripts/related-sdk-issues.jq "$RUNNER_TEMP/sdk-issues.json")
+          {
+            echo 'relations<<EOF'
+            printf '%s\n' "$relations"
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -237,7 +270,7 @@ jobs:
             Closes #0000
             --->
 
-            No linked issue.
+            ${{ steps.related_issues.outputs.relations }}
 
             ### References
             <!---
