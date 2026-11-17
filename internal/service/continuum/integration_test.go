@@ -110,6 +110,38 @@ func testAccIntegration_updateRole(t *testing.T) {
 	})
 }
 
+func testAccIntegration_updateExternalID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v continuum.GetIntegrationOutput
+	resourceName := "aws_continuum_integration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_externalID(rName, rName),
+				Check:  testAccCheckIntegrationExists(ctx, t, resourceName, &v),
+			},
+			{
+				Config: testAccIntegrationConfig_externalID(rName, rName+"-2"),
+				Check:  testAccCheckIntegrationExists(ctx, t, resourceName, &v),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3").AtSliceIndex(0).AtMapKey(names.AttrExternalID), knownvalue.StringExact(rName+"-2")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, v *continuum.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -156,10 +188,9 @@ func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.
 
 // testAccIntegrationConfig_base creates a bucket holding a placeholder code package and the roles
 // that Continuum assumes to read it. The package is not a valid zip, so scans fail fast.
+// The roles trust two external IDs so that the external ID can be updated in place.
 func testAccIntegrationConfig_base(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
@@ -193,7 +224,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringEquals"
       variable = "sts:ExternalId"
-      values   = [%[1]q]
+      values   = [%[1]q, "%[1]s-2"]
     }
   }
 }
@@ -244,6 +275,14 @@ func testAccIntegrationConfig_basic(rName string) string {
 }
 
 func testAccIntegrationConfig_role(rName, role string) string {
+	return testAccIntegrationConfig_s3(rName, role, rName)
+}
+
+func testAccIntegrationConfig_externalID(rName, externalID string) string {
+	return testAccIntegrationConfig_s3(rName, "test", externalID)
+}
+
+func testAccIntegrationConfig_s3(rName, role, externalID string) string {
 	return acctest.ConfigCompose(testAccIntegrationConfig_base(rName), fmt.Sprintf(`
 resource "aws_continuum_integration" "test" {
   name = %[1]q
@@ -251,10 +290,10 @@ resource "aws_continuum_integration" "test" {
   s3 {
     bucket      = aws_s3_bucket.test.id
     role_arn    = aws_iam_role.%[2]s.arn
-    external_id = %[1]q
+    external_id = %[3]q
   }
 
   depends_on = [aws_iam_role_policy.test, aws_iam_role_policy.test2, aws_s3_object.code]
 }
-`, rName, role))
+`, rName, role, externalID))
 }
