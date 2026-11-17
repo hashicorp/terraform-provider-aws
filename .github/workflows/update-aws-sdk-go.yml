@@ -64,7 +64,7 @@ jobs:
           table=$(jq -nr \
             --slurpfile before "$RUNNER_TEMP/go-mod.json" \
             --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
-            -f .ci/scripts/aws-sdk-go-module-changes.jq)
+            -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-module-changes.jq)
           {
             echo 'table<<EOF'
             printf '%s\n' "$table"
@@ -78,8 +78,8 @@ jobs:
           jq -n \
             --slurpfile before "$RUNNER_TEMP/go-mod.json" \
             --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
-            -f .ci/scripts/aws-sdk-go-module-tags.jq > "$RUNNER_TEMP/sdk-module-tags.json"
-          jq -f .ci/scripts/aws-sdk-go-previous-module-tags.jq \
+            -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-module-tags.jq > "$RUNNER_TEMP/sdk-module-tags.json"
+          jq -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-previous-module-tags.jq \
             "$RUNNER_TEMP/go-mod.json" > "$RUNNER_TEMP/sdk-previous-module-tags.json"
           module_tags=$(jq -sr 'add | unique[]' "$RUNNER_TEMP/sdk-module-tags.json" "$RUNNER_TEMP/sdk-previous-module-tags.json")
           patterns=('refs/tags/release-*')
@@ -91,10 +91,10 @@ jobs:
             echo "::warning::Unable to look up AWS SDK for Go v2 tags"
             : > "$RUNNER_TEMP/sdk-tags"
           fi
-          jq -Rs -f .ci/scripts/aws-sdk-go-tag-index.jq \
+          jq -Rs -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-tag-index.jq \
             "$RUNNER_TEMP/sdk-tags" > "$RUNNER_TEMP/sdk-tag-index.json"
           jq --slurpfile modules "$RUNNER_TEMP/sdk-module-tags.json" \
-            -f .ci/scripts/aws-sdk-go-release-matches.jq \
+            -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-release-matches.jq \
             "$RUNNER_TEMP/sdk-tag-index.json" > "$RUNNER_TEMP/sdk-release-matches.json"
           title="deps: update AWS SDK for Go v2"
           target=$(jq -r '.releases[0] // empty' "$RUNNER_TEMP/sdk-release-matches.json")
@@ -144,7 +144,7 @@ jobs:
             --slurpfile before "$RUNNER_TEMP/go-mod.json" \
             --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
             --slurpfile tags "$RUNNER_TEMP/sdk-tag-index.json" \
-            -f .ci/scripts/related-sdk-issues.jq "$RUNNER_TEMP/sdk-issues.json")
+            -f .ci/scripts/workflows/update-aws-sdk-go/related-sdk-issues.jq "$RUNNER_TEMP/sdk-issues.json")
           {
             echo 'relations<<EOF'
             printf '%s\n' "$relations"
