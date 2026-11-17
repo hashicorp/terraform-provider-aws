@@ -12,7 +12,7 @@ Manages an AWS Continuum integration. An integration connects Continuum to a cod
 
 ~> **NOTE:** The S3 integration role must use the path `/continuum/integrations/`, trust the `continuum.amazonaws.com` service principal with an `sts:ExternalId` condition, and allow `s3:ListBucket` on the bucket. IAM changes are eventually consistent, so the provider retries creation while Continuum cannot yet assume or use a new role.
 
-~> **NOTE:** Continuum does not return external IDs, access tokens or GitHub authorization codes. They are kept from configuration and are not populated by import.
+~> **NOTE:** Continuum does not return external IDs, access tokens or GitHub authorization values. They are kept from configuration and are not populated by import. The first apply after import records them in state without replacing the integration.
 
 ## Example Usage
 
@@ -58,7 +58,7 @@ This resource supports the following arguments:
 ### `github` Block
 
 * `authorization` - (Required) Single-use OAuth authorization. See [`authorization`](#authorization-block) below.
-* `organization_name` - (Optional) GitHub organization to install into. Omit for a personal account.
+* `organization_name` - (Optional, Forces new resource) GitHub organization to install into. Omit for a personal account.
 
 ### `authorization` Block
 
@@ -71,12 +71,12 @@ This resource supports the following arguments:
 * `access_token` - (Required, Sensitive) GitLab access token.
 * `instance_url` - (Required) URL of the GitLab instance.
 * `target_path` - (Required) Path of the GitLab project or group.
-* `target_type` - (Required) Type of the target. Valid values are `PROJECT`.
+* `target_type` - (Required) Type of the target. Valid values are `GROUP` and `PROJECT`.
 
 ### `s3` Block
 
 * `bucket` - (Required, Forces new resource) Name of the bucket that holds the code.
-* `external_id` - (Optional, Sensitive) External ID that Continuum presents when assuming the role. Can be updated in place.
+* `external_id` - (Optional, Sensitive) External ID that Continuum presents when assuming the role. Can be updated in place. Removing it forces a new resource, because Continuum keeps the existing external ID when none is supplied.
 * `role_arn` - (Required) ARN of the IAM role that Continuum assumes to read the bucket. Can be updated in place.
 
 ## Attribute Reference
@@ -129,12 +129,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_continuum_integration.example
-  id = "ID_PLACEHOLDER"
+  id = "01a17e22728b7d25b3a2294e0ca5c35e"
 }
 ```
 
 Using `terraform import`, import `aws_continuum_integration` using the ID. For example:
 
 ```console
-% terraform import aws_continuum_integration.example ID_PLACEHOLDER
+% terraform import aws_continuum_integration.example 01a17e22728b7d25b3a2294e0ca5c35e
 ```
