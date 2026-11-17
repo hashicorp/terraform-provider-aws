@@ -20,7 +20,9 @@ func TestAccContinuum_serial(t *testing.T) {
 		"Integration": {
 			acctest.CtBasic:      testAccIntegration_basic,
 			acctest.CtDisappears: testAccIntegration_disappears,
+			"updateExternalID":   testAccIntegration_updateExternalID,
 			"updateRole":         testAccIntegration_updateRole,
+			"identity":           testAccContinuumIntegration_identitySerial,
 		},
 	}
 
