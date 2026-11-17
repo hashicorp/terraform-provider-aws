@@ -45,6 +45,7 @@ func TestAccAmplify_serial(t *testing.T) {
 			acctest.CtDisappears:   testAccBranch_disappears,
 			"tags":                 testAccAmplifyBranch_tagsSerial,
 			"BasicAuthCredentials": testAccBranch_BasicAuthCredentials,
+			"ComputeRole":          testAccBranch_ComputeRole,
 			"EnvironmentVariables": testAccBranch_EnvironmentVariables,
 			"OptionalArguments":    testAccBranch_OptionalArguments,
 		},

@@ -41,6 +41,7 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "backend_environment_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "branch_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "compute_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_domains.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_branch", ""),
@@ -254,6 +255,65 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 	})
 }
 
+func testAccBranch_ComputeRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	var branch types.Branch
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_amplify_branch.test"
+	computeRole1ResourceName := "aws_iam_role.compute_test1"
+	computeRole2ResourceName := "aws_iam_role.compute_test2"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBranchDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBranchConfig_computeRoleARN(rName, "compute_test1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBranchExists(ctx, t, resourceName, &branch),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_role_arn", computeRole1ResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBranchConfig_computeRoleARN(rName, "compute_test2"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBranchExists(ctx, t, resourceName, &branch),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_role_arn", computeRole2ResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccBranchConfig_computeRoleARNRemoved(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBranchExists(ctx, t, resourceName, &branch),
+					resource.TestCheckResourceAttr(resourceName, "compute_role_arn", ""),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBranchExists(ctx context.Context, t *testing.T, resourceName string, v *types.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -328,6 +388,69 @@ resource "aws_amplify_branch" "test" {
   enable_basic_auth      = true
 }
 `, rName, basicAuthCredentials)
+}
+
+func testAccBranchConfig_computeRoleBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "compute_test1" {
+  name = "%[1]s-compute1"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "amplify.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role" "compute_test2" {
+  name = "%[1]s-compute2"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": "sts:AssumeRole",
+    "Principal": {
+      "Service": "amplify.amazonaws.com"
+    },
+    "Effect": "Allow"
+  }]
+}
+POLICY
+}
+
+resource "aws_amplify_app" "test" {
+  name     = %[1]q
+  platform = "WEB_COMPUTE"
+}
+`, rName)
+}
+
+func testAccBranchConfig_computeRoleARN(rName, roleResourceName string) string {
+	return acctest.ConfigCompose(testAccBranchConfig_computeRoleBase(rName), fmt.Sprintf(`
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+
+  compute_role_arn = aws_iam_role.%[2]s.arn
+}
+`, rName, roleResourceName))
+}
+
+func testAccBranchConfig_computeRoleARNRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccBranchConfig_computeRoleBase(rName), fmt.Sprintf(`
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+}
+`, rName))
 }
 
 func testAccBranchConfig_environmentVariables(rName string) string {
