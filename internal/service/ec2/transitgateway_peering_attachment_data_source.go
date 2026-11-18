@@ -43,6 +43,10 @@ func dataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"multipath_resilience_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"peer_account_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -113,6 +117,11 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 
 	resourceOwnerID := aws.ToString(local.OwnerId)
 	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, resourceOwnerID, d.Id()))
+	if v := transitGatewayPeeringAttachment.Options; v != nil {
+		d.Set("multipath_resilience_status", v.MultipathResilienceStatus)
+	} else {
+		d.Set("multipath_resilience_status", nil)
+	}
 	d.Set("peer_account_id", peer.OwnerId)
 	d.Set("peer_region", peer.Region)
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)

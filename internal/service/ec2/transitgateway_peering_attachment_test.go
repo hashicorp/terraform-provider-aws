@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -51,6 +52,32 @@ func TestFlattenTransitGatewayPeeringAttachmentOptions(t *testing.T) {
 				"dynamic_routing": awstypes.DynamicRoutingValueEnable,
 			}},
 		},
+		"multipath resilience disallowed": {
+			// The API returns the multipath resilience settings for every attachment.
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(false),
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled,
+				RequesterAllowMultipathResilience: aws.Bool(false),
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValue(""),
+			}},
+		},
+		"multipath resilience allowed": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(true),
+				AccepterMultipathResilienceMode:   awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled,
+				RequesterAllowMultipathResilience: aws.Bool(true),
+				RequesterMultipathResilienceMode:  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": true,
+				"dynamic_routing":            awstypes.DynamicRoutingValue(""),
+				"multipath_resilience_mode":  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+			}},
+		},
 	}
 
 	for name, testCase := range testCases {
@@ -90,7 +117,9 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
@@ -141,6 +170,78 @@ func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsy
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringAttachment_multipathResilience(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+	accepterResourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.peer"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "options.0.multipath_resilience_mode", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn)),
+					// Accepting the attachment also allows multipath resilience for the accepter.
+					resource.TestCheckResourceAttr(accepterResourceName, "options.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(accepterResourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				// Refresh the requester's status now that the attachment has been accepted.
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				Config:            testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtTrue),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtFalse),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusPending)),
+				),
+			},
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtTrue),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled)),
+				),
 			},
 		},
 	})
@@ -433,4 +534,44 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   }
 }
 `, acctest.AlternateRegion(), tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+// testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience skips the test when the Region pair doesn't support multipath resilience.
+// A Region without multipath resilience support doesn't recognize the parameter at all; a supported Region rejects an unsupported peer Region.
+func testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSequence(
+		acctest.ErrorCheck(t, names.EC2ServiceID),
+		acctest.ErrorCheckSkipMessagesContaining(t,
+			"MultipathResilience is not supported between",
+			"The parameter Options.AllowMultipathResilience is not recognized",
+		),
+	)
+}
+
+func testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, allow string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[2]q
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
+
+  options {
+    allow_multipath_resilience = %[3]s
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "peer" {
+  provider = "awsalternate"
+
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.AlternateRegion(), allow))
 }
