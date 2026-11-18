@@ -436,9 +436,16 @@ func sweepUserGroups(region string) error {
 		}
 
 		for _, v := range page.UserGroups {
+			id := aws.ToString(v.UserGroupId)
+
+			if id == "default.iam-user-group" {
+				log.Printf("[INFO] Skipping ElastiCache User Group: %s", id)
+				continue
+			}
+
 			r := resourceUserGroup()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.UserGroupId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
