@@ -3060,6 +3060,9 @@ func TestAccLambdaFunction_capacityProvider(t *testing.T) {
 
 func TestAccLambdaFunction_acceleratorConfig(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 	imageURI := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
 	if imageURI == "" {
 		t.Skip("Environment variable AWS_LAMBDA_IMAGE_LATEST_ID is not set")
