@@ -643,7 +643,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 
 	if v, ok := d.GetOk("accelerator_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.AcceleratorConfig = &awstypes.AcceleratorConfig{
-			AcceleratorMemorySize: awstypes.AcceleratorMemoryGB(int32(v.([]any)[0].(map[string]any)["accelerator_memory_size"].(int))),
+			AcceleratorMemorySize: awstypes.AcceleratorMemoryGB(v.([]any)[0].(map[string]any)["accelerator_memory_size"].(int)),
 		}
 	}
 
@@ -898,7 +898,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			// the existing value unchanged, so only send it when present.
 			if v, ok := d.GetOk("accelerator_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.AcceleratorConfig = &awstypes.AcceleratorConfig{
-					AcceleratorMemorySize: awstypes.AcceleratorMemoryGB(int32(v.([]any)[0].(map[string]any)["accelerator_memory_size"].(int))),
+					AcceleratorMemorySize: awstypes.AcceleratorMemoryGB(v.([]any)[0].(map[string]any)["accelerator_memory_size"].(int)),
 				}
 			}
 		}
