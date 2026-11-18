@@ -1291,6 +1291,7 @@ const testAccPolicyDocumentRoutingPolicyNamesExpectedJSON = `{
   ]
 }`
 
+// lintignore:AWSAT003
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_multipathResilience(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_networkmanager_core_network_policy_document.test"
@@ -1359,6 +1360,7 @@ func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_multipathResilienc
 	})
 }
 
+// lintignore:AWSAT003
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_multipathResilienceErrors(t *testing.T) {
 	ctx := acctest.Context(t)
 
