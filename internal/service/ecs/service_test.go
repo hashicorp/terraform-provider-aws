@@ -431,6 +431,57 @@ func TestAccECSService_gatewayConnector(t *testing.T) {
 	})
 }
 
+func TestAccECSService_GatewayConnector_deregistrationDelay(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service awstypes.Service
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, 60),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.0.timeout_seconds", "60"),
+				),
+			},
+			{
+				// 0 is a valid value and must be sent to the API.
+				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.0.timeout_seconds", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// The block is Optional and Computed: removing it keeps the last value.
+				Config: testAccServiceConfig_gatewayConnector(rName, `["PUBLIC"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.0.timeout_seconds", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSService_PlacementStrategy_unnormalized(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service awstypes.Service
@@ -9005,6 +9056,45 @@ resource "aws_ecs_service" "test" {
   depends_on = [aws_ecs_gateway_cluster_association.test]
 }
 `, rName, accessTypes))
+}
+
+func testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName string, timeoutSeconds int) string {
+	return acctest.ConfigCompose(testAccServiceConfig_baseGatewayConnector(rName), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 0
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets         = aws_subnet.test[*].id
+    security_groups = [aws_security_group.test.id]
+  }
+
+  gateway_connector {
+    port_name = "web"
+
+    deregistration_delay {
+      timeout_seconds = %[2]d
+    }
+
+    filters {
+      access_types = ["PUBLIC"]
+    }
+
+    health_check {
+      path = "/"
+
+      matcher {
+        http_code = "200"
+      }
+    }
+  }
+
+  depends_on = [aws_ecs_gateway_cluster_association.test]
+}
+`, rName, timeoutSeconds))
 }
 
 func testAccServiceConfig_gatewayConnectorRemoved(rName string) string {

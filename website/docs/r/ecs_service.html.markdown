@@ -295,6 +295,8 @@ The `volume_configuration` configuration block supports the following:
 
 `gateway_connector` supports the following:
 
+* `deregistration_delay` - (Optional) How long the gateway waits for in-flight requests to finish before it removes a deregistering task. If not configured, Amazon ECS uses 300 seconds. Removing the block leaves the last value in place.
+    * `timeout_seconds` - (Required) Time to wait before a deregistering task is removed, in seconds. Valid values: `0` to `3600`. `0` removes the task immediately.
 * `filters` - (Optional) Limits which gateways associated with the cluster route traffic to the service.
     * `access_types` - (Optional) Gateway access types to accept traffic from. Valid values: `PUBLIC`, `PRIVATE`.
 * `health_check` - (Optional) Health check that the gateway uses for the service's tasks. Arguments that are not configured use the values chosen by Amazon ECS. Changing the health check fails on services that use the `ROLLING` deployment strategy.

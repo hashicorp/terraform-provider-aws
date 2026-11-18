@@ -827,6 +827,21 @@ func resourceService() *schema.Resource {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"deregistration_delay": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"timeout_seconds": {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IntBetween(0, 3600),
+										},
+									},
+								},
+							},
 							"filters": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -3105,6 +3120,14 @@ func expandGatewayConnectors(tfList []any) []awstypes.GatewayConnector {
 			PortName: aws.String(tfMap["port_name"].(string)),
 		}
 
+		if v, ok := tfMap["deregistration_delay"].([]any); ok && len(v) > 0 && v[0] != nil {
+			if v, ok := v[0].(map[string]any)["timeout_seconds"].(int); ok {
+				apiObject.DeregistrationDelay = &awstypes.GatewayConnectorDeregistrationDelay{
+					TimeoutSeconds: aws.Int32(int32(v)),
+				}
+			}
+		}
+
 		if v, ok := tfMap["filters"].([]any); ok && len(v) > 0 && v[0] != nil {
 			if v, ok := v[0].(map[string]any)["access_types"].(*schema.Set); ok && v.Len() > 0 {
 				apiObject.Filters = &awstypes.GatewayConnectorFilters{
@@ -3170,6 +3193,12 @@ func flattenGatewayConnectors(apiObjects []awstypes.GatewayConnector) []any {
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]any{
 			"port_name": aws.ToString(apiObject.PortName),
+		}
+
+		if v := apiObject.DeregistrationDelay; v != nil && v.TimeoutSeconds != nil {
+			tfMap["deregistration_delay"] = []any{map[string]any{
+				"timeout_seconds": aws.ToInt32(v.TimeoutSeconds),
+			}}
 		}
 
 		if v := apiObject.Filters; v != nil {
