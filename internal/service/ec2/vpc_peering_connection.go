@@ -16,9 +16,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -53,10 +55,15 @@ func resourceVPCPeeringConnection() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"accepter": vpcPeeringConnectionOptionsSchema,
+				// Multipath resilience is cross-Region only, and each side can only be modified from its own Region.
+				"accepter": vpcPeeringConnectionOptionsSchema(false),
 				"auto_accept": {
 					Type:     schema.TypeBool,
 					Optional: true,
+				},
+				"multipath_resilience_status": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				"peer_owner_id": {
 					Type:     schema.TypeString,
@@ -75,7 +82,7 @@ func resourceVPCPeeringConnection() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
-				"requester":       vpcPeeringConnectionOptionsSchema,
+				"requester":       vpcPeeringConnectionOptionsSchema(true),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCID: {
@@ -88,20 +95,41 @@ func resourceVPCPeeringConnection() *schema.Resource {
 	}
 }
 
-var vpcPeeringConnectionOptionsSchema = &schema.Schema{
-	Type:     schema.TypeList,
-	Optional: true,
-	Computed: true,
-	MaxItems: 1,
-	Elem: &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"allow_remote_vpc_dns_resolution": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
+// vpcPeeringConnectionOptionsSchema returns the schema of an options block.
+// multipath adds the multipath resilience arguments, which can only be set for the side of
+// the connection in the Region (and account) that the resource is managed in.
+func vpcPeeringConnectionOptionsSchema(multipath bool) *schema.Schema {
+	s := map[string]*schema.Schema{
+		"allow_remote_vpc_dns_resolution": {
+			Type:     schema.TypeBool,
+			Optional: true,
+			Default:  false,
 		},
-	},
+	}
+
+	if multipath {
+		s["allow_multipath_resilience"] = &schema.Schema{
+			Type:     schema.TypeBool,
+			Optional: true,
+			Computed: true,
+		}
+		s["multipath_resilience_mode"] = &schema.Schema{
+			Type:             schema.TypeString,
+			Optional:         true,
+			Computed:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.MultipathResilienceMode](),
+		}
+	}
+
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Computed: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: s,
+		},
+	}
 }
 
 func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -126,6 +154,10 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 		input.PeerRegion = aws.String(v.(string))
 	}
 
+	// The requester's multipath resilience is set at create time, as a connection
+	// can't be modified until it's accepted, and cross-Region connections can't be auto-accepted.
+	input.RequesterPeeringConnectionOptions = expandCreatePeeringConnectionOptionsRequest(d)
+
 	log.Printf("[DEBUG] Creating EC2 VPC Peering Connection: %#v", input)
 	output, err := conn.CreateVpcPeeringConnection(ctx, input)
 
@@ -149,7 +181,19 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	if err := modifyVPCPeeringConnectionOptions(ctx, conn, d, vpcPeeringConnection, true); err != nil {
+	accepterPeeringConnectionOptions := expandPeeringConnectionOptionsRequest(d, "accepter")
+	requesterPeeringConnectionOptions := expandPeeringConnectionOptionsRequest(d, "requester")
+	if v := requesterPeeringConnectionOptions; v != nil {
+		v.AllowMultipathResilience = nil
+		v.MultipathResilienceMode = ""
+
+		// A new connection doesn't allow DNS resolution from the remote VPC, so there's nothing left to modify.
+		if !aws.ToBool(v.AllowDnsResolutionFromRemoteVpc) {
+			requesterPeeringConnectionOptions = nil
+		}
+	}
+
+	if err := updateVPCPeeringConnectionOptions(ctx, conn, d.Id(), vpcPeeringConnection, accepterPeeringConnectionOptions, requesterPeeringConnectionOptions, true); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -157,6 +201,13 @@ func resourceVPCPeeringConnectionCreate(ctx context.Context, d *schema.ResourceD
 }
 
 func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return readVPCPeeringConnection(ctx, d, meta, "requester")
+}
+
+// readVPCPeeringConnection reads a VPC peering connection into the state of aws_vpc_peering_connection
+// or aws_vpc_peering_connection_accepter. multipathKey is the options block ("accepter" or "requester")
+// that has the multipath resilience arguments.
+func readVPCPeeringConnection(ctx context.Context, d *schema.ResourceData, meta any, multipathKey string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -173,6 +224,7 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.Set("accept_status", vpcPeeringConnection.Status.Code)
+	d.Set("multipath_resilience_status", vpcPeeringConnection.MultipathResilienceStatus)
 	d.Set("peer_region", vpcPeeringConnection.AccepterVpcInfo.Region)
 
 	if accountID := meta.(*conns.AWSClient).AccountID(ctx); accountID == aws.ToString(vpcPeeringConnection.AccepterVpcInfo.OwnerId) && accountID != aws.ToString(vpcPeeringConnection.RequesterVpcInfo.OwnerId) {
@@ -188,7 +240,7 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions, multipathKey == "accepter")}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting accepter: %s", err)
 		}
 	} else {
@@ -196,7 +248,7 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions, multipathKey == "requester")}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting requester: %s", err)
 		}
 	} else {
@@ -209,6 +261,12 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceVPCPeeringConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return updateVPCPeeringConnection(ctx, d, meta, "requester")
+}
+
+// updateVPCPeeringConnection updates aws_vpc_peering_connection or aws_vpc_peering_connection_accepter.
+// See readVPCPeeringConnection for multipathKey.
+func updateVPCPeeringConnection(ctx context.Context, d *schema.ResourceData, meta any, multipathKey string) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
@@ -232,7 +290,7 @@ func resourceVPCPeeringConnectionUpdate(ctx context.Context, d *schema.ResourceD
 		}
 	}
 
-	return append(diags, resourceVPCPeeringConnectionRead(ctx, d, meta)...)
+	return append(diags, readVPCPeeringConnection(ctx, d, meta, multipathKey)...)
 }
 
 func resourceVPCPeeringConnectionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -290,17 +348,17 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, d 
 	var accepterPeeringConnectionOptions, requesterPeeringConnectionOptions *awstypes.PeeringConnectionOptionsRequest
 
 	if key := "accepter"; d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			accepterPeeringConnectionOptions = expandPeeringConnectionOptionsRequest(v.([]any)[0].(map[string]any))
-		}
+		accepterPeeringConnectionOptions = expandPeeringConnectionOptionsRequest(d, key)
 	}
 
 	if key := "requester"; d.HasChange(key) {
-		if v, ok := d.GetOk(key); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-			requesterPeeringConnectionOptions = expandPeeringConnectionOptionsRequest(v.([]any)[0].(map[string]any))
-		}
+		requesterPeeringConnectionOptions = expandPeeringConnectionOptionsRequest(d, key)
 	}
 
+	return updateVPCPeeringConnectionOptions(ctx, conn, d.Id(), vpcPeeringConnection, accepterPeeringConnectionOptions, requesterPeeringConnectionOptions, checkActive)
+}
+
+func updateVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, id string, vpcPeeringConnection *awstypes.VpcPeeringConnection, accepterPeeringConnectionOptions, requesterPeeringConnectionOptions *awstypes.PeeringConnectionOptionsRequest, checkActive bool) error {
 	if accepterPeeringConnectionOptions == nil && requesterPeeringConnectionOptions == nil {
 		return nil
 	}
@@ -312,25 +370,25 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, d 
 			return fmt.Errorf(
 				"Unable to modify EC2 VPC Peering Connection Options. EC2 VPC Peering Connection (%s) is not active (current status: %s). "+
 					"Please set the `auto_accept` attribute to `true` or activate the EC2 VPC Peering Connection manually.",
-				d.Id(), statusCode)
+				id, statusCode)
 		}
 	}
 
 	input := &ec2.ModifyVpcPeeringConnectionOptionsInput{
 		AccepterPeeringConnectionOptions:  accepterPeeringConnectionOptions,
 		RequesterPeeringConnectionOptions: requesterPeeringConnectionOptions,
-		VpcPeeringConnectionId:            aws.String(d.Id()),
+		VpcPeeringConnectionId:            aws.String(id),
 	}
 
 	log.Printf("[DEBUG] Modifying VPC Peering Connection Options: %#v", input)
 	if _, err := conn.ModifyVpcPeeringConnectionOptions(ctx, input); err != nil {
-		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: %w", d.Id(), err)
+		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: %w", id, err)
 	}
 
 	// Retry reading back the modified options to deal with eventual consistency.
 	// Often this is to do with a delay transitioning from pending-acceptance to active.
 	err := tfresource.Retry(ctx, ec2PropagationTimeout, func(ctx context.Context) *tfresource.RetryError {
-		vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, d.Id())
+		vpcPeeringConnection, err := findVPCPeeringConnectionByID(ctx, conn, id)
 
 		if err != nil {
 			return tfresource.NonRetryableError(err)
@@ -352,31 +410,99 @@ func modifyVPCPeeringConnectionOptions(ctx context.Context, conn *ec2.Client, d 
 	})
 
 	if err != nil {
-		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: waiting for completion: %w", d.Id(), err)
+		return fmt.Errorf("modifying EC2 VPC Peering Connection (%s) Options: waiting for completion: %w", id, err)
 	}
 
 	return nil
 }
 
 func vpcPeeringConnectionOptionsEqual(o1 *awstypes.VpcPeeringConnectionOptionsDescription, o2 *awstypes.PeeringConnectionOptionsRequest) bool {
-	return aws.ToBool(o1.AllowDnsResolutionFromRemoteVpc) == aws.ToBool(o2.AllowDnsResolutionFromRemoteVpc)
+	if aws.ToBool(o1.AllowDnsResolutionFromRemoteVpc) != aws.ToBool(o2.AllowDnsResolutionFromRemoteVpc) {
+		return false
+	}
+
+	if v := o2.AllowMultipathResilience; v != nil && aws.ToBool(o1.AllowMultipathResilience) != aws.ToBool(v) {
+		return false
+	}
+
+	if v := o2.MultipathResilienceMode; v != "" && o1.MultipathResilienceMode != v {
+		return false
+	}
+
+	return true
 }
 
-func expandPeeringConnectionOptionsRequest(tfMap map[string]any) *awstypes.PeeringConnectionOptionsRequest {
-	if tfMap == nil {
+// vpcPeeringConnectionOptionConfigured reports whether attribute attr is set in
+// the configuration of options block key ("accepter" or "requester").
+func vpcPeeringConnectionOptionConfigured(d *schema.ResourceData, key, attr string) bool {
+	v := d.GetRawConfig().GetAttr(key)
+	if !v.IsKnown() || v.IsNull() || v.LengthInt() == 0 {
+		return false
+	}
+
+	v = v.Index(cty.NumberIntVal(0))
+	if !v.IsKnown() || v.IsNull() {
+		return false
+	}
+
+	// Not every options block has every attribute.
+	if !v.Type().HasAttribute(attr) {
+		return false
+	}
+
+	v = v.GetAttr(attr)
+
+	return v.IsKnown() && !v.IsNull()
+}
+
+func expandPeeringConnectionOptionsRequest(d *schema.ResourceData, key string) *awstypes.PeeringConnectionOptionsRequest {
+	v, ok := d.GetOk(key)
+	if !ok || len(v.([]any)) == 0 || v.([]any)[0] == nil {
 		return nil
 	}
 
+	tfMap := v.([]any)[0].(map[string]any)
 	apiObject := &awstypes.PeeringConnectionOptionsRequest{}
 
 	if v, ok := tfMap["allow_remote_vpc_dns_resolution"].(bool); ok {
 		apiObject.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
 	}
 
+	// Multipath resilience is Optional+Computed: when it isn't configured, leave the current setting unchanged.
+	// Accepting a connection whose requester allows it also allows it for the accepter.
+	if vpcPeeringConnectionOptionConfigured(d, key, "allow_multipath_resilience") {
+		allow := tfMap["allow_multipath_resilience"].(bool)
+		apiObject.AllowMultipathResilience = aws.Bool(allow)
+
+		if v := tfMap["multipath_resilience_mode"].(string); allow && v != "" && vpcPeeringConnectionOptionConfigured(d, key, "multipath_resilience_mode") {
+			apiObject.MultipathResilienceMode = awstypes.MultipathResilienceMode(v)
+		}
+	}
+
 	return apiObject
 }
 
-func flattenVPCPeeringConnectionOptionsDescription(apiObject *awstypes.VpcPeeringConnectionOptionsDescription) map[string]any {
+func expandCreatePeeringConnectionOptionsRequest(d *schema.ResourceData) *awstypes.CreatePeeringConnectionOptionsRequest {
+	const key = "requester"
+
+	if !vpcPeeringConnectionOptionConfigured(d, key, "allow_multipath_resilience") || !d.Get(key+".0.allow_multipath_resilience").(bool) {
+		return nil
+	}
+
+	apiObject := &awstypes.CreatePeeringConnectionOptionsRequest{
+		AllowMultipathResilience: aws.Bool(true),
+	}
+
+	if vpcPeeringConnectionOptionConfigured(d, key, "multipath_resilience_mode") {
+		apiObject.MultipathResilienceMode = awstypes.MultipathResilienceMode(d.Get(key + ".0.multipath_resilience_mode").(string))
+	}
+
+	return apiObject
+}
+
+// flattenVPCPeeringConnectionOptionsDescription flattens an options block.
+// multipath includes the multipath resilience attributes; see vpcPeeringConnectionOptionsSchema.
+func flattenVPCPeeringConnectionOptionsDescription(apiObject *awstypes.VpcPeeringConnectionOptionsDescription, multipath bool) map[string]any {
 	if apiObject == nil {
 		return nil
 	}
@@ -385,6 +511,18 @@ func flattenVPCPeeringConnectionOptionsDescription(apiObject *awstypes.VpcPeerin
 
 	if v := apiObject.AllowDnsResolutionFromRemoteVpc; v != nil {
 		tfMap["allow_remote_vpc_dns_resolution"] = aws.ToBool(v)
+	}
+
+	if !multipath {
+		return tfMap
+	}
+
+	if v := apiObject.AllowMultipathResilience; v != nil {
+		tfMap["allow_multipath_resilience"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.MultipathResilienceMode; v != "" {
+		tfMap["multipath_resilience_mode"] = string(v)
 	}
 
 	return tfMap
