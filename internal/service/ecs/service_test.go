@@ -478,6 +478,20 @@ func TestAccECSService_GatewayConnector_deregistrationDelay(t *testing.T) {
 					},
 				},
 			},
+			{
+				// Changing another connector argument resends the connector and keeps the last delay.
+				Config: testAccServiceConfig_gatewayConnector(rName, `["PUBLIC", "PRIVATE"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, t, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.filters.0.access_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.0.timeout_seconds", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
