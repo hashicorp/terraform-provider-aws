@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -93,7 +94,16 @@ func (l *groupMembershipListResource) List(ctx context.Context, request list.Lis
 			result.DisplayName = membershipID
 
 			if request.IncludeResource {
-				if err := resourceGroupMembershipFlatten(rd, item.GroupId, item.IdentityStoreId, item.MembershipId, item.MemberId); err != nil {
+				membership, err := findGroupMembershipByTwoPartKey(ctx, conn, identityStoreID, membershipID)
+				if retry.NotFound(err) {
+					continue
+				}
+				if err != nil {
+					yield(smerr.NewListResultError(ctx, err))
+					return
+				}
+
+				if err := resourceGroupMembershipFlatten(rd, membership); err != nil {
 					yield(smerr.NewListResultError(ctx, err))
 					return
 				}

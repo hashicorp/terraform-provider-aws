@@ -110,30 +110,24 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading IdentityStore Group Membership (%s): %s", d.Id(), err)
 	}
 
-	if err := resourceGroupMembershipFlatten(d, out.GroupId, out.IdentityStoreId, out.MembershipId, out.MemberId); err != nil {
+	if err := resourceGroupMembershipFlatten(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-func resourceGroupMembershipFlatten(d *schema.ResourceData, groupID, identityStoreID, membershipID *string, memberID types.MemberId) error {
-	memberIDValue, err := userIDFromMemberID(memberID)
+func resourceGroupMembershipFlatten(d *schema.ResourceData, out *identitystore.DescribeGroupMembershipOutput) error {
+	memberIDValue, err := userIDFromMemberID(out.MemberId)
 	if err != nil {
 		return fmt.Errorf("flattening group member ID: %w", err)
 	}
-	if err := d.Set("group_id", groupID); err != nil {
-		return fmt.Errorf("setting group_id: %w", err)
-	}
-	if err := d.Set("identity_store_id", identityStoreID); err != nil {
-		return fmt.Errorf("setting identity_store_id: %w", err)
-	}
-	if err := d.Set("membership_id", membershipID); err != nil {
-		return fmt.Errorf("setting membership_id: %w", err)
-	}
-	if err := d.Set("member_id", memberIDValue); err != nil {
-		return fmt.Errorf("setting member_id: %w", err)
-	}
+
+	d.Set("group_id", out.GroupId)
+	d.Set("identity_store_id", out.IdentityStoreId)
+	d.Set("member_id", memberIDValue)
+	d.Set("membership_id", out.MembershipId)
+
 	return nil
 }
 
