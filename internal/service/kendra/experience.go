@@ -12,7 +12,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,7 +81,7 @@ func ResourceExperience() *schema.Resource {
 											MaxItems: 100,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
+												ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, ""),
 											},
 										},
 										"direct_put_content": {
@@ -96,7 +96,7 @@ func ResourceExperience() *schema.Resource {
 											MaxItems: 100,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
+												ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, ""),
 											},
 										},
 									},
@@ -115,7 +115,7 @@ func ResourceExperience() *schema.Resource {
 										"identity_attribute_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
+											ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, ""),
 										},
 									},
 								},
@@ -152,14 +152,14 @@ func ResourceExperience() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]*`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z-]*`, ""),
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1000),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
+						lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, ""),
 					),
 				},
 				names.AttrRoleARN: {

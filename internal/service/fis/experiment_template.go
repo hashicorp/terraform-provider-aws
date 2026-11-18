@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fis/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -62,7 +62,7 @@ func resourceExperimentTemplate() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(0, 128),
-									validation.StringMatch(regexache.MustCompile(`^aws:[0-9a-z-]+:[0-9A-Za-z/-]+$`), "must be in the format of aws:service-name:action-name"),
+									lazyvalidation.StringMatch(`^aws:[0-9a-z-]+:[0-9A-Za-z/-]+$`, "must be in the format of aws:service-name:action-name"),
 								),
 							},
 							names.AttrDescription: {
@@ -205,12 +205,12 @@ func resourceExperimentTemplate() *schema.Resource {
 							"post_experiment_duration": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^PT\d+[M|H|S]$`), "must be in the format of PT10S"),
+								ValidateFunc: lazyvalidation.StringMatch(`^PT\d+[M|H|S]$`, "must be in the format of PT10S"),
 							},
 							"pre_experiment_duration": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^PT\d+[M|H|S]$`), "must be in the format of PT10S"),
+								ValidateFunc: lazyvalidation.StringMatch(`^PT\d+[M|H|S]$`, "must be in the format of PT10S"),
 							},
 						},
 					},
@@ -232,7 +232,7 @@ func resourceExperimentTemplate() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												verify.ValidARN,
-												validation.StringMatch(regexache.MustCompile(`:\*$`), "ARN must end with `:*`"),
+												lazyvalidation.StringMatch(`:\*$`, "ARN must end with `:*`"),
 											),
 										},
 									},
@@ -359,7 +359,7 @@ func resourceExperimentTemplate() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(0, 64),
-									validation.StringMatch(regexache.MustCompile(`^(ALL|COUNT\(\d+\)|PERCENT\(\d+\))$`), "must be one of ALL, COUNT(number), PERCENT(number)"),
+									lazyvalidation.StringMatch(`^(ALL|COUNT\(\d+\)|PERCENT\(\d+\))$`, "must be one of ALL, COUNT(number), PERCENT(number)"),
 								),
 							},
 						},

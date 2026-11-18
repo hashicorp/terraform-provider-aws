@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
@@ -38,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -90,7 +90,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,10}$`), ""),
+					lazystringvalidator.RegexMatches(`^\S{1,10}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -104,7 +104,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrInstanceType: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,20}$`), ""),
+					lazystringvalidator.RegexMatches(`^\S{1,20}$`, ""),
 				},
 			},
 			names.AttrKMSKeyID: schema.StringAttribute{
@@ -123,7 +123,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

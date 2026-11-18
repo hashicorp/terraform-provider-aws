@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -73,20 +73,14 @@ func (r *relayResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9-_]+$`),
-						"must contain only alphanumeric characters, hyphens, and underscores",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9-_]+$`, "must contain only alphanumeric characters, hyphens, and underscores"),
 				},
 			},
 			"server_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9-.]+$`),
-						"must contain only alphanumeric characters, hyphens, and dots",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9-.]+$`, "must contain only alphanumeric characters, hyphens, and dots"),
 				},
 			},
 			"server_port": schema.Int32Attribute{

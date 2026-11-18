@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/vpclattice/types"
@@ -38,6 +37,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -120,7 +120,7 @@ func (r *resourceConfigurationResource) Schema(ctx context.Context, request reso
 				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
-						stringvalidator.RegexMatches(regexache.MustCompile("^((\\d{1,5}\\-\\d{1,5})|(\\d+))$"), "must contain one port number between 1 and 65535 or two separated by hyphen."),
+						lazystringvalidator.RegexMatches("^((\\d{1,5}\\-\\d{1,5})|(\\d+))$", "must contain one port number between 1 and 65535 or two separated by hyphen."),
 					),
 				},
 			},

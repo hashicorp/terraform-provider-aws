@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -66,7 +66,7 @@ func (r *associationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required: true,
 				Validators: []validator.String{
 					// Converted from (?!^[0-9]+$)([a-zA-Z0-9\-_' ']+) because of the negative lookahead.
-					stringvalidator.RegexMatches(regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)"), ""),
+					lazystringvalidator.RegexMatches("(^[^0-9][a-zA-Z0-9\\-_' ']+$)", ""),
 					stringvalidator.LengthBetween(0, 64),
 				},
 				PlanModifiers: []planmodifier.String{

@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,7 +89,7 @@ func resourceCustomDBEngineVersion() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						lazyvalidation.StringMatch(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
 						validation.StringLenBetween(1, 35),
 					),
 				},

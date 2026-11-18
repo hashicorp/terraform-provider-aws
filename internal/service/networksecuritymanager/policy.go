@@ -7,7 +7,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -64,7 +64,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z _.:/=+\-@]*$`), ""),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z _.:/=+\-@]*$`, ""),
 				},
 			},
 			"firewall_type": schema.StringAttribute{
@@ -85,7 +85,7 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z _.:/=+\-@]*$`), ""),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z][0-9A-Za-z _.:/=+\-@]*$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

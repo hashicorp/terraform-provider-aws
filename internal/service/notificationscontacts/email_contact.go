@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notificationscontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/notificationscontacts/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -51,7 +51,7 @@ func (r *emailContactResource) Schema(ctx context.Context, request resource.Sche
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(6, 254),
-					stringvalidator.RegexMatches(regexache.MustCompile(`(.+)@(.+)`), ""),
+					lazystringvalidator.RegexMatches(`(.+)@(.+)`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -61,7 +61,7 @@ func (r *emailContactResource) Schema(ctx context.Context, request resource.Sche
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[\w.~-]+`), ""),
+					lazystringvalidator.RegexMatches(`[\w.~-]+`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

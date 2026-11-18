@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -42,6 +41,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -395,7 +395,7 @@ func authorizerConfigurationBlock(ctx context.Context, extraValidators ...valida
 											Required: true,
 											Validators: []validator.String{
 												stringvalidator.LengthBetween(1, 255),
-												stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+												lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.:-]+$`, "must contain only letters, numbers, and the characters _ . - :"),
 											},
 										},
 										"inbound_token_claim_value_type": schema.StringAttribute{
@@ -436,7 +436,7 @@ func authorizerConfigurationBlock(ctx context.Context, extraValidators ...valida
 																	Optional: true,
 																	Validators: []validator.String{
 																		stringvalidator.LengthBetween(1, 255),
-																		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																		lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.:-]+$`, "must contain only letters, numbers, and the characters _ . - :"),
 																	},
 																},
 																"match_value_string_list": schema.SetAttribute{
@@ -445,7 +445,7 @@ func authorizerConfigurationBlock(ctx context.Context, extraValidators ...valida
 																	Validators: []validator.Set{
 																		setvalidator.ValueStringsAre(
 																			stringvalidator.LengthBetween(1, 255),
-																			stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.:-]+$`), "must contain only letters, numbers, and the characters _ . - :"),
+																			lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.:-]+$`, "must contain only letters, numbers, and the characters _ . - :"),
 																		),
 																	},
 																},
@@ -595,7 +595,7 @@ func filesystemConfigurationBlock(ctx context.Context, extraValidators ...valida
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(6, 200),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+									lazystringvalidator.RegexMatches(`^/mnt/[a-zA-Z0-9._-]+/?$`, "must be under /mnt with exactly one subdirectory level"),
 								},
 							},
 						},
@@ -616,7 +616,7 @@ func filesystemConfigurationBlock(ctx context.Context, extraValidators ...valida
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(6, 200),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+									lazystringvalidator.RegexMatches(`^/mnt/[a-zA-Z0-9._-]+/?$`, "must be under /mnt with exactly one subdirectory level"),
 								},
 							},
 						},
@@ -633,7 +633,7 @@ func filesystemConfigurationBlock(ctx context.Context, extraValidators ...valida
 								Required: true,
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(6, 200),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^/mnt/[a-zA-Z0-9._-]+/?$`), "must be under /mnt with exactly one subdirectory level"),
+									lazystringvalidator.RegexMatches(`^/mnt/[a-zA-Z0-9._-]+/?$`, "must be under /mnt with exactly one subdirectory level"),
 								},
 							},
 						},

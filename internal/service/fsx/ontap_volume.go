@@ -12,7 +12,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -75,7 +75,7 @@ func resourceONTAPVolume() *schema.Resource {
 								MaxItems: 12,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile("^(aggr[0-9]{1,2})$"), "Each value must be in the format aggrX, where X is a number between 1 and the number of ha_pairs"),
+									ValidateFunc: lazyvalidation.StringMatch("^(aggr[0-9]{1,2})$", "Each value must be in the format aggrX, where X is a number between 1 and the number of ha_pairs"),
 								},
 							},
 							"constituents_per_aggregate": {

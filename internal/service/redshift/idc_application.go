@@ -9,7 +9,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -65,7 +65,7 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 127),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[\w+=,.@-]+`), "must match [\\w+=,.@-]"),
+					lazystringvalidator.RegexMatches(`[\w+=,.@-]+`, "must match [\\w+=,.@-]"),
 				},
 			},
 			"idc_instance_arn": schema.StringAttribute{
@@ -87,7 +87,7 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 127),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_+.#@$-]+$`), "must match ^[a-zA-Z0-9_+.#@$-]+$"),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_+.#@$-]+$`, "must match ^[a-zA-Z0-9_+.#@$-]+$"),
 				},
 			},
 			"redshift_idc_application_arn": framework.ARNAttributeComputedOnly(),
@@ -98,7 +98,7 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[a-z][a-z0-9]*(-[a-z0-9]+)*`), "must match [a-z][a-z0-9]*(-[a-z0-9]+)*"),
+					lazystringvalidator.RegexMatches(`[a-z][a-z0-9]*(-[a-z0-9]+)*`, "must match [a-z][a-z0-9]*(-[a-z0-9]+)*"),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

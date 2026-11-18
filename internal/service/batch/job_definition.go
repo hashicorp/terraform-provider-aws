@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -540,7 +540,7 @@ func resourceJobDefinition() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 512),
-												validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
+												lazyvalidation.StringMatch(`^[0-9]*\*?$`, "must contain only numbers, and can optionally end with an asterisk"),
 											),
 										},
 										"on_reason": {
@@ -548,7 +548,7 @@ func resourceJobDefinition() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 512),
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+												lazyvalidation.StringMatch(`^[0-9A-Za-z.:\s]*\*?$`, "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
 											),
 										},
 										"on_status_reason": {
@@ -556,7 +556,7 @@ func resourceJobDefinition() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 512),
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
+												lazyvalidation.StringMatch(`^[0-9A-Za-z.:\s]*\*?$`, "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
 											),
 										},
 									},

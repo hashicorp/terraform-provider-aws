@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -161,7 +161,7 @@ func protectConfigurationCountryRulesAttribute(statuses ...awstypes.ProtectStatu
 		Validators: []validator.Map{
 			mapvalidator.SizeAtLeast(1),
 			mapvalidator.NoNullValues(),
-			mapvalidator.KeysAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z]{2}$`), "must be a two-character ISO 3166-1 alpha-2 country code in upper case")),
+			mapvalidator.KeysAre(lazystringvalidator.RegexMatches(`^[A-Z]{2}$`, "must be a two-character ISO 3166-1 alpha-2 country code in upper case")),
 			mapvalidator.ValueStringsAre(stringvalidator.OneOf(enum.Slice(statuses...)...)),
 		},
 	}

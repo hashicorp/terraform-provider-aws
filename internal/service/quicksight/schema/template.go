@@ -6,12 +6,12 @@ package schema
 import (
 	"sync"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	sdkschema "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/schema"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -262,7 +262,7 @@ var idSchema = sync.OnceValue(func() *schema.Schema {
 		Required: true,
 		ValidateFunc: validation.All(
 			validation.StringLenBetween(1, 512),
-			validation.StringMatch(regexache.MustCompile(`[\w\-]+`), "must contain only alphanumeric, hyphen, and underscore characters"),
+			lazyvalidation.StringMatch(`[\w\-]+`, "must contain only alphanumeric, hyphen, and underscore characters"),
 		),
 	}
 })

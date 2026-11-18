@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -52,7 +53,7 @@ func resourceConnectorProfile() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
+						lazyvalidation.StringMatch(`[0-9A-Za-z][\w!@#.-]+`, "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
 						validation.StringLenBetween(1, 256),
 					),
 				},
@@ -84,7 +85,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrSecretKey: {
@@ -93,7 +94,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -116,7 +117,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 256),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"api_secret_key": {
@@ -124,7 +125,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 256),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -173,14 +174,14 @@ func resourceConnectorProfile() *schema.Resource {
 																		Type: schema.TypeString,
 																		ValidateFunc: validation.All(
 																			validation.StringLenBetween(0, 2048),
-																			validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																		),
 																	},
 																},
 																"custom_authentication_type": {
 																	Type:         schema.TypeString,
 																	Required:     true,
-																	ValidateFunc: validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																	ValidateFunc: lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																},
 															},
 														},
@@ -197,7 +198,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Sensitive: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 4096),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																names.AttrClientID: {
@@ -205,7 +206,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																names.AttrClientSecret: {
@@ -214,7 +215,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Sensitive: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"oauth_request": {
@@ -228,7 +229,7 @@ func resourceConnectorProfile() *schema.Resource {
 																				Optional: true,
 																				ValidateFunc: validation.All(
 																					validation.StringLenBetween(1, 4096),
-																					validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																					lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																				),
 																			},
 																			"redirect_uri": {
@@ -236,7 +237,7 @@ func resourceConnectorProfile() *schema.Resource {
 																				Optional: true,
 																				ValidateFunc: validation.All(
 																					validation.StringLenBetween(1, 512),
-																					validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																					lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																				),
 																			},
 																		},
@@ -247,7 +248,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 4096),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -267,7 +268,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"application_key": {
@@ -275,7 +276,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -292,7 +293,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -310,7 +311,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 2048),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientID: {
@@ -318,7 +319,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientSecret: {
@@ -327,7 +328,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"oauth_request": {
@@ -341,7 +342,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"redirect_uri": {
@@ -349,7 +350,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -360,7 +361,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -378,7 +379,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 2048),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"oauth_request": {
@@ -392,7 +393,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"redirect_uri": {
@@ -400,7 +401,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -411,7 +412,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -428,7 +429,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"datakey": {
@@ -436,7 +437,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"secret_access_key": {
@@ -445,7 +446,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"user_id": {
@@ -453,7 +454,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -471,7 +472,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 2048),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientID: {
@@ -479,7 +480,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientSecret: {
@@ -488,7 +489,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"oauth_request": {
@@ -502,7 +503,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"redirect_uri": {
@@ -510,7 +511,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -536,7 +537,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -554,7 +555,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 2048),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"client_credentials_arn": {
@@ -583,7 +584,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"redirect_uri": {
@@ -591,7 +592,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -602,7 +603,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -631,7 +632,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -649,7 +650,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Sensitive: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																names.AttrClientID: {
@@ -657,7 +658,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																names.AttrClientSecret: {
@@ -665,7 +666,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"oauth_request": {
@@ -679,7 +680,7 @@ func resourceConnectorProfile() *schema.Resource {
 																				Optional: true,
 																				ValidateFunc: validation.All(
 																					validation.StringLenBetween(1, 2048),
-																					validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																					lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																				),
 																			},
 																			"redirect_uri": {
@@ -687,7 +688,7 @@ func resourceConnectorProfile() *schema.Resource {
 																				Optional: true,
 																				ValidateFunc: validation.All(
 																					validation.StringLenBetween(1, 512),
-																					validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																					lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																				),
 																			},
 																		},
@@ -698,7 +699,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 1024),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -724,7 +725,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -741,7 +742,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -759,7 +760,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 2048),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientID: {
@@ -767,7 +768,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientSecret: {
@@ -776,7 +777,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"oauth_request": {
@@ -790,7 +791,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"redirect_uri": {
@@ -798,7 +799,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -824,7 +825,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -842,7 +843,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -865,7 +866,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -883,7 +884,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 2048),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientID: {
@@ -891,7 +892,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrClientSecret: {
@@ -900,7 +901,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Sensitive: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"oauth_request": {
@@ -914,7 +915,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 																"redirect_uri": {
@@ -922,7 +923,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Optional: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 512),
-																		validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																		lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																	),
 																},
 															},
@@ -970,7 +971,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 256),
-																		validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																		lazyvalidation.StringMatch(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`, "must provide a valid HTTPS url"),
 																	),
 																},
 																"token_url_custom_properties": {
@@ -984,7 +985,7 @@ func resourceConnectorProfile() *schema.Resource {
 																		Type: schema.TypeString,
 																		ValidateFunc: validation.All(
 																			validation.StringLenBetween(0, 2048),
-																			validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																		),
 																	},
 																},
@@ -1002,7 +1003,7 @@ func resourceConnectorProfile() *schema.Resource {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(0, 2048),
-																validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 															),
 														},
 													},
@@ -1020,7 +1021,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1037,7 +1038,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1070,7 +1071,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1087,7 +1088,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1104,7 +1105,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(3, 63),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrBucketPrefix: {
@@ -1149,7 +1150,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"is_sandbox_environment": {
@@ -1174,7 +1175,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+															lazyvalidation.StringMatch(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`, "must provide a valid HTTPS url"),
 														),
 													},
 													"application_service_path": {
@@ -1182,7 +1183,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"client_number": {
@@ -1190,7 +1191,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(3, 3),
-															validation.StringMatch(regexache.MustCompile(`^\d{3}$`), "must consist of exactly three digits"),
+															lazyvalidation.StringMatch(`^\d{3}$`, "must consist of exactly three digits"),
 														),
 													},
 													"logon_language": {
@@ -1198,7 +1199,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(0, 2),
-															validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]*$`), "must contain only alphanumeric characters and the underscore (_) character"),
+															lazyvalidation.StringMatch(`^[0-9A-Za-z_]*$`, "must contain only alphanumeric characters and the underscore (_) character"),
 														),
 													},
 													"oauth_properties": {
@@ -1212,7 +1213,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 256),
-																		validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																		lazyvalidation.StringMatch(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`, "must provide a valid HTTPS url"),
 																	),
 																},
 																"oauth_scopes": {
@@ -1222,7 +1223,7 @@ func resourceConnectorProfile() *schema.Resource {
 																		Type: schema.TypeString,
 																		ValidateFunc: validation.All(
 																			validation.StringLenBetween(1, 128),
-																			validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+																			lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 																		),
 																	},
 																},
@@ -1231,7 +1232,7 @@ func resourceConnectorProfile() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 256),
-																		validation.StringMatch(regexache.MustCompile(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`), "must provide a valid HTTPS url"),
+																		lazyvalidation.StringMatch(`^(https?)://[0-9A-Za-z-+&@#/%?=~_|!:,.;]*[0-9A-Za-z-+&@#/%=~_|]`, "must provide a valid HTTPS url"),
 																	),
 																},
 															},
@@ -1247,7 +1248,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
+															lazyvalidation.StringMatch(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`, "must be a valid AWS VPC endpoint address"),
 														),
 													},
 												},
@@ -1264,7 +1265,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1289,7 +1290,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1306,7 +1307,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrBucketName: {
@@ -1314,7 +1315,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(3, 63),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrBucketPrefix: {
@@ -1327,7 +1328,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`), "must be a valid AWS VPC endpoint address"),
+															lazyvalidation.StringMatch(`^$|com.amazonaws.vpce.[\w/!:@#.\-]+`, "must be a valid AWS VPC endpoint address"),
 														),
 													},
 													names.AttrRegion: {
@@ -1335,7 +1336,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Optional: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 64),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													names.AttrStage: {
@@ -1346,7 +1347,7 @@ func resourceConnectorProfile() *schema.Resource {
 														},
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 512),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 													"warehouse": {
@@ -1354,7 +1355,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(0, 512),
-															validation.StringMatch(regexache.MustCompile(`[\s\w/!@#+=.-]*`), "must match [\\s\\w/!@#+=.-]*"),
+															lazyvalidation.StringMatch(`[\s\w/!@#+=.-]*`, "must match [\\s\\w/!@#+=.-]*"),
 														),
 													},
 												},
@@ -1379,7 +1380,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1396,7 +1397,7 @@ func resourceConnectorProfile() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 256),
-															validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"),
+															lazyvalidation.StringMatch(`\S+`, "must not contain any whitespace characters"),
 														),
 													},
 												},
@@ -1431,7 +1432,7 @@ func resourceConnectorProfile() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 256),
-						validation.StringMatch(regexache.MustCompile(`[\w/!@#+=.-]+`), "must match [\\w/!@#+=.-]+"),
+						lazyvalidation.StringMatch(`[\w/!@#+=.-]+`, "must match [\\w/!@#+=.-]+"),
 					),
 				},
 			}

@@ -11,17 +11,16 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 )
 
 // @FrameworkDataSource("aws_organizations_entity_path", name="Entity Path")
@@ -39,7 +38,7 @@ func (d *entityPathDataSource) Schema(ctx context.Context, request datasource.Sc
 			"entity_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^(\d{12})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$`), "must be an organizational unit (OU) or AWS account ID"),
+					lazystringvalidator.RegexMatches(`^(\d{12})|(ou-[0-9a-z]{4,32}-[a-z0-9]{8,32})$`, "must be an organizational unit (OU) or AWS account ID"),
 				},
 			},
 			"entity_path": schema.StringAttribute{

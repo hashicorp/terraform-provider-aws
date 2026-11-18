@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -116,7 +117,7 @@ func resourceWebACL() *schema.Resource {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 64),
-																validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), ""),
+																lazyvalidation.StringMatch(`^.*\S.*$`, ""),
 															),
 														},
 													},
@@ -163,7 +164,7 @@ func resourceWebACL() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				names.AttrNamePrefix: {
@@ -174,7 +175,7 @@ func resourceWebACL() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128-sdkid.UniqueIDSuffixLength),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				"rule_json": {
@@ -252,7 +253,7 @@ func resourceWebACL() *schema.Resource {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 253),
-							validation.StringMatch(regexache.MustCompile(`^[\w\.\-/]+$`), "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
+							lazyvalidation.StringMatch(`^[\w\.\-/]+$`, "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
 						),
 					},
 				},

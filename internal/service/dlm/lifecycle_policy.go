@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dlm/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,7 +51,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
+						lazyvalidation.StringMatch("^[0-9A-Za-z _-]+$", "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
 						validation.StringLenBetween(1, 500),
 					),
 				},
@@ -124,7 +124,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													names.AttrTarget: {
 														Type:         schema.TypeString,
 														Required:     true,
-														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
+														ValidateFunc: lazyvalidation.StringMatch(`^[\w:\-\/\*]+$`, ""),
 													},
 												},
 											},
@@ -134,7 +134,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(0, 120),
-												validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+												lazyvalidation.StringMatch("^[0-9A-Za-z _-]+$", "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
 											),
 										},
 									},
@@ -379,7 +379,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													"cron_expression": {
 														Type:         schema.TypeString,
 														Optional:     true,
-														ValidateFunc: validation.StringMatch(regexache.MustCompile("^cron\\([^\n]{11,100}\\)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
+														ValidateFunc: lazyvalidation.StringMatch("^cron\\([^\n]{11,100}\\)$", "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
 													},
 													names.AttrInterval: {
 														Type:         schema.TypeInt,
@@ -414,7 +414,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(0, 200),
-																		validation.StringMatch(regexache.MustCompile("^([a-zA-Z0-9_\\-.]{3,128}|[a-zA-Z0-9_\\-.:/]{3,200}|[A-Z0-9_]+)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+																		lazyvalidation.StringMatch("^([a-zA-Z0-9_\\-.]{3,128}|[a-zA-Z0-9_\\-.:/]{3,200}|[A-Z0-9_]+)$", "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
 																	),
 																},
 																"execution_handler_service": {
@@ -455,7 +455,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 														MaxItems: 1,
 														Elem: &schema.Schema{
 															Type:         schema.TypeString,
-															ValidateFunc: validation.StringMatch(regexache.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
+															ValidateFunc: lazyvalidation.StringMatch("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$", "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
 														},
 													},
 												},
@@ -522,7 +522,7 @@ func resourceLifecyclePolicy() *schema.Resource {
 													names.AttrTarget: {
 														Type:         schema.TypeString,
 														Optional:     true,
-														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
+														ValidateFunc: lazyvalidation.StringMatch(`^[\w:\-\/\*]+$`, ""),
 													},
 													"target_region": {
 														Type:         schema.TypeString,

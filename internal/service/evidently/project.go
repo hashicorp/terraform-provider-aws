@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -84,7 +84,7 @@ func ResourceProject() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 512),
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_./-]+$`), "must be a valid CloudWatch Log Group name"),
+												lazyvalidation.StringMatch(`^[0-9A-Za-z_./-]+$`, "must be a valid CloudWatch Log Group name"),
 											),
 										},
 									},
@@ -104,7 +104,7 @@ func ResourceProject() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(3, 63),
-												validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`), "must be a valid Bucket name"),
+												lazyvalidation.StringMatch(`^[0-9a-z][0-9a-z-]*[0-9a-z]$`, "must be a valid Bucket name"),
 											),
 										},
 										names.AttrPrefix: {
@@ -112,7 +112,7 @@ func ResourceProject() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_!.*'()/-]*$`), "must be a valid prefix name"),
+												lazyvalidation.StringMatch(`^[0-9A-Za-z_!.*'()/-]*$`, "must be a valid prefix name"),
 											),
 										},
 									},
@@ -148,7 +148,7 @@ func ResourceProject() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 127),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "alphanumeric and can contain hyphens, underscores, and periods"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]*$`, "alphanumeric and can contain hyphens, underscores, and periods"),
 					),
 				},
 				names.AttrStatus: {
