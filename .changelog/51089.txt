@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_peering_attachment: Add `options.allow_multipath_resilience` and `options.multipath_resilience_mode` arguments and `multipath_resilience_status` attribute
+```
+
+```release-note:enhancement
+resource/aws_ec2_transit_gateway_peering_attachment_accepter: Add `options` argument with `allow_multipath_resilience` and `multipath_resilience_mode`, and `multipath_resilience_status` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_peering_attachment: Add `multipath_resilience_status` attribute
+```
