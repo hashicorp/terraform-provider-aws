@@ -5,6 +5,8 @@ page_title: "AWS: aws_bedrockagentcore_gateway"
 description: |-
   Manages an AWS Bedrock AgentCore Gateway.
 ---
+~> **NOTE:** At least one of `allowed_audience`, `allowed_clients`, `allowed_scopes`, or `custom_claims` must be specified within the `custom_jwt_authorizer` block. The `discovery_url` argument alone is not sufficient.
+
 
 # Resource: aws_bedrockagentcore_gateway
 
