@@ -181,6 +181,27 @@ func resourceObject() *schema.Resource {
 					Elem:         &schema.Schema{Type: schema.TypeString},
 					ValidateFunc: validateMetadataIsLowerCase,
 				},
+				"object_lock_event_hold": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					RequiredWith:     []string{"object_lock_mode"},
+					ValidateDiagFunc: enum.Validate[types.ObjectLockEventHold](),
+				},
+				"object_lock_event_hold_duration_days": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.IntBetween(1, 36500),
+					ConflictsWith: []string{"object_lock_event_hold_duration_years"},
+				},
+				"object_lock_event_hold_duration_years": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					Computed:      true,
+					ValidateFunc:  validation.IntBetween(1, 100),
+					ConflictsWith: []string{"object_lock_event_hold_duration_days"},
+				},
 				"object_lock_legal_hold_status": {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -192,9 +213,12 @@ func resourceObject() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.ObjectLockMode](),
 				},
 				"object_lock_retain_until_date": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.IsRFC3339Time,
+					Type:     schema.TypeString,
+					Optional: true,
+					// S3 assigns and advances this while an event hold is active.
+					Computed:         true,
+					ValidateFunc:     validation.IsRFC3339Time,
+					DiffSuppressFunc: suppressEventHoldRetainUntilDrift,
 				},
 				"override_provider": {
 					Type:     schema.TypeList,
@@ -318,6 +342,9 @@ func resourceObjectFlatten(d *schema.ResourceData, output *s3.HeadObjectOutput) 
 		d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
 	}
 	d.Set("metadata", output.Metadata)
+	d.Set("object_lock_event_hold", output.ObjectLockEventHold)
+	d.Set("object_lock_event_hold_duration_days", output.ObjectLockEventHoldDurationDays)
+	d.Set("object_lock_event_hold_duration_years", output.ObjectLockEventHoldDurationYears)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
@@ -385,22 +412,42 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 	}
 
-	if d.HasChanges("object_lock_mode", "object_lock_retain_until_date") {
-		input := &s3.PutObjectRetentionInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-			Retention: &types.ObjectLockRetention{
-				Mode:            types.ObjectLockRetentionMode(d.Get("object_lock_mode").(string)),
-				RetainUntilDate: expandObjectDate(d.Get("object_lock_retain_until_date").(string)),
-			},
+	if d.HasChanges("object_lock_event_hold", "object_lock_event_hold_duration_days", "object_lock_event_hold_duration_years", "object_lock_mode", "object_lock_retain_until_date") {
+		retention := &types.ObjectLockRetention{
+			EventHold: types.ObjectLockEventHold(d.Get("object_lock_event_hold").(string)),
+			Mode:      types.ObjectLockRetentionMode(d.Get("object_lock_mode").(string)),
 		}
 
-		// Bypass required to lower or clear retain-until date.
-		if d.HasChange("object_lock_retain_until_date") {
-			oraw, nraw := d.GetChange("object_lock_retain_until_date")
-			o, n := expandObjectDate(oraw.(string)), expandObjectDate(nraw.(string))
+		// Send a date only when one is configured, and only when it would move the date forward
+		if v, state := configuredString(d.GetRawConfig(), "object_lock_retain_until_date"); state == attrSet {
+			n := expandObjectDate(v)
 
-			if n == nil || (o != nil && n.Before(*o)) {
+			if oraw, _ := d.GetChange("object_lock_retain_until_date"); retention.EventHold != "" && oraw.(string) != "" {
+				if o := expandObjectDate(oraw.(string)); o != nil && n != nil && !n.After(*o) {
+					n = nil
+				}
+			}
+
+			retention.RetainUntilDate = n
+		}
+
+		// S3 rejects a duration with a released hold: "EventHoldDuration must not be supplied with EventHold:OFF".
+		if retention.EventHold == types.ObjectLockEventHoldOn {
+			retention.EventHoldDuration = expandObjectEventHoldDuration(d)
+		}
+
+		input := &s3.PutObjectRetentionInput{
+			Bucket:    aws.String(bucket),
+			Key:       aws.String(key),
+			Retention: retention,
+		}
+
+		// Bypass is required to lower or clear the retain-until date.
+		// The planned value is unreliable here.
+		if oraw, _ := d.GetChange("object_lock_retain_until_date"); oraw.(string) != "" {
+			o, n := expandObjectDate(oraw.(string)), retention.RetainUntilDate
+
+			if o != nil && (retention.Mode == "" || (n != nil && n.Before(*o))) {
 				input.BypassGovernanceRetention = aws.Bool(true)
 			}
 		}
@@ -542,6 +589,17 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 		input.Metadata = flex.ExpandStringValueMap(v.(map[string]any))
 	}
 
+	if v, ok := d.GetOk("object_lock_event_hold"); ok {
+		input.ObjectLockEventHold = types.ObjectLockEventHold(v.(string))
+	}
+
+	if input.ObjectLockEventHold == types.ObjectLockEventHoldOn {
+		if ehd := expandObjectEventHoldDuration(d); ehd != nil {
+			input.ObjectLockEventHoldDurationDays = ehd.Days
+			input.ObjectLockEventHoldDurationYears = ehd.Years
+		}
+	}
+
 	if v, ok := d.GetOk("object_lock_legal_hold_status"); ok {
 		input.ObjectLockLegalHoldStatus = types.ObjectLockLegalHoldStatus(v.(string))
 	}
@@ -550,8 +608,8 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 		input.ObjectLockMode = types.ObjectLockMode(v.(string))
 	}
 
-	if v, ok := d.GetOk("object_lock_retain_until_date"); ok {
-		input.ObjectLockRetainUntilDate = expandObjectDate(v.(string))
+	if v, state := configuredString(d.GetRawConfig(), "object_lock_retain_until_date"); state == attrSet {
+		input.ObjectLockRetainUntilDate = expandObjectDate(v)
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
@@ -579,7 +637,7 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 		input.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
-	if (input.ObjectLockLegalHoldStatus != "" || input.ObjectLockMode != "" || input.ObjectLockRetainUntilDate != nil) && input.ChecksumAlgorithm == "" {
+	if (input.ObjectLockEventHold != "" || input.ObjectLockLegalHoldStatus != "" || input.ObjectLockMode != "" || input.ObjectLockRetainUntilDate != nil) && input.ChecksumAlgorithm == "" {
 		// "Content-MD5 OR x-amz-checksum- HTTP header is required for Put Object requests with Object Lock parameters".
 		// AWS SDK for Go v1 transparently added a Content-MD4 header.
 		input.ChecksumAlgorithm = types.ChecksumAlgorithmCrc32
@@ -611,6 +669,10 @@ func validateMetadataIsLowerCase(v any, k string) (ws []string, errors []error) 
 }
 
 func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	if err := validateObjectEventHold(d); err != nil {
+		return err
+	}
+
 	if hasObjectContentChanges(d) {
 		return d.SetNewComputed("version_id")
 	}
