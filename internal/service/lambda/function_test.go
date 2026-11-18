@@ -2536,6 +2536,9 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		// EOL runtimes.
 		// https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy.
 		switch runtime {
+		// InvalidParameterValueException: RuntimeConfig is required when Runtime is 'custom'.
+		case awstypes.RuntimeCustom:
+			fallthrough
 		case awstypes.RuntimeDotnetcore21:
 			fallthrough
 		case awstypes.RuntimePython27:
