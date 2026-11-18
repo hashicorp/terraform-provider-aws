@@ -725,7 +725,7 @@ The following arguments are optional:
 * `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
 * `image_config` - (Optional) Container image configuration values. [See below](#image_config-block).
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
-* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt environment variables. If not configured, Lambda uses an AWS owned key or an AWS managed key.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
 * `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-block).
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 32,768 MB (32 GB), in 1 MB increments. Defaults to 128.
