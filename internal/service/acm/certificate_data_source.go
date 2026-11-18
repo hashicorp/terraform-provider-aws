@@ -175,7 +175,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if len(certificates) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", tfresource.NewEmptyResultError())
 	}
 
 	var matchedCertificate *awstypes.CertificateDetail
@@ -190,7 +190,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 	} else if n := len(certificates); n > 1 {
-		return sdkdiag.AppendErrorf(diags, "%d matching ACM Certificates found", n)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", tfresource.NewTooManyResultsError(n, nil))
 	} else {
 		matchedCertificate = certificates[0]
 	}
