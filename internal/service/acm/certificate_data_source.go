@@ -7,7 +7,6 @@ package acm
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"slices"
 	"time"
@@ -132,11 +131,11 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
 		output, err := findCertificates(ctx, conn, &input, f)
 		if err != nil {
-			return nil, fmt.Errorf("reading ACM Certificates: %w", err)
+			return nil, err
 		}
 
 		if len(output) > 0 && len(tagsToMatch) > 0 {
-			var matches []awstypes.CertificateSummary
+			matches := make([]awstypes.CertificateSummary, 0, len(output))
 			for _, certificate := range output {
 				arn := aws.ToString(certificate.CertificateArn)
 				tags, err := listTags(ctx, conn, arn)
@@ -159,10 +158,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		return output, nil
 	})
 	if err != nil {
-		if errors.Is(err, tfresource.ErrEmptyResult) {
-			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
-		}
-		return sdkdiag.AppendFromErr(diags, err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 	}
 
 	var certificates []*awstypes.CertificateDetail
