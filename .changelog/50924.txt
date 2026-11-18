@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_infrastructure_configuration: Add `parent_instance` and `terminate_instance_on_completion` arguments
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_infrastructure_configuration: Add `parent_instance` and `terminate_instance_on_completion` attributes
+```

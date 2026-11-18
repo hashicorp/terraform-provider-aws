@@ -43,6 +43,10 @@ This data source exports the following attributes in addition to the arguments a
         * `s3_bucket_name` - Name of the S3 Bucket for logging.
         * `s3_key_prefix` - Key prefix for S3 Bucket logging.
 * `name` - Name of the infrastructure configuration.
+* `parent_instance` - Parent instance settings for build instances launched from an Auto Scaling group.
+    * `auto_scaling_group` - Auto Scaling group settings.
+        * `capacity_wait_timeout_seconds` - Number of seconds to wait for an instance to become available in the Auto Scaling group.
+        * `name` - Name of the Auto Scaling group.
 * `placement` - Placement settings that define where the instances that are launched from your image will run.
     * `availability_zone` - Availability Zone where your build and test instances will launch.
     * `host_id` - ID of the Dedicated Host on which build and test instances run.
@@ -53,4 +57,5 @@ This data source exports the following attributes in addition to the arguments a
 * `sns_topic_arn` - ARN of the SNS Topic associated with the configuration.
 * `subnet_id` - Identifier of the EC2 Subnet associated with the configuration.
 * `tags` - Key-value map of resource tags for the infrastructure configuration.
+* `terminate_instance_on_completion` - Whether to terminate build and test instances when image creation ends without a failure (success, cancellation, or expiration). Defaults to `true`.
 * `terminate_instance_on_failure` - Whether instances are terminated on failure.

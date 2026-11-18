@@ -52,12 +52,14 @@ The following arguments are optional:
 * `instance_types` - (Optional) Set of EC2 Instance Types.
 * `key_pair` - (Optional) Name of EC2 Key Pair.
 * `logging` - (Optional) Configuration block with logging settings. Detailed below.
+* `parent_instance` - (Optional) Configuration block that launches build instances from an Auto Scaling group instead of launching a new instance for each build. Detailed below.
 * `placement` - (Optional) Configuration block with placement settings that define where the instances that are launched from your image will run. Detailed below.
 * `resource_tags` - (Optional) Key-value map of resource tags to assign to infrastructure created by the configuration.
 * `security_group_ids` - (Optional) Set of EC2 Security Group identifiers.
 * `sns_topic_arn` - (Optional) ARN of SNS Topic.
 * `subnet_id` - (Optional) EC2 Subnet identifier. Also requires `security_group_ids` argument.
 * `tags` - (Optional) Key-value map of resource tags to assign to the configuration. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `terminate_instance_on_completion` - (Optional) Whether to terminate build and test instances when image creation ends without a failure (success, cancellation, or expiration). Defaults to `true`.
 * `terminate_instance_on_failure` - (Optional) Enable if the instance should be terminated when the pipeline fails. Defaults to `false`.
 
 ### instance_metadata_options
@@ -84,6 +86,22 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `s3_key_prefix` - (Optional) Prefix to use for S3 logs. Defaults to `/`.
+
+### parent_instance
+
+The following arguments are required:
+
+* `auto_scaling_group` - (Required) Configuration block with the Auto Scaling group to take build instances from. Detailed below.
+
+### auto_scaling_group
+
+The following arguments are required:
+
+* `name` - (Required) Name of the Auto Scaling group.
+
+The following arguments are optional:
+
+* `capacity_wait_timeout_seconds` - (Optional) Number of seconds to wait for an instance to become available in the Auto Scaling group. Valid values: `0` to `3600`.
 
 ### placement
 

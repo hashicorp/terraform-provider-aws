@@ -44,6 +44,7 @@ func TestAccImageBuilderInfrastructureConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_pair", ""),
 					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "parent_instance.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
@@ -620,6 +621,54 @@ func TestAccImageBuilderInfrastructureConfiguration_placement(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderInfrastructureConfiguration_parentInstance(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	autoScalingGroupResourceName := "aws_autoscaling_group.test"
+	resourceName := "aws_imagebuilder_infrastructure_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInfrastructureConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInfrastructureConfigurationConfig_parentInstance(rName, 600, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parent_instance.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parent_instance.0.auto_scaling_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "parent_instance.0.auto_scaling_group.0.name", autoScalingGroupResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "parent_instance.0.auto_scaling_group.0.capacity_wait_timeout_seconds", "600"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_completion", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_parentInstance(rName, 1200, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, t, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "parent_instance.0.auto_scaling_group.0.capacity_wait_timeout_seconds", "1200"),
+					resource.TestCheckResourceAttr(resourceName, "terminate_instance_on_completion", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccInfrastructureConfigurationConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInfrastructureConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parent_instance.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckInfrastructureConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ImageBuilderClient(ctx)
@@ -1090,4 +1139,44 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
   }
 }
 `, rName, tenancy))
+}
+
+func testAccInfrastructureConfigurationConfig_parentInstance(rName string, capacityWaitTimeoutSeconds int, terminateInstanceOnCompletion bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		testAccInfrastructureConfigurationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[1]q
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type = "t3.micro"
+}
+
+resource "aws_autoscaling_group" "test" {
+  name                = %[1]q
+  min_size            = 0
+  max_size            = 1
+  desired_capacity    = 0
+  vpc_zone_identifier = aws_subnet.test[*].id
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = "$Latest"
+  }
+}
+
+resource "aws_imagebuilder_infrastructure_configuration" "test" {
+  instance_profile_name            = aws_iam_instance_profile.test.name
+  name                             = %[1]q
+  terminate_instance_on_completion = %[3]t
+
+  parent_instance {
+    auto_scaling_group {
+      name                          = aws_autoscaling_group.test.name
+      capacity_wait_timeout_seconds = %[2]d
+    }
+  }
+}
+`, rName, capacityWaitTimeoutSeconds, terminateInstanceOnCompletion))
 }
