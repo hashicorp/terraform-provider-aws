@@ -31,6 +31,16 @@ type coreNetworkPolicyCoreNetworkConfiguration struct {
 	EdgeLocations                   []*coreNetworkPolicyCoreNetworkEdgeLocation `json:"edge-locations,omitempty"`
 	DnsSupport                      bool                                        `json:"dns-support"`
 	SecurityGroupReferencingSupport bool                                        `json:"security-group-referencing-support"`
+	MultipathResilience             *coreNetworkPolicyMultipathResilience       `json:"multipath-resilience,omitempty"`
+}
+
+type coreNetworkPolicyMultipathResilience struct {
+	Mode     string                                         `json:"mode"`
+	EdgeSets []*coreNetworkPolicyMultipathResilienceEdgeSet `json:"edge-sets,omitempty"`
+}
+
+type coreNetworkPolicyMultipathResilienceEdgeSet struct {
+	EdgeLocations []string `json:"edge-locations"`
 }
 
 type coreNetworkPolicyCoreNetworkEdgeLocation struct {

@@ -237,6 +237,7 @@ The following arguments are available:
 * `edge_locations` (Required) - A block value of AWS Region locations where you're creating Core Network Edges. Detailed below.
 * `dns_support` (Optional) - Indicates whether DNS resolution is enabled for the core network. The value can be either `true` or `false`. When set to `true`, DNS resolution is enabled for VPCs attached to the core network, allowing resources in different VPCs to resolve each other's domain names. The default is `true`.
 * `security_group_referencing_support` — (Optional) Indicates whether security group referencing is enabled for the core network. The value can be either `true` or `false`. When set to `true`, security groups in one VPC can reference security groups in another VPC attached to the core network, enabling more flexible security configurations across your network. The default is `false`.
+* `multipath_resilience` (Optional) - Block argument that enables multipath resilience for cross-Region traffic between Core Network Edges. Detailed below.
 
 ### `edge_locations`
 
@@ -245,6 +246,21 @@ The following arguments are available:
 * `locations` (Required) - An AWS Region code, such as `us-east-1`.
 * `asn` (Optional) - ASN of the Core Network Edge in an AWS Region. By default, the ASN will be a single integer automatically assigned from `asn_ranges`
 * `inside_cidr_blocks` (Optional) - The local CIDR blocks for this Core Network Edge for AWS Transit Gateway Connect attachments. By default, this CIDR block will be one or more optional IPv4 and IPv6 CIDR prefixes auto-assigned from `inside_cidr_blocks`.
+
+### `multipath_resilience`
+
+Multipath resilience replicates cross-Region traffic across multiple paths on the AWS global network. It incurs additional charges while enabled. See [Enable multipath resilience in a core network policy](https://docs.aws.amazon.com/network-manager/latest/cloudwan/enable-multipath-resilience-cloudwan.html) for more information and the supported Regions.
+
+The following arguments are available:
+
+* `edge_sets` (Optional) - Pairs of edge locations to cover. When omitted, multipath resilience covers all eligible pairs of edge locations. Detailed below.
+* `mode` (Required) - Multipath resilience mode. Valid values: `best-effort`, `disabled`.
+
+#### `edge_sets` (multipath resilience)
+
+The following arguments are available:
+
+* `edge_locations` (Required) - Set of exactly two AWS Region codes. Each must be defined in `edge_locations`. The pair covers traffic in both directions.
 
 ### `segments`
 
