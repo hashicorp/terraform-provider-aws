@@ -444,7 +444,7 @@ func TestAccECSService_GatewayConnector_deregistrationDelay(t *testing.T) {
 		CheckDestroy:             testAccCheckServiceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, 60),
+				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, `["PUBLIC"]`, `deregistration_delay { timeout_seconds = 60 }`),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "gateway_connector.#", "1"),
@@ -454,7 +454,7 @@ func TestAccECSService_GatewayConnector_deregistrationDelay(t *testing.T) {
 			},
 			{
 				// 0 is a valid value and must be sent to the API.
-				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, 0),
+				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, `["PUBLIC"]`, `deregistration_delay { timeout_seconds = 0 }`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.0.timeout_seconds", "0"),
@@ -467,7 +467,7 @@ func TestAccECSService_GatewayConnector_deregistrationDelay(t *testing.T) {
 			},
 			{
 				// The block is Optional and Computed: removing it keeps the last value.
-				Config: testAccServiceConfig_gatewayConnector(rName, `["PUBLIC"]`),
+				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, `["PUBLIC"]`, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.deregistration_delay.0.timeout_seconds", "0"),
@@ -480,7 +480,7 @@ func TestAccECSService_GatewayConnector_deregistrationDelay(t *testing.T) {
 			},
 			{
 				// Changing another connector argument resends the connector and keeps the last delay.
-				Config: testAccServiceConfig_gatewayConnector(rName, `["PUBLIC", "PRIVATE"]`),
+				Config: testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, `["PUBLIC", "PRIVATE"]`, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, t, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "gateway_connector.0.filters.0.access_types.#", "2"),
@@ -9072,7 +9072,7 @@ resource "aws_ecs_service" "test" {
 `, rName, accessTypes))
 }
 
-func testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName string, timeoutSeconds int) string {
+func testAccServiceConfig_gatewayConnectorDeregistrationDelay(rName, accessTypes, deregistrationDelay string) string {
 	return acctest.ConfigCompose(testAccServiceConfig_baseGatewayConnector(rName), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
   name            = %[1]q
@@ -9080,6 +9080,12 @@ resource "aws_ecs_service" "test" {
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 0
   launch_type     = "FARGATE"
+
+  # Changes to the target group properties of a gateway connector are rejected for the ROLLING deployment strategy.
+  deployment_configuration {
+    strategy             = "BLUE_GREEN"
+    bake_time_in_minutes = 0
+  }
 
   network_configuration {
     subnets         = aws_subnet.test[*].id
@@ -9089,12 +9095,10 @@ resource "aws_ecs_service" "test" {
   gateway_connector {
     port_name = "web"
 
-    deregistration_delay {
-      timeout_seconds = %[2]d
-    }
+    %[3]s
 
     filters {
-      access_types = ["PUBLIC"]
+      access_types = %[2]s
     }
 
     health_check {
@@ -9108,7 +9112,7 @@ resource "aws_ecs_service" "test" {
 
   depends_on = [aws_ecs_gateway_cluster_association.test]
 }
-`, rName, timeoutSeconds))
+`, rName, accessTypes, deregistrationDelay))
 }
 
 func testAccServiceConfig_gatewayConnectorRemoved(rName string) string {
