@@ -24,8 +24,8 @@ import (
 func resourceVPCPeeringConnectionAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCPeeringAccepterCreate,
-		ReadWithoutTimeout:   resourceVPCPeeringConnectionRead,
-		UpdateWithoutTimeout: resourceVPCPeeringConnectionUpdate,
+		ReadWithoutTimeout:   resourceVPCPeeringAccepterRead,
+		UpdateWithoutTimeout: resourceVPCPeeringAccepterUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Timeouts: &schema.ResourceTimeout{
@@ -54,10 +54,14 @@ func resourceVPCPeeringConnectionAccepter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"accepter": vpcPeeringConnectionOptionsSchema,
+				"accepter": vpcPeeringConnectionOptionsSchema(true),
 				"auto_accept": {
 					Type:     schema.TypeBool,
 					Optional: true,
+				},
+				"multipath_resilience_status": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				"peer_owner_id": {
 					Type:     schema.TypeString,
@@ -71,7 +75,8 @@ func resourceVPCPeeringConnectionAccepter() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				"requester":       vpcPeeringConnectionOptionsSchema,
+				// Multipath resilience is cross-Region only, and each side can only be modified from its own Region.
+				"requester":       vpcPeeringConnectionOptionsSchema(false),
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 				names.AttrVPCID: {
@@ -117,5 +122,13 @@ func resourceVPCPeeringAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting EC2 VPC Peering Connection (%s) tags: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceVPCPeeringConnectionRead(ctx, d, meta)...)
+	return append(diags, resourceVPCPeeringAccepterRead(ctx, d, meta)...)
+}
+
+func resourceVPCPeeringAccepterRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return readVPCPeeringConnection(ctx, d, meta, "accepter")
+}
+
+func resourceVPCPeeringAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	return updateVPCPeeringConnection(ctx, d, meta, "accepter")
 }

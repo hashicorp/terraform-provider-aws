@@ -218,6 +218,86 @@ func TestAccVPCPeeringConnectionOptions_sameRegionDifferentAccount(t *testing.T)
 	})
 }
 
+func TestAccVPCPeeringConnectionOptions_multipathResilience(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpc_peering_connection_options.test"         // Requester
+	resourceNamePeer := "aws_vpc_peering_connection_options.peer"     // Accepter
+	pcxResourceName := "aws_vpc_peering_connection.test"              // Requester
+	pcxResourceNamePeer := "aws_vpc_peering_connection_accepter.peer" // Accepter
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               testAccErrorCheckSkipVPCPeeringConnectionMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCPeeringConnectionOptionsConfig_multipathResilience(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					// Requester's view:
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.multipath_resilience_mode", string(awstypes.MultipathResilienceModeAlwaysOn)),
+					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
+						"requester",
+						&awstypes.VpcPeeringConnectionOptionsDescription{
+							AllowMultipathResilience: aws.Bool(true),
+						},
+					),
+					// Accepter's view:
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_multipath_resilience", acctest.CtTrue),
+					testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, pcxResourceNamePeer,
+						"accepter",
+						&awstypes.VpcPeeringConnectionOptionsDescription{
+							AllowMultipathResilience: aws.Bool(true),
+						},
+						acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers),
+					),
+				),
+			},
+			{
+				// Both options resources are applied in parallel, so the requester's view of the accepter's options
+				// can be read before the accepter's options are set. Refresh it before verifying the import.
+				Config: testAccVPCPeeringConnectionOptionsConfig_multipathResilience(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.multipath_resilience_mode", string(awstypes.MultipathResilienceModeAlwaysOn)),
+				),
+			},
+			{
+				Config:            testAccVPCPeeringConnectionOptionsConfig_multipathResilience(rName, true, true),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCPeeringConnectionOptionsConfig_multipathResilience(rName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_multipath_resilience", acctest.CtFalse),
+					testAccCheckVPCPeeringConnectionOptions(ctx, pcxResourceName,
+						"requester",
+						&awstypes.VpcPeeringConnectionOptionsDescription{
+							AllowMultipathResilience: aws.Bool(false),
+						},
+					),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_multipath_resilience", acctest.CtFalse),
+					testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, pcxResourceNamePeer,
+						"accepter",
+						&awstypes.VpcPeeringConnectionOptionsDescription{
+							AllowMultipathResilience: aws.Bool(false),
+						},
+						acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers),
+					),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCPeeringConnectionOptions(ctx context.Context, n, block string, options *awstypes.VpcPeeringConnectionOptionsDescription) resource.TestCheckFunc {
 	return testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx, n, block, options, acctest.DefaultProviderFunc)
 }
@@ -244,6 +324,12 @@ func testAccCheckVPCPeeringConnectionOptionsWithProvider(ctx context.Context, n,
 
 		if got, want := aws.ToBool(o.PeeringOptions.AllowDnsResolutionFromRemoteVpc), aws.ToBool(options.AllowDnsResolutionFromRemoteVpc); got != want {
 			return fmt.Errorf("VPC Peering Connection Options AllowDnsResolutionFromRemoteVpc =%v, want = %v", got, want)
+		}
+
+		if options.AllowMultipathResilience != nil {
+			if got, want := aws.ToBool(o.PeeringOptions.AllowMultipathResilience), aws.ToBool(options.AllowMultipathResilience); got != want {
+				return fmt.Errorf("VPC Peering Connection Options AllowMultipathResilience =%v, want = %v", got, want)
+			}
 		}
 
 		return nil
@@ -431,4 +517,71 @@ resource "aws_vpc_peering_connection_options" "peer" {
   }
 }
 `, rName))
+}
+
+func testAccVPCPeeringConnectionOptionsConfig_multipathResilience(rName string, allow, allowPeer bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "peer" {
+  provider = "awsalternate"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
+  peer_region = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_accepter" "peer" {
+  provider = "awsalternate"
+
+  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+  auto_accept               = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection_options" "test" {
+  # As options can't be set until the connection has been accepted
+  # create an explicit dependency on the accepter.
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
+
+  requester {
+    allow_multipath_resilience = %[3]t
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_options" "peer" {
+  provider = "awsalternate"
+
+  vpc_peering_connection_id = aws_vpc_peering_connection_accepter.peer.id
+
+  accepter {
+    allow_multipath_resilience = %[4]t
+  }
+}
+`, rName, acctest.AlternateRegion(), allow, allowPeer))
 }

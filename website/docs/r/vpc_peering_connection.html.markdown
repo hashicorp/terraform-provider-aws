@@ -101,6 +101,30 @@ resource "aws_vpc" "bar" {
 }
 ```
 
+Cross-Region usage with multipath resilience:
+
+```terraform
+resource "aws_vpc_peering_connection" "requester" {
+  provider = aws.us-east-1
+
+  vpc_id      = aws_vpc.requester.id
+  peer_vpc_id = aws_vpc.accepter.id
+  peer_region = "eu-west-1"
+
+  requester {
+    allow_multipath_resilience = true
+  }
+}
+
+# Accepting the connection also allows multipath resilience for the accepter.
+resource "aws_vpc_peering_connection_accepter" "accepter" {
+  provider = aws.eu-west-1
+
+  vpc_peering_connection_id = aws_vpc_peering_connection.requester.id
+  auto_accept               = true
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -125,7 +149,9 @@ This resource supports the following arguments:
 
 -> **Note:** When enabled, the DNS resolution feature requires that VPCs participating in the peering must have support for the DNS hostnames enabled. This can be done using the [`enable_dns_hostnames`](vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
+* `allow_multipath_resilience` - (Optional) Whether to allow [multipath resilience](https://docs.aws.amazon.com/vpc/latest/peering/enable-multipath-resilience-peering.html) for this side of a cross-Region VPC Peering Connection. Multipath resilience takes effect only when both sides allow it, and additional charges apply. If not set, the current setting is left unchanged. When set to `true` on create, multipath resilience is requested with the connection, so the connection doesn't need to be accepted first.
 * `allow_remote_vpc_dns_resolution` - (Optional) Whether to allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in the peer VPC.
+* `multipath_resilience_mode` - (Optional) Multipath resilience mode. Valid values: `always-on`. Can only be set when `allow_multipath_resilience` is `true`. Defaults to `always-on` when multipath resilience is allowed.
 
 ## Attribute Reference
 
@@ -133,6 +159,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `accept_status` - Status of the VPC Peering Connection request.
 * `id` - ID of the VPC Peering Connection.
+* `multipath_resilience_status` - Multipath resilience status of the VPC Peering Connection. Values are `enabled` (both sides allow multipath resilience), `pending` (only one side allows it) and `disabled` (neither side allows it).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ~> **Note:** If both VPCs are not in the same AWS account and region, do not enable the `auto_accept` attribute. The accepter can manage its side of the connection using the `aws_vpc_peering_connection_accepter` resource or accept manually via the AWS Management Console, CLI, or SDKs.
