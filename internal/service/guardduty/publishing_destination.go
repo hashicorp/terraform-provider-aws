@@ -73,7 +73,7 @@ func resourcePublishingDestination() *schema.Resource {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				names.AttrTags:    tftags.TagsSchemaForceNew(),
+				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			}
 		},
