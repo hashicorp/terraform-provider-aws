@@ -33,10 +33,10 @@ import (
 var (
 	// expectedSourceCodeHash is a lookup of expected hash values for each test fixture
 	expectedSourceCodeHash = map[string]string{
-		"lambda_func.js":          "8k4rLrkGteQRbNk8b1suO+fzwOMbF1/4jUoNm7LlWYM=",
-		"lambda_func_modified.js": "iuqvZS4PYKsiYL2YMow4YuB6ZdPzjDTiH5QhuQfLmdQ=",
-		"lambda_func.py":          "DhHL9LXWkDreFoZIv0PWn6wQx9ycpZSnt65JhKkkyRA=",
-		"lambda_func_modified.py": "9DEXvbwU6j4yE7XFZtj1MBTrhyHjwhdvOyuA8AhhhNE=",
+		"lambda_func.js":          "GE6Qb8Bc6vOrLX2zdQDa85S9hE5tLaROqDT1AYi5aNo=",
+		"lambda_func_modified.js": "VoHtznyW+n0Jl5nPJQ+iCDfxEc9ds08gXE0zZyjqnNw=",
+		"lambda_func.py":          "HhC4MioZePknwM5kl+H7LYI93B0jcpIjSuWcGYUk8Hg=",
+		"lambda_func_modified.py": "72Luil+w4xkC/VKGmTray6dpJhK6kmfqMO0G2JCRYPo=",
 	}
 )
 
