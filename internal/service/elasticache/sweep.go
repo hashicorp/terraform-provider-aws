@@ -390,7 +390,7 @@ func sweepUsers(region string) error {
 		for _, v := range page.Users {
 			id := aws.ToString(v.UserId)
 
-			if id == "default" {
+			if id == "default" || id == "default.iam-user" {
 				log.Printf("[INFO] Skipping ElastiCache User: %s", id)
 				continue
 			}
