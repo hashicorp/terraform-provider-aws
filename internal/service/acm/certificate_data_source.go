@@ -129,14 +129,12 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		timeout = 1 * time.Minute
 	)
 	tagsToMatch := keyValueTags(ctx, getTagsIn(ctx))
-	var noTagMatches bool
 	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
 		output, err := findCertificates(ctx, conn, &input, f)
 		if err != nil {
 			return nil, fmt.Errorf("reading ACM Certificates: %w", err)
 		}
 
-		noTagMatches = false
 		if len(output) > 0 && len(tagsToMatch) > 0 {
 			var matches []awstypes.CertificateSummary
 			for _, certificate := range output {
@@ -153,7 +151,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 				}
 			}
 			output = matches
-			noTagMatches = len(output) == 0
 		}
 
 		if len(output) == 0 {
@@ -163,9 +160,6 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	})
 	if err != nil {
 		if errors.Is(err, tfresource.ErrEmptyResult) {
-			if noTagMatches {
-				return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
-			}
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 		}
 		return sdkdiag.AppendFromErr(diags, err)
