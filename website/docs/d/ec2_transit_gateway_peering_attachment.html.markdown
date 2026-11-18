@@ -54,6 +54,7 @@ which take the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the attachment.
+* `multipath_resilience_status` - Multipath resilience status of the attachment. Values are `enabled` (both sides allow multipath resilience), `pending` (only one side allows it, or it is being enabled) and `disabled` (neither side allows it).
 * `peer_account_id` - Identifier of the peer AWS account.
 * `peer_region` - Identifier of the peer AWS region.
 * `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway.

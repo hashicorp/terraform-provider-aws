@@ -11,10 +11,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -37,6 +39,31 @@ func resourceTransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
+				"multipath_resilience_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow_multipath_resilience": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Computed: true,
+							},
+							"multipath_resilience_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TransitGatewayPeeringAttachmentMultipathResilienceMode](),
+							},
+						},
+					},
+				},
 				"peer_account_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -83,8 +110,19 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, 
 
 	d.SetId(aws.ToString(output.TransitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 
-	if _, err := waitTransitGatewayPeeringAttachmentAccepted(ctx, conn, d.Id()); err != nil {
+	transitGatewayPeeringAttachment, err := waitTransitGatewayPeeringAttachmentAccepted(ctx, conn, d.Id())
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Peering Attachment (%s) update: %s", d.Id(), err)
+	}
+
+	// Accepting an attachment whose requester allows multipath resilience also allows it for the accepter.
+	// The accepter's side can only be modified once the attachment is available.
+	if transitGatewayPeeringAttachmentAccepterOptionsChanged(d, transitGatewayPeeringAttachment.Options) {
+		if err := modifyTransitGatewayPeeringAttachmentOptions(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	} else if err := waitTransitGatewayPeeringAttachmentMultipathResilienceEnabledIfAllowed(ctx, conn, d.Id(), transitGatewayPeeringAttachment.Options); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
@@ -117,6 +155,14 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(ctx context.Context, d 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
+	if v := transitGatewayPeeringAttachment.Options; v != nil {
+		d.Set("multipath_resilience_status", v.MultipathResilienceStatus)
+	} else {
+		d.Set("multipath_resilience_status", nil)
+	}
+	if err := d.Set("options", flattenTransitGatewayPeeringAttachmentAccepterOptions(transitGatewayPeeringAttachment.Options)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
+	}
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.RequesterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.RequesterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
@@ -130,8 +176,13 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(ctx context.Context, d 
 
 func resourceTransitGatewayPeeringAttachmentAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	// Tags only.
+	if d.HasChanges("options.0.allow_multipath_resilience", "options.0.multipath_resilience_mode") {
+		if err := modifyTransitGatewayPeeringAttachmentOptions(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
 
 	return append(diags, resourceTransitGatewayPeeringAttachmentAccepterRead(ctx, d, meta)...)
 }
@@ -159,4 +210,42 @@ func resourceTransitGatewayPeeringAttachmentAccepterDelete(ctx context.Context, 
 	}
 
 	return diags
+}
+
+// transitGatewayPeeringAttachmentAccepterOptionsChanged reports whether the configured multipath resilience
+// settings differ from the accepter's current settings.
+func transitGatewayPeeringAttachmentAccepterOptionsChanged(d *schema.ResourceData, apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) bool {
+	options := expandModifyTransitGatewayPeeringAttachmentRequestOptions(d)
+	if options == nil {
+		return false
+	}
+
+	if apiObject == nil {
+		return true
+	}
+
+	if aws.ToBool(options.AllowMultipathResilience) != aws.ToBool(apiObject.AccepterAllowMultipathResilience) {
+		return true
+	}
+
+	return options.MultipathResilienceMode != "" && options.MultipathResilienceMode != apiObject.AccepterMultipathResilienceMode
+}
+
+// flattenTransitGatewayPeeringAttachmentAccepterOptions flattens the options of the accepter's side of the attachment.
+func flattenTransitGatewayPeeringAttachmentAccepterOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []any {
+	if apiObject == nil || (apiObject.AccepterAllowMultipathResilience == nil && apiObject.AccepterMultipathResilienceMode == "") {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.AccepterAllowMultipathResilience; v != nil {
+		tfMap["allow_multipath_resilience"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.AccepterMultipathResilienceMode; v != "" {
+		tfMap["multipath_resilience_mode"] = v
+	}
+
+	return []any{tfMap}
 }

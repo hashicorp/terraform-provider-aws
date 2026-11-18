@@ -9,6 +9,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -51,6 +52,57 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T, semaphor
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringAttachmentAccepter_multipathResilience(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
+	resourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// The requester allows multipath resilience, so accepting would also allow it for the accepter.
+				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_multipathResilience(rName, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusPending)),
+				),
+			},
+			{
+				Config:            testAccTransitGatewayPeeringAttachmentAccepterConfig_multipathResilience(rName, acctest.CtFalse),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayPeeringAttachmentAccepterConfig_multipathResilience(rName, acctest.CtTrue),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "options.0.multipath_resilience_mode", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn)),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled)),
+				),
 			},
 		},
 	})
@@ -239,4 +291,55 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTransitGatewayPeeringAttachmentAccepterConfig_multipathResilience(rName, allow string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateRegionProvider(),
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway" "peer" {
+  provider = "awsalternate"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  provider = "awsalternate"
+
+  peer_account_id         = aws_ec2_transit_gateway.test.owner_id
+  peer_region             = data.aws_region.current.region
+  peer_transit_gateway_id = aws_ec2_transit_gateway.test.id
+  transit_gateway_id      = aws_ec2_transit_gateway.peer.id
+
+  options {
+    allow_multipath_resilience = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "test" {
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.test.id
+
+  options {
+    allow_multipath_resilience = %[2]s
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, allow))
 }
