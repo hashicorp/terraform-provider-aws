@@ -962,27 +962,12 @@ func TestAccLambdaFunction_s3FileSystem(t *testing.T) {
 
 func TestAccLambdaFunction_image(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
-	imageLatestID := os.Getenv(key)
-	if imageLatestID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V1_ID"
-	imageV1ID := os.Getenv(key)
-	if imageV1ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V2_ID"
-	imageV2ID := os.Getenv(key)
-	if imageV2ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageLatestID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageV1ID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_V1_ID")
+	imageV2ID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_V2_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1034,15 +1019,10 @@ func TestAccLambdaFunction_image(t *testing.T) {
 
 func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
-	imageLatestID := os.Getenv(key)
-	if imageLatestID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1052,13 +1032,13 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccFunctionConfig_imageConfigNull(rName, imageLatestID),
+				Config: testAccFunctionConfig_imageConfigNull(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
-					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1069,13 +1049,13 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_image(rName, imageLatestID),
+				Config: testAccFunctionConfig_image(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
-					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
@@ -3063,13 +3043,11 @@ func TestAccLambdaFunction_acceleratorConfig(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	imageURI := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
-	if imageURI == "" {
-		t.Skip("Environment variable AWS_LAMBDA_IMAGE_LATEST_ID is not set")
-	}
+
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
@@ -3112,13 +3090,14 @@ func TestAccLambdaFunction_acceleratorConfig(t *testing.T) {
 
 func TestAccLambdaFunction_acceleratorConfigAdd(t *testing.T) {
 	ctx := acctest.Context(t)
-	imageURI := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
-	if imageURI == "" {
-		t.Skip("Environment variable AWS_LAMBDA_IMAGE_LATEST_ID is not set")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
+
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
@@ -3155,13 +3134,14 @@ func TestAccLambdaFunction_acceleratorConfigAdd(t *testing.T) {
 
 func TestAccLambdaFunction_acceleratorConfigRemove(t *testing.T) {
 	ctx := acctest.Context(t)
-	imageURI := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
-	if imageURI == "" {
-		t.Skip("Environment variable AWS_LAMBDA_IMAGE_LATEST_ID is not set")
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
+
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },

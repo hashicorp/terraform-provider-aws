@@ -5,7 +5,6 @@ package lambda_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -304,16 +303,15 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
-
-	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccImageLatestPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionDataSourceConfig_image(rName, imageLatestID),
+				Config: testAccFunctionDataSourceConfig_image(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "code_signing_config_arn", resourceName, "code_signing_config_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_uri", resourceName, "image_uri"),
@@ -470,13 +468,10 @@ func TestAccLambdaFunctionDataSource_capacityProvider(t *testing.T) {
 
 func TestAccLambdaFunctionDataSource_acceleratorConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	imageURI := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
-	if imageURI == "" {
-		t.Skip("Environment variable AWS_LAMBDA_IMAGE_LATEST_ID is not set")
-	}
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
@@ -493,12 +488,6 @@ func TestAccLambdaFunctionDataSource_acceleratorConfig(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccImageLatestPreCheck(t *testing.T) {
-	if os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "" {
-		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID env var must be set for Lambda Function Data Source Image Support acceptance tests.")
-	}
 }
 
 func testAccFunctionDataSourceConfig_base(rName string) string {
