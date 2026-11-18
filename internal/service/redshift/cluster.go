@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
@@ -30,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -109,10 +109,10 @@ func resourceCluster() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-						validation.StringMatch(regexache.MustCompile(`(?i)^[a-z]`), "first character must be a letter"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
+						lazyvalidation.StringMatch(`^[0-9a-z-]+$`, "must contain only lowercase alphanumeric characters and hyphens"),
+						lazyvalidation.StringMatch(`(?i)^[a-z]`, "first character must be a letter"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end with a hyphen"),
 					),
 				},
 				"cluster_namespace_arn": {
@@ -174,8 +174,8 @@ func resourceCluster() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`^[0-9a-z_$]+$`), "must contain only lowercase alphanumeric characters, underscores, and dollar signs"),
-						validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter or underscore"),
+						lazyvalidation.StringMatch(`^[0-9a-z_$]+$`, "must contain only lowercase alphanumeric characters, underscores, and dollar signs"),
+						lazyvalidation.StringMatch(`(?i)^[a-z_]`, "first character must be a letter or underscore"),
 					),
 				},
 				"default_iam_role_arn": {
@@ -212,9 +212,9 @@ func resourceCluster() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must only contain alphanumeric characters and hyphens"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end in a hyphen"),
 					),
 				},
 				"iam_roles": {
@@ -254,10 +254,10 @@ func resourceCluster() *schema.Resource {
 					Sensitive: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(8, 64),
-						validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
-						validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
-						validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
-						validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+						lazyvalidation.StringMatch(`^.*[a-z].*`, "must contain at least one lowercase letter"),
+						lazyvalidation.StringMatch(`^.*[A-Z].*`, "must contain at least one uppercase letter"),
+						lazyvalidation.StringMatch(`^.*[0-9].*`, "must contain at least one number"),
+						lazyvalidation.StringMatch(`^[^\@\/'" ]*$`, "cannot contain [/@\"' ]"),
 					),
 					ConflictsWith: []string{"manage_master_password", "master_password_wo"},
 				},
@@ -268,10 +268,10 @@ func resourceCluster() *schema.Resource {
 					Sensitive: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(8, 64),
-						validation.StringMatch(regexache.MustCompile(`^.*[a-z].*`), "must contain at least one lowercase letter"),
-						validation.StringMatch(regexache.MustCompile(`^.*[A-Z].*`), "must contain at least one uppercase letter"),
-						validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
-						validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
+						lazyvalidation.StringMatch(`^.*[a-z].*`, "must contain at least one lowercase letter"),
+						lazyvalidation.StringMatch(`^.*[A-Z].*`, "must contain at least one uppercase letter"),
+						lazyvalidation.StringMatch(`^.*[0-9].*`, "must contain at least one number"),
+						lazyvalidation.StringMatch(`^[^\@\/'" ]*$`, "cannot contain [/@\"' ]"),
 					),
 					ConflictsWith: []string{"manage_master_password", "master_password"},
 					RequiredWith:  []string{"master_password_wo_version"},
@@ -297,8 +297,7 @@ func resourceCluster() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z][0-9A-Za-z_.@+-]*$`),
-							"must start with a letter and only contain alphanumeric characters, underscores, plus signs, dots, @ symbols, or hyphens")),
+						lazyvalidation.StringMatch(`^[A-Za-z][0-9A-Za-z_.@+-]*$`, "must start with a letter and only contain alphanumeric characters, underscores, plus signs, dots, @ symbols, or hyphens")),
 				},
 				"multi_az": {
 					Type:     schema.TypeBool,

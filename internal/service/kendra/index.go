@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -122,10 +122,7 @@ func ResourceIndex() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 10),
-												validation.StringMatch(
-													regexache.MustCompile(`[0-9]+[s]`),
-													"numeric string followed by the character \"s\"",
-												),
+												lazyvalidation.StringMatch(`[0-9]+[s]`, "numeric string followed by the character \"s\""),
 											),
 										},
 										"freshness": {
@@ -244,10 +241,7 @@ func ResourceIndex() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1000),
-						validation.StringMatch(
-							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-							"The name must consist of alphanumerics, hyphens or underscores.",
-						),
+						lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, "The name must consist of alphanumerics, hyphens or underscores."),
 					),
 				},
 				names.AttrRoleARN: {
@@ -360,10 +354,7 @@ func ResourceIndex() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 2048),
-												validation.StringMatch(
-													regexache.MustCompile(`^(https?|ftp|file):\/\/([^\s]*)`),
-													"Must be valid URL",
-												),
+												lazyvalidation.StringMatch(`^(https?|ftp|file):\/\/([^\s]*)`, "Must be valid URL"),
 											),
 										},
 										"user_name_attribute_field": {

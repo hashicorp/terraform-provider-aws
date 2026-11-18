@@ -576,7 +576,8 @@ func findSubnetConfigurationsByNetworkInterfaceIDs(ctx context.Context, conn *ec
 }
 
 func isAmazonS3VPCEndpoint(serviceName string) bool {
-	ok, _ := regexp.MatchString(`^com\.amazonaws\.`+inttypes.CanonicalRegionPatternNoAnchors+`\.s3$`, serviceName)
+	// In FIPS mode the Service Name for the S3 service is s3-fips, so both s3 and s3-fips need to be handled here
+	ok, _ := regexp.MatchString(`^com\.amazonaws\.`+inttypes.CanonicalRegionPatternNoAnchors+`\.s3(?:-fips)?$`, serviceName)
 	return ok
 }
 

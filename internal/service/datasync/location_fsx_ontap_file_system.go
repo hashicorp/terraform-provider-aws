@@ -245,7 +245,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	subdirectory, err := subdirectoryFromLocationURI(uri)
+	_, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

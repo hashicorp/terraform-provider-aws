@@ -7,10 +7,10 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -179,7 +179,7 @@ func StringMatchSchema(handling AttrHandling, re, message string) *schema.Schema
 			Required:     handling.IsRequired(),
 			Optional:     handling.IsOptional(),
 			Computed:     handling.IsComputed(),
-			ValidateFunc: validation.StringMatch(regexache.MustCompile(re), message),
+			ValidateFunc: lazyvalidation.StringMatch(re, message),
 		},
 	)
 	return s

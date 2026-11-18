@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -90,10 +91,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 				Description: "Name of the hub content reference.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`),
-						"valid characters are a-z, A-Z, 0-9, and - (hyphen)",
-					),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`, "valid characters are a-z, A-Z, 0-9, and - (hyphen)"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -119,10 +117,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 				Description: "Name of the private SageMaker Hub to add the content reference to.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`),
-						"valid characters are a-z, A-Z, 0-9, and - (hyphen)",
-					),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`, "valid characters are a-z, A-Z, 0-9, and - (hyphen)"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -325,12 +320,10 @@ func (r *hubContentReferenceResource) Delete(ctx context.Context, request resour
 	}
 }
 
-var versionSuffix = regexache.MustCompile(`/\d+\.\d+\.\d+$`)
-
 // stripARNVersion removes the semantic version suffix from a SageMaker hub content ARN.
 // If no version suffix is present, the ARN is returned unchanged.
 func stripARNVersion(arn *string) *string {
-	return aws.String(versionSuffix.ReplaceAllString(aws.ToString(arn), ""))
+	return aws.String(regexache.MustCompile(`/\d+\.\d+\.\d+$`).ReplaceAllString(aws.ToString(arn), ""))
 }
 
 const hubContentReferenceImportIDSeparator = intflex.ResourceIdSeparator

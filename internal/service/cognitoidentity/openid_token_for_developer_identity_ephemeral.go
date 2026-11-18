@@ -6,7 +6,6 @@ package cognitoidentity
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 )
 
 // @EphemeralResource("aws_cognito_identity_openid_token_for_developer_identity", name="Open ID Connect Token For Developer Identity")
@@ -36,14 +36,14 @@ func (e *openIDTokenForDeveloperIdentityEphemeralResource) Schema(ctx context.Co
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`[\w-]+:[0-9a-f-]+`), "A unique identifier in the format REGION:GUID."),
+					lazystringvalidator.RegexMatches(`[\w-]+:[0-9a-f-]+`, "A unique identifier in the format REGION:GUID."),
 					stringvalidator.LengthBetween(1, 55),
 				},
 			},
 			"identity_pool_id": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`[\w-]+:[0-9a-f-]+`), "A unique identifier in the format REGION:GUID."),
+					lazystringvalidator.RegexMatches(`[\w-]+:[0-9a-f-]+`, "A unique identifier in the format REGION:GUID."),
 					stringvalidator.LengthBetween(1, 55),
 				},
 			},

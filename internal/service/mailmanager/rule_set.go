@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
@@ -33,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -344,7 +344,7 @@ func ruleStringEvaluateBlock(ctx context.Context) schema.ListNestedBlock {
 					Optional: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 256),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[Xx]-.+`), "must begin with X- or x-"),
+						lazystringvalidator.RegexMatches(`^[Xx]-.+`, "must begin with X- or x-"),
 						stringvalidator.ExactlyOneOf(
 							path.MatchRelative().AtParent().AtName("analysis"),
 							path.MatchRelative().AtParent().AtName("attribute"),
@@ -459,7 +459,7 @@ func addHeaderActionBlock(ctx context.Context) schema.ListNestedBlock {
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 64),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[Xx]-`), "must begin with X- or x-"),
+						lazystringvalidator.RegexMatches(`^[Xx]-`, "must begin with X- or x-"),
 					},
 				},
 				"header_value": schema.StringAttribute{
@@ -522,13 +522,13 @@ func bounceActionBlock(ctx context.Context) schema.ListNestedBlock {
 				"smtp_reply_code": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[45][0-9]{2}$`), "must be a 4xx or 5xx SMTP reply code"),
+						lazystringvalidator.RegexMatches(`^[45][0-9]{2}$`, "must be a 4xx or 5xx SMTP reply code"),
 					},
 				},
 				names.AttrStatusCode: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[45]\.[0-9]{1,3}\.[0-9]{1,3}$`), "must be an enhanced SMTP status code beginning with 4 or 5"),
+						lazystringvalidator.RegexMatches(`^[45]\.[0-9]{1,3}\.[0-9]{1,3}$`, "must be an enhanced SMTP status code beginning with 4 or 5"),
 					},
 				},
 			}},

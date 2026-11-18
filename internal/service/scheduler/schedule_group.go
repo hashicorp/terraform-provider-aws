@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/scheduler/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -69,7 +69,7 @@ func resourceScheduleGroup() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, `The name must consist of alphanumerics, hyphens, and underscores.`),
 					)),
 				},
 				names.AttrNamePrefix: {
@@ -80,7 +80,7 @@ func resourceScheduleGroup() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 						validation.StringLenBetween(1, 64-sdkid.UniqueIDSuffixLength),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, `The name must consist of alphanumerics, hyphens, and underscores.`),
 					)),
 				},
 				names.AttrState: {

@@ -37,6 +37,10 @@ func TestAccConfigService_serial(t *testing.T) {
 			"ListIncludeResource": testAccConfigRule_List_includeResource,
 			"ListRegionOverride":  testAccConfigRule_List_regionOverride,
 		},
+		"ConfigurationAggregator": {
+			"organization": testAccConfigurationAggregator_organization,
+			"switch":       testAccConfigurationAggregator_switch,
+		},
 		"ConfigurationRecorderStatus": {
 			acctest.CtBasic:      testAccConfigurationRecorderStatus_basic,
 			"startEnabled":       testAccConfigurationRecorderStatus_startEnabled,
@@ -64,6 +68,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Template":          testAccConformancePack_updateS3Template,
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
 			"Identity":                  testAccConfigServiceConformancePack_identitySerial,
+		},
+		"Connector": {
+			acctest.CtBasic:      testAccConnector_basic,
+			acctest.CtDisappears: testAccConnector_disappears,
+			"tags":               testAccConnector_tags,
 		},
 		"DeliveryChannel": {
 			acctest.CtBasic:      testAccDeliveryChannel_basic,
@@ -133,10 +142,6 @@ func TestAccConfigService_serial(t *testing.T) {
 			"ListBasic":           testAccRemediationConfiguration_List_basic,
 			"ListIncludeResource": testAccRemediationConfiguration_List_includeResource,
 			"ListRegionOverride":  testAccRemediationConfiguration_List_regionOverride,
-		},
-		"ConfigurationAggregator": {
-			"organization": testAccConfigurationAggregator_organization,
-			"switch":       testAccConfigurationAggregator_switch,
 		},
 		"RetentionConfiguration": {
 			acctest.CtBasic:      testAccRetentionConfiguration_basic,

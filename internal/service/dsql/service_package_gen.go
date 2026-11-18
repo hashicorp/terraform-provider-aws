@@ -54,6 +54,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 				WrappedImport: true,
 			},
 		},
+		{
+			Factory:  newStreamResource,
+			TypeName: "aws_dsql_stream",
+			Name:     "Stream",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterIdentifier, true),
+				inttypes.StringIdentityAttribute("stream_identifier", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      streamImportID{},
+			},
+		},
 	}
 }
 
@@ -73,6 +88,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Cluster Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrIdentifier, true)),
+		},
+		{
+			Factory:  newStreamResourceAsListResource,
+			TypeName: "aws_dsql_stream",
+			Name:     "Stream",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrClusterIdentifier, true),
+				inttypes.StringIdentityAttribute("stream_identifier", true),
+			}),
 		},
 	})
 }

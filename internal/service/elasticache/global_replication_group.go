@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,6 +49,7 @@ const (
 )
 
 // @SDKResource("aws_elasticache_global_replication_group", name="Global Replication Group")
+// @Tags(identifierAttribute="arn")
 func resourceGlobalReplicationGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalReplicationGroupCreate,
@@ -200,6 +202,8 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validateReplicationGroupID,
 				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputedOnly(),
 				"transit_encryption_enabled": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -284,11 +288,13 @@ func paramGroupNameRequiresEngineOrMajorVersionUpgrade(diff sdkv2.ResourceDiffer
 func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	id := d.Get("global_replication_group_id_suffix").(string)
 	input := &elasticache.CreateGlobalReplicationGroupInput{
 		GlobalReplicationGroupIdSuffix: aws.String(id),
 		PrimaryReplicationGroupId:      aws.String(d.Get("primary_replication_group_id").(string)),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("global_replication_group_description"); ok {
@@ -296,6 +302,13 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 	}
 
 	output, err := conn.CreateGlobalReplicationGroup(ctx, input)
+
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+		input.Tags = nil
+
+		output, err = conn.CreateGlobalReplicationGroup(ctx, input)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Global Replication Group (%s): %s", id, err)
@@ -307,6 +320,20 @@ func resourceGlobalReplicationGroupCreate(ctx context.Context, d *schema.Resourc
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Global Replication Group (%s) create: %s", d.Id(), err)
+	}
+
+	// For partitions not supporting tag-on-create, attempt tag after create.
+	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTags(ctx, conn, aws.ToString(globalReplicationGroup.ARN), tags)
+
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]any)) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
+			err = nil
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting ElastiCache Global Replication Group (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if v, ok := d.GetOk("automatic_failover_enabled"); ok {
@@ -810,6 +837,16 @@ func waitGlobalReplicationGroupDeleted(ctx context.Context, conn *elasticache.Cl
 }
 
 func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) (*awstypes.GlobalReplicationGroupMember, error) {
+	return findGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID, tfslices.PredicateTrue[*awstypes.GlobalReplicationGroupMember]())
+}
+
+func findGlobalReplicationGroupMemberByIDAndRegion(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string) (*awstypes.GlobalReplicationGroupMember, error) {
+	return findGlobalReplicationGroupMember(ctx, conn, globalReplicationGroupID, replicationGroupID, func(v *awstypes.GlobalReplicationGroupMember) bool {
+		return aws.ToString(v.ReplicationGroupRegion) == replicationGroupRegion
+	})
+}
+
+func findGlobalReplicationGroupMember(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, filter tfslices.Predicate[*awstypes.GlobalReplicationGroupMember]) (*awstypes.GlobalReplicationGroupMember, error) {
 	globalReplicationGroup, err := findGlobalReplicationGroupByID(ctx, conn, globalReplicationGroupID)
 
 	if err != nil {
@@ -821,7 +858,7 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 
 	for _, v := range globalReplicationGroup.Members {
-		if aws.ToString(v.ReplicationGroupId) == replicationGroupID {
+		if aws.ToString(v.ReplicationGroupId) == replicationGroupID && filter(&v) {
 			return &v, nil
 		}
 	}
@@ -831,9 +868,9 @@ func findGlobalReplicationGroupMemberByID(ctx context.Context, conn *elasticache
 	}
 }
 
-func statusGlobalReplicationGroupMember(conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string) retry.StateRefreshFunc {
+func statusGlobalReplicationGroupMember(conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findGlobalReplicationGroupMemberByID(ctx, conn, globalReplicationGroupID, replicationGroupID)
+		output, err := findGlobalReplicationGroupMemberByIDAndRegion(ctx, conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -851,11 +888,11 @@ const (
 	globalReplicationGroupMemberStatusAssociated = "associated"
 )
 
-func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID string, timeout time.Duration) (*awstypes.GlobalReplicationGroupMember, error) {
+func waitGlobalReplicationGroupMemberDetached(ctx context.Context, conn *elasticache.Client, globalReplicationGroupID, replicationGroupID, replicationGroupRegion string, timeout time.Duration) (*awstypes.GlobalReplicationGroupMember, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{globalReplicationGroupMemberStatusAssociated},
 		Target:     []string{},
-		Refresh:    statusGlobalReplicationGroupMember(conn, globalReplicationGroupID, replicationGroupID),
+		Refresh:    statusGlobalReplicationGroupMember(conn, globalReplicationGroupID, replicationGroupID, replicationGroupRegion),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,

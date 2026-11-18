@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -44,6 +43,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -53,16 +53,10 @@ import (
 )
 
 // Standard Bedrock AgentCore resource name validator.
-var validResourceName validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`),
-	`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 48 characters.`,
-)
+var validResourceName validator.String = lazystringvalidator.RegexMatches(`^[a-zA-Z][a-zA-Z0-9_]{0,47}$`, `Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 48 characters.`)
 
 // Standard Bedrock AgentCore memory key validator.
-var validMemoryKey validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(`^[a-zA-Z0-9\s._:/=+@-]{1,128}$`),
-	`Key can only contain alphanumeric characters, spaces, and . _ : / = + @ - and must be between 1 and 128 characters.`,
-)
+var validMemoryKey validator.String = lazystringvalidator.RegexMatches(`^[a-zA-Z0-9\s._:/=+@-]{1,128}$`, `Key can only contain alphanumeric characters, spaces, and . _ : / = + @ - and must be between 1 and 128 characters.`)
 
 // @FrameworkResource("aws_bedrockagentcore_memory_strategy", name="Memory Strategy")
 // @IdentityAttribute("memory_id")

@@ -5,4 +5,5 @@ package devopsagent
 
 const (
 	ResNameAgentSpace = "Agent Space"
+	ResNameAssetFile  = "Asset File"
 )

@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -101,8 +101,8 @@ func resourceFirewallPolicy() *schema.Resource {
 														Required: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 32),
-															validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-															validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric and underscore characters"),
+															lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+															lazyvalidation.StringMatch(`^[0-9A-Za-z_]+$`, "must contain only alphanumeric and underscore characters"),
 														),
 													},
 												},
@@ -133,7 +133,7 @@ func resourceFirewallPolicy() *schema.Resource {
 											Required: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 256),
-												validation.StringMatch(regexache.MustCompile(`^rslvr-frg-[0-9a-f]+$`), "must be a Route 53 Resolver DNS Firewall rule group ID"),
+												lazyvalidation.StringMatch(`^rslvr-frg-[0-9a-f]+$`, "must be a Route 53 Resolver DNS Firewall rule group ID"),
 											),
 										},
 										"source_ip_ranges": route53ResolvedIPValidationIPRangesSchema(),

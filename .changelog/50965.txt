@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssoadmin_managed_policy_attachment: Add resource identity support
+```
+
+```release-note:new-list-resource
+aws_ssoadmin_managed_policy_attachment
+```

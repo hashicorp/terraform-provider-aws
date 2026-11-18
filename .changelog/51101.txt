@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_acm_certificate: Fixes evenutal consistency error when filtering by `tags`.
+```

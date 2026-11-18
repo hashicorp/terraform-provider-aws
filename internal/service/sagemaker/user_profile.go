@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,7 +81,7 @@ func resourceUserProfile() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`, "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 					),
 				},
 				"user_settings": {
@@ -235,7 +235,7 @@ func resourceUserProfile() *schema.Resource {
 														Type:     schema.TypeString,
 														Optional: true,
 														ValidateFunc: validation.All(
-															validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+															lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 															validation.StringLenBetween(1, 1024),
 														),
 													},

@@ -15,7 +15,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
@@ -37,6 +36,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -228,8 +228,7 @@ func resourceGroup() *schema.Resource {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 255),
-									validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
-										`no spaces or special characters except "-", "_", and "/"`),
+									lazyvalidation.StringMatch(`[A-Za-z0-9\-_\/]+`, `no spaces or special characters except "-", "_", and "/"`),
 								),
 							},
 							"notification_metadata": {
@@ -870,7 +869,7 @@ func resourceGroup() *schema.Resource {
 													"weighted_capacity": {
 														Type:         schema.TypeString,
 														Optional:     true,
-														ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
+														ValidateFunc: lazyvalidation.StringMatch(`^[1-9][0-9]{0,2}$`, "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
 													},
 												},
 											},

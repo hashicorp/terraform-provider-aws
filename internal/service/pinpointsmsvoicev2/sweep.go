@@ -4,15 +4,21 @@
 package pinpointsmsvoicev2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,6 +32,9 @@ func RegisterSweepers() {
 		Name: "aws_pinpointsmsvoicev2_pool",
 		F:    sweepPools,
 	})
+	awsv2.Register("aws_pinpointsmsvoicev2_account_default_protect_configuration", sweepAccountDefaultProtectConfigurations)
+	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration", sweepProtectConfigurations, "aws_pinpointsmsvoicev2_account_default_protect_configuration", "aws_pinpointsmsvoicev2_protect_configuration_association")
+	awsv2.Register("aws_pinpointsmsvoicev2_protect_configuration_association", sweepProtectConfigurationAssociations)
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_sender_id", &resource.Sweeper{
 		Name:         "aws_pinpointsmsvoicev2_sender_id",
 		F:            sweepSenderIDs,
@@ -163,4 +172,120 @@ func sweepSenderIDs(region string) error {
 	}
 
 	return nil
+}
+
+func sweepAccountDefaultProtectConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+
+	_, err := findAccountDefaultProtectConfiguration(ctx, conn)
+	if retry.NotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return []sweep.Sweepable{
+		framework.NewSweepResource(newAccountDefaultProtectConfigurationResource, client,
+			framework.NewAttribute(names.AttrID, client.Region(ctx))),
+	}, nil
+}
+
+func sweepProtectConfigurationAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input pinpointsmsvoicev2.DescribeConfigurationSetsInput
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listConfigurationSets(ctx, conn, &input) {
+		if err != nil {
+			return nil, err
+		}
+
+		if aws.ToString(v.ProtectConfigurationId) == "" {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newProtectConfigurationAssociationResource, client,
+			framework.NewAttribute("configuration_set_name", aws.ToString(v.ConfigurationSetName)),
+			framework.NewAttribute("protect_configuration_id", aws.ToString(v.ProtectConfigurationId))))
+	}
+
+	return sweepResources, nil
+}
+
+func sweepProtectConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input pinpointsmsvoicev2.DescribeProtectConfigurationsInput
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listProtectConfigurations(ctx, conn, &input) {
+		if err != nil {
+			return nil, err
+		}
+
+		sweepResources = append(sweepResources, protectConfigurationSweeper{
+			conn:   conn,
+			config: v,
+			sweepable: framework.NewSweepResource(newProtectConfigurationResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.ProtectConfigurationId))),
+		})
+	}
+
+	return sweepResources, nil
+}
+
+// protectConfigurationSweeper removes the settings that block deletion before deleting the protect configuration.
+type protectConfigurationSweeper struct {
+	conn      *pinpointsmsvoicev2.Client
+	config    awstypes.ProtectConfigurationInformation
+	sweepable sweep.Sweepable
+}
+
+func (s protectConfigurationSweeper) Delete(ctx context.Context, optFns ...tfresource.OptionsFunc) error {
+	id := aws.ToString(s.config.ProtectConfigurationId)
+
+	if s.config.DeletionProtectionEnabled {
+		input := pinpointsmsvoicev2.UpdateProtectConfigurationInput{
+			DeletionProtectionEnabled: aws.Bool(false),
+			ProtectConfigurationId:    aws.String(id),
+		}
+		if _, err := s.conn.UpdateProtectConfiguration(ctx, &input); err != nil {
+			return fmt.Errorf("disabling deletion protection for End User Messaging SMS Protect Configuration (%s): %w", id, err)
+		}
+	}
+
+	input := pinpointsmsvoicev2.DescribeConfigurationSetsInput{
+		Filters: []awstypes.ConfigurationSetFilter{
+			{
+				Name:   awstypes.ConfigurationSetFilterNameProtectConfigurationId,
+				Values: []string{id},
+			},
+		},
+	}
+	configurationSets, err := findConfigurationSets(ctx, s.conn, &input)
+	if err != nil && !retry.NotFound(err) {
+		return fmt.Errorf("listing End User Messaging SMS Configuration Sets for Protect Configuration (%s): %w", id, err)
+	}
+	for _, v := range configurationSets {
+		input := pinpointsmsvoicev2.DisassociateProtectConfigurationInput{
+			ConfigurationSetName:   v.ConfigurationSetName,
+			ProtectConfigurationId: aws.String(id),
+		}
+		_, err := s.conn.DisassociateProtectConfiguration(ctx, &input)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || isProtectConfigurationNotAssociatedError(err) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("disassociating End User Messaging SMS Protect Configuration (%s) from Configuration Set (%s): %w", id, aws.ToString(v.ConfigurationSetName), err)
+		}
+	}
+
+	if s.config.AccountDefault {
+		var input pinpointsmsvoicev2.DeleteAccountDefaultProtectConfigurationInput
+		if _, err := s.conn.DeleteAccountDefaultProtectConfiguration(ctx, &input); err != nil {
+			return fmt.Errorf("removing End User Messaging SMS Protect Configuration (%s) as account default: %w", id, err)
+		}
+	}
+
+	return s.sweepable.Delete(ctx, optFns...)
 }
