@@ -2673,18 +2673,18 @@ func ssmSendCommandConfigBlock(ctx context.Context) fwschema.Block {
 							"document_version":   fwschema.StringAttribute{Optional: true},
 							"cross_account_role": fwschema.StringAttribute{Optional: true},
 							names.AttrExternalID: fwschema.StringAttribute{Optional: true},
-							"parameters": fwschema.MapAttribute{
+							names.AttrParameters: fwschema.MapAttribute{
 								CustomType: fwtypes.NewMapTypeOf[fwtypes.ListValueOf[types.String]](ctx),
 								Optional:   true,
 							},
 						},
 						Blocks: map[string]fwschema.Block{
-							"target": fwschema.ListNestedBlock{
+							names.AttrTarget: fwschema.ListNestedBlock{
 								CustomType: fwtypes.NewListNestedObjectTypeOf[ssmTargetModel](ctx),
 								NestedObject: fwschema.NestedBlockObject{
 									Attributes: map[string]fwschema.Attribute{
-										"key": fwschema.StringAttribute{Required: true},
-										"values": fwschema.ListAttribute{
+										names.AttrKey: fwschema.StringAttribute{Required: true},
+										names.AttrValues: fwschema.ListAttribute{
 											CustomType: fwtypes.ListOfStringType,
 											Required:   true,
 										},
