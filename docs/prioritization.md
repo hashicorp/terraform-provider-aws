@@ -3,57 +3,59 @@
 
 # How We Prioritize
 
-## Intro
+## Overview
 
-### What this document is
+### What This Document Is
 
-This document describes how we handle prioritization of work from a variety of input sources. Our focus is always to deliver tangible value to the practitioner on a predictable and frequent schedule, and we feel it is important to be transparent in how we weigh input in order to deliver on this goal.
+This document describes how we prioritize work from a variety of input sources. Our focus is to deliver tangible value to practitioners on a predictable, frequent schedule. Being transparent about how we weigh input helps us meet that goal.
 
-### What this document is not
+### What This Document Is Not
 
-Due to the variety of input sources, the scale of the provider, and resource constraints, it is impossible to give a hard number on how each of the factors outlined in this document is weighted. Instead, the goal of the document is to give a transparent, but generalized assessment of each of the sources of input so that the community has a better idea of why things are prioritized the way they are. Additional information may be found in the [FAQ](faq.md#how-do-you-decide-what-gets-merged-for-each-release).
+This document does not give exact weights for each prioritization factor. The variety of input sources, the scale of the provider, and resource constraints make that impossible. Instead, it offers a transparent, generalized assessment of each input source so the community can better understand why work is prioritized the way it is. See the [FAQ](faq.md#how-do-you-decide-what-gets-merged-for-each-release) for more information.
 
-## Prioritization
+## Sources of Work
 
-We prioritize work based on a number of factors, including community feedback, issue/PR reactions, as well as the source of the request. While community feedback is heavily weighted, there are times when other factors take precedence. By their nature, some factors are less visible to the community, and so are outlined here as a way to be as transparent as possible. Each of the sources of input is detailed below.
+We prioritize work based on a range of factors, including community feedback (such as issue and pull request reactions) and the source of the request. While community feedback is heavily weighted, other factors sometimes take precedence. Security issues and serious regressions are always prioritized. For everything else, community support is the primary signal, and customer, partner, and internal needs are weighed against it. Some of these sources are less visible to the community, so we outline each one below.
 
 ### Community
 
-Our large community of practitioners is vocal and immensely productive in contributing to the provider codebase. Unfortunately, our current team capacity means that we are unable to give every issue or pull request the same level of attention. This means we need to prioritize the issues that provide the most value to the greatest number of practitioners.
+Our large community of practitioners is vocal and contributes heavily to the provider codebase. Because team capacity is limited, we cannot give every issue or pull request the same level of attention, so we prioritize the issues that provide the most value to the most practitioners.
 
-We will always focus on the issues which have the most attention. The main rubric we have for assessing community wants is GitHub reactions. In addition to reactions, we look at comments, reactions to comments, and links to additional issues and PRs to help get a more holistic view of where the community stands. We try to ensure that for the issues where we have the most community support, we are responsive to that support and attempt to give timelines wherever possible.
+Community attention is a primary input, and GitHub reactions are the main rubric we use to assess it. In addition to reactions, we look at comments, reactions to comments, and links to additional issues and pull requests to help get a more holistic view of where the community stands. For the items with the most community support, we aim to be responsive and to share timelines where we can.
 
 ### Customer
 
-Another source of work that must be weighted is escalations around particular feature requests and bugs from HashiCorp and AWS customers. Escalations typically come via several routes:
+We also receive escalations for specific feature requests and bugs from HashiCorp/IBM and AWS customers. Escalations typically come via several routes:
 
 - Customer Support
 - Sales Engineering
-- AWS Solutions Architects contacting us on behalf of their clients.
+- AWS Solutions Architects contacting us on behalf of their clients
 
-These reports flow into an internal board and are triaged weekly to determine whether the escalation request should be prioritized for an upcoming release or added to the backlog to monitor for additional community support. During triage, we verify whether a GitHub issue or PR exists for the request and will create one if it does not exist. In this way, these requests are visible to the community to some degree. An escalation coming from a customer does not necessarily guarantee that it will be prioritized over requests made by the community. Instead, we assess them based on the following rubric:
+These reports flow into an internal board and are triaged weekly to decide whether to prioritize the escalation for an upcoming release or add it to the backlog until it gathers more community support. If the request has no corresponding GitHub issue or pull request, we create one, which gives the community some visibility.
 
-- Does the issue have considerable community support?
-- Does the issue pertain to one of our [Core Services](core-services.md)?
+A customer escalation does not guarantee priority over community requests. Instead, we assess each escalation with the following questions:
 
-By weighing these factors, we can make a call to determine whether, and how it is to be prioritized.
+- Does the request have considerable community support?
+- Does the request pertain to one of our [core services](core-services.md)?
+
+We weigh the answers to these questions to decide whether, and how, to prioritize the request.
 
 ### Partner
 
-AWS Service Teams and Partner representatives regularly contact us to discuss upcoming features or new services. This work is often done under an NDA, so usually needs to be done in private. Often the ask is to enable Terraform support or an upcoming feature or service.
+AWS service teams and partner representatives regularly contact us to discuss upcoming features or new services. This work is often done under NDA, so it usually has to happen in private.
 
-As with customer escalations, a request from a partner does not necessarily mean that it will be prioritized over other efforts; capacity restraints require us to prioritize major releases or prefer offerings in line with our [core services](core-services.md).
+As with customer escalations, a partner request does not guarantee priority. Because of capacity constraints, we favor major service launches and offerings that align with our [core services](core-services.md).
 
 ### Internal
 
-#### SDK/Core Updates
+#### SDK Updates
 
-We endeavor to keep in step with all minor SDK releases, so these are automatically pulled in by our GitHub automation. Major releases normally include breaking changes and usually require us to bump the provider itself to a major version. We plan to make one major version change a year and try to avoid any more than that.
+We keep pace with minor releases of the AWS SDK for Go v2, which our GitHub automation pulls in automatically. Major SDK releases can include breaking changes, which may require a major provider version bump. We plan for at most one major provider version per year.
 
 #### Technical Debt
 
-We always include capacity for technical debt work in every iteration, but engineers are free to include minor tech debt work on their own recognizance. Larger items are discussed and prioritized in an internal meeting aimed at reviewing technical debt.
+Every planning cycle includes capacity for technical debt work, and engineers may also take on minor technical debt work at their own discretion. Larger items are discussed and prioritized in an internal meeting specifically aimed at reviewing and addressing technical debt.
 
-#### Adverse User Experience or Security Vulnerabilities
+#### Regressions, Crashes, and Security Issues
 
-Issues with the provider that provide a poor user experience (bugs, crashes), or involve a threat to security are always prioritized for inclusion. The severity of these will determine how soon they are included for release.
+Issues that degrade the user experience (such as regressions and crashes) or pose a security threat are always prioritized. The severity determines how quickly we release a fix.
