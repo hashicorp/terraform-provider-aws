@@ -14,6 +14,7 @@ Used to automate the AWS Provider Team's working board.
 | `github_token` | true | The token used to authenticate with the GitHub API |
 | `item_url` | true | The URL of the Issue or Pull Request |
 | `move_to_top` | false | Whether to move the item to the top of the list |
+| `remove` | false | Whether to delete the item from the board instead of adding it |
 | `status` | false | The Status the item should be set to |
 | `view` | false | The View the item should be assigned to |
 
