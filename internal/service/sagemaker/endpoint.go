@@ -277,6 +277,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 			return tfresource.NonRetryableError(fmt.Errorf("creating SageMaker AI Endpoint (%s): %w", name, err))
 		}
 
+		// Save ID so that a failed non-retryable wait failure leaves a tainted resource rather than an orphan.
+		d.SetId(name)
+
 		_, err = waitEndpointInService(ctx, conn, name)
 
 		// unexpected state 'Failed', wanted target 'InService'. last error: The execution role ARN "..." is invalid. Please ensure that the role exists and that its trust relationship policy allows the action "sts:AssumeRole" for the service principal "sagemaker.amazonaws.com"

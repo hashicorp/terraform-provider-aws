@@ -13,7 +13,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -206,7 +206,7 @@ func resourceRegisteredDomain() *schema.Resource {
 								Required: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 255),
-									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.-]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
+									lazyvalidation.StringMatch(`[0-9A-Za-z_.-]*`, "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
 								),
 							},
 						},
@@ -507,10 +507,13 @@ func hasDomainTransferLock(statusList []string) bool {
 }
 
 func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, name string) (*route53domains.GetDomainDetailOutput, error) {
-	input := &route53domains.GetDomainDetailInput{
+	input := route53domains.GetDomainDetailInput{
 		DomainName: aws.String(name),
 	}
+	return findDomainDetail(ctx, conn, &input)
+}
 
+func findDomainDetail(ctx context.Context, conn *route53domains.Client, input *route53domains.GetDomainDetailInput) (*route53domains.GetDomainDetailOutput, error) {
 	output, err := conn.GetDomainDetail(ctx, input)
 
 	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "not found") {

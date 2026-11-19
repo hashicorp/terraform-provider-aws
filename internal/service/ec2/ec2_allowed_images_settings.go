@@ -8,7 +8,6 @@ package ec2
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
@@ -25,6 +24,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -65,7 +65,7 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 								setvalidator.SizeAtMost(50),
 								setvalidator.ValueStringsAre(
 									stringvalidator.LengthBetween(1, 128),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9\-\._/\?\[\]@'\(\)\*\w]+$`), "can only contain valid characters"),
+									lazystringvalidator.RegexMatches(`^[a-zA-Z0-9\-\._/\?\[\]@'\(\)\*\w]+$`, "can only contain valid characters"),
 								),
 							},
 						},
@@ -91,7 +91,7 @@ func (r *allowedImagesSettingsResource) Schema(ctx context.Context, request reso
 								setvalidator.SizeAtMost(50),
 								setvalidator.ValueStringsAre(
 									stringvalidator.LengthBetween(1, 25),
-									stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9]+$`), "must be a valid marketplace product code"),
+									lazystringvalidator.RegexMatches(`^[a-zA-Z0-9]+$`, "must be a valid marketplace product code"),
 								),
 							},
 						},

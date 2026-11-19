@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -174,7 +174,7 @@ func resourceNFSFileShare() *schema.Resource {
 					Optional: true,
 					Default:  "{}",
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+						lazyvalidation.StringMatch(`^\{[\w\s:\{\}\[\]"]*}$`, ""),
 						validation.StringLenBetween(2, 100),
 					),
 				},
@@ -237,7 +237,7 @@ func resourceNFSFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 		GatewayARN:           aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
+		KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 		LocationARN:          aws.String(d.Get("location_arn").(string)),
 		NFSFileShareDefaults: fileShareDefaults,
 		ObjectACL:            awstypes.ObjectACL(d.Get("object_acl").(string)),
@@ -356,7 +356,7 @@ func resourceNFSFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),
 			FileShareARN:         aws.String(d.Id()),
 			GuessMIMETypeEnabled: aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)),
+			KMSEncrypted:         aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 			NFSFileShareDefaults: fileShareDefaults,
 			ObjectACL:            awstypes.ObjectACL(d.Get("object_acl").(string)),
 			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),

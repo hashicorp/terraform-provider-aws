@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_resiliencehubv2_policy: Add `sharing_enabled` argument
+```
+
+```release-note:enhancement
+data-source/aws_resiliencehubv2_policy: Add `sharing_enabled` attribute
+```

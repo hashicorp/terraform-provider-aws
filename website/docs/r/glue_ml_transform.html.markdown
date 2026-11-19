@@ -123,38 +123,38 @@ resource "aws_glue_catalog_table" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name you assign to this ML Transform. It must be unique in your account.
-* `input_record_tables` - (Required)  A list of AWS Glue table definitions used by the transform. see [Input Record Tables](#input_record_tables).
-* `parameters` - (Required) The algorithmic parameters that are specific to the transform type used. Conditionally dependent on the transform type. see [Parameters](#parameters).
-* `role_arn` - (Required) The ARN of the IAM role associated with this ML Transform.
 * `description` - (Optional) Description of the ML Transform.
-* `glue_version` - (Optional) The version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `max_capacity` - (Optional) The number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
-* `max_retries` - (Optional) The maximum number of times to retry this ML Transform if it fails.
+* `glue_version` - (Optional) Version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
+* `input_record_tables` - (Required) List of AWS Glue table definitions used by the transform. See [`input_record_tables`](#input_record_tables-block).
+* `max_capacity` - (Optional) Number of AWS Glue data processing units (DPUs) that are allocated to task runs for this transform. You can allocate from `2` to `100` DPUs; the default is `10`. `max_capacity` is a mutually exclusive option with `number_of_workers` and `worker_type`.
+* `max_retries` - (Optional) Maximum number of times to retry this ML Transform if it fails.
+* `name` - (Required) Name you assign to this ML Transform. It must be unique in your account.
+* `number_of_workers` - (Optional) Number of workers of a defined `worker_type` that are allocated when an ML Transform runs. Required with `worker_type`.
+* `parameters` - (Required) Algorithmic parameters that are specific to the transform type used. Conditionally dependent on the transform type. See [`parameters`](#parameters-block).
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `role_arn` - (Required) ARN of the IAM role associated with this ML Transform.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `timeout` - (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
-* `worker_type` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `number_of_workers`.
-* `number_of_workers` - (Optional) The number of workers of a defined `worker_type` that are allocated when an ML Transform runs. Required with `worker_type`.
+* `timeout` - (Optional) ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
+* `worker_type` - (Optional) Type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `number_of_workers`.
 
-### input_record_tables
+### `input_record_tables` Block
 
-* `database_name` - (Required) A database name in the AWS Glue Data Catalog.
-* `table_name` - (Required) A table name in the AWS Glue Data Catalog.
-* `catalog_id` - (Optional) A unique identifier for the AWS Glue Data Catalog.
-* `connection_name`- (Optional) The name of the connection to the AWS Glue Data Catalog.
+* `catalog_id` - (Optional) Unique identifier for the AWS Glue Data Catalog.
+* `connection_name` - (Optional) Name of the connection to the AWS Glue Data Catalog.
+* `database_name` - (Required) Database name in the AWS Glue Data Catalog.
+* `table_name` - (Required) Table name in the AWS Glue Data Catalog.
 
-### parameters
+### `parameters` Block
 
-* `transform_type` - (Required) The type of machine learning transform. For information about the types of machine learning transforms, see [Creating Machine Learning Transforms](http://docs.aws.amazon.com/glue/latest/dg/add-job-machine-learning-transform.html).
-* `find_matches_parameters` - (Required) The parameters for the find matches algorithm. see [Find Matches Parameters](#find_matches_parameters).
+* `find_matches_parameters` - (Required) Parameters for the find matches algorithm. See [`find_matches_parameters`](#find_matches_parameters-block).
+* `transform_type` - (Required) Type of machine learning transform. For information about the types of machine learning transforms, see [Creating Machine Learning Transforms](http://docs.aws.amazon.com/glue/latest/dg/add-job-machine-learning-transform.html).
 
-#### find_matches_parameters
+#### `find_matches_parameters` Block
 
-* `accuracy_cost_trade_off` - (Optional) The value that is selected when tuning your transform for a balance between accuracy and cost.
-* `enforce_provided_labels` - (Optional) The value to switch on or off to force the output to match the provided labels from users.
-* `precision_recall_trade_off` - (Optional) The value selected when tuning your transform for a balance between precision and recall.
-* `primary_key_column_name` - (Optional) The name of a column that uniquely identifies rows in the source table.
+* `accuracy_cost_trade_off` - (Optional) Value that is selected when tuning your transform for a balance between accuracy and cost.
+* `enforce_provided_labels` - (Optional) Value to switch on or off to force the output to match the provided labels from users.
+* `precision_recall_trade_off` - (Optional) Value selected when tuning your transform for a balance between precision and recall.
+* `primary_key_column_name` - (Optional) Name of a column that uniquely identifies rows in the source table.
 
 ## Attribute Reference
 
@@ -162,14 +162,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of Glue ML Transform.
 * `id` - Glue ML Transform ID.
-* `label_count` - The number of labels available for this transform.
-* `schema` - The object that represents the schema that this transform accepts. see [Schema](#schema).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `label_count` - Number of labels available for this transform.
+* `schema` - Object that represents the schema that this transform accepts. See [`schema`](#schema-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-### schema
+### `schema` Block
 
-* `name` - The name of the column.
-* `data_type` - The type of data in the column.
+* `data_type` - Type of data in the column.
+* `name` - Name of the column.
 
 ## Import
 

@@ -113,8 +113,10 @@ resource "aws_prometheus_resource_policy" "service_access" {
 
 This resource supports the following arguments:
 
-* `workspace_id` - (Required) The ID of the workspace to attach the resource-based policy to.
-* `policy_document` - (Required) The JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
+The following arguments are required:
+
+* `policy_document` - (Required) JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
+* `workspace_id` - (Required) ID of the workspace to attach the resource-based policy to.
 
 The following arguments are optional:
 
@@ -124,8 +126,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `policy_status` - The current status of the resource-based policy. Can be `CREATING`, `ACTIVE`, `UPDATING`, or `DELETING`.
-* `revision_id` - The revision ID of the current resource-based policy.
+* `revision_id` - Revision ID of the current resource-based policy.
 
 ## Timeouts
 

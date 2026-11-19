@@ -14,7 +14,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -105,7 +105,7 @@ func resourceGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`), ""),
+						lazyvalidation.StringMatch(`^[ -\.0-\[\]-~]*[!-\.0-\[\]-~][ -\.0-\[\]-~]*$`, ""),
 						validation.StringLenBetween(2, 255),
 					),
 				},
@@ -125,8 +125,8 @@ func resourceGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ValidateFunc: validation.Any(
-						validation.StringMatch(regexache.MustCompile(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`), ""),
-						validation.StringMatch(regexache.MustCompile(`^GMT$`), ""),
+						lazyvalidation.StringMatch(`^GMT[+-][0-9]{1,2}:[0-9]{2}$`, ""),
+						lazyvalidation.StringMatch(`^GMT$`, ""),
 					),
 				},
 				"gateway_type": {
@@ -197,7 +197,7 @@ func resourceGateway() *schema.Resource {
 								Elem: &schema.Schema{
 									Type: schema.TypeString,
 									ValidateFunc: validation.All(
-										validation.StringMatch(regexache.MustCompile(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`), ""),
+										lazyvalidation.StringMatch(`^(([0-9A-Za-z-]*[0-9A-Za-z])\.)*([0-9A-Za-z-]*[0-9A-Za-z])(:(\d+))?$`, ""),
 										validation.StringLenBetween(6, 1024),
 									),
 								},
@@ -206,7 +206,7 @@ func resourceGateway() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`), ""),
+									lazyvalidation.StringMatch(`^([0-9a-z]+(-[0-9a-z]+)*\.)+[a-z]{2,}$`, ""),
 									validation.StringLenBetween(1, 1024),
 								),
 							},
@@ -220,7 +220,7 @@ func resourceGateway() *schema.Resource {
 								Required:  true,
 								Sensitive: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
+									lazyvalidation.StringMatch(`^[ -~]+$`, ""),
 									validation.StringLenBetween(1, 1024),
 								),
 							},
@@ -234,7 +234,7 @@ func resourceGateway() *schema.Resource {
 								Type:     schema.TypeString,
 								Required: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
+									lazyvalidation.StringMatch(`^\w[\w\.\- ]*$`, ""),
 									validation.StringLenBetween(1, 1024),
 								),
 							},
@@ -250,7 +250,7 @@ func resourceGateway() *schema.Resource {
 					Optional:  true,
 					Sensitive: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
+						lazyvalidation.StringMatch(`^[ -~]+$`, ""),
 						validation.StringLenBetween(6, 512),
 					),
 				},

@@ -41,7 +41,7 @@ This resource supports the following arguments:
 * `trust_store_arn` - (Required) Trust Store ARN.
 * `revocations_s3_bucket` - (Required) S3 Bucket name holding the client certificate CA bundle.
 * `revocations_s3_key` - (Required) S3 object key holding the client certificate CA bundle.
-* `revocations_s3_object_version` - (Optional) Version Id of CA bundle S3 bucket object, if versioned, defaults to latest if omitted.
+* `revocations_s3_object_version` - (Optional) Version ID of CA bundle S3 bucket object, if versioned, defaults to latest if omitted.
 
 ## Attribute Reference
 

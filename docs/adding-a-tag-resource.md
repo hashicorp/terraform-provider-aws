@@ -167,8 +167,9 @@ resource "aws_{service}_tag" "example" {
 
 This resource supports the following arguments:
 
-* `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `key` - (Required) Tag name.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `resource_arn` - (Required) ARN of the {SERVICE} resource to tag.
 * `value` - (Required) Tag value.
 
 ## Attribute Reference
@@ -179,9 +180,18 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-Import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_{service}_tag.example
+  id = "arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name"
+}
+```
+
+Using `terraform import`, import `aws_{service}_tag` using the {SERVICE} resource identifier and key, separated by a comma (`,`). For example:
 
 ```console
-$ terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
+% terraform import aws_{service}_tag.example arn:aws:{service}:us-east-1:123456789012:{thing}/example,Name
 ```
 ``````

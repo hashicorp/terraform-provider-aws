@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fsx"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -127,7 +127,7 @@ func resourceFileCache() *schema.Resource {
 												Type: schema.TypeString,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(7, 15),
-													validation.StringMatch(regexache.MustCompile(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`), "invalid pattern"),
+													lazyvalidation.StringMatch(`^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$`, "invalid pattern"),
 												),
 											},
 										},
@@ -174,7 +174,7 @@ func resourceFileCache() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 20),
-						validation.StringMatch(regexache.MustCompile(`^[0-9](.[0-9]*)*$`), "invalid pattern"),
+						lazyvalidation.StringMatch(`^[0-9](.[0-9]*)*$`, "invalid pattern"),
 					),
 				},
 				names.AttrKMSKeyID: {
@@ -246,7 +246,7 @@ func resourceFileCache() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(7, 7),
-									validation.StringMatch(regexache.MustCompile(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`), "invalid pattern"),
+									lazyvalidation.StringMatch(`^[1-7]:([01]\d|2[0-3]):?([0-5]\d)$`, "invalid pattern"),
 								),
 							},
 						},

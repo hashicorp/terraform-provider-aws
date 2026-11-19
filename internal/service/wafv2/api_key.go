@@ -8,7 +8,6 @@ package wafv2
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -72,15 +72,7 @@ func (r *apiKeyResource) Schema(ctx context.Context, request resource.SchemaRequ
 					setvalidator.SizeAtLeast(1),
 					setvalidator.SizeAtMost(5),
 					setvalidator.ValueStringsAre(
-						stringvalidator.RegexMatches(
-							// Based on RFC 1034, RFC 1123, and RFC 5890
-							// - Domain labels must start and end with alphanumeric characters
-							// - Domain labels can contain hyphens but not at start or end
-							// - Each domain label can be up to 63 characters
-							// - Must contain at least one period (separating domain and TLD)
-							regexache.MustCompile(`^([0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?\.)+[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?$`),
-							"domain names must follow DNS format with valid characters: A-Z, a-z, 0-9, -(hyphen) or . (period)",
-						),
+						lazystringvalidator.RegexMatches(`^([0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?\.)+[0-9A-Za-z]([0-9A-Za-z-]{0,61}[0-9A-Za-z])?$`, "domain names must follow DNS format with valid characters: A-Z, a-z, 0-9, -(hyphen) or . (period)"),
 						stringvalidator.LengthAtMost(253),
 					),
 				},

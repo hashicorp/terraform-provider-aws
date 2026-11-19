@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,14 +37,6 @@ type listResourceFunction struct {
 
 func (l *listResourceFunction) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().LambdaClient(ctx)
-
-	var query listFunctionModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing Lambda Functions")
 	stream.Results = func(yield func(list.ListResult) bool) {
@@ -98,24 +91,22 @@ func (l *listResourceFunction) List(ctx context.Context, request list.ListReques
 	}
 }
 
-type listFunctionModel struct {
-	framework.WithRegionModel
+func listFunctions(ctx context.Context, conn *lambda.Client, input *lambda.ListFunctionsInput, optFns ...func(*lambda.Options)) iter.Seq2[awstypes.FunctionConfiguration, error] {
+	return tfiter.ConcatValuesWithError(listFunctionPages(ctx, conn, input, optFns...))
 }
 
-func listFunctions(ctx context.Context, conn *lambda.Client, input *lambda.ListFunctionsInput) iter.Seq2[awstypes.FunctionConfiguration, error] {
-	return func(yield func(awstypes.FunctionConfiguration, error) bool) {
+func listFunctionPages(ctx context.Context, conn *lambda.Client, input *lambda.ListFunctionsInput, optFns ...func(*lambda.Options)) iter.Seq2[[]awstypes.FunctionConfiguration, error] {
+	return func(yield func([]awstypes.FunctionConfiguration, error) bool) {
 		pages := lambda.NewListFunctionsPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(awstypes.FunctionConfiguration{}, fmt.Errorf("listing Lambda Function resources: %w", err))
+				yield(nil, fmt.Errorf("listing Lambda Functions: %w", err))
 				return
 			}
 
-			for _, item := range page.Functions {
-				if !yield(item, nil) {
-					return
-				}
+			if !yield(page.Functions, nil) {
+				return
 			}
 		}
 	}

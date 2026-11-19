@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -31,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -115,7 +115,7 @@ func resourceMetricAlarm() *schema.Resource {
 					Optional:      true,
 					MaxItems:      1,
 					ExactlyOneOf:  []string{"evaluation_criteria", names.AttrMetricName, "metric_query"},
-					ConflictsWith: []string{names.AttrNamespace, names.AttrMetricName, "dimensions", "period", names.AttrUnit, "statistic", "extended_statistic", "metric_query", "threshold", "comparison_operator", "threshold_metric_id", "evaluation_periods", "datapoints_to_alarm"},
+					ConflictsWith: []string{names.AttrNamespace, names.AttrMetricName, "dimensions", "period", names.AttrUnit, "statistic", "extended_statistic", "metric_query", "threshold", "comparison_operator", "threshold_metric_id", "evaluation_periods", "datapoints_to_alarm", "evaluation_window"},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"promql_criteria": {
@@ -160,15 +160,34 @@ func resourceMetricAlarm() *schema.Resource {
 					Optional:     true,
 					ValidateFunc: validation.IntAtLeast(1),
 				},
+				"evaluation_window": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					MaxItems:      1,
+					ConflictsWith: []string{"evaluation_criteria"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"wall_clock_window": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"timezone": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"extended_statistic": {
 					Type:          schema.TypeString,
 					Optional:      true,
 					ConflictsWith: []string{"statistic", "metric_query"},
-					ValidateFunc: validation.StringMatch(
-						// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-						regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-						"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-					),
+					ValidateFunc:  lazyvalidation.StringMatch(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`, "invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html"),
 				},
 				"insufficient_data_actions": {
 					Type:     schema.TypeSet,
@@ -230,7 +249,7 @@ func resourceMetricAlarm() *schema.Resource {
 											Optional: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 255),
-												validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
+												lazyvalidation.StringMatch(`[^:].*`, "must not contain colon characters"),
 											),
 										},
 										"period": {
@@ -246,13 +265,8 @@ func resourceMetricAlarm() *schema.Resource {
 											Required: true,
 											ValidateDiagFunc: validation.AnyDiag(
 												enum.Validate[awstypes.Statistic](),
-												validation.ToDiagFunc(
-													validation.StringMatch(
-														// doesn't catch: PR with %-values provided, TM/WM/PR/TC/TS with no values provided
-														regexache.MustCompile(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`),
-														"invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html",
-													),
-												),
+												// Doesn't catch PR with percentage values, or TM/WM/PR/TC/TS with no values.
+												lazyvalidation.StringMatchDiag(`^((p|(tm)|(wm)|(tc)|(ts))((\d{1,2}(\.\d{1,2})?)|(100))|(IQM)|(((TM)|(WM)|(PR)|(TC)|(TS)))\((\d+(\.\d+)?%?)?:(\d+(\.\d+)?%?)?\))$`, "invalid statistic, see: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html"),
 											),
 										},
 										names.AttrUnit: {
@@ -289,7 +303,7 @@ func resourceMetricAlarm() *schema.Resource {
 					ConflictsWith: []string{"metric_query"},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`[^:].*`), "must not contain colon characters"),
+						lazyvalidation.StringMatch(`[^:].*`, "must not contain colon characters"),
 					),
 				},
 				"ok_actions": {
@@ -342,6 +356,25 @@ func resourceMetricAlarm() *schema.Resource {
 					Type:             schema.TypeString,
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.StandardUnit](),
+				},
+				"warm_up_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"only_start_evaluating_after_warm_up_period_ends": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  false,
+							},
+							"warm_up_period_duration_in_minutes": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntBetween(1, 2880),
+							},
+						},
+					},
 				},
 			}
 		},
@@ -560,6 +593,10 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 		apiObject.OKActions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("warm_up_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.WarmUpConfiguration = expandWarmUpConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	// Handle evaluation_criteria (PromQL alarms).
 	if v, ok := d.GetOk("evaluation_criteria"); ok && len(v.([]any)) > 0 {
 		apiObject.EvaluationCriteria = expandEvaluationCriteria(v.([]any)[0].(map[string]any))
@@ -594,6 +631,10 @@ func expandPutMetricAlarmInput(ctx context.Context, d *schema.ResourceData) *clo
 
 	if v, ok := d.GetOk("evaluation_periods"); ok {
 		apiObject.EvaluationPeriods = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("evaluation_window"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		apiObject.EvaluationWindow = expandEvaluationWindow(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk("extended_statistic"); ok {
@@ -657,6 +698,35 @@ func flattenEvaluationCriteria(apiObject awstypes.EvaluationCriteria) []any {
 		}
 
 		tfMap["promql_criteria"] = []any{promqlMap}
+	}
+
+	return []any{tfMap}
+}
+
+func flattenEvaluationWindow(apiObject awstypes.EvaluationWindow) []any {
+	v, ok := apiObject.(*awstypes.EvaluationWindowMemberWallClockWindow)
+	if !ok {
+		return nil
+	}
+
+	wallClockWindowMap := map[string]any{}
+	if v.Value.Timezone != nil {
+		wallClockWindowMap["timezone"] = aws.ToString(v.Value.Timezone)
+	}
+
+	return []any{map[string]any{
+		"wall_clock_window": []any{wallClockWindowMap},
+	}}
+}
+
+func flattenWarmUpConfiguration(apiObject *awstypes.WarmUpConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"only_start_evaluating_after_warm_up_period_ends": aws.ToBool(apiObject.OnlyStartEvaluatingAfterWarmUpPeriodEnds),
+		"warm_up_period_duration_in_minutes":              aws.ToInt32(apiObject.WarmUpPeriodDurationInMinutes),
 	}
 
 	return []any{tfMap}
@@ -833,6 +903,43 @@ func expandEvaluationCriteria(tfMap map[string]any) awstypes.EvaluationCriteria 
 	return nil
 }
 
+func expandEvaluationWindow(tfMap map[string]any) awstypes.EvaluationWindow {
+	if tfMap == nil {
+		return nil
+	}
+
+	v, ok := tfMap["wall_clock_window"].([]any)
+	if !ok || len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	wallClockWindowMap := v[0].(map[string]any)
+
+	apiObject := awstypes.WallClockWindow{}
+	if v, ok := wallClockWindowMap["timezone"]; ok && v.(string) != "" {
+		apiObject.Timezone = aws.String(v.(string))
+	}
+
+	return &awstypes.EvaluationWindowMemberWallClockWindow{
+		Value: apiObject,
+	}
+}
+
+func expandWarmUpConfiguration(tfMap map[string]any) *awstypes.WarmUpConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.WarmUpConfiguration{
+		WarmUpPeriodDurationInMinutes: aws.Int32(int32(tfMap["warm_up_period_duration_in_minutes"].(int))),
+	}
+
+	if v, ok := tfMap["only_start_evaluating_after_warm_up_period_ends"]; ok {
+		apiObject.OnlyStartEvaluatingAfterWarmUpPeriodEnds = aws.Bool(v.(bool))
+	}
+
+	return apiObject
+}
+
 func expandMetricAlarmDimensions(tfMap map[string]any) []awstypes.Dimension {
 	if len(tfMap) == 0 {
 		return nil
@@ -872,6 +979,7 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		d.Set("datapoints_to_alarm", nil)
 		d.Set("dimensions", nil)
 		d.Set("evaluate_low_sample_count_percentiles", nil)
+		d.Set("evaluation_window", nil)
 		d.Set("extended_statistic", nil)
 		d.Set(names.AttrMetricName, nil)
 		d.Set("metric_query", nil)
@@ -890,6 +998,9 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		}
 		d.Set("evaluate_low_sample_count_percentiles", alarm.EvaluateLowSampleCountPercentile)
 		d.Set("evaluation_periods", alarm.EvaluationPeriods)
+		if err := d.Set("evaluation_window", flattenEvaluationWindow(alarm.EvaluationWindow)); err != nil {
+			return smarterr.NewError(fmt.Errorf("setting evaluation_window: %w", err))
+		}
 		d.Set("extended_statistic", alarm.ExtendedStatistic)
 		d.Set(names.AttrMetricName, alarm.MetricName)
 		if len(alarm.Metrics) > 0 {
@@ -915,37 +1026,43 @@ func resourceMetricAlarmFlatten(_ context.Context, d *schema.ResourceData, alarm
 		d.Set("treat_missing_data", missingDataMissing)
 	}
 
+	if err := d.Set("warm_up_configuration", flattenWarmUpConfiguration(alarm.WarmUpConfiguration)); err != nil {
+		return smarterr.NewError(fmt.Errorf("setting warm_up_configuration: %w", err))
+	}
+
 	return nil
 }
 
 type metricAlarmResourceModel struct {
 	framework.WithRegionModel
-	ActionsEnabled                    types.Bool                                               `tfsdk:"actions_enabled"`
-	AlarmActions                      fwtypes.SetOfString                                      `tfsdk:"alarm_actions"`
-	AlarmDescription                  types.String                                             `tfsdk:"alarm_description"`
-	AlarmName                         types.String                                             `tfsdk:"alarm_name"`
-	ARN                               types.String                                             `tfsdk:"arn"`
-	ComparisonOperator                fwtypes.StringEnum[awstypes.ComparisonOperator]          `tfsdk:"comparison_operator"`
-	DatapointsToAlarm                 types.Int64                                              `tfsdk:"datapoints_to_alarm"`
-	Dimensions                        fwtypes.MapOfString                                      `tfsdk:"dimensions"`
-	EvaluateLowSampleCountPercentiles types.String                                             `tfsdk:"evaluate_low_sample_count_percentiles"`
-	EvaluationCriteria                fwtypes.ListNestedObjectValueOf[evaluationCriteriaModel] `tfsdk:"evaluation_criteria"`
-	EvaluationInterval                types.Int64                                              `tfsdk:"evaluation_interval"`
-	EvaluationPeriods                 types.Int64                                              `tfsdk:"evaluation_periods"`
-	ExtendedStatistic                 types.String                                             `tfsdk:"extended_statistic"`
-	InsufficientDataActions           fwtypes.SetOfString                                      `tfsdk:"insufficient_data_actions"`
-	MetricName                        types.String                                             `tfsdk:"metric_name"`
-	MetricQuery                       fwtypes.SetNestedObjectValueOf[metricDataQueryModel]     `tfsdk:"metric_query"`
-	Namespace                         types.String                                             `tfsdk:"namespace"`
-	OKActions                         fwtypes.SetOfString                                      `tfsdk:"ok_actions"`
-	Period                            types.Int64                                              `tfsdk:"period"`
-	Statistic                         fwtypes.StringEnum[awstypes.Statistic]                   `tfsdk:"statistic"`
-	Tags                              tftags.Map                                               `tfsdk:"tags"`
-	TagsAll                           tftags.Map                                               `tfsdk:"tags_all"`
-	Threshold                         types.Float64                                            `tfsdk:"threshold"`
-	ThresholdMetricID                 types.String                                             `tfsdk:"threshold_metric_id"`
-	TreatMissingData                  types.String                                             `tfsdk:"treat_missing_data"`
-	Unit                              fwtypes.StringEnum[awstypes.StandardUnit]                `tfsdk:"unit"`
+	ActionsEnabled                    types.Bool                                                `tfsdk:"actions_enabled"`
+	AlarmActions                      fwtypes.SetOfString                                       `tfsdk:"alarm_actions"`
+	AlarmDescription                  types.String                                              `tfsdk:"alarm_description"`
+	AlarmName                         types.String                                              `tfsdk:"alarm_name"`
+	ARN                               types.String                                              `tfsdk:"arn"`
+	ComparisonOperator                fwtypes.StringEnum[awstypes.ComparisonOperator]           `tfsdk:"comparison_operator"`
+	DatapointsToAlarm                 types.Int64                                               `tfsdk:"datapoints_to_alarm"`
+	Dimensions                        fwtypes.MapOfString                                       `tfsdk:"dimensions"`
+	EvaluateLowSampleCountPercentiles types.String                                              `tfsdk:"evaluate_low_sample_count_percentiles"`
+	EvaluationCriteria                fwtypes.ListNestedObjectValueOf[evaluationCriteriaModel]  `tfsdk:"evaluation_criteria"`
+	EvaluationInterval                types.Int64                                               `tfsdk:"evaluation_interval"`
+	EvaluationPeriods                 types.Int64                                               `tfsdk:"evaluation_periods"`
+	EvaluationWindow                  fwtypes.ListNestedObjectValueOf[evaluationWindowModel]    `tfsdk:"evaluation_window"`
+	ExtendedStatistic                 types.String                                              `tfsdk:"extended_statistic"`
+	InsufficientDataActions           fwtypes.SetOfString                                       `tfsdk:"insufficient_data_actions"`
+	MetricName                        types.String                                              `tfsdk:"metric_name"`
+	MetricQuery                       fwtypes.SetNestedObjectValueOf[metricDataQueryModel]      `tfsdk:"metric_query"`
+	Namespace                         types.String                                              `tfsdk:"namespace"`
+	OKActions                         fwtypes.SetOfString                                       `tfsdk:"ok_actions"`
+	Period                            types.Int64                                               `tfsdk:"period"`
+	Statistic                         fwtypes.StringEnum[awstypes.Statistic]                    `tfsdk:"statistic"`
+	Tags                              tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                           tftags.Map                                                `tfsdk:"tags_all"`
+	Threshold                         types.Float64                                             `tfsdk:"threshold"`
+	ThresholdMetricID                 types.String                                              `tfsdk:"threshold_metric_id"`
+	TreatMissingData                  types.String                                              `tfsdk:"treat_missing_data"`
+	Unit                              fwtypes.StringEnum[awstypes.StandardUnit]                 `tfsdk:"unit"`
+	WarmUpConfiguration               fwtypes.ListNestedObjectValueOf[warmUpConfigurationModel] `tfsdk:"warm_up_configuration"`
 }
 
 type evaluationCriteriaModel struct {
@@ -956,6 +1073,14 @@ type alarmPromQLCriteriaModel struct {
 	PendingPeriod  types.Int64  `tfsdk:"pending_period"`
 	Query          types.String `tfsdk:"query"`
 	RecoveryPeriod types.Int64  `tfsdk:"recovery_period"`
+}
+
+type evaluationWindowModel struct {
+	WallClockWindow fwtypes.ListNestedObjectValueOf[wallClockWindowModel] `tfsdk:"wall_clock_window"`
+}
+
+type wallClockWindowModel struct {
+	Timezone types.String `tfsdk:"timezone"`
 }
 
 type metricDataQueryModel struct {
@@ -975,4 +1100,9 @@ type metricStatModel struct {
 	Period     types.Int64                               `tfsdk:"period"`
 	Stat       types.String                              `tfsdk:"stat"`
 	Unit       fwtypes.StringEnum[awstypes.StandardUnit] `tfsdk:"unit"`
+}
+
+type warmUpConfigurationModel struct {
+	OnlyStartEvaluatingAfterWarmUpPeriodEnds types.Bool  `tfsdk:"only_start_evaluating_after_warm_up_period_ends"`
+	WarmUpPeriodDurationInMinutes            types.Int64 `tfsdk:"warm_up_period_duration_in_minutes"`
 }

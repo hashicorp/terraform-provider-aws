@@ -8,8 +8,8 @@ description: |-
 
 # Data Source: aws_autoscaling_groups
 
-The Autoscaling Groups data source allows access to the list of AWS
-ASGs within a specific region. This will allow you to pass a list of AutoScaling Groups to other resources.
+The Auto Scaling groups data source allows access to the list of AWS
+ASGs within a specific region. This will allow you to pass a list of Auto Scaling groups to other resources.
 
 ## Example Usage
 
@@ -45,7 +45,7 @@ resource "aws_autoscaling_notification" "slack_notifications" {
 This data source supports the following arguments:
 
 * `filter` - (Optional) Filter used to scope the list e.g., by tags. See [related docs](http://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_Filter.html).
-* `names` - (Optional) List of autoscaling group names
+* `names` - (Optional) List of Auto Scaling group names
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `filter` Block
@@ -59,6 +59,6 @@ The `filter` block supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arns` - List of the Autoscaling Groups Arns in the current region.
+* `arns` - List of the Auto Scaling groups ARNs in the current region.
 * `id` - AWS Region.
-* `names` - List of the Autoscaling Groups in the current region.
+* `names` - List of the Auto Scaling groups in the current region.

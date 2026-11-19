@@ -36,14 +36,6 @@ type patchGroupListResource struct {
 func (l *patchGroupListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SSMClient(ctx)
 
-	var query listPatchGroupModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		input := ssm.DescribePatchGroupsInput{}
 		for item, err := range listPatchGroups(ctx, conn, &input) {
@@ -91,10 +83,6 @@ func (l *patchGroupListResource) List(ctx context.Context, request list.ListRequ
 			}
 		}
 	}
-}
-
-type listPatchGroupModel struct {
-	framework.WithRegionModel
 }
 
 func listPatchGroups(ctx context.Context, conn *ssm.Client, input *ssm.DescribePatchGroupsInput) iter.Seq2[awstypes.PatchGroupPatchBaselineMapping, error] {

@@ -6,6 +6,7 @@
 //go:generate go run ../../generate/identitytests/main.go
 //go:generate go run ../../generate/servicepackage/main.go
 //go:generate go run generate_statement_models.go
+//go:generate go run generate_scopedown_statement_models.go
 // ONLY generate directives and package declaration! Do not add anything else to this file.
 
 package wafv2

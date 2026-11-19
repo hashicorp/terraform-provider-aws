@@ -71,7 +71,7 @@ The following arguments are required:
 * `environment_id` - (Required) Unique identifier for the KX environment.
 * `name` - (Required) Unique name for the cluster that you want to create.
 * `release_label` - (Required) Version of FinSpace Managed kdb to run.
-* `type` - (Required) Type of KDB database. Valid values are `HDB` (Historical Database), `RDB` (Realtime Database, which requires the `savedown_storage_configuration` parameter), `GATEWAY`, `GP` (general purpose), and `Tickerplant`.
+* `type` - (Required) Type of KDB database. Valid values are `HDB` (Historical Database), `RDB` (Realtime Database, which requires the `savedown_storage_configuration` parameter), `GATEWAY`, `GP` (general purpose), and `TICKERPLANT`.
 * `vpc_configuration` - (Required) Configuration details about the network where the Privatelink endpoint of the cluster resides. See [`vpc_configuration` Block](#vpc_configuration-block).
 
 The following arguments are optional:
@@ -145,7 +145,7 @@ The `cache_configurations` block supports the following arguments:
 The `savedown_storage_configuration` block supports the following arguments:
 
 * `size` - (Optional) Size of temporary storage in gigabytes. Must be between 10 and 16000.
-* `type` - (Optional) Type of writeable storage space for temporarily storing your savedown data. Valid value is `SDS01`, which represents 3000 IOPS and io2 ebs volume type.
+* `type` - (Optional) Type of writeable storage space for temporarily storing your savedown data. Valid value is `SDS01`, which represents 3000 IOPS and io2 EBS volume type.
 * `volume_name` - (Optional) Name of the kdb volume that you want to use as writeable save-down storage for clusters.
 
 ### `vpc_configuration` Block

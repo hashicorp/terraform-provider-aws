@@ -36,6 +36,7 @@ func TestDiff(t *testing.T) {
 		state                     any
 		expectedIgnoredFieldNames []string
 		expectedChange            bool
+		expectedChangedFieldNames []string
 		expectErr                 bool
 	}{
 		"no change": {
@@ -72,7 +73,10 @@ func TestDiff(t *testing.T) {
 				"Age",
 			},
 			expectedChange: true,
-			expectErr:      false,
+			expectedChangedFieldNames: []string{
+				"Name",
+			},
+			expectErr: false,
 		},
 		"has change state": {
 			plan:  testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1)},
@@ -82,7 +86,10 @@ func TestDiff(t *testing.T) {
 				"Age",
 			},
 			expectedChange: true,
-			expectErr:      false,
+			expectedChangedFieldNames: []string{
+				"Number",
+			},
+			expectErr: false,
 		},
 		"has multiple changes": {
 			plan:  testResourceData1{Name: types.StringValue("test"), Number: types.Int64Value(1), Age: types.Int64Value(100)},
@@ -91,7 +98,11 @@ func TestDiff(t *testing.T) {
 				"Name",
 			},
 			expectedChange: true,
-			expectErr:      false,
+			expectedChangedFieldNames: []string{
+				"Number",
+				"Age",
+			},
+			expectErr: false,
 		},
 
 		"embedded no change": {
@@ -117,7 +128,11 @@ func TestDiff(t *testing.T) {
 				"Name",
 			},
 			expectedChange: true,
-			expectErr:      false,
+			expectedChangedFieldNames: []string{
+				"Number",
+				"Age",
+			},
+			expectErr: false,
 		},
 	}
 
@@ -132,6 +147,10 @@ func TestDiff(t *testing.T) {
 			}
 
 			if diff := cmp.Diff(results.HasChanges(), test.expectedChange); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+
+			if diff := cmp.Diff(results.ChangedFieldNames(), test.expectedChangedFieldNames); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 

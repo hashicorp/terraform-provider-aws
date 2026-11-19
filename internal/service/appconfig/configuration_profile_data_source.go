@@ -8,12 +8,11 @@ package appconfig
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,7 +28,7 @@ func dataSourceConfigurationProfile() *schema.Resource {
 				names.AttrApplicationID: {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`[a-z\d]{4,7}`, ""),
 				},
 				names.AttrARN: {
 					Type:     schema.TypeString,
@@ -38,7 +37,7 @@ func dataSourceConfigurationProfile() *schema.Resource {
 				"configuration_profile_id": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
+					ValidateFunc: lazyvalidation.StringMatch(`[a-z\d]{4,7}`, ""),
 				},
 				names.AttrDescription: {
 					Type:     schema.TypeString,

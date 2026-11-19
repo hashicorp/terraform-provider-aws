@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -35,28 +35,19 @@ import (
 
 // @SDKResource("aws_wafv2_ip_set", name="IP Set")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
+// @IdentityAttribute("name")
+// @IdentityAttribute("scope")
+// @ImportIDHandler("ipSetImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/wafv2/types;awstypes;awstypes.IPSet")
+// @Testing(preIdentityVersion="v6.64.0")
+// @Testing(importStateIdFunc="testAccIPSetImportStateIdFunc")
 func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,
 		UpdateWithoutTimeout: resourceIPSetUpdate,
 		DeleteWithoutTimeout: resourceIPSetDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), "/")
-				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected ID/NAME/SCOPE", d.Id())
-				}
-				id := idParts[0]
-				name := idParts[1]
-				scope := idParts[2]
-				d.SetId(id)
-				d.Set(names.AttrName, name)
-				d.Set(names.AttrScope, scope)
-				return []*schema.ResourceData{d}, nil
-			},
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -116,7 +107,7 @@ func resourceIPSet() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				names.AttrNamePrefix: {
@@ -127,7 +118,7 @@ func resourceIPSet() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128-sdkid.UniqueIDSuffixLength),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				names.AttrScope: {
@@ -192,6 +183,12 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading WAFv2 IPSet (%s): %s", d.Id(), err)
 	}
 
+	resourceIPSetFlatten(output, d)
+
+	return diags
+}
+
+func resourceIPSetFlatten(output *wafv2.GetIPSetOutput, d *schema.ResourceData) {
 	ipSet := output.IPSet
 	d.Set("addresses", ipSet.Addresses)
 	d.Set(names.AttrARN, ipSet.ARN)
@@ -200,8 +197,6 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("lock_token", output.LockToken)
 	d.Set(names.AttrName, ipSet.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(ipSet.Name)))
-
-	return diags
 }
 
 func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -290,4 +285,26 @@ func findIPSetByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name, 
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = ipSetImportID{}
+
+type ipSetImportID struct{}
+
+func (ipSetImportID) Create(d *schema.ResourceData) string {
+	return d.Id()
+}
+
+func (ipSetImportID) Parse(id string) (string, map[string]any, error) {
+	idParts := strings.Split(id, "/")
+	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+		return "", nil, fmt.Errorf("unexpected format of ID (%q), expected ID/NAME/SCOPE", id)
+	}
+
+	result := map[string]any{
+		names.AttrName:  idParts[1],
+		names.AttrScope: idParts[2],
+	}
+
+	return idParts[0], result, nil
 }

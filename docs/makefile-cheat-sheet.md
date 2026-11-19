@@ -61,6 +61,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `BASE_REF` - (Default: `main`) Origin reference to use for Git `diff` comparison, as in `origin/BASE_REF`.
 * `CURDIR` - (Default: Value of `$PWD`) Root path to use for `/.ci/scripts/`.
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
+* `GOVULNCHECK_ARGS` - (Default: ``) govulncheck arguments.
 * `K` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `PKG` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
 * `P` - (Default: `20`) Number of concurrent acceptance tests to run. Assigns a value to `ACCTEST_PARALLELISM` overridding any value set.
 * `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set. When neither `PKG` nor `K` is set, `PKG` is auto-detected from `T` (see the `T` variable).
@@ -118,7 +119,10 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
 | `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
+| `fix` | Apply `go fix` (all packages, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `TEST` |
+| `fix-check` | Go Fix Check / go fix | ✔️ |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `fix-core` | Apply `go fix` in core directories (non-internal/service) |  |  |  |
 | `fix-imports` | Fixing source code imports with goimports |  |  |  |
 | `fix-imports-core` | Fixing core directory imports with goimports |  |  |  |
 | `fmt` | Fix Go source formatting |  |  | `K`, `PKG`, `PKG_NAME` |
@@ -131,13 +135,14 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `generate-changelog` | Generate changelog |  |  | `CURDIR` |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
-| `go-misspell` | Provider Checks / misspell | ✔️ |  |  |
+| `go-fix-check-shard` | Go Fix Check / go fix for a specific shard | ✔️ |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS` |
 | `golangci-lint`<sup>M</sup> | All golangci-lint Checks | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint1` | golangci-lint Checks / 1 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint2` | golangci-lint Checks / 2 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint3` | golangci-lint Checks / 3 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint4` | golangci-lint Checks / 4 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint5` | golangci-lint Checks / 5 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `govulncheck` | Run govulncheck |  |  |  |
 | `help` | Display help |  |  |  |
 | `import-lint` | Provider Checks / import-lint | ✔️ |  | `K`, `PKG`, `TEST` |
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |
@@ -145,17 +150,17 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  |  |  |
 | `makefile-lint` | Makefile Linting / alignment check | ✔️ |  |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
-| `modern-check` | Check for modern Go | ✔️ |  | `TEST` |
-| `modern-fix` | Fix checks for modern Go | ✔️ |  | `TEST` |
-| `modern-fix-core` | Fix checks for modern Go in core directories |  |  |  |
+| `modern-check`<sup>D</sup> | Legacy alias to `fix-check` |  | ✔️ | `K`, `PKG`, `TEST` |
+| `modern-fix`<sup>D</sup> | Legacy alias to `fix` |  | ✔️ | `K`, `PKG`, `TEST` |
+| `modern-fix-core`<sup>D</sup> | Legacy alias to `fix-core` |  | ✔️ |  |
 | `pr-target-check` | Pull Request Target Check | ✔️ |  |  |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
-| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, modern, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
+| `provider-memory` | Run provider memory benchmarks |  |  | `GO_VER`, `SAMPLES`, `RESULTS_FILE` |
+| `quick-fix`<sup>M</sup> | Run multiple quick fixes (copyright, fmt, testacc-lint, imports, fix, semgrep, terraform-fmt, website-terrafmt) |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS`, `SVC_DIR` |
 | `quick-fix-core`<sup>M</sup> | Quick fixes for core directories (non-internal/service) |  |  |  |
 | `sane`<sup>D</sup> | Run sane check |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
-| `sanity`<sup>D</sup> | Run sanity check (failures allowed) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
 | `schema-validate` | Validate schemas | | | `GO_VER` |
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
@@ -173,8 +178,11 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `shellcheck` | Lint shell scripts with ShellCheck |  |  |  |
 | `skaff`<sup>D</sup> | Install skaff |  |  | `GO_VER` |
 | `skaff-check-compile` | Skaff Checks / Compile skaff | ✔️ |  |  |
-| `smoke` | Smoke tests (alias of `sane`) |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
-| `smoke-identity`<sup>D</sup> | Run Resource Identity smoke tests |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `TEST_COUNT` |
+| `smoke`<sup>D</sup> | Run smoke tests |  |  | `GO_VER` |
+| `smoke-core-services`<sup>D</sup> | Run core-service smoke tests |  |  | `GO_VER` |
+| `smoke-identity`<sup>D</sup> | Run Resource Identity smoke tests |  |  | `GO_VER` |
+| `smoke-logging`<sup>M</sup> | Run logging smoke tests at all log levels |  |  | `GO_VER` |
+| `smoke-logging-%`<sup>D</sup> | Run logging smoke tests at a specific log level (e.g. `make smoke-logging-DEBUG`) |  |  | `GO_VER` |
 | `sweep`<sup>D</sup> | Run sweepers |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP`, `SWEEPARGS` |
 | `sweeper`<sup>D</sup> | Run sweepers with failures allowed |  |  | `GO_VER`, `SWEEP_DIR`, `SWEEP_TIMEOUT`, `SWEEP` |
 | `sweeper-check`<sup>M</sup> | Provider Checks / Sweeper Linked, Unlinked | ✔️ |  |  |

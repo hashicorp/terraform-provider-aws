@@ -138,6 +138,22 @@ func resourceModel() *schema.Resource {
 														ForceNew:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
 													},
+													"hub_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"hub_content_arn": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ForceNew:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+															},
+														},
+													},
 													"model_access_config": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -191,6 +207,22 @@ func resourceModel() *schema.Resource {
 														Required:         true,
 														ForceNew:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+													},
+													"hub_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"hub_content_arn": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ForceNew:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+															},
+														},
 													},
 													"model_access_config": {
 														Type:     schema.TypeList,
@@ -376,6 +408,22 @@ func resourceModel() *schema.Resource {
 														ForceNew:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
 													},
+													"hub_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"hub_content_arn": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ForceNew:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+															},
+														},
+													},
 													"model_access_config": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -430,6 +478,22 @@ func resourceModel() *schema.Resource {
 														Required:         true,
 														ForceNew:         true,
 														ValidateDiagFunc: enum.Validate[awstypes.ModelCompressionType](),
+													},
+													"hub_access_config": {
+														Type:     schema.TypeList,
+														Optional: true,
+														ForceNew: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"hub_content_arn": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ForceNew:     true,
+																	ValidateFunc: verify.ValidARN,
+																},
+															},
+														},
 													},
 													"model_access_config": {
 														Type:     schema.TypeList,
@@ -793,6 +857,9 @@ func expandS3ModelDataSource(tfList []any) *awstypes.S3ModelDataSource {
 	if v, ok := m["compression_type"]; ok && v.(string) != "" {
 		apiObject.CompressionType = awstypes.ModelCompressionType(v.(string))
 	}
+	if v, ok := m["hub_access_config"].([]any); ok && len(v) > 0 {
+		apiObject.HubAccessConfig = expandInferenceHubAccessConfig(v)
+	}
 	if v, ok := m["model_access_config"].([]any); ok && len(v) > 0 {
 		apiObject.ModelAccessConfig = expandModelAccessConfig(v)
 	}
@@ -852,6 +919,21 @@ func expandModelAccessConfig(tfList []any) *awstypes.ModelAccessConfig {
 	apiObject := &awstypes.ModelAccessConfig{}
 	if v, ok := m["accept_eula"].(bool); ok {
 		apiObject.AcceptEula = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandInferenceHubAccessConfig(tfList []any) *awstypes.InferenceHubAccessConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+
+	apiObject := &awstypes.InferenceHubAccessConfig{}
+	if v, ok := m["hub_content_arn"].(string); ok && v != "" {
+		apiObject.HubContentArn = aws.String(v)
 	}
 
 	return apiObject
@@ -985,6 +1067,9 @@ func flattenS3ModelDataSource(apiObject *awstypes.S3ModelDataSource) []any {
 		"compression_type": apiObject.CompressionType,
 	}
 
+	if apiObject.HubAccessConfig != nil {
+		tfMap["hub_access_config"] = flattenInferenceHubAccessConfig(apiObject.HubAccessConfig)
+	}
 	if apiObject.ModelAccessConfig != nil {
 		tfMap["model_access_config"] = flattenModelAccessConfig(apiObject.ModelAccessConfig)
 	}
@@ -1038,6 +1123,18 @@ func flattenModelAccessConfig(apiObject *awstypes.ModelAccessConfig) []any {
 
 	tfMap := map[string]any{
 		"accept_eula": aws.ToBool(apiObject.AcceptEula),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenInferenceHubAccessConfig(apiObject *awstypes.InferenceHubAccessConfig) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		"hub_content_arn": aws.ToString(apiObject.HubContentArn),
 	}
 
 	return []any{tfMap}

@@ -45,14 +45,6 @@ func (l *registryListResource) ListResourceConfigSchema(ctx context.Context, req
 func (l *registryListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().BedrockAgentCoreClient(ctx)
 
-	var query listRegistryModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input bedrockagentcorecontrol.ListRegistriesInput
 		for item, err := range listRegistries(ctx, conn, &input) {
@@ -99,10 +91,6 @@ func (l *registryListResource) List(ctx context.Context, request list.ListReques
 			}
 		}
 	}
-}
-
-type listRegistryModel struct {
-	framework.WithRegionModel
 }
 
 func listRegistries(ctx context.Context, conn *bedrockagentcorecontrol.Client, input *bedrockagentcorecontrol.ListRegistriesInput) iter.Seq2[awstypes.RegistrySummary, error] {

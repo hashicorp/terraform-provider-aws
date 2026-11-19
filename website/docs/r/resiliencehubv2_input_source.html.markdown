@@ -55,6 +55,32 @@ resource "aws_resiliencehubv2_input_source" "example" {
 }
 ```
 
+### EKS Cluster Scoped by Labels
+
+```terraform
+resource "aws_resiliencehubv2_input_source" "example" {
+  service_arn = aws_resiliencehubv2_service.example.arn
+
+  resource_configuration {
+    eks {
+      cluster_arn = "arn:aws:eks:us-west-2:123456789012:cluster/my-cluster"
+      namespaces  = ["default"]
+
+      label_selector {
+        match_labels = {
+          app = "payments"
+        }
+
+        match_expressions {
+          key      = "deprecated"
+          operator = "DOES_NOT_EXIST"
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -81,7 +107,25 @@ The `resource_configuration` block supports exactly one of the following:
 The `eks` block supports:
 
 * `cluster_arn` - (Required) Cluster ARN.
+* `label_selector` - (Optional) Kubernetes label selector that narrows discovery to the objects whose labels match. When omitted, all supported objects in the selected namespaces are discovered. See [`label_selector` Block](#label_selector-block) below.
 * `namespaces` - (Required) List of Kubernetes namespaces within the EKS cluster.
+
+### `label_selector` Block
+
+Objects must satisfy both `match_labels` and `match_expressions` to match. At least one of the two is required. Matching reads each object's own labels, as `kubectl get -l` does, so labeling a Deployment alone does not select its ReplicaSets or Pods.
+
+The `label_selector` block supports:
+
+* `match_expressions` - (Optional) Label requirements that an object must satisfy. Every requirement must match. See [`match_expressions` Block](#match_expressions-block) below.
+* `match_labels` - (Optional) Label key-value pairs that an object must have, up to 20. Every pair must match.
+
+### `match_expressions` Block
+
+The `match_expressions` block supports:
+
+* `key` - (Required) Label key that the requirement applies to.
+* `operator` - (Required) Relationship between the label key and values. Valid values are `IN`, `NOT_IN`, `EXISTS`, and `DOES_NOT_EXIST`.
+* `values` - (Optional) Label values to compare against, up to 20. Required with `IN` and `NOT_IN`, and must be omitted with `EXISTS` and `DOES_NOT_EXIST`.
 
 ### `resource_tag` Block
 

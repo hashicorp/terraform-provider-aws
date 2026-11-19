@@ -58,3 +58,18 @@ This data source exports the following attributes in addition to the arguments a
 * `throughput_capacity` - Throughput (megabytes per second) of the file system in power of 2 increments. Minimum of `8` and maximum of `2048`.
 * `vpc_id` - ID of the primary VPC for the file system.
 * `weekly_maintenance_start_time` - Preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
+
+### `audit_log_configuration` Block
+
+The `audit_log_configuration` block exports the following attributes:
+
+* `audit_log_destination` - ARN for the destination of the audit logs.
+* `file_access_audit_log_level` - Attempt type logged by Amazon FSx for file and folder accesses.
+* `file_share_access_audit_log_level` - Attempt type logged by Amazon FSx for file share accesses.
+
+### `disk_iops_configuration` Block
+
+The `disk_iops_configuration` block exports the following attributes:
+
+* `iops` - Total number of SSD IOPS provisioned for the file system.
+* `mode` - Mode for the number of IOPS for the file system.

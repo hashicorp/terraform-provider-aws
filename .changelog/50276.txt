@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagent_data_source: Add `vector_ingestion_configuration.context_enrichment_configuration` configuration block
+```
+
+```release-note:enhancement
+resource/aws_bedrockagent_data_source: Add `data_source_configuration.managed_knowledge_base_connector_configuration.sync_schedule` configuration block
+```

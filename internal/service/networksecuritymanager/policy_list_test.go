@@ -1,0 +1,222 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package networksecuritymanager_test
+
+import (
+	"testing"
+
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/querycheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
+	tfquerycheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/querycheck"
+	tfqueryfilter "github.com/hashicorp/terraform-provider-aws/internal/acctest/queryfilter"
+	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+func TestAccNetworkSecurityManagerPolicy_List_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_networksecuritymanager_policy.test[0]"
+	resourceName2 := "aws_networksecuritymanager_policy.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/list_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkPolicyARN),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), checkPolicyARN),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/list_basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_networksecuritymanager_policy.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_networksecuritymanager_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					tfquerycheck.ExpectNoResourceObject("aws_networksecuritymanager_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks())),
+
+					tfquerycheck.ExpectIdentityFunc("aws_networksecuritymanager_policy.test", identity2.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_networksecuritymanager_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks()), knownvalue.StringExact(rName+"-1")),
+					tfquerycheck.ExpectNoResourceObject("aws_networksecuritymanager_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity2.Checks())),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkSecurityManagerPolicy_List_includeResource(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_networksecuritymanager_policy.test[0]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), checkPolicyARN),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/list_include_resource/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(1),
+					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
+						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
+					}),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_networksecuritymanager_policy.test", identity1.Checks()),
+					querycheck.ExpectResourceDisplayName("aws_networksecuritymanager_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), knownvalue.StringExact(rName+"-0")),
+					querycheck.ExpectResourceKnownValues("aws_networksecuritymanager_policy.test", tfqueryfilter.ByResourceIdentityFunc(identity1.Checks()), []querycheck.KnownValueCheck{
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkPolicyARN),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"remediation_enabled": knownvalue.Bool(false),
+								"resources_clean_up":  knownvalue.Bool(true),
+								"waf_config":          knownvalue.ListSizeExact(0),
+							}),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrDescription), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.PolicyFirewallTypeShieldAdvanced)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("is_published"), knownvalue.Bool(true)),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName+"-0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrPriority), knownvalue.Int32Exact(testAccPolicyPriority(rName+"-0"))),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+							acctest.CtKey1: knownvalue.StringExact(acctest.CtValue1),
+						})),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("template_or_rule"), knownvalue.ListSizeExact(0)),
+					}),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkSecurityManagerPolicy_List_regionOverride(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resourceName1 := "aws_networksecuritymanager_policy.test[0]"
+	resourceName2 := "aws_networksecuritymanager_policy.test[1]"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	identity1 := tfstatecheck.Identity()
+	identity2 := tfstatecheck.Identity()
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			// Step 1: Setup
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					identity1.GetIdentity(resourceName1),
+					statecheck.ExpectKnownValue(resourceName1, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("network-security-manager", regexache.MustCompile(`policy:[0-9a-z]+$`))),
+
+					identity2.GetIdentity(resourceName2),
+					statecheck.ExpectKnownValue(resourceName2, tfjsonpath.New(names.AttrARN), tfknownvalue.RegionalARNAlternateRegionRegexp("network-security-manager", regexache.MustCompile(`policy:[0-9a-z]+$`))),
+				},
+			},
+
+			// Step 2: Query
+			{
+				Query:           true,
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/list_region_override/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"resource_count": config.IntegerVariable(2),
+					"region":         config.StringVariable(acctest.AlternateRegion()),
+				},
+				QueryResultChecks: []querycheck.QueryResultCheck{
+					tfquerycheck.ExpectIdentityFunc("aws_networksecuritymanager_policy.test", identity1.Checks()),
+
+					tfquerycheck.ExpectIdentityFunc("aws_networksecuritymanager_policy.test", identity2.Checks()),
+				},
+			},
+		},
+	})
+}

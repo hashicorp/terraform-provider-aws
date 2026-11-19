@@ -28,27 +28,27 @@ resource "aws_gamelift_script" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the script
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storage_location` - (Optional) Information indicating where your game script files are stored. See below.
-* `version` - (Optional) Version that is associated with this script.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `zip_file` - (Optional) A data object containing your Realtime scripts and dependencies as a zip  file. The zip file can have one or multiple files. Maximum size of a zip file is 5 MB.
+* `version` - (Optional) Version that is associated with this script.
+* `zip_file` - (Optional) Data object containing your Realtime scripts and dependencies as a zip  file. The zip file can have one or multiple files. Maximum size of a zip file is 5 MB.
 
-#### `storage_location`
+#### `storage_location` Block
 
 * `bucket` - (Required) Name of your S3 bucket.
 * `key` - (Required) Name of the zip file containing your script files.
+* `object_version` - (Optional) Specific version of the file. If not set, the latest version of the file is retrieved.
 * `role_arn` - (Required) ARN of the access role that allows Amazon GameLift to access your S3 bucket.
-* `object_version` - (Optional) A specific version of the file. If not set, the latest version of the file is retrieved.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - GameLift Script ID.
 * `arn` - GameLift Script ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - GameLift Script ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

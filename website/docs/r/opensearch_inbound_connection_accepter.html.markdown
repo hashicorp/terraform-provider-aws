@@ -49,7 +49,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the connection to accept.
+* `id` - The ID of the connection to accept.
 * `connection_status` - Status of the connection request.
 
 ## Timeouts

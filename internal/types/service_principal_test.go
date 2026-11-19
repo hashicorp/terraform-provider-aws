@@ -45,9 +45,20 @@ func TestIsServicePrincipal(t *testing.T) {
 		{"secretsmanager.amazonaws.com", true},
 		{"sts.amazonaws.com", true},
 		{"ec2.amazon.com", true},
+		// Multi-label prefixes (exercises the {1,4} label quantifier).
+		{"appstream.application-autoscaling.amazonaws.com", true},
+		{"member.org.stacksets.cloudformation.amazonaws.com", true},
+		{"a4b.amazonaws.com", true},
+		{"vpc-flow-logs.amazonaws.com", true},
+		// Region-qualified principal.
+		{"logs.eu-central-1.amazonaws.com", true},
 		{"", false},
 		{"invalid", false},
+		// Label-count boundaries: 1-4 prefix labels are allowed, 5 is too many.
 		{"amazonaws.com", false},
+		{"a.amazonaws.com", true},
+		{"a.b.c.d.amazonaws.com", true},
+		{"a.b.c.d.e.amazonaws.com", false},
 		{"ec2", false},
 		{".amazonaws.com", false},
 		{"ec2.amazonaws", false},
@@ -55,6 +66,10 @@ func TestIsServicePrincipal(t *testing.T) {
 		{"ec2.example.com", false},
 		{"arn:aws:iam::123456789012:role/test", false},
 		{"123456789012", false},
+		// Illegal character and wrong-domain rejections.
+		{"testwithwildcard*", false},
+		{"transfer.amz.com", false},
+		{"test.google.com", false},
 	} {
 		ok := IsServicePrincipal(tc.principal)
 		if got, want := ok, tc.valid; got != want {

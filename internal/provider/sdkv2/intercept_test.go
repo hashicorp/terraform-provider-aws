@@ -22,30 +22,32 @@ func TestInterceptorsWhy(t *testing.T) {
 	t.Parallel()
 
 	var interceptors interceptorInvocations
-	interceptors = append(interceptors, interceptorInvocation{
-		when: Before,
-		why:  Create,
-		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
-			var diags diag.Diagnostics
-			return diags
-		}),
-	})
-	interceptors = append(interceptors, interceptorInvocation{
-		when: After,
-		why:  Delete,
-		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
-			var diags diag.Diagnostics
-			return diags
-		}),
-	})
-	interceptors = append(interceptors, interceptorInvocation{
-		when: Before,
-		why:  Create,
-		interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
-			var diags diag.Diagnostics
-			return diags
-		}),
-	})
+	interceptors = append(interceptors,
+		interceptorInvocation{
+			when: Before,
+			why:  Create,
+			interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+				var diags diag.Diagnostics
+				return diags
+			}),
+		},
+		interceptorInvocation{
+			when: After,
+			why:  Delete,
+			interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+				var diags diag.Diagnostics
+				return diags
+			}),
+		},
+		interceptorInvocation{
+			when: Before,
+			why:  Create,
+			interceptor: crudInterceptorFunc(func(ctx context.Context, opts crudInterceptorOptions) diag.Diagnostics {
+				var diags diag.Diagnostics
+				return diags
+			}),
+		},
+	)
 
 	if got, want := len(interceptors.why(Create)), 2; got != want {
 		t.Errorf("length of interceptors.Why(Create) = %v, want %v", got, want)

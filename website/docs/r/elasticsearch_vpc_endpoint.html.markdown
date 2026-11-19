@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_elasticsearch_vpc_endpoint
 
-Manages an [AWS Elasticsearch VPC Endpoint](https://docs.aws.amazon.com/elasticsearch-service/latest/APIReference/API_CreateVpcEndpoint.html). Creates an Amazon elasticsearch Service-managed VPC endpoint.
+Manages an [AWS Elasticsearch VPC Endpoint](https://docs.aws.amazon.com/elasticsearch-service/latest/APIReference/API_CreateVpcEndpoint.html). Creates an Amazon Elasticsearch Service-managed VPC endpoint.
 
 ## Example Usage
 
@@ -36,7 +36,7 @@ This resource supports the following arguments:
 
 ### vpc_options
 
-* `security_group_ids` - (Optional) The list of security group IDs associated with the VPC endpoints for the domain. If you do not provide a security group ID, elasticsearch Service uses the default security group for the VPC.
+* `security_group_ids` - (Optional) The list of security group IDs associated with the VPC endpoints for the domain. If you do not provide a security group ID, Elasticsearch Service uses the default security group for the VPC.
 * `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoints for the domain. If your domain uses multiple Availability Zones, you need to provide two subnet IDs, one per zone. Otherwise, provide only one.
 
 ## Attribute Reference
@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import elasticsearch VPC endpoints using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elasticsearch VPC endpoints using the `id`. For example:
 
 ```terraform
 import {
@@ -65,7 +65,7 @@ import {
 }
 ```
 
-Using `terraform import`, import elasticsearch VPC endpoints using the `id`. For example:
+Using `terraform import`, import Elasticsearch VPC endpoints using the `id`. For example:
 
 ```console
 % terraform import aws_elasticsearch_vpc_endpoint.example endpoint-id

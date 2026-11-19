@@ -43,11 +43,11 @@ output "gateway_association_state" {
 
 This data source supports the following arguments:
 
-* `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
 
-### Filter Configuration Block
+### `filter` Block
 
 The `filter` configuration block supports the following arguments:
 
@@ -65,11 +65,25 @@ This data source exports the following attributes in addition to the arguments a
 * `customer_gateway_id` - ID of the customer gateway at your end of the VPN connection.
 * `gateway_association_state` - Current state of the gateway association.
 * `pre_shared_key_arn` - (ARN) of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection.
-* `routes` - List of static routes associated with the VPN connection.
+* `routes` - List of static routes associated with the VPN connection. [See below](#routes-block).
 * `state` - Current state of the VPN connection.
 * `tags` - Tags associated to the VPN Connection.
 * `transit_gateway_id` - ID of a transit gateway associated with the VPN connection.
 * `type` - Type of VPN connection. Currently the only supported type is ipsec.1.
-* `vgw_telemetries` - List of objects containing information about the VPN tunnel.
+* `vgw_telemetries` - List of objects containing information about the VPN tunnel. [See below](#vgw_telemetries-block).
 * `vpn_concentrator_id` - ID of a VPN concentrator associated with the VPN connection.
 * `vpn_gateway_id` - ID of a virtual private gateway associated with the VPN connection.
+
+### `routes` Block
+
+* `destination_cidr_block` - CIDR block associated with the local subnet of the customer data center.
+* `source` - How the routes were provided.
+* `state` - Current state of the static route.
+
+### `vgw_telemetries` Block
+
+* `accepted_route_count` - Number of accepted routes.
+* `last_status_change` - Date and time of the last change in status.
+* `outside_ip_address` - IP address of the virtual private gateway tunnel endpoint.
+* `status` - Status of the VPN tunnel.
+* `status_message` - Information about the status change.

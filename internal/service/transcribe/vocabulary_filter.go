@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -205,8 +206,7 @@ func resourceVocabularyFilterDelete(ctx context.Context, d *schema.ResourceData,
 	_, err := conn.DeleteVocabularyFilter(ctx, &input)
 
 	if err != nil {
-		var bre *types.BadRequestException
-		if errors.As(err, &bre) {
+		if errs.IsA[*types.BadRequestException](err) {
 			return diags
 		}
 
@@ -222,8 +222,7 @@ func FindVocabularyFilterByName(ctx context.Context, conn *transcribe.Client, id
 	}
 	out, err := conn.GetVocabularyFilter(ctx, in)
 	if err != nil {
-		var bre *types.BadRequestException
-		if errors.As(err, &bre) {
+		if errs.IsA[*types.BadRequestException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

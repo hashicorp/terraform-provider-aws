@@ -1,0 +1,11 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package agentregistry
+
+// Exports for use in tests only.
+var (
+	ResourceRegistry = newRegistryResource
+
+	FindRegistryByID = findRegistryByID
+)

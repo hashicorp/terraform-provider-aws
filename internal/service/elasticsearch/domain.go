@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	elasticsearch "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/semver"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -342,9 +342,8 @@ func resourceDomain() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
-						"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
-							" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-z][0-9a-z\-]{2,27}$`, "must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
+						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
 				},
 				"domain_endpoint_options": {
 					Type:     schema.TypeList,

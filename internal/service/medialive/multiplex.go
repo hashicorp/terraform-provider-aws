@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -256,8 +257,7 @@ func resourceMultiplexDelete(ctx context.Context, d *schema.ResourceData, meta a
 	})
 
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return diags
 		}
 
@@ -378,8 +378,7 @@ func findMultiplexByID(ctx context.Context, conn *medialive.Client, id string) (
 	}
 	out, err := conn.DescribeMultiplex(ctx, in)
 	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

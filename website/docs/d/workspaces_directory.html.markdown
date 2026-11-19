@@ -65,7 +65,7 @@ This data source exports the following attributes in addition to the arguments a
     * `device_type_windows` - (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
     * `device_type_zeroclient` - (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
 * `workspace_creation_properties` - The default properties that are used for creating WorkSpaces.
-    * `custom_security_group_id` - The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+    * `custom_security_group_id` - The identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
     * `default_ou` - The default organizational unit (OU) for your WorkSpace directories.
     * `enable_internet_access` - Indicates whether internet access is enabled for your WorkSpaces.
     * `enable_maintenance_mode` - Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html).

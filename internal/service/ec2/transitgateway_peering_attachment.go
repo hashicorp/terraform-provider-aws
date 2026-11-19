@@ -75,6 +75,7 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 				"options": {
 					Type:     schema.TypeList,
 					Optional: true,
+					Computed: true,
 					ForceNew: true,
 					MaxItems: 1,
 					Elem: &schema.Resource{
@@ -82,6 +83,7 @@ func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 							"dynamic_routing": {
 								Type:             schema.TypeString,
 								Optional:         true,
+								Computed:         true,
 								ForceNew:         true,
 								ValidateDiagFunc: enum.Validate[awstypes.DynamicRoutingValue](),
 							},
@@ -212,7 +214,10 @@ func expandCreateTransitGatewayPeeringAttachmentRequestOptions(tfMap []any) *aws
 }
 
 func flattenTransitGatewayPeeringAttachmentOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []any {
-	if apiObject == nil {
+	// Treat a nil or empty Options object as "no options block".
+	// The API may return an empty Options struct (for example when a field is present in the wire response but not yet modeled in the SDK).
+	// Without this guard the provider would flatten that into a block containing an empty "dynamic_routing", diverging from a configuration with no options block and forcing a replacement of the attachment.
+	if apiObject == nil || apiObject.DynamicRouting == "" {
 		return nil
 	}
 

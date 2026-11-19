@@ -26,7 +26,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `file_systems` - List of file systems. See [`file_systems`](#file_systems-attribute-reference) below.
+* `file_systems` - List of file systems. See [`file_systems`](#file_systems-block) below.
 
 ### `file_systems` Block
 

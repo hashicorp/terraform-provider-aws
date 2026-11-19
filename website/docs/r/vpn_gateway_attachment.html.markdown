@@ -43,15 +43,15 @@ guides for more information.
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_id` - (Required) The ID of the VPC.
-* `vpn_gateway_id` - (Required) The ID of the Virtual Private Gateway.
+* `vpc_id` - (Required) ID of the VPC.
+* `vpn_gateway_id` - (Required) ID of the Virtual Private Gateway.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `vpc_id` - The ID of the VPC that Virtual Private Gateway is attached to.
-* `vpn_gateway_id` - The ID of the Virtual Private Gateway.
+* `vpc_id` - ID of the VPC that Virtual Private Gateway is attached to.
+* `vpn_gateway_id` - ID of the Virtual Private Gateway.
 
 ## Import
 

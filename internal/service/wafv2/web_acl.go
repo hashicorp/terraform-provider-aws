@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -116,7 +117,7 @@ func resourceWebACL() *schema.Resource {
 															Type: schema.TypeString,
 															ValidateFunc: validation.All(
 																validation.StringLenBetween(1, 64),
-																validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), ""),
+																lazyvalidation.StringMatch(`^.*\S.*$`, ""),
 															),
 														},
 													},
@@ -154,6 +155,7 @@ func resourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"monetization_config": monetizationConfigSchema(),
 				names.AttrName: {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -162,7 +164,7 @@ func resourceWebACL() *schema.Resource {
 					ConflictsWith: []string{names.AttrNamePrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				names.AttrNamePrefix: {
@@ -173,7 +175,7 @@ func resourceWebACL() *schema.Resource {
 					ConflictsWith: []string{names.AttrName},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128-sdkid.UniqueIDSuffixLength),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric hyphen and underscore characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_-]+$`, "must contain only alphanumeric hyphen and underscore characters"),
 					),
 				},
 				"rule_json": {
@@ -204,6 +206,7 @@ func resourceWebACL() *schema.Resource {
 										"captcha":   captchaConfigSchema(),
 										"challenge": challengeConfigSchema(),
 										"count":     countConfigSchema(),
+										"monetize":  monetizeConfigSchema(),
 									},
 								},
 							},
@@ -230,7 +233,7 @@ func resourceWebACL() *schema.Resource {
 								Required: true,
 							},
 							"rule_label":        ruleLabelsSchema(),
-							"statement":         webACLRootStatementSchema(webACLRootStatementSchemaLevel),
+							"statement":         webACLRootStatementSchema(ruleStatementSchemaLevel),
 							"visibility_config": visibilityConfigSchema(),
 						},
 					},
@@ -250,7 +253,7 @@ func resourceWebACL() *schema.Resource {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 253),
-							validation.StringMatch(regexache.MustCompile(`^[\w\.\-/]+$`), "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
+							lazyvalidation.StringMatch(`^[\w\.\-/]+$`, "must contain only alphanumeric, hyphen, dot, underscore and forward-slash characters"),
 						),
 					},
 				},
@@ -298,6 +301,10 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("monetization_config"); ok && len(v.([]any)) > 0 {
+		input.MonetizationConfig = expandMonetizationConfig(v.([]any))
 	}
 
 	if v, ok := d.GetOk("token_domains"); ok && v.(*schema.Set).Len() > 0 {
@@ -363,6 +370,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 	d.Set(names.AttrDescription, webACL.Description)
 	d.Set("lock_token", output.LockToken)
+	if err := d.Set("monetization_config", flattenMonetizationConfig(webACL.MonetizationConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting monetization_config: %s", err)
+	}
 	d.Set(names.AttrName, webACL.Name)
 	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(webACL.Name)))
 	if _, ok := d.GetOk("rule_json"); !ok {
@@ -396,6 +406,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		"data_protection_config",
 		names.AttrDefaultAction,
 		names.AttrDescription,
+		"monetization_config",
 		"rule_json",
 		names.AttrRule,
 		"token_domains",
@@ -444,6 +455,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			DefaultAction:        expandDefaultAction(d.Get(names.AttrDefaultAction).([]any)),
 			Id:                   aws.String(d.Id()),
 			LockToken:            aws.String(aclLockToken),
+			MonetizationConfig:   expandMonetizationConfig(d.Get("monetization_config").([]any)),
 			Name:                 aws.String(aclName),
 			Rules:                rules,
 			Scope:                awstypes.Scope(aclScope),
@@ -478,8 +490,18 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			}
 
 			if newLockToken := aws.ToString(output.LockToken); newLockToken != aclLockToken {
-				// Retrieved a new lock token, retry due to other processes modifying the web acl out of band (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
+				// Retrieved a new lock token, retry due to other processes modifying the web ACL
+				// concurrently (See: https://docs.aws.amazon.com/sdk-for-go/api/service/shield/#Shield.EnableApplicationLayerAutomaticResponse)
 				input.LockToken = aws.String(newLockToken)
+
+				// Rules may be managed separately from this resource.
+				//
+				// When no rule changes are planned send the most current rule set instead of
+				// the originally planned values from state, which may now be stale.
+				if !d.HasChanges(names.AttrRule, "rule_json") {
+					input.Rules = output.WebACL.Rules
+				}
+
 				_, err = tfresource.RetryWhenIsOneOf2[any, *awstypes.WAFAssociatedItemException, *awstypes.WAFUnavailableEntityException](ctx, timeout, func(ctx context.Context) (any, error) {
 					return conn.UpdateWebACL(ctx, input)
 				})

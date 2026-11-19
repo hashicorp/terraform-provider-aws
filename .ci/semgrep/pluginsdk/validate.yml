@@ -1,0 +1,51 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-lazyvalidation-string-match
+    languages: [go]
+    message: Prefer `lazyvalidation.StringMatch` to `validation.StringMatch(regexache.MustCompile(...), ...)`
+    patterns:
+      - pattern: validation.StringMatch(regexache.MustCompile($PATTERN), $MESSAGE)
+      - pattern-not-inside: validation.ToDiagFunc(validation.StringMatch(...))
+    fix: lazyvalidation.StringMatch($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-match-diag
+    languages: [go]
+    message: Prefer `lazyvalidation.StringMatchDiag` to `validation.ToDiagFunc(validation.StringMatch(...))`
+    pattern: validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile($PATTERN), $MESSAGE))
+    fix: lazyvalidation.StringMatchDiag($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-match-precompiled-regex
+    languages: [go]
+    message: Replace the regular expression with a pattern string and use `lazyvalidation.StringMatch`
+    patterns:
+      - pattern: validation.StringMatch($REGEX, $...ARGS)
+      - pattern-not: validation.StringMatch(regexache.MustCompile(...), ...)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-does-not-match
+    languages: [go]
+    message: Prefer `lazyvalidation.StringDoesNotMatch` to `validation.StringDoesNotMatch(regexache.MustCompile(...), ...)`
+    patterns:
+      - pattern: validation.StringDoesNotMatch(regexache.MustCompile($PATTERN), $MESSAGE)
+      - pattern-not-inside: validation.ToDiagFunc(validation.StringDoesNotMatch(...))
+    fix: lazyvalidation.StringDoesNotMatch($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-does-not-match-diag
+    languages: [go]
+    message: Prefer `lazyvalidation.StringDoesNotMatchDiag` to `validation.ToDiagFunc(validation.StringDoesNotMatch(...))`
+    pattern: validation.ToDiagFunc(validation.StringDoesNotMatch(regexache.MustCompile($PATTERN), $MESSAGE))
+    fix: lazyvalidation.StringDoesNotMatchDiag($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazyvalidation-string-does-not-match-precompiled-regex
+    languages: [go]
+    message: Replace the regular expression with a pattern string and use `lazyvalidation.StringDoesNotMatch`
+    patterns:
+      - pattern: validation.StringDoesNotMatch($REGEX, $...ARGS)
+      - pattern-not: validation.StringDoesNotMatch(regexache.MustCompile(...), ...)
+    severity: WARNING

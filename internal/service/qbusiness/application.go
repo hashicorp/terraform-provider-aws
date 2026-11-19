@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -66,7 +66,7 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+					lazystringvalidator.RegexMatches(`^\P{C}*$`, "must not contain control characters"),
 				},
 			},
 			names.AttrDisplayName: schema.StringAttribute{
@@ -74,7 +74,7 @@ func (r *applicationResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
+					lazystringvalidator.RegexMatches(`^\P{C}*$`, "must not contain control characters"),
 				},
 			},
 			"iam_service_role_arn": schema.StringAttribute{

@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -201,8 +201,7 @@ func resourceUserPool() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.Any(
 									validation.StringInSlice([]string{""}, false),
-									validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-										`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
+									lazyvalidation.StringMatch(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`, `must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
 								),
 							},
 							"source_arn": {
@@ -225,15 +224,13 @@ func resourceUserPool() *schema.Resource {
 								Optional: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(6, 20000),
-									validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
-										`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
+									lazyvalidation.StringMatch(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`, `must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{####\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`),
 								),
 							},
 							"subject": {
-								Type:     schema.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
-									`must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: lazyvalidation.StringMatch(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`, `must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`),
 							},
 						},
 					},
@@ -400,8 +397,7 @@ func resourceUserPool() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.Any(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`[\w\s+=,.@-]+`),
-							`must satisfy regular expression pattern: [\w\s+=,.@-]+`),
+						lazyvalidation.StringMatch(`[\w\s+=,.@-]+`, `must satisfy regular expression pattern: [\w\s+=,.@-]+`),
 					),
 				},
 				"password_policy": {

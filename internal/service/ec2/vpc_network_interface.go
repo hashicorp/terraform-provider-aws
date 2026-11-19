@@ -82,6 +82,34 @@ func resourceNetworkInterface() *schema.Resource {
 						},
 					},
 				},
+				"connection_tracking_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"tcp_established_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(60, 432000),
+							},
+							"udp_stream_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(60, 180),
+							},
+							"udp_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.IntBetween(30, 60),
+							},
+						},
+					},
+				},
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -389,6 +417,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	input := ec2.CreateNetworkInterfaceInput{
 		ClientToken: aws.String(create.UniqueId(ctx)),
 		SubnetId:    aws.String(d.Get(names.AttrSubnetID).(string)),
+	}
+
+	if v, ok := d.GetOk("connection_tracking_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v.([]any)[0].(map[string]any))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -1063,6 +1095,21 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChange("connection_tracking_specification") {
+		if v, ok := d.GetOk("connection_tracking_specification"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := ec2.ModifyNetworkInterfaceAttributeInput{
+				NetworkInterfaceId:              aws.String(d.Id()),
+				ConnectionTrackingSpecification: expandConnectionTrackingSpecificationRequest(v.([]any)[0].(map[string]any)),
+			}
+
+			_, err := conn.ModifyNetworkInterfaceAttribute(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) connection tracking specification: %s", d.Id(), err)
+			}
+		}
+	}
+
 	if d.HasChange(names.AttrDescription) {
 		input := ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
@@ -1595,6 +1642,28 @@ func flattenAttachmentEnaSrdUdpSpecification(apiObject *awstypes.AttachmentEnaSr
 	return tfMap
 }
 
+func flattenConnectionTrackingConfiguration(apiObject *awstypes.ConnectionTrackingConfiguration) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.TcpEstablishedTimeout; v != nil {
+		tfMap["tcp_established_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpStreamTimeout; v != nil {
+		tfMap["udp_stream_timeout"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.UdpTimeout; v != nil {
+		tfMap["udp_timeout"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
 func resourceNetworkInterfaceFlatten(ctx context.Context, awsClient *conns.AWSClient, eni *awstypes.NetworkInterface, d *schema.ResourceData) error {
 	ownerID := aws.ToString(eni.OwnerId)
 	d.Set(names.AttrARN, networkInterfaceARN(ctx, awsClient, ownerID, d.Id()))
@@ -1611,6 +1680,13 @@ func resourceNetworkInterfaceFlatten(ctx context.Context, awsClient *conns.AWSCl
 		}
 	} else {
 		d.Set("ena_srd_specification", nil)
+	}
+	if eni.ConnectionTrackingConfiguration != nil {
+		if err := d.Set("connection_tracking_specification", []any{flattenConnectionTrackingConfiguration(eni.ConnectionTrackingConfiguration)}); err != nil {
+			return fmt.Errorf("setting connection_tracking_specification: %w", err)
+		}
+	} else {
+		d.Set("connection_tracking_specification", nil)
 	}
 	d.Set(names.AttrDescription, eni.Description)
 	d.Set("interface_type", eni.InterfaceType)

@@ -7,6 +7,7 @@ package s3control
 
 import (
 	"context"
+	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,7 +15,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -49,7 +50,14 @@ const (
 	ResNameDirectoryBucketAccessPointScope = "Directory Bucket Access Point Scope"
 )
 
-var AccessPointForDirectoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--xa-s3$`)
+const (
+	directoryBucketAccessPointNameRegexPattern       = `^(?:[0-9a-z.-]+)` + directoryBucketAccessPointNameSuffixRegexPattern + `$`
+	directoryBucketAccessPointNameSuffixRegexPattern = `--(?:[0-9a-z]+(?:-[0-9a-z]+)+)--xa-s3`
+)
+
+func accessPointForDirectoryBucketNameRegex() *regexp.Regexp {
+	return regexache.MustCompile(directoryBucketAccessPointNameRegexPattern)
+}
 
 func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
@@ -69,8 +77,7 @@ func (r *directoryBucketAccessPointScopeResource) Schema(ctx context.Context, _ 
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(AccessPointForDirectoryBucketNameRegex,
-						"must be in the format [access_point_name]--[azid]--xa-s3"),
+					lazystringvalidator.RegexMatches(directoryBucketAccessPointNameRegexPattern, "must be in the format [access_point_name]--[azid]--xa-s3"),
 				},
 			},
 		},

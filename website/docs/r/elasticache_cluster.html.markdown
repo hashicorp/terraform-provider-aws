@@ -92,7 +92,7 @@ resource "aws_elasticache_cluster" "test" {
 }
 ```
 
-### Elasticache Cluster in Outpost
+### ElastiCache Cluster in Outpost
 
 ```terraform
 data "aws_outposts_outposts" "example" {}

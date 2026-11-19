@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,12 +49,9 @@ func DataSourceThesaurus() *schema.Resource {
 					Computed: true,
 				},
 				"index_id": {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
-						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z-]{35}`, "Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36."),
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
@@ -98,10 +95,7 @@ func DataSourceThesaurus() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(
-							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-							"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
-						),
+						lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, "Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens."),
 					),
 				},
 				"updated_at": {

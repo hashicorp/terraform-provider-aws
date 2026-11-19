@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/storagegateway/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -167,7 +167,7 @@ func resourceSMBFileShare() *schema.Resource {
 					Optional: true,
 					Default:  "{}",
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^\{[\w\s:\{\}\[\]"]*}$`), ""),
+						lazyvalidation.StringMatch(`^\{[\w\s:\{\}\[\]"]*}$`, ""),
 						validation.StringLenBetween(2, 100),
 					),
 				},
@@ -222,7 +222,7 @@ func resourceSMBFileShareCreate(ctx context.Context, d *schema.ResourceData, met
 		ClientToken:            aws.String(create.UniqueId(ctx)),
 		GatewayARN:             aws.String(d.Get("gateway_arn").(string)),
 		GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
+		KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 		LocationARN:            aws.String(d.Get("location_arn").(string)),
 		ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 		RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
@@ -370,7 +370,7 @@ func resourceSMBFileShareUpdate(ctx context.Context, d *schema.ResourceData, met
 			AccessBasedEnumeration: aws.Bool(d.Get("access_based_enumeration").(bool)),
 			FileShareARN:           aws.String(d.Id()),
 			GuessMIMETypeEnabled:   aws.Bool(d.Get("guess_mime_type_enabled").(bool)),
-			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)),
+			KMSEncrypted:           aws.Bool(d.Get("kms_encrypted").(bool)), //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 			ReadOnly:               aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:          aws.Bool(d.Get("requester_pays").(bool)),
 			SMBACLEnabled:          aws.Bool(d.Get("smb_acl_enabled").(bool)),

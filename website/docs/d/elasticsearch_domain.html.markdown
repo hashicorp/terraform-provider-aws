@@ -75,7 +75,7 @@ This data source exports the following attributes in addition to the arguments a
 * `elasticsearch_version` - Elasticsearch version for the domain.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
-    * `kms_key_id` - The KMS key id used to encrypt data at rest.
+    * `kms_key_id` - The KMS key ID used to encrypt data at rest.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibana_endpoint` - Domain-specific endpoint used to access the Kibana application.
 * `log_publishing_options` - Domain log publishing related options.

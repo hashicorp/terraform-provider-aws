@@ -96,7 +96,7 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.
 * `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) Concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
+* `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration-block).
 
 ### `versioning_configuration` Block
 
