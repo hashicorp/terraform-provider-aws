@@ -19,6 +19,7 @@ import (
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -2659,8 +2660,13 @@ func ssmSendCommandConfigBlock(ctx context.Context) fwschema.Block {
 				"retry_interval_minutes": fwschema.Float32Attribute{
 					Required: true,
 				},
+				// Region switch applies a default timeout when none is set, so the value is Computed.
 				"timeout_minutes": fwschema.Int32Attribute{
 					Optional: true,
+					Computed: true,
+					PlanModifiers: []planmodifier.Int32{
+						int32planmodifier.UseNonNullStateForUnknown(),
+					},
 				},
 			},
 			Blocks: map[string]fwschema.Block{

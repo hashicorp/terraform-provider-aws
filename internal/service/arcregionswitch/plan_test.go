@@ -1519,7 +1519,25 @@ func TestAccARCRegionSwitchPlan_ssmSendCommand(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
+				// Only the required arguments: Region switch sets timeout_minutes when it is omitted.
+				Config: testAccPlanConfig_ssmSendCommandMinimal(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.execution_block_type", "SSMSendCommand"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.0.retry_interval_minutes", "5"),
+					resource.TestCheckResourceAttrSet(resourceName, "workflow.0.step.0.ssm_send_command_config.0.timeout_minutes"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.0.region_document.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.0.ungraceful.#", "0"),
+				),
+			},
+			{
 				Config: testAccPlanConfig_ssmSendCommand(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, t, resourceName, &plan),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -3480,6 +3498,69 @@ resource "aws_arcregionswitch_plan" "test" {
 
         ungraceful {
           behavior = "skip"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.Region(), acctest.AlternateRegion())
+}
+
+func testAccPlanConfig_ssmSendCommandMinimal(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "ssm-send-command-step"
+      execution_block_type = "SSMSendCommand"
+      description          = "SSM Send Command step"
+
+      ssm_send_command_config {
+        retry_interval_minutes = 5
+
+        region_document {
+          region       = %[2]q
+          document_arn = "arn:aws:ssm:%[2]s::document/AWS-RunShellScript"
+
+          target {
+            key    = "tag:Environment"
+            values = ["production"]
+          }
+        }
+
+        region_document {
+          region       = %[3]q
+          document_arn = "arn:aws:ssm:%[3]s::document/AWS-RunShellScript"
+
+          target {
+            key    = "tag:Environment"
+            values = ["production"]
+          }
         }
       }
     }
