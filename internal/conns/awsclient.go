@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3_types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -264,6 +265,32 @@ func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string 
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region(ctx), c.DNSSuffix(ctx))
 }
 
+// S3BucketLocationConstraint returns the LocationConstraint value to send in
+// an S3 CreateBucket request, or an empty value when none should be sent.
+func (c *AWSClient) S3BucketLocationConstraint(ctx context.Context) s3_types.BucketLocationConstraint {
+	locationConstraint := c.Region(ctx)
+
+	// originalRegion is the non-standard region preserved for S3-compatible storage
+	// (Ceph, MinIO, etc.) and is empty for native AWS.
+	// For S3-compatible storage the configured region is substituted
+	// with a compliant dummy value (us-east-1) during SDK initialization, so the
+	// original region is preferred here to avoid sending an empty
+	// CreateBucketConfiguration. Any non-standard string (e.g. ":region-ha-premium"
+	// or "ceph-objectstore-region1:region-ha-premium") is passed through verbatim.
+	if originalRegion := c.s3OriginalRegion; originalRegion != "" {
+		locationConstraint = originalRegion
+	}
+
+	// As on native AWS, us-east-1 must not send a LocationConstraint, so an empty
+	// value is returned in that case.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
+	if locationConstraint == endpoints.UsEast1RegionID {
+		return ""
+	}
+
+	return s3_types.BucketLocationConstraint(locationConstraint)
+}
+
 // S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
@@ -290,14 +317,6 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
 func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 	return c.s3UsePathStyle
-}
-
-// S3OriginalRegion returns the original, non-standard Region string configured for
-// S3-compatible storage (Ceph, MinIO, etc.). It is empty when the configured Region
-// is a standard AWS Region. See config.go where the Region is substituted with a
-// compliant dummy value for AWS SDK initialization.
-func (c *AWSClient) S3OriginalRegion(context.Context) string {
-	return c.s3OriginalRegion
 }
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
