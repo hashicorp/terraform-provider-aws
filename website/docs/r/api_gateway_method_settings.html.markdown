@@ -14,10 +14,6 @@ Manages API Gateway Stage Method Settings. For example, CloudWatch logging and m
 
 ## Example Usage
 
-### End-to-end
-
-An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
-
 ### Basic Usage
 
 ```terraform
