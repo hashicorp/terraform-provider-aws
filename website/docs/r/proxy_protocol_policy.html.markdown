@@ -51,4 +51,3 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the policy.
-* `load_balancer` - Load balancer to which the policy is attached.

@@ -48,10 +48,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `vpc_id` - ID of the VPC that Virtual Private Gateway is attached to.
-* `vpn_gateway_id` - ID of the Virtual Private Gateway.
+This resource exports no additional attributes.
 
 ## Import
 

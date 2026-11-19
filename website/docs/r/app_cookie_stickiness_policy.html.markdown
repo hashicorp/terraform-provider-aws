@@ -47,11 +47,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `cookie_name` - Application cookie whose lifetime the ELB's cookie should follow.
 * `id` - ID of the policy.
-* `lb_port` - Load balancer port to which the policy is applied.
-* `load_balancer` - Name of load balancer to which the policy is attached.
-* `name` - Name of the stickiness policy.
 
 ## Import
 

@@ -44,7 +44,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Key pair ARN.
 * `fingerprint` - MD5 public key fingerprint as specified in section 4 of RFC 4716.
 * `id` - Key pair name.
-* `key_name` - Key pair name.
 * `key_pair_id` - Key pair ID.
 * `key_type` - Type of key pair.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
