@@ -32,6 +32,7 @@ Batch
 Bedrock
 Bedrock AgentCore
 Bedrock Agents
+Bedrock Data Automation
 Bedrock Runtime
 Billing
 CE (Cost Explorer)
@@ -80,6 +81,7 @@ Config
 Connect
 Connect Cases
 Connect Customer Profiles
+Continuum
 Control Tower
 Cost Optimization Hub
 Cost and Usage Report
@@ -250,6 +252,7 @@ SageMaker AI
 Savings Plans
 Secrets Manager
 Security Hub
+Security Incident Response
 Security Lake
 Serverless Application Repository
 Service Catalog

@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -77,7 +77,7 @@ func resourceAnomalySubscription() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexache.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
+						lazyvalidation.StringMatch(`[\\S\\s]*`, "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
 				},
 				"subscriber": {
 					Type:     schema.TypeSet,

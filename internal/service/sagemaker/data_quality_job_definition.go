@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -73,7 +73,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 								Optional: true,
 								ForceNew: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+									lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 									validation.StringLenBetween(1, 512),
 								),
 							},
@@ -82,7 +82,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 								Optional: true,
 								ForceNew: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+									lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 									validation.StringLenBetween(1, 512),
 								),
 							},
@@ -108,7 +108,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 											Optional: true,
 											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 												validation.StringLenBetween(1, 512),
 											),
 										},
@@ -127,7 +127,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 											Optional: true,
 											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 												validation.StringLenBetween(1, 512),
 											),
 										},
@@ -156,7 +156,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 											Required: true,
 											ForceNew: true,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+												lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 												validation.StringLenBetween(1, 512),
 											),
 										},
@@ -207,7 +207,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 											ForceNew: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+												lazyvalidation.StringMatch(`^\/opt\/ml\/processing\/.*`, "Must start with `/opt/ml/processing`."),
 											),
 										},
 										"s3_data_distribution_type": {
@@ -247,7 +247,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 											ForceNew: true,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 1024),
-												validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+												lazyvalidation.StringMatch(`^\/opt\/ml\/processing\/.*`, "Must start with `/opt/ml/processing`."),
 											),
 										},
 										"s3_data_distribution_type": {
@@ -304,7 +304,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 														ForceNew: true,
 														ValidateFunc: validation.All(
 															validation.StringLenBetween(1, 1024),
-															validation.StringMatch(regexache.MustCompile(`^\/opt\/ml\/processing\/.*`), "Must start with `/opt/ml/processing`."),
+															lazyvalidation.StringMatch(`^\/opt\/ml\/processing\/.*`, "Must start with `/opt/ml/processing`."),
 														),
 													},
 													"s3_upload_mode": {
@@ -319,7 +319,7 @@ func resourceDataQualityJobDefinition() *schema.Resource {
 														Required: true,
 														ForceNew: true,
 														ValidateFunc: validation.All(
-															validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+															lazyvalidation.StringMatch(`^(https|s3)://([^/])/?(.*)$`, ""),
 															validation.StringLenBetween(1, 512),
 														),
 													},

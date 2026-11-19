@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
@@ -26,16 +25,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-var (
-	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names.
-	rfc1123LabelNameRelaxed = regexache.MustCompile(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`)
 )
 
 // @SDKResource("aws_eks_addon", name="Add-On")
@@ -74,7 +69,7 @@ func resourceAddon() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						// Regular expression taken from: https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-						validation.StringMatch(regexache.MustCompile(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`), "must follow semantic version format"),
+						lazyvalidation.StringMatch(`^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$`, "must follow semantic version format"),
 					),
 				},
 				names.AttrARN: {
@@ -109,11 +104,12 @@ func resourceAddon() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrNamespace: {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ForceNew:     true,
-								ValidateFunc: validation.StringMatch(rfc1123LabelNameRelaxed, "must be a valid RFC 1123 DNS label"),
+								Type:     schema.TypeString,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-label-names.
+								ValidateFunc: lazyvalidation.StringMatch(`^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$`, "must be a valid RFC 1123 DNS label"),
 							},
 						},
 					},

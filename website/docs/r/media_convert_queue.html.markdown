@@ -28,7 +28,7 @@ This resource supports the following arguments:
 * `pricing_plan` - (Optional) Whether the pricing plan for the queue is on-demand or reserved. Valid values are `ON_DEMAND` or `RESERVED`. Default to `ON_DEMAND`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `reservation_plan_settings` - (Optional) Detail pricing plan of the reserved queue. See below.
-* `status` - (Optional) Status of the queue. Valid values are `ACTIVE` or `RESERVED`. Default to `PAUSED`.
+* `status` - (Optional) Status of the queue. Valid values are `ACTIVE` or `PAUSED`. Default value: `ACTIVE`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `reservation_plan_settings` Block

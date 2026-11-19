@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appintegrations"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appintegrations/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,7 +51,7 @@ func resourceEventIntegration() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z\/\._\-]{1,255}$`, "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 				},
 				"event_filter": {
 					Type:     schema.TypeList,
@@ -64,7 +64,7 @@ func resourceEventIntegration() *schema.Resource {
 								Type:         schema.TypeString,
 								Required:     true,
 								ForceNew:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^aws\.partner\/.*$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+								ValidateFunc: lazyvalidation.StringMatch(`^aws\.partner\/.*$`, "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 							},
 						},
 					},
@@ -73,7 +73,7 @@ func resourceEventIntegration() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\/\._\-]{1,255}$`), "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z\/\._\-]{1,255}$`, "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),

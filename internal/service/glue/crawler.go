@@ -11,7 +11,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -318,7 +318,7 @@ func resourceCrawler() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_$#\/-]+$`), ""),
+						lazyvalidation.StringMatch(`[0-9A-Za-z_$#\/-]+$`, ""),
 					),
 				},
 				"recrawl_policy": {

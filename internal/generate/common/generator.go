@@ -68,10 +68,8 @@ type Destination interface {
 // needed, knowing that goimports will remove any unnecessary packages.
 func (g *Generator) NewGoFileDestination(filename string) Destination {
 	return &fileDestination{
-		baseDestination: baseDestination{
-			writeFormatter: goodgo,
-		},
-		filename: filename,
+		writeFormatter: goodgo,
+		filename:       filename,
 	}
 }
 
@@ -83,10 +81,8 @@ func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 
 func (g *Generator) NewFileDestinationWithFormatter(filename string, formatter func([]byte) ([]byte, error)) Destination {
 	return &fileDestination{
-		filename: filename,
-		baseDestination: baseDestination{
-			formatter: formatter,
-		},
+		filename:  filename,
+		formatter: formatter,
 	}
 }
 

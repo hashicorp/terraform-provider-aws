@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -29,6 +28,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,7 +63,7 @@ func (r *environmentProfileResource) Schema(ctx context.Context, req resource.Sc
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^\\d{12}$"), "must match ^\\d{12}$"),
+					lazystringvalidator.RegexMatches("^\\d{12}$", "must match ^\\d{12}$"),
 				},
 			},
 			"aws_account_region": schema.StringAttribute{
@@ -92,7 +92,7 @@ func (r *environmentProfileResource) Schema(ctx context.Context, req resource.Sc
 			"environment_blueprint_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9_-]{1,36}$"), "must match ^[a-zA-Z0-9_-]{1,36}$"),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9_-]{1,36}$", "must match ^[a-zA-Z0-9_-]{1,36}$"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -102,14 +102,14 @@ func (r *environmentProfileResource) Schema(ctx context.Context, req resource.Sc
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^[\\w -]+$"), "must match ^[\\w -]+$"),
+					lazystringvalidator.RegexMatches("^[\\w -]+$", "must match ^[\\w -]+$"),
 					stringvalidator.LengthBetween(1, 64),
 				},
 			},
 			"project_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9_-]{1,36}$"), "must match ^[a-zA-Z0-9_-]{1,36}$"),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9_-]{1,36}$", "must match ^[a-zA-Z0-9_-]{1,36}$"),
 				},
 			},
 			"updated_at": schema.StringAttribute{

@@ -8,6 +8,7 @@ package fms_test
 import (
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -58,7 +59,11 @@ func testAccFMSPolicy_tags(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -255,7 +260,11 @@ func testAccFMSPolicy_Tags_null(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -328,7 +337,11 @@ func testAccFMSPolicy_Tags_emptyMap(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -397,7 +410,11 @@ func testAccFMSPolicy_Tags_addOnUpdate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -484,7 +501,11 @@ func testAccFMSPolicy_Tags_EmptyTag_onCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -582,7 +603,11 @@ func testAccFMSPolicy_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -728,7 +753,11 @@ func testAccFMSPolicy_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -823,7 +852,11 @@ func testAccFMSPolicy_Tags_DefaultTags_providerOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1019,7 +1052,11 @@ func testAccFMSPolicy_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1191,7 +1228,11 @@ func testAccFMSPolicy_Tags_DefaultTags_overlapping(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1379,7 +1420,11 @@ func testAccFMSPolicy_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1475,7 +1520,11 @@ func testAccFMSPolicy_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1570,7 +1619,11 @@ func testAccFMSPolicy_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1641,7 +1694,11 @@ func testAccFMSPolicy_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1704,7 +1761,11 @@ func testAccFMSPolicy_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1772,7 +1833,11 @@ func testAccFMSPolicy_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1840,7 +1905,11 @@ func testAccFMSPolicy_Tags_ComputedTag_onCreate(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -1901,7 +1970,11 @@ func testAccFMSPolicy_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2004,7 +2077,11 @@ func testAccFMSPolicy_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2097,7 +2174,11 @@ func testAccFMSPolicy_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -2262,7 +2343,11 @@ func testAccFMSPolicy_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.FMSServiceID),
 		CheckDestroy: testAccCheckPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{

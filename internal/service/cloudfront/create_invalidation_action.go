@@ -5,11 +5,9 @@ package cloudfront
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -24,10 +22,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -60,10 +60,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 				Description: "The ID of the CloudFront distribution to invalidate cache for",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[A-Z0-9]+$`),
-						"must be a valid CloudFront distribution ID (e.g., E1GHKQ2EXAMPLE)",
-					),
+					lazystringvalidator.RegexMatches(`^[A-Z0-9]+$`, "must be a valid CloudFront distribution ID (e.g., E1GHKQ2EXAMPLE)"),
 				},
 			},
 			"paths": schema.ListAttribute{
@@ -76,7 +73,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 					listvalidator.SizeAtMost(3000), // CloudFront limit
 					listvalidator.ValueStringsAre(
 						stringvalidator.LengthAtLeast(1),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^(/.*|\*)$`), "must start with '/' or be '*'"),
+						lazystringvalidator.RegexMatches(`^(/.*|\*)$`, "must start with '/' or be '*'"),
 					),
 				},
 			},
@@ -218,14 +215,12 @@ func (a *createInvalidationAction) Invoke(ctx context.Context, req action.Invoke
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Invalidation to Complete",
 				fmt.Sprintf("CloudFront invalidation %s did not complete within %s: %s", invalidationID, timeout, err),
 			)
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError(
 				"Invalid Invalidation State",
 				fmt.Sprintf("CloudFront invalidation %s entered unexpected state: %s", invalidationID, err),

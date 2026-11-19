@@ -8,16 +8,15 @@ package networkfirewall
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -79,6 +78,36 @@ func dataSourceFirewallPolicy() *schema.Resource {
 													},
 												},
 											},
+										},
+									},
+								},
+							},
+							"route53_resolved_ip_validation": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrAction: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"bypass_destination_validation_ip_ranges": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"dns_expiry_exception_policy": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"dns_firewall_rule_group_id": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"source_ip_ranges": {
+											Type:     schema.TypeSet,
+											Computed: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
 									},
 								},
@@ -186,7 +215,7 @@ func dataSourceFirewallPolicy() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z-]{1,128}$`, "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 				},
 				names.AttrTags: tftags.TagsSchemaComputedOnly(),
 				"update_token": {

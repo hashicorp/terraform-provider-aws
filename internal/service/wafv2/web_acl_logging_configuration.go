@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -108,7 +108,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 																	Required: true,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 1024),
-																		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
+																		lazyvalidation.StringMatch(`^[0-9A-Za-z_\-:]+$`, "must contain only alphanumeric characters, underscores, hyphens, and colons"),
 																	),
 																},
 															},
@@ -153,7 +153,7 @@ func resourceWebACLLoggingConfiguration() *schema.Resource {
 												validation.StringLenBetween(1, 64),
 												// The value is returned in lower case by the API.
 												// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-												validation.StringMatch(regexache.MustCompile(`^.*\S.*$`), "Must be any string that contains at least one non-whitespace character"),
+												lazyvalidation.StringMatch(`^.*\S.*$`, "Must be any string that contains at least one non-whitespace character"),
 											),
 										},
 									},

@@ -6,7 +6,6 @@ package cloudwatchomni
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -71,7 +71,7 @@ func (r *viewResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(6, 256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^view\.[0-9a-z][0-9a-z_-]{0,250}$`), "must start with \"view.\" followed by a lowercase letter or digit, and contain only lowercase letters, digits, underscores and hyphens"),
+					lazystringvalidator.RegexMatches(`^view\.[0-9a-z][0-9a-z_-]{0,250}$`, "must start with \"view.\" followed by a lowercase letter or digit, and contain only lowercase letters, digits, underscores and hyphens"),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),

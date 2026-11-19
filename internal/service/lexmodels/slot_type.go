@@ -11,7 +11,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -107,7 +107,7 @@ func resourceSlotType() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(regexache.MustCompile(`^((AMAZON\.)_?|[A-Za-z]_?)+`), ""),
+						lazyvalidation.StringMatch(`^((AMAZON\.)_?|[A-Za-z]_?)+`, ""),
 					),
 				},
 				"value_selection_strategy": {

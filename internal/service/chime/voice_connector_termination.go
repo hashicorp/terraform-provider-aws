@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
@@ -21,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -65,7 +65,7 @@ func ResourceVoiceConnectorTermination() *schema.Resource {
 				"default_phone_number": {
 					Type:         schema.TypeString,
 					Optional:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\+?[1-9]\d{1,14}$`), "must match ^\\+?[1-9]\\d{1,14}$"),
+					ValidateFunc: lazyvalidation.StringMatch(`^\+?[1-9]\d{1,14}$`, "must match ^\\+?[1-9]\\d{1,14}$"),
 				},
 				"disabled": {
 					Type:     schema.TypeBool,

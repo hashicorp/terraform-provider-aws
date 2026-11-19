@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_msk_replicator: Fix update failures for replications that identify a cluster by `replication_info_list.source_kafka_cluster_id` or `replication_info_list.target_kafka_cluster_id`, where an empty cluster ARN was sent instead of the cluster ID
+```
+
+```release-note:bug
+resource/aws_msk_replicator: Fix import of a replicator with a `kafka_cluster.apache_kafka_cluster` block proposing to replace the replicator, caused by reading a `vpc_config` onto the `apache_kafka_cluster` entry
+```

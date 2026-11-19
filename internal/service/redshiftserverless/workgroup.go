@@ -12,7 +12,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -185,7 +185,7 @@ func resourceWorkgroup() *schema.Resource {
 					Computed: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 256),
-						validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_]+$`), "must be alphanumeric or underscore"),
+						lazyvalidation.StringMatch(`^[a-zA-Z0-9_]+$`, "must be alphanumeric or underscore"),
 					),
 				},
 				"workgroup_id": {

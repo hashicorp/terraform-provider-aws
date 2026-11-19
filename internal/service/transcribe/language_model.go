@@ -7,10 +7,8 @@ package transcribe
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -130,9 +129,8 @@ func resourceLanguageModelCreate(ctx context.Context, d *schema.ResourceData, me
 			return conn.CreateLanguageModel(ctx, in)
 		},
 		func(err error) (bool, error) {
-			var bre *types.BadRequestException
-			if errors.As(err, &bre) {
-				return strings.Contains(bre.ErrorMessage(), "Make sure that you have read permission"), err
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Make sure that you have read permission") {
+				return true, err
 			}
 			return false, err
 		},
@@ -203,8 +201,7 @@ func resourceLanguageModelDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 	_, err := conn.DeleteLanguageModel(ctx, &input)
 
-	var resourceNotFoundException *types.NotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -255,8 +252,7 @@ func FindLanguageModelByName(ctx context.Context, conn *transcribe.Client, id st
 
 	out, err := conn.DescribeLanguageModel(ctx, in)
 
-	var bre *types.BadRequestException
-	if errors.As(err, &bre) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

@@ -101,6 +101,10 @@ func dataSourceFunction() *schema.Resource {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
+							names.AttrKMSKeyARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							names.AttrRetentionPeriod: {
 								Type:     schema.TypeInt,
 								Computed: true,

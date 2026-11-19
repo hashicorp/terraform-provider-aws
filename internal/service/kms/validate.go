@@ -5,61 +5,44 @@ package kms
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
-	aliasNamePattern        = aliasNamePrefix + `[0-9A-Za-z_/-]+`
+	aliasNameCharPattern    = `[0-9A-Za-z_/-]+`
+	aliasNamePattern        = `^` + aliasNamePrefix + aliasNameCharPattern + `$`
+	grantNameCharPattern    = `[0-9A-Za-z_:/-]*`
+	grantNamePattern        = `^` + grantNameCharPattern + `$`
 	multiRegionKeyIDPattern = `mrk-[0-9a-f]{32}`
 )
 
-var (
-	aliasNameRegex     = regexache.MustCompile(`^` + aliasNamePattern + `$`)
-	keyIDRegex         = regexache.MustCompile(`^` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `$`)
-	keyIDResourceRegex = regexache.MustCompile(`^key/(` + verify.UUIDRegexPattern + `|` + multiRegionKeyIDPattern + `)$`)
+func aliasNameRegex() *regexp.Regexp {
+	return regexache.MustCompile(aliasNamePattern)
+}
+
+var validGrantName = validation.All(
+	validation.StringLenBetween(0, 256),
+	lazyvalidation.StringMatch(grantNamePattern, "must only contain "+grantNameCharPattern),
 )
 
-func validGrantName(v any, k string) (ws []string, es []error) {
-	value := v.(string)
+var validNameForDataSource = lazyvalidation.StringMatch(
+	aliasNamePattern,
+	"must begin with 'alias/' and only contain "+aliasNameCharPattern,
+)
 
-	if len(value) > 256 {
-		es = append(es, fmt.Errorf("%s can not be greater than 256 characters", k))
-	}
-
-	if !regexache.MustCompile(`^[0-9A-Za-z_:/-]+$`).MatchString(value) {
-		es = append(es, fmt.Errorf("%s must only contain [0-9A-Za-z_:/-]", k))
-	}
-
-	return
-}
-
-func validNameForDataSource(v any, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	if !aliasNameRegex.MatchString(value) {
-		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
-	}
-	return
-}
-
-func validNameForResource(v any, k string) (ws []string, es []error) {
-	value := v.(string)
-
-	if regexache.MustCompile(`^(` + cmkAliasPrefix + `)`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws/'", k))
-	}
-
-	if !aliasNameRegex.MatchString(value) {
-		es = append(es, fmt.Errorf(
-			"%q must begin with 'alias/' and only contain [0-9A-Za-z_/-]", k))
-	}
-	return
-}
+var validNameForResource = validation.All(
+	lazyvalidation.StringDoesNotMatch(`^`+cmkAliasPrefix, "cannot begin with reserved AWS CMK prefix '"+cmkAliasPrefix+"'"),
+	lazyvalidation.StringMatch(
+		aliasNamePattern,
+		"must begin with 'alias/' and only contain "+aliasNameCharPattern,
+	),
+)
 
 var validateKey = validation.Any(
 	validateKeyID,
@@ -73,7 +56,7 @@ var validateKeyOrAlias = validation.Any(
 	validateKeyAliasARN,
 )
 
-var validateKeyID = validation.StringMatch(keyIDRegex, "must be a KMS Key ID")
+var validateKeyID = lazyvalidation.StringMatch(`^`+verify.UUIDRegexPattern+`|`+multiRegionKeyIDPattern+`$`, "must be a KMS Key ID")
 
 func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
@@ -99,7 +82,7 @@ func validateKeyARN(v any, k string) (ws []string, errors []error) {
 	return
 }
 
-var validateKeyAliasName = validation.StringMatch(aliasNameRegex, "must be a KMS Key Alias")
+var validateKeyAliasName = lazyvalidation.StringMatch(aliasNamePattern, "must be a KMS Key Alias")
 
 func validateKeyAliasARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)

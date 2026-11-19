@@ -41,7 +41,8 @@ func warnComputedTagsConfigured(any, cty.Path) diag.Diagnostics {
 	}}
 }
 
-// TagsSchemaComputedOnly returns the schema to use for data source tags that are attributes only.
+// TagsSchemaComputedOnly returns the schema to use for data source tags that are attributes only
+// or for newly-added resource `tags_all`.
 // Users can't set it in configuration.
 var TagsSchemaComputedOnly = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{

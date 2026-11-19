@@ -16,7 +16,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
@@ -34,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/duration"
@@ -98,7 +98,7 @@ func resourceCertificate() *schema.Resource {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
-					ValidateFunc:  validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					ValidateFunc:  lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 					ExactlyOneOf:  []string{names.AttrDomainName, names.AttrPrivateKey, "private_key_wo"},
 					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 				},
@@ -230,7 +230,7 @@ func resourceCertificate() *schema.Resource {
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 253),
-							validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+							lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 						),
 					},
 					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
