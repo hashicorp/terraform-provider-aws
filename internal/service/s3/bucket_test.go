@@ -93,11 +93,11 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkBucketARN(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceGlobal)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_prefix"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_region"), knownvalue.StringExact(region)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_regional_domain_name"), knownvalue.StringExact(testAccBucketRegionalDomainName(rName, region))),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cors_rule"), knownvalue.ListSizeExact(0)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("force_destroy"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("grant"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
 						names.AttrID: knownvalue.NotNull(),
 						names.AttrPermissions: knownvalue.SetExact([]knownvalue.Check{
