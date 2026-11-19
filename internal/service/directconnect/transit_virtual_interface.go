@@ -127,7 +127,7 @@ func resourceTransitVirtualInterface() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan": {
 					Type:         schema.TypeInt,
 					Required:     true,

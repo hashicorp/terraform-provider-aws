@@ -28,7 +28,7 @@ func resourceWithoutIdentifier() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"tags_all": tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 		},
 	}
 }

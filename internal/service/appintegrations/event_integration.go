@@ -76,7 +76,7 @@ func resourceEventIntegration() *schema.Resource {
 					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z\/\._\-]{1,255}$`, "should be not be more than 255 alphanumeric, forward slashes, dots, underscores, or hyphen characters"),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

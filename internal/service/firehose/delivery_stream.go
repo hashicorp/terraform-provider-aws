@@ -1469,7 +1469,7 @@ func resourceDeliveryStream() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"version_id": {
 					Type:     schema.TypeString,
 					Optional: true,

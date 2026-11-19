@@ -181,7 +181,7 @@ func resourceFileSystem() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"throughput_mode": {
 					Type:             schema.TypeString,
 					Optional:         true,

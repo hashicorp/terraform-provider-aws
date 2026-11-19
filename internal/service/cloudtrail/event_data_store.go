@@ -183,7 +183,7 @@ func resourceEventDataStore() *schema.Resource {
 					ValidateFunc: nullable.ValidateTypeStringNullableBool,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"termination_protection_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,

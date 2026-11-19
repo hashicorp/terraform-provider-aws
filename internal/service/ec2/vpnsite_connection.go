@@ -144,7 +144,7 @@ func resourceVPNConnection() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTransitGatewayAttachmentID: {
 					Type:     schema.TypeString,
 					Computed: true,

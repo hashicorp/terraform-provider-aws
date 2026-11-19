@@ -199,7 +199,7 @@ func resourceOpenZFSVolume() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVolumeType: {
 					Type:             schema.TypeString,
 					Optional:         true,

@@ -72,7 +72,7 @@ func dataSourceLocalGatewayVirtualInterface() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"vlan": {
 					Type:     schema.TypeInt,
 					Computed: true,

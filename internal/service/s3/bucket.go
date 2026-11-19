@@ -664,7 +664,7 @@ func resourceBucket() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"versioning": {
 					Type:       schema.TypeList,
 					Optional:   true,

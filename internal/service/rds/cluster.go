@@ -711,7 +711,7 @@ func resourceCluster() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upgrade_rollout_order": {
 					Type:     schema.TypeString,
 					Computed: true,

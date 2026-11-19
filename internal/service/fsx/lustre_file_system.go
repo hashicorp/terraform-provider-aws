@@ -322,7 +322,7 @@ func resourceLustreFileSystem() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"throughput_capacity": {
 					Type:             schema.TypeInt,
 					Optional:         true,

@@ -72,7 +72,7 @@ func resourceUser() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 2048),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				/*
 					The UniqueID could be used as the Id(), but none of the API
 					calls allow specifying a user by the UniqueID: they require the

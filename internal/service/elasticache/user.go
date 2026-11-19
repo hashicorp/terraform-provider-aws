@@ -128,7 +128,7 @@ func resourceUser() *schema.Resource {
 					RequiredWith: []string{"passwords_wo"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_id": {
 					Type:      schema.TypeString,
 					Required:  true,

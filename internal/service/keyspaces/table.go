@@ -265,7 +265,7 @@ func resourceTable() *schema.Resource {
 					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_]{1,48}$`, "The table name can have up to 48 characters. It can only contain alpha-numeric characters and underscores."),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"ttl": {
 					Type:     schema.TypeList,
 					Optional: true,

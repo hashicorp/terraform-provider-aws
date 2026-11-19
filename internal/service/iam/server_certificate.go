@@ -101,7 +101,7 @@ func resourceServerCertificate() *schema.Resource {
 					StateFunc:        sdkv2.TrimSpaceSchemaStateFunc,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upload_date": {
 					Type:     schema.TypeString,
 					Computed: true,

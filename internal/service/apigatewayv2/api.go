@@ -161,7 +161,7 @@ func resourceAPI() *schema.Resource {
 					Default:  "$request.method $request.path",
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTarget: {
 					Type:     schema.TypeString,
 					Optional: true,

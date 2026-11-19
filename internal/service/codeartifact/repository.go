@@ -93,7 +93,7 @@ func resourceRepository() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upstream": {
 					Type:     schema.TypeList,
 					MinItems: 1,
