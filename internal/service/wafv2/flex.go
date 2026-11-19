@@ -3723,6 +3723,21 @@ func flattenFieldToProtect(apiObject *awstypes.FieldToProtect) any {
 	return []any{tfMap}
 }
 
+func expandAnalyticsConfig(tfList []any) *awstypes.AnalyticsConfig {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	apiObject := &awstypes.AnalyticsConfig{}
+
+	if v, ok := tfMap[names.AttrMode].(string); ok && v != "" {
+		apiObject.Mode = awstypes.AnalyticsMode(v)
+	}
+
+	return apiObject
+}
+
 func expandMonetizationConfig(l []any) *awstypes.MonetizationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -3808,6 +3823,18 @@ func expandPrices(l []any) []awstypes.Price {
 	}
 
 	return prices
+}
+
+func flattenAnalyticsConfig(apiObject *awstypes.AnalyticsConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrMode: apiObject.Mode,
+	}
+
+	return []any{tfMap}
 }
 
 func flattenMonetizationConfig(apiObject *awstypes.MonetizationConfig) []any {

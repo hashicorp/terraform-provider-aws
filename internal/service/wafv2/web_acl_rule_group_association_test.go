@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -2489,4 +2490,124 @@ resource "aws_wafv2_web_acl_rule_group_association" "test3" {
   override_action = "none"
 }
 `, rName)
+}
+
+func TestAccWAFV2WebACLRuleGroupAssociation_preservesAnalyticsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var association wafv2.GetWebACLOutput
+	var v awstypes.WebACL
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule_group_association.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleGroupAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_analyticsConfig(rName, 1, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName, &association),
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeCrossRegion),
+					resource.TestCheckResourceAttr(webACLResourceName, "analytics_config.0.mode", string(awstypes.AnalyticsModeCrossRegion)),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_analyticsConfig(rName, 2, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLRuleGroupAssociationExists(ctx, t, resourceName, &association),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "2"),
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeCrossRegion),
+				),
+			},
+			{
+				Config: testAccWebACLRuleGroupAssociationConfig_analyticsConfig(rName, 2, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeCrossRegion),
+					resource.TestCheckResourceAttr(webACLResourceName, "analytics_config.0.mode", string(awstypes.AnalyticsModeCrossRegion)),
+				),
+			},
+		},
+	})
+}
+
+func testAccWebACLRuleGroupAssociationConfig_analyticsConfig(rName string, priority int, withAssociation bool) string {
+	config := fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  name     = %[1]q
+  scope    = "REGIONAL"
+  capacity = 10
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      geo_match_statement {
+        country_codes = ["US", "CA"]
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-1"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  analytics_config {
+    mode = "CROSS_REGION"
+  }
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName)
+
+	if !withAssociation {
+		return config
+	}
+
+	return config + fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule_group_association" "test" {
+  rule_name   = "%[1]s-association"
+  priority    = %[2]d
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  rule_group_reference {
+    arn = aws_wafv2_rule_group.test.arn
+  }
+}
+`, rName, priority)
 }

@@ -66,6 +66,20 @@ func resourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"analytics_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrMode: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AnalyticsMode](),
+							},
+						},
+					},
+				},
 				"application_integration_url": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -269,6 +283,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	name := create.Name(ctx, d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &wafv2.CreateWebACLInput{
+		AnalyticsConfig:   expandAnalyticsConfig(d.Get("analytics_config").([]any)),
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]any)),
 		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]any)),
 		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]any)),
@@ -347,6 +362,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	}
 
 	webACL := output.WebACL
+	if err := d.Set("analytics_config", flattenAnalyticsConfig(webACL.AnalyticsConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting analytics_config: %s", err)
+	}
 	d.Set("application_integration_url", output.ApplicationIntegrationURL)
 	d.Set(names.AttrARN, webACL.ARN)
 	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
@@ -399,6 +417,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	// https://github.com/hashicorp/terraform-provider-aws/pull/42740.
 	// if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 	if d.HasChanges(
+		"analytics_config",
 		"association_config",
 		"captcha_config",
 		"challenge_config",
@@ -448,6 +467,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 		}
 
 		input := &wafv2.UpdateWebACLInput{
+			AnalyticsConfig:      expandAnalyticsConfig(d.Get("analytics_config").([]any)),
 			AssociationConfig:    expandAssociationConfig(d.Get("association_config").([]any)),
 			CaptchaConfig:        expandCaptchaConfig(d.Get("captcha_config").([]any)),
 			ChallengeConfig:      expandChallengeConfig(d.Get("challenge_config").([]any)),

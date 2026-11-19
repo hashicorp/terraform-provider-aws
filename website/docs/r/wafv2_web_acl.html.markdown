@@ -455,10 +455,34 @@ resource "aws_wafv2_web_acl" "example" {
 }
 ```
 
+### Security Analytics
+
+```terraform
+resource "aws_wafv2_web_acl" "example" {
+  name  = "security-analytics-example"
+  scope = "REGIONAL"
+
+  analytics_config {
+    mode = "CROSS_REGION"
+  }
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "security-analytics-example"
+    sampled_requests_enabled   = false
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
+* `analytics_config` - (Optional) Security analytics configuration for the web ACL. See [`analytics_config`](#analytics_config-block) below for details.
 * `association_config` - (Optional) Custom configurations for the associations between the web ACL and protected resources. See [`association_config`](#association_config-block) below for details.
 * `captcha_config` - (Optional) Configuration for how AWS WAF handles CAPTCHA evaluations at the web ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`captcha_config`](#captcha_config-block) below for details.
 * `challenge_config` - (Optional) Configuration for how AWS WAF handles Challenge evaluations at the web ACL level (used by [AWS Bot Control](https://docs.aws.amazon.com/waf/latest/developerguide/aws-managed-rule-groups-bot.html)). See [`challenge_config`](#challenge_config-block) below for details.
@@ -476,6 +500,12 @@ This resource supports the following arguments:
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `token_domains` - (Optional) Domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
 * `visibility_config` - (Required) Amazon CloudWatch metrics and web request sample collection configuration. See [`visibility_config`](#visibility_config-block) below for details.
+
+### `analytics_config` Block
+
+The `analytics_config` block supports the following arguments:
+
+* `mode` - (Required) Security analytics mode for the web ACL. Valid values are `CROSS_REGION` and `DISABLED`. `CROSS_REGION` enables security analytics, which shows the web ACL's request log data from multiple AWS Regions in one place. When you enable it, you authorize AWS WAF to transfer and store the web ACL's full request logs outside the AWS Region where the web ACL is hosted. `DISABLED` stops the transfer. If you remove the `analytics_config` block, the provider omits the setting on the next update and AWS WAF no longer returns it. See [Enabling security analytics for a protection pack (web ACL)](https://docs.aws.amazon.com/waf/latest/developerguide/web-acl-security-analytics-enabling.html).
 
 ### `association_config` Block
 

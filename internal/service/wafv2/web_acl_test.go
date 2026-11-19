@@ -53,6 +53,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, t, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "application_integration_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
@@ -8177,4 +8178,139 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName)
+}
+
+func TestAccWAFV2WebACL_analyticsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLConfig_analyticsConfig(webACLName, "REGIONAL", "ENABLED"),
+				ExpectError: regexache.MustCompile(`expected mode to be one of \["CROSS_REGION" "DISABLED"\], got ENABLED`),
+			},
+			{
+				Config: testAccWebACLConfig_analyticsConfig(webACLName, "REGIONAL", string(awstypes.AnalyticsModeCrossRegion)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeCrossRegion),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.0.mode", string(awstypes.AnalyticsModeCrossRegion)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccWebACLConfig_analyticsConfig(webACLName, "REGIONAL", string(awstypes.AnalyticsModeDisabled)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeDisabled),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.0.mode", string(awstypes.AnalyticsModeDisabled)),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_analyticsConfig(webACLName, "REGIONAL", string(awstypes.AnalyticsModeCrossRegion)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeCrossRegion),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.0.mode", string(awstypes.AnalyticsModeCrossRegion)),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_basic(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, ""),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_analyticsConfigCloudFront(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_analyticsConfig(webACLName, "CLOUDFRONT", string(awstypes.AnalyticsModeCrossRegion)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLAnalyticsMode(&v, awstypes.AnalyticsModeCrossRegion),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "analytics_config.0.mode", string(awstypes.AnalyticsModeCrossRegion)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func testAccCheckWebACLAnalyticsMode(v *awstypes.WebACL, want awstypes.AnalyticsMode) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		var got awstypes.AnalyticsMode
+		if v.AnalyticsConfig != nil {
+			got = v.AnalyticsConfig.Mode
+		}
+
+		if got != want {
+			return fmt.Errorf("WAFv2 WebACL (%s) AnalyticsConfig.Mode = %q, want %q", aws.ToString(v.Name), got, want)
+		}
+
+		return nil
+	}
+}
+
+func testAccWebACLConfig_analyticsConfig(rName, scope, mode string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = %[2]q
+
+  analytics_config {
+    mode = %[3]q
+  }
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, scope, mode)
 }

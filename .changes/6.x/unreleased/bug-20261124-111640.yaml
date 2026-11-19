@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T11:16:40.959968-05:00
+custom:
+  Body: Preserve the web ACL's `analytics_config` when creating, updating or deleting an association
+  Impact: resource/aws_wafv2_web_acl_rule_group_association
+  PullRequest: "51303"
