@@ -12,9 +12,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -60,6 +62,21 @@ func (r *traceSegmentDestinationResource) Schema(ctx context.Context, req resour
 			names.AttrID: framework.IDAttributeDeprecatedWithAlternate(path.Root(names.AttrRegion)),
 		},
 		Blocks: map[string]schema.Block{
+			"cloudwatch_logs_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogsConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						// GetTraceSegmentDestination doesn't return this value, so it can't be read back.
+						"spans_log_group_kms_key_id": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -77,9 +94,12 @@ func (r *traceSegmentDestinationResource) Create(ctx context.Context, req resour
 
 	conn := r.Meta().XRayClient(ctx)
 
-	input := xray.UpdateTraceSegmentDestinationInput{
-		Destination: plan.Destination.ValueEnum(),
+	var input xray.UpdateTraceSegmentDestinationInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
 	_, err := conn.UpdateTraceSegmentDestination(ctx, &input)
 	switch {
 	case errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "The destination is already set to "):
@@ -133,9 +153,12 @@ func (r *traceSegmentDestinationResource) Update(ctx context.Context, req resour
 
 	conn := r.Meta().XRayClient(ctx)
 
-	input := xray.UpdateTraceSegmentDestinationInput{
-		Destination: plan.Destination.ValueEnum(),
+	var input xray.UpdateTraceSegmentDestinationInput
+	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+
 	_, err := conn.UpdateTraceSegmentDestination(ctx, &input)
 	switch {
 	case errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "The destination is already set to "):
@@ -202,7 +225,12 @@ func waitTraceSegmentDestinationActive(ctx context.Context, conn *xray.Client, t
 
 type traceSegmentDestinationResourceModel struct {
 	framework.WithRegionModel
-	Destination fwtypes.StringEnum[awstypes.TraceSegmentDestination] `tfsdk:"destination"`
-	ID          types.String                                         `tfsdk:"id"`
-	Timeouts    timeouts.Value                                       `tfsdk:"timeouts"`
+	CloudWatchLogsConfiguration fwtypes.ListNestedObjectValueOf[cloudWatchLogsConfigurationModel] `tfsdk:"cloudwatch_logs_configuration"`
+	Destination                 fwtypes.StringEnum[awstypes.TraceSegmentDestination]              `tfsdk:"destination"`
+	ID                          types.String                                                      `tfsdk:"id"`
+	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`
+}
+
+type cloudWatchLogsConfigurationModel struct {
+	SpansLogGroupKMSKeyID fwtypes.ARN `tfsdk:"spans_log_group_kms_key_id"`
 }
