@@ -16,6 +16,7 @@ func TestAccWorkSpaces_serial(t *testing.T) {
 		"Directory": {
 			acctest.CtBasic:             testAccDirectory_basic,
 			acctest.CtDisappears:        testAccDirectory_disappears,
+			"entra":                     testAccDirectory_entra,
 			"ipGroupIds":                testAccDirectory_ipGroupIDs,
 			"selfServicePermissions":    testAccDirectory_selfServicePermissions,
 			"subnetIDs":                 testAccDirectory_subnetIDs,
