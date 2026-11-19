@@ -75,18 +75,28 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIf(func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+						if req.ConfigValue.IsNull() {
+							// odb_network_arn handles replacement when this attribute is unconfigured.
+							return
+						}
+						var networkARN types.String
+						resp.Diagnostics.Append(req.State.GetAttribute(ctx, path.Root("odb_network_arn"), &networkARN)...)
+						if resp.Diagnostics.HasError() {
+							return
+						}
+						resp.RequiresReplace = !networkPeeringConnectionSameNetwork(req.StateValue, req.PlanValue, networkARN)
+					}, "Replace when the ODB network changes", "Replace when the ODB network changes"),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "Required field. The unique identifier of the ODB network that initiates the peering connection. " +
-					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
+				Description: "ID or ARN of the ODB network that initiates the peering connection. Exactly one of odb_network_id and odb_network_arn must be configured. Changing to another ODB network replaces the peering connection.",
 			},
 			"peer_network_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Required field. The unique identifier of the ODB peering connection. Changing this will force terraform to create new resource",
+				Description: "ID of the peer VPC or ODB network. Changing this replaces the peering connection.",
 			},
 
 			names.AttrDisplayName: schema.StringAttribute{
@@ -114,7 +124,7 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 			},
 
 			"odb_network_arn": schema.StringAttribute{
-				Description: "ARN of the odb network peering connection.",
+				Description: "ARN of the ODB network that initiates the peering connection.",
 				Optional:    true,
 				Computed:    true,
 				PlanModifiers: []planmodifier.String{
@@ -276,7 +286,8 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		return
 	}
 	plan.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
-	plan.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
+	odbNetworkID := strings.Split(odbNetworkARNParsed.Resource, "/")[1]
+	plan.OdbNetworkId = networkPeeringConnectionNetworkID(plan.OdbNetworkId, *createdPeeredConnection.OdbNetworkArn, odbNetworkID)
 	resp.Diagnostics.Append(flex.Flatten(ctx, createdPeeredConnection, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -324,13 +335,46 @@ func (r *resourceNetworkPeeringConnection) Read(ctx context.Context, req resourc
 		return
 	}
 	state.PeerNetworkId = types.StringValue(strings.Split(peerVpcARN.Resource, "/")[1])
-	state.OdbNetworkId = types.StringValue(strings.Split(odbNetworkARNParsed.Resource, "/")[1])
+	odbNetworkID := strings.Split(odbNetworkARNParsed.Resource, "/")[1]
+	state.OdbNetworkId = networkPeeringConnectionNetworkID(state.OdbNetworkId, *out.OdbNetworkArn, odbNetworkID)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func networkPeeringConnectionNetworkID(current types.String, networkARN, networkID string) types.String {
+	// The API returns the ARN but not whether the user supplied an ARN or ID.
+	// Preserve either configured form while it still identifies the same network.
+	if !current.IsNull() && !current.IsUnknown() {
+		if value := current.ValueString(); value == networkARN || value == networkID {
+			return current
+		}
+	}
+
+	return types.StringValue(networkID)
+}
+
+func networkPeeringConnectionSameNetwork(current, planned, networkARN types.String) bool {
+	if current.IsNull() || current.IsUnknown() || planned.IsNull() || planned.IsUnknown() || networkARN.IsNull() || networkARN.IsUnknown() {
+		return false
+	}
+
+	parsedARN, err := arn.Parse(networkARN.ValueString())
+	if err != nil || parsedARN.Service != "odb" {
+		return false
+	}
+	networkID, ok := strings.CutPrefix(parsedARN.Resource, "odb-network/")
+	if !ok || networkID == "" {
+		return false
+	}
+
+	identifiesNetwork := func(value types.String) bool {
+		return value.ValueString() == networkARN.ValueString() || value.ValueString() == networkID
+	}
+	return identifiesNetwork(current) && identifiesNetwork(planned)
 }
 
 func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -344,6 +388,20 @@ func (r *resourceNetworkPeeringConnection) Update(ctx context.Context, req resou
 	diff, d := flex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	changedFields := diff.ChangedFieldNames()
+	if len(changedFields) == 1 && changedFields[0] == "OdbNetworkId" &&
+		networkPeeringConnectionSameNetwork(state.OdbNetworkId, plan.OdbNetworkId, state.OdbNetworkArn) {
+		// The API returns only the ARN. Switching between an ID and ARN for the
+		// same network changes Terraform state without updating the connection.
+		state.OdbNetworkId = plan.OdbNetworkId
+		// Diff ignores these fields; they may still change in the same plan.
+		state.Region = plan.Region
+		state.Tags = plan.Tags
+		state.TagsAll = plan.TagsAll
+		state.Timeouts = plan.Timeouts
+		resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 		return
 	}
 	if !diff.HasChanges() {
