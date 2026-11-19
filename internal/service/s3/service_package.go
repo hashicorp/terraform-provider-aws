@@ -7,10 +7,8 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
 	"github.com/aws/aws-sdk-go-v2/aws/retry"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/smithy-go/middleware"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -29,18 +27,7 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 				tflog.Debug(ctx, "Injecting original region for S3-compatible endpoint", map[string]any{
 					"original_region": originalRegion,
 				})
-				o.APIOptions = append(o.APIOptions, func(stack *middleware.Stack) error {
-					return stack.Finalize.Add(
-						middleware.FinalizeMiddlewareFunc(
-							"InjectOriginalS3Region",
-							func(ctx context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
-								ctx = awsmiddleware.SetSigningRegion(ctx, originalRegion)
-								return next.HandleFinalize(ctx, in)
-							},
-						),
-						middleware.Before,
-					)
-				})
+				s3.WithSigV4ASigningRegions([]string{originalRegion})(o)
 			}
 		},
 		func(o *s3.Options) {
