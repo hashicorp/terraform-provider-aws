@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -91,7 +91,7 @@ func (r *gatewayResource) Schema(ctx context.Context, request resource.SchemaReq
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric characters and hyphens"),
 				},
 			},
 			names.AttrPropagateTags: schema.StringAttribute{
