@@ -161,7 +161,7 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
                 return map[string]*schema.Schema{
                     /* ... other configuration ... */
                     names.AttrTags:    tftags.TagsSchema(),
-                    names.AttrTagsAll: tftags.TagsSchemaComputed(),
+                    names.AttrTagsAll: tftags.TagsSchemaComputedOnly(),
                 },
             }
         }
@@ -170,9 +170,13 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
 
 For data sources, use `tftags.TagsAttributeComputedOnly()` (Plugin Framework) or `tftags.TagsSchemaComputedOnly()` (Plugin SDK V2) for `tags`.
 Both are Computed only.
-Don't use `tftags.TagsSchemaComputed()` in data sources. It's Optional+Computed for resource `tags_all` and warns when configured.
 Use `tftags.TagsSchemaOptionalComputed()` only when the data source's Read uses the configured `tags` to find the result, for example as EC2 tag filters.
 Document `tags` under Argument Reference only in that case.
+
+Don't use `tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly()` in new code.
+It was named `tftags.TagsSchemaComputed()`, which suggested Computed only, but it was Optional+Computed.
+Existing resource `tags_all` and data source `tags` that Read doesn't use were built with it by mistake.
+They now warn when configured, and a future version will make them Computed only ([#50581](https://github.com/hashicorp/terraform-provider-aws/issues/50581)).
 
 ### Transparent Tagging
 
