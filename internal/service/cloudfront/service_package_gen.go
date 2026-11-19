@@ -49,6 +49,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
+			Factory:  newKeyGroupDataSource,
+			TypeName: "aws_cloudfront_key_group",
+			Name:     "Key Group",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newOriginAccessControlDataSource,
 			TypeName: "aws_cloudfront_origin_access_control",
 			Name:     "Origin Access Control",
