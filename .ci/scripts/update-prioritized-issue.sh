@@ -20,7 +20,9 @@ PROJECT_NUMBER=196
 REPO="hashicorp/terraform-provider-aws"
 DRY_RUN="${DRY_RUN:-false}"
 
-INTRO="Below is a list of items that the Terraform AWS Provider maintainers currently have prioritized. This list is regularly updated to provide insight as priorities shift and are updated."
+INTRO='Below is a list of items that the Terraform AWS Provider maintainers currently have prioritized. This list is regularly updated to provide insight as priorities shift and are updated.
+
+For more information on how we prioritize issues and pull requests, refer to the [How We Prioritize](https://hashicorp.github.io/terraform-provider-aws/prioritization/) section of the Contributors Guide.'
 
 # One URL per non-archived issue or pull request on the board. Drafts have no URL and are skipped.
 board_urls () {
