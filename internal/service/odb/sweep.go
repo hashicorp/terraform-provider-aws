@@ -13,6 +13,7 @@ import (
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -31,6 +32,10 @@ func sweepAutonomousDatabases(ctx context.Context, client *conns.AWSClient) ([]s
 	pages := odb.NewListAutonomousDatabasesPaginator(conn, &odb.ListAutonomousDatabasesInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+		if errs.IsAErrorMessageContains[*odbtypes.ValidationException](err, "Oracle Database@AWS doesn't support Autonomous Database in the current Region") {
+			tflog.Info(ctx, "Skipping ODB Autonomous Database sweep in unsupported region")
+			return nil, nil
+		}
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
