@@ -11,12 +11,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
 	odbtypes "github.com/aws/aws-sdk-go-v2/service/odb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -24,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -78,15 +81,24 @@ func (r *resourceNetworkPeeringConnection) Schema(ctx context.Context, req resou
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Description: "Required field. The unique identifier of the ODB network that initiates the peering connection. " +
-					"A sample ID is odbpcx-abcdefgh12345678. Changing this will force terraform to create new resource.",
+				Description: "ID of the ODB network that initiates the peering connection. Configure exactly one of `odb_network_id` and `odb_network_arn`. Changing this replaces the peering connection.",
 			},
 			"peer_network_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Description: "Required field. The unique identifier of the ODB peering connection. Changing this will force terraform to create new resource",
+				Description: "ID of the VPC or ODB network to peer with. Changing this replaces the peering connection.",
+			},
+			"peer_network_route_table_id": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^rtb-[a-z0-9]{8,17}$`), "must be a VPC route table ID in the form rtb- followed by 8 to 17 lowercase letters or digits"),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Description: "ID of the VPC route table where AWS creates a route to the ODB network during peering creation. Only one route table is supported. Changing this replaces the peering connection.",
 			},
 
 			names.AttrDisplayName: schema.StringAttribute{
@@ -228,6 +240,9 @@ func (r *resourceNetworkPeeringConnection) Create(ctx context.Context, req resou
 		PeerNetworkId: plan.PeerNetworkId.ValueStringPointer(),
 		DisplayName:   plan.DisplayName.ValueStringPointer(),
 		Tags:          getTagsIn(ctx),
+	}
+	if !plan.PeerNetworkRouteTableId.IsNull() {
+		input.PeerNetworkRouteTableIds = []string{plan.PeerNetworkRouteTableId.ValueString()}
 	}
 	out, err := conn.CreateOdbPeeringConnection(ctx, &input)
 	if err != nil {
@@ -549,6 +564,7 @@ type odbNetworkPeeringConnectionResourceModel struct {
 	framework.WithRegionModel
 	OdbNetworkId             types.String                                `tfsdk:"odb_network_id" autoflex:",noflatten"`
 	PeerNetworkId            types.String                                `tfsdk:"peer_network_id" autoflex:",noflatten"`
+	PeerNetworkRouteTableId  types.String                                `tfsdk:"peer_network_route_table_id" autoflex:",noflatten"`
 	OdbPeeringConnectionId   types.String                                `tfsdk:"id"`
 	DisplayName              types.String                                `tfsdk:"display_name"`
 	Status                   fwtypes.StringEnum[odbtypes.ResourceStatus] `tfsdk:"status"`
