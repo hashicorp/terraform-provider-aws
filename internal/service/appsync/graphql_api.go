@@ -280,7 +280,7 @@ func resourceGraphQLAPI() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"uris": {
 					Type:     schema.TypeMap,
 					Computed: true,

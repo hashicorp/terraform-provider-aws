@@ -202,7 +202,7 @@ func resourceStream() *schema.Resource {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"warm_throughput_mib_ps": {
 					Type:          schema.TypeInt,
 					Optional:      true,

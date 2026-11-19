@@ -84,7 +84,7 @@ func resourceGatewayRoute() *schema.Resource {
 				},
 				"spec":            resourceGatewayRouteSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"virtual_gateway_name": {
 					Type:         schema.TypeString,
 					Required:     true,

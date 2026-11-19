@@ -773,17 +773,17 @@ func TestTagsSchemas(t *testing.T) {
 		t.Fatalf("Initializing SDKv2 provider: %s", err)
 	}
 
-	t.Run("data sources don't use TagsSchemaComputed", func(t *testing.T) {
+	t.Run("data sources don't use TagsSchemaOptionalComputedWarnShouldBeComputedOnly", func(t *testing.T) {
 		t.Parallel()
 
-		// TagsSchemaComputed is Optional so that resource configurations setting tags_all keep working.
+		// TagsSchemaOptionalComputedWarnShouldBeComputedOnly is Optional so that resource configurations setting tags_all keep working.
 		// Data sources must use TagsSchemaComputedOnly, or TagsSchemaOptionalComputed for tag filters.
-		warn := reflect.ValueOf(tftags.TagsSchemaComputed().ValidateDiagFunc).Pointer()
+		warn := reflect.ValueOf(tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly().ValidateDiagFunc).Pointer()
 		var walk func(name, path string, m map[string]*schema.Schema)
 		walk = func(name, path string, m map[string]*schema.Schema) {
 			for k, s := range m {
 				if s.ValidateDiagFunc != nil && reflect.ValueOf(s.ValidateDiagFunc).Pointer() == warn {
-					t.Errorf("%s: %s%s uses tftags.TagsSchemaComputed", name, path, k)
+					t.Errorf("%s: %s%s uses tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly", name, path, k)
 				}
 				if r, ok := s.Elem.(*schema.Resource); ok {
 					walk(name, path+k+".", r.SchemaMap())

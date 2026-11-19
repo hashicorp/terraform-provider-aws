@@ -574,7 +574,7 @@ func resourceJobDefinition() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTimeout: {
 					Type:     schema.TypeList,
 					Optional: true,

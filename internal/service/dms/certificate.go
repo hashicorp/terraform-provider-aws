@@ -71,7 +71,7 @@ func resourceCertificate() *schema.Resource {
 					ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

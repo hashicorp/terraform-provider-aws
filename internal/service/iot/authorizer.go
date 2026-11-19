@@ -80,7 +80,7 @@ func resourceAuthorizer() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.AuthorizerStatus](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"token_key_name": {
 					Type:     schema.TypeString,
 					Optional: true,

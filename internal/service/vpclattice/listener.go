@@ -148,7 +148,7 @@ func resourceListener() *schema.Resource {
 					AtLeastOneOf: []string{"service_arn", "service_identifier"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

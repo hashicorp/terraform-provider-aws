@@ -99,7 +99,7 @@ func ResourceRoom() *schema.Resource {
 					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_-]{0,128}$`, "must contain only alphanumeric, hyphen, and underscore characters, with max length of 128 characters"),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

@@ -107,7 +107,7 @@ func resourceConnection() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -250,7 +250,7 @@ func resourceConnection() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeInt,
 					Computed: true,

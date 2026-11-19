@@ -10,6 +10,6 @@ rules:
         - "/internal/service/**/*_data_source.go"
     patterns:
       - pattern-either:
-          - pattern-regex: '"tags_all":\s*tftags.TagsSchemaComputed'
-          - pattern-regex: 'names\.AttrTagsAll:\s*tftags.TagsSchemaComputed'
+          - pattern-regex: '"tags_all":\s*tftags\.TagsSchema\w*'
+          - pattern-regex: 'names\.AttrTagsAll:\s*tftags\.TagsSchema\w*'
     severity: WARNING

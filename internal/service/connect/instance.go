@@ -145,7 +145,7 @@ func resourceInstance() *schema.Resource {
 				// 	Default:  false, //verified default result from ListInstanceAttributes()
 				// },
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

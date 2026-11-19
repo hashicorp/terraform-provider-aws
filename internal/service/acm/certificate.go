@@ -236,7 +236,7 @@ func resourceCertificate() *schema.Resource {
 					ConflictsWith: []string{"certificate_body", names.AttrCertificateChain, names.AttrPrivateKey},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrType: {
 					Type:     schema.TypeString,
 					Computed: true,

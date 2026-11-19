@@ -884,7 +884,7 @@ func resourceApplication() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"version_id": {
 					Type:     schema.TypeInt,
 					Computed: true,

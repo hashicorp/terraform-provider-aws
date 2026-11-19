@@ -105,7 +105,7 @@ func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 				},
 				"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
 				names.AttrTags:                  tftags.TagsSchema(),
-				names.AttrTagsAll:               tftags.TagsSchemaComputed(),
+				names.AttrTagsAll:               tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
