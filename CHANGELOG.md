@@ -32,6 +32,9 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_acm_certificate: Fixes evenutal consistency error when filtering by `tags`. ([#51101](https://github.com/hashicorp/terraform-provider-aws/issues/51101))
+* list-resource/aws_iam_group_policy_attachment: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
+* list-resource/aws_iam_instance_profile: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
+* list-resource/aws_iam_user: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
 * resource/aws_cloudwatchomni_access_profile: Fix deletion failing with `AccessDeniedException` when the parent space no longer exists ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
 * resource/aws_dx_hosted_private_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
 * resource/aws_dx_hosted_transit_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
