@@ -2,6 +2,8 @@
 
 NOTES:
 
+* provider: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* provider: Warn when `tags` is set in data source configurations that don't filter by tags. The value was never used. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
 * resource/aws_s3_object: `object_lock_retain_until_date` is now `Computed` because Amazon S3 assigns and advances the value for objects under an event hold. Removing the argument from configuration no longer plans a change. ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 
 FEATURES:
@@ -32,6 +34,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_acm_certificate: Fixes evenutal consistency error when filtering by `tags`. ([#51101](https://github.com/hashicorp/terraform-provider-aws/issues/51101))
+* data-source/aws_vpc_ipam_pools: Return every pool instead of collapsing pools with identical tags into one ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
 * list-resource/aws_iam_group_policy_attachment: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
 * list-resource/aws_iam_instance_profile: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
 * list-resource/aws_iam_user: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
