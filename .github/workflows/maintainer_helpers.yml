@@ -94,7 +94,7 @@ jobs:
           github_token: ${{ steps.token.outputs.token }}
           item_url: ${{ env.ISSUE_URL }}
           view: "working-board"
-          move_to_top: ${{ github.event.label.name == 'regression' }}
+          move_to_top: ${{ contains(fromJSON('["crash", "regression"]'), github.event.label.name) }}
 
       - name: Add Prioritized Items
         if: |
