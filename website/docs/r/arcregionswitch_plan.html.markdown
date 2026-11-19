@@ -587,6 +587,10 @@ The following arguments are optional:
 
 * `ungraceful` - (Required) Ungraceful behavior. Valid values: `promoteReadReplica`.
 
+### `workflow.step.parallel_config.step.ssm_send_command_config.ungraceful` Block
+
+* `behavior` - (Required) Ungraceful behavior. Valid value: `skip`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
