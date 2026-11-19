@@ -38,7 +38,7 @@ func dataSourceQueue() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrURL: {
 					Type:     schema.TypeString,
 					Computed: true,

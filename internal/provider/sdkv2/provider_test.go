@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"iter"
 	"os"
-	"reflect"
 	"slices"
 	"strings"
 	"testing"
@@ -773,25 +772,30 @@ func TestTagsSchemas(t *testing.T) {
 		t.Fatalf("Initializing SDKv2 provider: %s", err)
 	}
 
-	t.Run("data sources don't use TagsSchemaOptionalComputedWarnShouldBeComputedOnly", func(t *testing.T) {
+	t.Run("nested tags users can't configure are Computed only", func(t *testing.T) {
 		t.Parallel()
 
-		// TagsSchemaOptionalComputedWarnShouldBeComputedOnly is Optional so that resource configurations setting tags_all keep working.
-		// Data sources must use TagsSchemaComputedOnly, or TagsSchemaOptionalComputed for tag filters.
-		warn := reflect.ValueOf(tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly().ValidateDiagFunc).Pointer()
-		var walk func(name, path string, m map[string]*schema.Schema)
-		walk = func(name, path string, m map[string]*schema.Schema) {
+		// TagsSchemaOptionalComputedWarnShouldBeComputedOnly stays Optional only so that existing
+		// configurations keep working. Under a block users can't configure, nobody can set it, so
+		// it must be TagsSchemaComputedOnly. Optional+Computed there also changes the set hash
+		// (https://github.com/hashicorp/terraform-provider-aws/issues/40314).
+		warn := tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly()
+		var walk func(name, path string, settable bool, m map[string]*schema.Schema)
+		walk = func(name, path string, settable bool, m map[string]*schema.Schema) {
 			for k, s := range m {
-				if s.ValidateDiagFunc != nil && reflect.ValueOf(s.ValidateDiagFunc).Pointer() == warn {
-					t.Errorf("%s: %s%s uses tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly", name, path, k)
+				if s == warn && !settable {
+					t.Errorf("%s: %s%s uses tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly; use tftags.TagsSchemaComputedOnly", name, path, k)
 				}
 				if r, ok := s.Elem.(*schema.Resource); ok {
-					walk(name, path+k+".", r.SchemaMap())
+					walk(name, path+k+".", settable && (s.Optional || s.Required), r.SchemaMap())
 				}
 			}
 		}
 		for name, r := range p.DataSourcesMap {
-			walk(name, "", r.SchemaMap())
+			walk(name, "", true, r.SchemaMap())
+		}
+		for name, r := range p.ResourcesMap {
+			walk(name, "", true, r.SchemaMap())
 		}
 	})
 
@@ -817,10 +821,10 @@ func TestTagsSchemas(t *testing.T) {
 			wantWarnings: 1,
 		},
 		"data source attribute tags": {
-			typeName:   "aws_sns_topic",
-			dataSource: true,
-			config:     map[string]any{names.AttrName: "n", names.AttrTags: map[string]any{"k": "v"}},
-			wantErrors: 1,
+			typeName:     "aws_sns_topic",
+			dataSource:   true,
+			config:       map[string]any{names.AttrName: "n", names.AttrTags: map[string]any{"k": "v"}},
+			wantWarnings: 1,
 		},
 		"data source filter tags": {
 			typeName:   "aws_vpc",

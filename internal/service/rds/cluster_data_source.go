@@ -188,7 +188,7 @@ func dataSourceCluster() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upgrade_rollout_order": {
 					Type:     schema.TypeString,
 					Computed: true,

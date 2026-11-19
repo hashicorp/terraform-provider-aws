@@ -171,7 +171,7 @@ func dataSourceContainerRecipe() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_repository": {
 					Type:     schema.TypeList,
 					Computed: true,

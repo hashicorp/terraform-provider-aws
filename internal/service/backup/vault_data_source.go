@@ -40,7 +40,7 @@ func dataSourceVault() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

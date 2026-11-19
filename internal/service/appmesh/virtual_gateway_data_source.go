@@ -58,7 +58,7 @@ func dataSourceVirtualGateway() *schema.Resource {
 					Computed: true,
 				},
 				"spec":         sdkv2.ComputedOnlyFromSchema(resourceVirtualGatewaySpecSchema()),
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

@@ -488,7 +488,7 @@ func dataSourceDomain() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vpc_options": {
 					Type:     schema.TypeList,
 					Computed: true,

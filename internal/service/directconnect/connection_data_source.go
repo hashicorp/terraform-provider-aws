@@ -82,7 +82,7 @@ func dataSourceConnection() *schema.Resource {
 					Computed: true,
 				},
 				"rate_limiter_status": rateLimiterStatusSchema(),
-				names.AttrTags:        tftags.TagsSchemaComputedOnly(),
+				names.AttrTags:        tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeInt,
 					Computed: true,

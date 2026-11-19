@@ -42,7 +42,7 @@ func DataSourceTracker() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tracker_arn": {
 					Type:     schema.TypeString,
 					Computed: true,

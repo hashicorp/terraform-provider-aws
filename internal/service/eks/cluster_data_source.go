@@ -392,7 +392,7 @@ func dataSourceCluster() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upgrade_policy": {
 					Type:     schema.TypeList,
 					Computed: true,

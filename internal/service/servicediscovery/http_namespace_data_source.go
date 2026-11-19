@@ -42,7 +42,7 @@ func dataSourceHTTPNamespace() *schema.Resource {
 					Required:     true,
 					ValidateFunc: validNamespaceName,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

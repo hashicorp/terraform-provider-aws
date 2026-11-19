@@ -89,7 +89,7 @@ func dataSourceReplicationInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Elem:     &schema.Schema{Type: schema.TypeString},

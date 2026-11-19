@@ -56,7 +56,7 @@ func dataSourceStreamConsumer() *schema.Resource {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

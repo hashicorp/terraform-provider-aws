@@ -59,7 +59,7 @@ func dataSourceRoute() *schema.Resource {
 					Computed: true,
 				},
 				"spec":         sdkv2.ComputedOnlyFromSchema(resourceRouteSpecSchema()),
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"virtual_router_name": {
 					Type:     schema.TypeString,
 					Required: true,

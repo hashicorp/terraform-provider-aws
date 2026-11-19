@@ -55,7 +55,7 @@ func dataSourceMesh() *schema.Resource {
 					Computed: true,
 				},
 				"spec":         sdkv2.ComputedOnlyFromSchema(resourceMeshSpecSchema()),
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

@@ -63,7 +63,7 @@ func dataSourceTransitGatewayConnectPeer() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_address": {
 					Type:     schema.TypeString,
 					Computed: true,

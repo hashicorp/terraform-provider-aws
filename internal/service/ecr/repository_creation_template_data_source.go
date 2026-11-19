@@ -99,7 +99,7 @@ func dataSourceRepositoryCreationTemplate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrResourceTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrResourceTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

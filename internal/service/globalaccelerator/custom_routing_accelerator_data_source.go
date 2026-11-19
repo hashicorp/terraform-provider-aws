@@ -89,7 +89,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

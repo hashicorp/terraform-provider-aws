@@ -89,7 +89,7 @@ func DataSourceQuerySuggestionsBlockList() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"updated_at": {
 					Type:     schema.TypeString,
 					Computed: true,

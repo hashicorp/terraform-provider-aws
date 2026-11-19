@@ -80,7 +80,7 @@ func dataSourceEBSVolume() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrThroughput: {
 					Type:     schema.TypeInt,
 					Computed: true,

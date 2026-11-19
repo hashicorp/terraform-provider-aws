@@ -221,7 +221,7 @@ func dataSourceAMI() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tpm_support": {
 					Type:     schema.TypeString,
 					Computed: true,

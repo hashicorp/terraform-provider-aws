@@ -74,7 +74,7 @@ func dataSourceManagedPrefixList() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVersion: {
 					Type:     schema.TypeInt,
 					Computed: true,

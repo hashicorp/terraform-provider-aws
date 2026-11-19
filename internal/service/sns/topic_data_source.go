@@ -38,7 +38,7 @@ func dataSourceTopic() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

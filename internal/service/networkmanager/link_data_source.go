@@ -63,7 +63,7 @@ func dataSourceLink() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrType: {
 					Type:     schema.TypeString,
 					Computed: true,

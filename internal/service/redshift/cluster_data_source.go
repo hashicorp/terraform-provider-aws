@@ -195,7 +195,7 @@ func dataSourceCluster() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Computed: true,

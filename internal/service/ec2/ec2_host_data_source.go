@@ -168,7 +168,7 @@ func dataSourceHost() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"total_vcpus": {
 					Type:     schema.TypeInt,
 					Computed: true,

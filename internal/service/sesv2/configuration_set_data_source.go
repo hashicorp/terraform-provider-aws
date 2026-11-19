@@ -99,7 +99,7 @@ func dataSourceConfigurationSet() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tracking_options": {
 					Type:     schema.TypeList,
 					Computed: true,

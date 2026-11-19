@@ -173,7 +173,7 @@ func dataSourcePlan() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -87,7 +87,7 @@ func dataSourceStream() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"warm_throughput": {
 					Type:     schema.TypeList,
 					Computed: true,

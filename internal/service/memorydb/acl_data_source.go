@@ -38,7 +38,7 @@ func dataSourceACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_names": {
 					Type:     schema.TypeSet,
 					Computed: true,

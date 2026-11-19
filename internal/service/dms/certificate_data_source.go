@@ -68,7 +68,7 @@ func dataSourceCertificate() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"valid_from_date": {
 					Type:     schema.TypeString,
 					Computed: true,

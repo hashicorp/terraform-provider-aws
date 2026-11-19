@@ -261,7 +261,7 @@ func dataSourceBroker() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputedOnly(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user": {
 					Type:     schema.TypeSet,
 					Computed: true,
