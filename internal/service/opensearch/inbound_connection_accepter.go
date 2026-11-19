@@ -122,7 +122,8 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) to become deletable: %s", d.Id(), err)
 	}
 
-	if connection.ConnectionStatus.StatusCode == awstypes.InboundConnectionStatusCodePendingAcceptance {
+	switch connection.ConnectionStatus.StatusCode {
+	case awstypes.InboundConnectionStatusCodePendingAcceptance:
 		log.Printf("[DEBUG] Rejecting OpenSearch Inbound Connection: %s", d.Id())
 		_, err := conn.RejectInboundConnection(ctx, &opensearch.RejectInboundConnectionInput{
 			ConnectionId: aws.String(d.Id()),
@@ -132,24 +133,28 @@ func resourceInboundConnectionDelete(ctx context.Context, d *schema.ResourceData
 			return sdkdiag.AppendErrorf(diags, "rejecting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
 		}
 
+		fallthrough
+	case awstypes.InboundConnectionStatusCodeRejecting:
 		if _, err := waitInboundConnectionRejected(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Inbound Connection (%s) reject: %s", d.Id(), err)
 		}
 
 		return diags
-	}
+	case awstypes.InboundConnectionStatusCodeDeleting:
+		// Already deleting. Wait below.
+	default:
+		log.Printf("[DEBUG] Deleting OpenSearch Inbound Connection: %s", d.Id())
+		_, err := conn.DeleteInboundConnection(ctx, &opensearch.DeleteInboundConnectionInput{
+			ConnectionId: aws.String(d.Id()),
+		})
 
-	log.Printf("[DEBUG] Deleting OpenSearch Inbound Connection: %s", d.Id())
-	_, err = conn.DeleteInboundConnection(ctx, &opensearch.DeleteInboundConnectionInput{
-		ConnectionId: aws.String(d.Id()),
-	})
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return diags
+		}
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Inbound Connection (%s): %s", d.Id(), err)
+		}
 	}
 
 	if _, err := waitInboundConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
@@ -265,7 +270,15 @@ func waitInboundConnectionDeletable(ctx context.Context, conn *opensearch.Client
 			awstypes.InboundConnectionStatusCodeRejecting,
 			awstypes.InboundConnectionStatusCodeDeleting,
 		),
-		Refresh: statusInboundConnection(conn, id),
+		// Return not-found as an error so a missing connection ends the wait at once.
+		Refresh: func(ctx context.Context) (any, string, error) {
+			output, err := findInboundConnectionByID(ctx, conn, id)
+			if err != nil {
+				return nil, "", err
+			}
+
+			return output, string(output.ConnectionStatus.StatusCode), nil
+		},
 		Timeout: timeout,
 	}
 

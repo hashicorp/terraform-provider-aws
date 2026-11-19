@@ -353,7 +353,15 @@ func waitOutboundConnectionDeletable(ctx context.Context, conn *opensearch.Clien
 			awstypes.OutboundConnectionStatusCodeValidationFailed,
 			awstypes.OutboundConnectionStatusCodeDeleting,
 		),
-		Refresh: statusOutboundConnection(conn, id),
+		// Return not-found as an error so a missing connection ends the wait at once.
+		Refresh: func(ctx context.Context) (any, string, error) {
+			output, err := findOutboundConnectionByID(ctx, conn, id)
+			if err != nil {
+				return nil, "", err
+			}
+
+			return output, string(output.ConnectionStatus.StatusCode), nil
+		},
 		Timeout: timeout,
 	}
 
