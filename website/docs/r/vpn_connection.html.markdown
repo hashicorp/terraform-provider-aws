@@ -224,13 +224,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `tunnel1_bgp_asn` - BGP ASN number of the first VPN tunnel.
 * `tunnel1_bgp_holdtime` - BGP holdtime of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
-* `tunnel1_preshared_key` - Preshared key of the first VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
+* `tunnel1_preshared_key` - Preshared key of the first VPN tunnel. If `preshared_key_storage` is `SecretsManager` and the key is not set in the configuration, it returns a string indicating the key is redacted and stored in Secrets Manager.
 * `tunnel1_vgw_inside_address` - RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
 * `tunnel2_address` - Public IP address of the second VPN tunnel.
 * `tunnel2_bgp_asn` - BGP ASN number of the second VPN tunnel.
 * `tunnel2_bgp_holdtime` - BGP holdtime of the second VPN tunnel.
 * `tunnel2_cgw_inside_address` - RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
-* `tunnel2_preshared_key` - Preshared key of the second VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
+* `tunnel2_preshared_key` - Preshared key of the second VPN tunnel. If `preshared_key_storage` is `SecretsManager` and the key is not set in the configuration, it returns a string indicating the key is redacted and stored in Secrets Manager.
 * `tunnel2_vgw_inside_address` - RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).
 * `vgw_telemetry` - Telemetry for the VPN tunnels. Detailed below.
 * `vpn_gateway_id` - ID of the virtual private gateway to which the connection is attached.
