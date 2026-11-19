@@ -321,12 +321,12 @@ func TestAccLogsMetricFilter_systemFields(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@aws.account"]`),
+				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@aws.account"]`), //lintignore:AWSAT003
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.account"),
-					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-east-1"`),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-east-1"`), //lintignore:AWSAT003
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -344,13 +344,13 @@ func TestAccLogsMetricFilter_systemFields(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-west-2\"`, `["@aws.account", "@aws.region"]`),
+				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-west-2\"`, `["@aws.account", "@aws.region"]`), //lintignore:AWSAT003
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.account"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "emit_system_field_dimensions.*", "@aws.region"),
-					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-west-2"`),
+					resource.TestCheckResourceAttr(resourceName, "field_selection_criteria", `@aws.region = "us-west-2"`), //lintignore:AWSAT003
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -392,7 +392,7 @@ func TestAccLogsMetricFilter_systemFieldsInvalid(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@source.log"]`),
+				Config:      testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@source.log"]`), //lintignore:AWSAT003
 				ExpectError: regexache.MustCompile(`expected emit_system_field_dimensions.\d+ to be one of`),
 			},
 			{

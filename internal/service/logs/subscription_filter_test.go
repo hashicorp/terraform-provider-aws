@@ -351,7 +351,7 @@ func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriptionFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-east-1\"`),
+				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-east-1\"`), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 				),
@@ -364,7 +364,7 @@ func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-east-1"`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-east-1"`)), //lintignore:AWSAT003
 				},
 			},
 			{
@@ -375,7 +375,7 @@ func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrRoleARN, "apply_on_transformed_logs"},
 			},
 			{
-				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-west-2\"`),
+				Config: testAccSubscriptionFilterConfig_fieldSelectionCriteria(rName, `@aws.region = \"us-west-2\"`), //lintignore:AWSAT003
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriptionFilterExists(ctx, t, resourceName, &filter),
 				),
@@ -388,7 +388,7 @@ func TestAccLogsSubscriptionFilter_fieldSelectionCriteria(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-west-2"`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("field_selection_criteria"), knownvalue.StringExact(`@aws.region = "us-west-2"`)), //lintignore:AWSAT003
 				},
 			},
 			{
