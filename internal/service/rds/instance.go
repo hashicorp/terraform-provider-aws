@@ -2572,7 +2572,7 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("delete_automated_backups", true)
 
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
-	if v, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil {
+	if v, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil && v.ReadReplicaSourceDBClusterIdentifier != nil {
 		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
 	}
 
