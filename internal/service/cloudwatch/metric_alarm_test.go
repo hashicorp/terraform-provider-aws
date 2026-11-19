@@ -746,7 +746,7 @@ func TestAccCloudWatchMetricAlarm_evaluationWindowNoTimezone(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName),
+				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName, 80),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_window.#", "1"),
@@ -760,6 +760,16 @@ func TestAccCloudWatchMetricAlarm_evaluationWindowNoTimezone(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "threshold", "90"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.0.timezone"),
+				),
+			},
+			{
 				Config: testAccMetricAlarmConfig_evaluationWindow(rName, "America/New_York"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
@@ -767,7 +777,7 @@ func TestAccCloudWatchMetricAlarm_evaluationWindowNoTimezone(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName),
+				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName, 90),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.#", "1"),
@@ -1458,7 +1468,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
 `, rName, timezone)
 }
 
-func testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName string) string {
+func testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName string, threshold int) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_metric_alarm" "test" {
   alarm_name                = %[1]q
@@ -1468,7 +1478,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   namespace                 = "AWS/EC2"
   period                    = 60
   statistic                 = "Average"
-  threshold                 = 80
+  threshold                 = %[2]d
   alarm_description         = "This metric monitors ec2 cpu utilization"
   insufficient_data_actions = []
 
@@ -1480,7 +1490,7 @@ resource "aws_cloudwatch_metric_alarm" "test" {
     wall_clock_window {}
   }
 }
-`, rName)
+`, rName, threshold)
 }
 
 func testAccMetricAlarmConfig_metricNameUnknown(rName string) string {
