@@ -431,7 +431,7 @@ func (c *AWSClient) ValidateInContextRegionInPartition(ctx context.Context) erro
 }
 
 func convertIPToDashIP(ip string) string {
-	return strings.Replace(ip, ".", "-", -1)
+	return strings.ReplaceAll(ip, ".", "-")
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
