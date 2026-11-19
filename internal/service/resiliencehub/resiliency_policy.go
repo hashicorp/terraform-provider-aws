@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehub/types"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -100,7 +100,7 @@ func (r *resiliencyPolicyResource) Schema(ctx context.Context, req resource.Sche
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 60),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]+$`), "Must start with an alphanumeric character and contain alphanumeric characters, underscores, or hyphens"),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_-]+$`, "Must start with an alphanumeric character and contain alphanumeric characters, underscores, or hyphens"),
 				},
 			},
 			"tier": schema.StringAttribute{

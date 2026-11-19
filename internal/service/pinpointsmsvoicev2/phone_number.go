@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
@@ -38,6 +37,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfboolvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/boolvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -80,7 +80,7 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 			"iso_country_code": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z]{2}$`), "must be in ISO 3166-1 alpha-2 format"),
+					lazystringvalidator.RegexMatches(`^[A-Z]{2}$`, "must be in ISO 3166-1 alpha-2 format"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -153,7 +153,7 @@ func (r *phoneNumberResource) Schema(ctx context.Context, request resource.Schem
 					),
 					stringvalidator.Any(
 						fwvalidators.ARN(),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^connect\.[a-z0-9-]+\.amazonaws.com$`), "Must be connect.{region}.amazonaws.com"),
+						lazystringvalidator.RegexMatches(`^connect\.[a-z0-9-]+\.amazonaws.com$`, "Must be connect.{region}.amazonaws.com"),
 					),
 				},
 			},

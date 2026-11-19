@@ -165,7 +165,7 @@ func resourceReplicationConfig() *schema.Resource {
 					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_endpoint_arn": {
 					Type:         schema.TypeString,
 					Required:     true,

@@ -10,7 +10,6 @@ import (
 	"iter"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
@@ -18,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lambdaweb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambdaweb/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -33,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -43,10 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var validFunctionName validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z_-]{0,62}[0-9A-Za-z]$`),
-	`Function name must be 2 to 64 characters, and can't start or end with a hyphen (-) or underscore (_). Valid characters are a-z, A-Z, 0-9, hyphens (-), and underscores (_).`,
-)
+var validFunctionName validator.String = lazystringvalidator.RegexMatches(`^[0-9A-Za-z][0-9A-Za-z_-]{0,62}[0-9A-Za-z]$`, `Function name must be 2 to 64 characters, and can't start or end with a hyphen (-) or underscore (_). Valid characters are a-z, A-Z, 0-9, hyphens (-), and underscores (_).`)
 
 // @FrameworkResource("aws_lambdaweb_function", name="Function")
 // @IdentityAttribute("function_name")

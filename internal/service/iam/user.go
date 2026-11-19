@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,12 +57,9 @@ func resourceUser() *schema.Resource {
 					Description: "Delete user even if it has non-Terraform-managed IAM access keys, login profile or MFA devices",
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
-						"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z=,.@\-_+]+$`, "must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs"),
 				},
 				names.AttrPath: {
 					Type:     schema.TypeString,
@@ -75,7 +72,7 @@ func resourceUser() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 2048),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				/*
 					The UniqueID could be used as the Id(), but none of the API
 					calls allow specifying a user by the UniqueID: they require the
@@ -165,8 +162,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
 
-	resourceUserFlatten(user, d)
-	setTagsOut(ctx, user.Tags)
+	resourceUserFlatten(ctx, user, d)
 
 	return diags
 }
@@ -755,7 +751,7 @@ func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUse
 	return output, err
 }
 
-func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
+func resourceUserFlatten(ctx context.Context, user *awstypes.User, d *schema.ResourceData) {
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrName, user.UserName)
 	d.Set(names.AttrPath, user.Path)
@@ -765,4 +761,5 @@ func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
 		d.Set("permissions_boundary", nil)
 	}
 	d.Set("unique_id", user.UserId)
+	setTagsOut(ctx, user.Tags)
 }

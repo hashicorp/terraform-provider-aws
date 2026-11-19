@@ -156,7 +156,7 @@ func resourceImageBuilder() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCConfig: {
 					Type:     schema.TypeList,
 					MaxItems: 1,

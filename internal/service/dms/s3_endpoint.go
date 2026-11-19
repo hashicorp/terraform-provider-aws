@@ -103,7 +103,7 @@ func resourceS3Endpoint() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 
 				/////// S3-Specific Settings
 				"add_column_name": {

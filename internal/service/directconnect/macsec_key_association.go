@@ -11,7 +11,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/directconnect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,7 +48,7 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 					ForceNew:      true,
 					AtLeastOneOf:  []string{"cak", "cak_wo", "secret_arn"},
 					ConflictsWith: []string{"cak_wo"},
-					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+					ValidateFunc:  lazyvalidation.StringMatch(`[0-9A-Fa-f]{64}$`, "Must be 64-character hex code string"),
 				},
 				"cak_wo": {
 					Type:          schema.TypeString,
@@ -58,7 +58,7 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 					AtLeastOneOf:  []string{"cak", "cak_wo", "secret_arn"},
 					ConflictsWith: []string{"cak", "secret_arn"},
 					RequiredWith:  []string{"cak_wo_version"},
-					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+					ValidateFunc:  lazyvalidation.StringMatch(`^[0-9A-Fa-f]{64}$`, "Must be 64-character hex code string"),
 				},
 				"cak_wo_version": {
 					Type:         schema.TypeInt,
@@ -74,7 +74,7 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 					Computed:      true,
 					AtLeastOneOf:  []string{"ckn", "ckn_wo", "secret_arn"},
 					ConflictsWith: []string{"ckn_wo"},
-					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+					ValidateFunc:  lazyvalidation.StringMatch(`[0-9A-Fa-f]{64}$`, "Must be 64-character hex code string"),
 				},
 				"ckn_wo": {
 					Type:          schema.TypeString,
@@ -84,7 +84,7 @@ func resourceMacSecKeyAssociation() *schema.Resource {
 					AtLeastOneOf:  []string{"ckn", "ckn_wo", "secret_arn"},
 					ConflictsWith: []string{"ckn", "secret_arn"},
 					RequiredWith:  []string{"ckn_wo_version"},
-					ValidateFunc:  validation.StringMatch(regexache.MustCompile(`^[0-9A-Fa-f]{64}$`), "Must be 64-character hex code string"),
+					ValidateFunc:  lazyvalidation.StringMatch(`^[0-9A-Fa-f]{64}$`, "Must be 64-character hex code string"),
 				},
 				"ckn_wo_version": {
 					Type:         schema.TypeInt,

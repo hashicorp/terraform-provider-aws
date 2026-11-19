@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tfunique "github.com/hashicorp/terraform-provider-aws/internal/unique"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -683,24 +683,26 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 						interceptor: resourceValidateRegion(),
 					})
 				}
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: defaultRegion(),
-				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        After,
-					why:         Read,
-					interceptor: setRegionInState(),
-				})
-				// We can't just set the injected "region" attribute to ForceNew because if
-				// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
-				// the region attribute is not set in state and its value shows a change.
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: forceNewIfRegionChanges(),
-				})
+				interceptors = append(interceptors,
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: defaultRegion(),
+					},
+					interceptorInvocation{
+						when:        After,
+						why:         Read,
+						interceptor: setRegionInState(),
+					},
+					// We can't just set the injected "region" attribute to ForceNew because if
+					// a plan is run with '-refresh=false', then after provider v5 to v6 upgrade
+					// the region attribute is not set in state and its value shows a change.
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: forceNewIfRegionChanges(),
+					},
+				)
 				if resource.Identity.HasInherentRegion() {
 					interceptors = append(interceptors, resourceImportRegionNoDefault())
 				} else {
@@ -709,21 +711,23 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 			}
 
 			if resource.Tags.Enabled() {
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before | After | Finally,
-					why:         Create | Read | Update,
-					interceptor: resourceTransparentTagging(resource.Tags),
-				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: setTagsAll(),
-				})
-				interceptors = append(interceptors, interceptorInvocation{
-					when:        Before,
-					why:         CustomizeDiff,
-					interceptor: validateRequiredTags(),
-				})
+				interceptors = append(interceptors,
+					interceptorInvocation{
+						when:        Before | After | Finally,
+						why:         Create | Read | Update,
+						interceptor: resourceTransparentTagging(resource.Tags),
+					},
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: setTagsAll(),
+					},
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: validateRequiredTags(),
+					},
+				)
 			}
 
 			if len(resource.Identity.Attributes) > 0 {
@@ -819,7 +823,7 @@ func assumeRoleSchema() *schema.Schema {
 					Description: "A unique identifier that might be required when you assume a role in another account.",
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 1224),
-						validation.StringMatch(regexache.MustCompile(`[\w+=,.@:\/\-]*`), ""),
+						lazyvalidation.StringMatch(`[\w+=,.@:\/\-]*`, ""),
 					),
 				},
 				"policy": {

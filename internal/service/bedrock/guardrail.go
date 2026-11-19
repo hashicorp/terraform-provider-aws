@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -75,8 +75,6 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 	const (
 		filtersConfigThresholdMin = 0.000000
 	)
-	guardrailNameRegex := regexache.MustCompile("^[0-9a-zA-Z-_]+$")
-	topicsConfigNameRegex := regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -121,7 +119,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 50),
-					stringvalidator.RegexMatches(guardrailNameRegex, ""),
+					lazystringvalidator.RegexMatches(`^[0-9a-zA-Z-_]+$`, ""),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -408,7 +406,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 100),
-											stringvalidator.RegexMatches(topicsConfigNameRegex, ""),
+											lazystringvalidator.RegexMatches(`^[0-9a-zA-Z-_ !?.]+$`, ""),
 										},
 									},
 									names.AttrType: schema.StringAttribute{

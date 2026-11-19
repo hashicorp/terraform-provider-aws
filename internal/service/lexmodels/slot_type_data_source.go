@@ -9,12 +9,12 @@ import (
 	"context"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +65,7 @@ func dataSourceSlotType() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(regexache.MustCompile(`^([A-Za-z]_?)+$`), ""),
+						lazyvalidation.StringMatch(`^([A-Za-z]_?)+$`, ""),
 					),
 				},
 				"value_selection_strategy": {
@@ -78,7 +78,7 @@ func dataSourceSlotType() *schema.Resource {
 					Default:  SlotTypeVersionLatest,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 64),
-						validation.StringMatch(regexache.MustCompile(`\$LATEST|[0-9]+`), ""),
+						lazyvalidation.StringMatch(`\$LATEST|[0-9]+`, ""),
 					),
 				},
 			}

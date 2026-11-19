@@ -231,7 +231,7 @@ func resourceClientVPNEndpoint() *schema.Resource {
 					Default:  false,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"traffic_ip_address_type": {
 					Type:             schema.TypeString,
 					Optional:         true,

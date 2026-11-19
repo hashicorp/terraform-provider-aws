@@ -53,6 +53,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newAlertResource,
+			TypeName: "aws_cloudwatchomni_alert",
+			Name:     "Alert",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("alert_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      alertImportID{},
+			},
+		},
+		{
 			Factory:  newDashboardResource,
 			TypeName: "aws_cloudwatchomni_dashboard",
 			Name:     "Dashboard",
@@ -73,6 +88,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Domain",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newOrganizationAccessGrantResource,
+			TypeName: "aws_cloudwatchomni_organization_access_grant",
+			Name:     "Organization Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 			},
@@ -133,6 +159,17 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			}),
 		},
 		{
+			Factory:  newAlertResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_alert",
+			Name:     "Alert",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("space_id", true),
+				inttypes.StringIdentityAttribute("alert_id", true),
+			}),
+		},
+		{
 			Factory:  newDashboardResourceAsListResource,
 			TypeName: "aws_cloudwatchomni_dashboard",
 			Name:     "Dashboard",
@@ -149,6 +186,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Name:     "Domain",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("domain_id", true)),
+		},
+		{
+			Factory:  newOrganizationAccessGrantResourceAsListResource,
+			TypeName: "aws_cloudwatchomni_organization_access_grant",
+			Name:     "Organization Access Grant",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("grant_id", true)),
 		},
 		{
 			Factory:  newOrganizationDomainResourceAsListResource,

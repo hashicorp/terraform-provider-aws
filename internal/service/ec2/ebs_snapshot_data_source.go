@@ -104,7 +104,7 @@ func dataSourceEBSSnapshot() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"volume_id": {
 					Type:     schema.TypeString,
 					Computed: true,
