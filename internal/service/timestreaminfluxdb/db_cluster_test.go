@@ -642,6 +642,68 @@ func TestAccTimestreamInfluxDBDBCluster_maintenanceSchedule(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBCluster_maintenanceScheduleV2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+	preferredMaintenanceWindow1 := "Sun:02:00-Sun:06:00"
+	preferredMaintenanceWindow2 := "Mon:01:00-Mon:05:00"
+	timezone1 := "UTC"
+	timezone2 := "America/New_York"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_maintenanceScheduleV2(rName, preferredMaintenanceWindow1, timezone1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", preferredMaintenanceWindow1),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", timezone1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+			{
+				Config: testAccDBClusterConfig_maintenanceScheduleV2(rName, preferredMaintenanceWindow2, timezone2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.preferred_maintenance_window", preferredMaintenanceWindow2),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_schedule.0.timezone", timezone2),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization"},
+			},
+		},
+	})
+}
+
 func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -706,10 +768,6 @@ func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 			{
 				Config:      testAccDBClusterConfig_v3WithUsername(rName),
 				ExpectError: regexache.MustCompile(`(?s)username must not be set when using an InfluxDB V3 db parameter.*group`),
-			},
-			{
-				Config:      testAccDBClusterConfig_maintenanceScheduleV2(rName, "Sun:02:00-Sun:06:00", "UTC"),
-				ExpectError: regexache.MustCompile(`(?s)maintenance_schedule is only supported for InfluxDB V3 clusters`),
 			},
 		},
 	})

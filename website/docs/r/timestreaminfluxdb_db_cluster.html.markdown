@@ -190,7 +190,7 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 
 ### Usage with InfluxDB V3
 
-For InfluxDB V3 clusters, you can create a cluster without providing `allocated_storage`, `bucket`, `organization`, `username`, `password`, or `deployment_type` by specifying a `db_parameter_group_identifier` such as `"InfluxDBV3Core"`. You can also optionally configure a maintenance schedule.
+For InfluxDB V3 clusters, you can create a cluster without providing `allocated_storage`, `bucket`, `organization`, `username`, `password`, or `deployment_type` by specifying a `db_parameter_group_identifier` such as `"InfluxDBV3Core"`.
 
 ```terraform
 resource "aws_timestreaminfluxdb_db_cluster" "example" {
@@ -251,7 +251,7 @@ The following arguments are optional:
 * `deployment_type` - (Optional, Default: `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters) Type of cluster to create. Valid options are: `"MULTI_NODE_READ_REPLICAS"`. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
 * `failover_mode` - (Optional, Default: `"AUTOMATIC"`) Behavior of failure recovery when the primary node of the cluster fails. Valid options are: `"AUTOMATIC"` and `"NO_FAILOVER"`.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket. This argument is updatable.
-* `maintenance_schedule` - (Optional) Maintenance schedule for the DB cluster, including the preferred maintenance window and timezone. This argument is updatable. This field is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
+* `maintenance_schedule` - (Optional) Maintenance schedule for the DB cluster, including the preferred maintenance window and timezone. This argument is updatable.
 * `network_type` - (Optional) Network type of the Timestream for InfluxDB cluster. `IPV4` can communicate over IPv4 protocol only, and `DUAL` can communicate over both IPv4 and IPv6 protocols.
 * `organization` - (Optional) Name of the initial organization for the initial admin user in InfluxDB. An InfluxDB organization is a workspace for a group of users. Along with `bucket`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
 * `password` - (Optional) Password of the initial admin user created in InfluxDB. This password will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `username`, and `organization`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group) as the AWS API rejects it.
