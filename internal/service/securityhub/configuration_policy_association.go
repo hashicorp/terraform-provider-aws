@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -59,14 +59,11 @@ func resourceConfigurationPolicyAssociation() *schema.Resource {
 					),
 				},
 				"target_id": {
-					Type:        schema.TypeString,
-					Required:    true,
-					ForceNew:    true,
-					Description: "The identifier of the target account, organizational unit, or the root to associate with the specified configuration.",
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^(r-[a-z0-9]{4,32})$|^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32})$|^([0-9]{12})$`),
-						"Target ID must be a valid root, organizational unit or account id.",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					Description:  "The identifier of the target account, organizational unit, or the root to associate with the specified configuration.",
+					ValidateFunc: lazyvalidation.StringMatch(`^(r-[a-z0-9]{4,32})$|^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32})$|^([0-9]{12})$`, "Target ID must be a valid root, organizational unit or account id."),
 				},
 			}
 		},

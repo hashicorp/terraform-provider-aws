@@ -81,7 +81,7 @@ Follow these steps:
         import {
           to = <resource-name>.example
           identity = {
-              "arn" = <example-arn-value>
+              arn = <example-arn-value>
           }
         }
 

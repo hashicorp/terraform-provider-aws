@@ -72,7 +72,7 @@ func resourceMesh() *schema.Resource {
 				},
 				"spec":            resourceMeshSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

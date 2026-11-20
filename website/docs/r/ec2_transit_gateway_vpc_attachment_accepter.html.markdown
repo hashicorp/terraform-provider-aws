@@ -18,6 +18,8 @@ connection into management.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
   transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.example.id
@@ -28,7 +30,98 @@ resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
 }
 ```
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and attach a VPC in the second account to the Transit Gateway via the `aws_ec2_transit_gateway_vpc_attachment` and `aws_ec2_transit_gateway_vpc_attachment_accepter` resources can be found in [the `./examples/transit-gateway-cross-account-vpc-attachment` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/transit-gateway-cross-account-vpc-attachment).
+### Cross-Account Usage
+
+This example creates a Transit Gateway in one AWS account (the accepter), shares it with a second AWS account (the VPC owner) using Resource Access Manager (RAM), attaches a VPC in the second account to the Transit Gateway, and accepts the attachment in the first account.
+
+~> **Note:** This example requires both AWS accounts to be in the same AWS Organization with [RAM sharing with AWS Organizations enabled](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs). For accounts outside the Organization, set `allow_external_principals = true` on the `aws_ram_resource_share`, accept the RAM invitation in the VPC owner's account with the [`aws_ram_resource_share_accepter` resource](/docs/providers/aws/r/ram_resource_share_accepter.html), and add the accepter to the attachment's `depends_on`.
+
+```terraform
+provider "aws" {
+  # Accepter's (Transit Gateway owner's) credentials.
+}
+
+provider "aws" {
+  alias = "vpc_owner"
+
+  # VPC owner's credentials.
+}
+
+data "aws_caller_identity" "vpc_owner" {
+  provider = aws.vpc_owner
+}
+
+data "aws_availability_zones" "available" {
+  provider = aws.vpc_owner
+
+  state = "available"
+}
+
+# Accepter's side: create and share the Transit Gateway.
+resource "aws_ec2_transit_gateway" "example" {
+  tags = {
+    Name = "example"
+  }
+}
+
+resource "aws_ram_resource_share" "example" {
+  name = "example"
+}
+
+resource "aws_ram_resource_association" "example" {
+  resource_arn       = aws_ec2_transit_gateway.example.arn
+  resource_share_arn = aws_ram_resource_share.example.arn
+}
+
+resource "aws_ram_principal_association" "example" {
+  principal          = data.aws_caller_identity.vpc_owner.account_id
+  resource_share_arn = aws_ram_resource_share.example.arn
+}
+
+# VPC owner's side: create the VPC and the attachment.
+resource "aws_vpc" "example" {
+  provider = aws.vpc_owner
+
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  provider = aws.vpc_owner
+
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.example.id
+}
+
+resource "aws_ec2_transit_gateway_vpc_attachment" "example" {
+  provider = aws.vpc_owner
+
+  subnet_ids         = [aws_subnet.example.id]
+  transit_gateway_id = aws_ec2_transit_gateway.example.id
+  vpc_id             = aws_vpc.example.id
+
+  # The Transit Gateway must be shared before the attachment can be created.
+  depends_on = [
+    aws_ram_principal_association.example,
+    aws_ram_resource_association.example,
+  ]
+
+  tags = {
+    Name = "example"
+    Side = "Creator"
+  }
+}
+
+# Accepter's side: accept the attachment.
+resource "aws_ec2_transit_gateway_vpc_attachment_accepter" "example" {
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.example.id
+
+  tags = {
+    Name = "example"
+    Side = "Accepter"
+  }
+}
+```
 
 ## Argument Reference
 

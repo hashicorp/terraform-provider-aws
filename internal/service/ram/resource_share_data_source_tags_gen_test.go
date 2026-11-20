@@ -8,7 +8,6 @@ package ram_test
 import (
 	"context"
 	"testing"
-	"unique"
 
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -227,8 +226,5 @@ func TestAccRAMResourceShareDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *te
 }
 
 func expectFullResourceShareDataSourceTags(ctx context.Context, resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfram.ServicePackage(ctx), resourceAddress, unique.Make(inttypes.ServicePackageResourceTags{
-		IdentifierAttribute: names.AttrARN,
-		ResourceType:        "ResourceShare",
-	}), knownValue)
+	return tfstatecheck.ExpectFullDataSourceTagsSpecTags(tfram.ServicePackage(ctx), resourceAddress, inttypes.ResourceTagsTypeAndAttribute("ResourceShare", names.AttrARN), knownValue)
 }

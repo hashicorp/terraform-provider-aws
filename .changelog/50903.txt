@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_devopsagent_asset_file
+```
+
+```release-note:new-list-resource
+aws_devopsagent_asset_file
+```

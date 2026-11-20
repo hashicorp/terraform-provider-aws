@@ -539,7 +539,7 @@ func resourceTable() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"ttl": {
 					Type:     schema.TypeList,
 					Optional: true,

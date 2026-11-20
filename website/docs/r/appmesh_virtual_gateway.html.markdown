@@ -180,7 +180,7 @@ This resource supports the following arguments:
 ### `port_mapping` Block
 
 * `port` - (Required) Port used for the port mapping.
-* `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`, `http2`, `tcp` and `grpc`.
+* `protocol` - (Required) Protocol used for the port mapping. Valid values are `http`, `http2`, and `grpc`.
 
 ### `connection_pool` Block
 

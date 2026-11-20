@@ -8,11 +8,11 @@ description: |-
 
 # Resource: aws_appautoscaling_policy
 
-Provides an Application AutoScaling Policy resource.
+Provides an Application Auto Scaling Policy resource.
 
 ## Example Usage
 
-### DynamoDB Table Autoscaling
+### DynamoDB Table AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "dynamodb_table_read_target" {
@@ -40,7 +40,7 @@ resource "aws_appautoscaling_policy" "dynamodb_table_read_policy" {
 }
 ```
 
-### ECS Service Autoscaling
+### ECS Service AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "ecs_target" {
@@ -86,7 +86,7 @@ resource "aws_ecs_service" "ecs_service" {
 }
 ```
 
-### Aurora Read Replica Autoscaling
+### Aurora Read Replica AutoScaling
 
 ```terraform
 resource "aws_appautoscaling_target" "replicas" {
@@ -425,8 +425,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `alarm_arns` - List of CloudWatch alarm ARNs associated with the scaling policy.
 * `arn` - ARN assigned by AWS to the scaling policy.
-* `name` - Scaling policy's name.
-* `policy_type` - Scaling policy's type.
 
 ## Import
 
@@ -462,7 +460,7 @@ resource "aws_appautoscaling_policy" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application Auto Scaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
 ```terraform
 import {
@@ -471,7 +469,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+Using `terraform import`, import Application Auto Scaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
 ```console
 % terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name

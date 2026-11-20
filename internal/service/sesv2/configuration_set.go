@@ -130,7 +130,7 @@ func resourceConfigurationSet() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tracking_options": {
 					Type:     schema.TypeList,
 					Optional: true,

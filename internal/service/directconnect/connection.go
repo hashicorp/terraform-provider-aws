@@ -107,7 +107,7 @@ func resourceConnection() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -239,6 +239,7 @@ func resourceConnection() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
+				"rate_limiter_status": rateLimiterStatusSchema(),
 				names.AttrSkipDestroy: {
 					Type:     schema.TypeBool,
 					Default:  false,
@@ -249,12 +250,16 @@ func resourceConnection() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
 			}
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
 }
@@ -332,6 +337,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta an
 	}
 	d.Set(names.AttrState, connection.ConnectionState)
 	d.Set("vlan_id", connection.Vlan)
+	d.Set("rate_limiter_status", flattenRateLimiterStatus(connection.RateLimiterStatus))
 
 	return diags
 }
@@ -352,7 +358,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
+		if err := waitConnectionConfirmed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -480,4 +486,49 @@ func waitConnectionDeleted(ctx context.Context, conn *directconnect.Client, id s
 	}
 
 	return nil, err
+}
+
+func rateLimiterStatusSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"in_use": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"max_allowed": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"remaining": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"total_bandwidth": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenRateLimiterStatus(apiObject *awstypes.RateLimiterStatus) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"max_allowed": int(apiObject.MaxAllowed),
+		"in_use":      int(apiObject.InUse),
+		"remaining":   int(apiObject.Remaining),
+	}
+
+	if v := apiObject.TotalBandwidth; v != nil {
+		tfMap["total_bandwidth"] = aws.ToString(v)
+	}
+
+	return []any{tfMap}
 }

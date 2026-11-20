@@ -4,9 +4,6 @@
 package batch
 
 import (
-	_ "unsafe" // Required for go:linkname
-
-	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
@@ -85,11 +82,78 @@ func expandJobNodeProperties(tfString string) (*awstypes.NodeProperties, error) 
 	return apiObject, nil
 }
 
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeNodeProperties github.com/aws/aws-sdk-go-v2/service/batch.awsRestjson1_serializeDocumentNodeProperties
-func serializeNodeProperties(v *awstypes.NodeProperties, value smithyjson.Value) error
+func serializeNodeProperties(v *awstypes.NodeProperties, value smithyjson.Value) error {
+	o := value.Object()
+	defer o.Close()
+
+	if v.MainNode != nil {
+		o.Key("mainNode").Integer(*v.MainNode)
+	}
+	if v.NodeRangeProperties != nil {
+		a := o.Key("nodeRangeProperties").Array()
+		for _, node := range v.NodeRangeProperties {
+			if err := serializeNodeRangeProperty(&node, a.Value()); err != nil {
+				return err
+			}
+		}
+		a.Close()
+	}
+	if v.NumNodes != nil {
+		o.Key("numNodes").Integer(*v.NumNodes)
+	}
+
+	return nil
+}
+
+func serializeNodeRangeProperty(v *awstypes.NodeRangeProperty, value smithyjson.Value) error {
+	o := value.Object()
+	defer o.Close()
+
+	if v.ConsumableResourceProperties != nil {
+		serializeConsumableResourceProperties(v.ConsumableResourceProperties, o.Key("consumableResourceProperties"))
+	}
+	if v.Container != nil {
+		if err := serializeContainerProperties(v.Container, o.Key("container")); err != nil {
+			return err
+		}
+	}
+	if v.EcsProperties != nil {
+		if err := serializeECSPProperties(v.EcsProperties, o.Key("ecsProperties")); err != nil {
+			return err
+		}
+	}
+	if v.EksProperties != nil {
+		serializeEKSProperties(v.EksProperties, o.Key("eksProperties"))
+	}
+	if v.InstanceTypes != nil {
+		serializeStringList(v.InstanceTypes, o.Key("instanceTypes"))
+	}
+	if v.TargetNodes != nil {
+		o.Key("targetNodes").String(*v.TargetNodes)
+	}
+
+	return nil
+}
+
+func serializeConsumableResourceProperties(v *awstypes.ConsumableResourceProperties, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	if v.ConsumableResourceList != nil {
+		a := o.Key("consumableResourceList").Array()
+		for _, resource := range v.ConsumableResourceList {
+			r := a.Value().Object()
+			if resource.ConsumableResource != nil {
+				r.Key("consumableResource").String(*resource.ConsumableResource)
+			}
+			if resource.Quantity != nil {
+				r.Key("quantity").Long(*resource.Quantity)
+			}
+			r.Close()
+		}
+		a.Close()
+	}
+}
 
 func flattenNodeProperties(apiObject *awstypes.NodeProperties) (string, error) {
 	if apiObject == nil {

@@ -161,16 +161,26 @@ The `tags_all` attribute contains a union of the tags set directly on the resour
                 return map[string]*schema.Schema{
                     /* ... other configuration ... */
                     names.AttrTags:    tftags.TagsSchema(),
-                    names.AttrTagsAll: tftags.TagsSchemaComputed(),
+                    names.AttrTagsAll: tftags.TagsSchemaComputedOnly(),
                 },
             }
         }
     }
     ```
 
+For data sources, use `tftags.TagsAttributeComputedOnly()` (Plugin Framework) or `tftags.TagsSchemaComputedOnly()` (Plugin SDK V2) for `tags`.
+Both are Computed only.
+Use `tftags.TagsSchemaOptionalComputed()` only when the data source's Read uses the configured `tags` to find the result, for example as EC2 tag filters.
+Document `tags` under Argument Reference only in that case.
+
+Don't use `tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly()` in new code.
+It was named `tftags.TagsSchemaComputed()`, which suggested Computed only, but it was Optional+Computed.
+Existing resource `tags_all` and data source `tags` that Read doesn't use were built with it by mistake.
+They now warn when configured, and a future version will make them Computed only ([#50581](https://github.com/hashicorp/terraform-provider-aws/issues/50581)).
+
 ### Transparent Tagging
 
-All service that support tagging use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
+All services that support tagging use a facility we call _transparent_ (or _implicit_) _tagging_, where the majority of resource tagging functionality is implemented using code located in the provider's runtime packages (see `internal/provider/intercept.go` and `internal/provider/fwprovider/intercept.go` for details) and not in the resource's CRUD handler functions. Resource implementers opt-in to transparent tagging by adding an _annotation_ (a specially formatted Go comment) to the resource's factory function (similar to the [resource self-registration mechanism](add-a-new-resource.md)).
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -569,5 +579,5 @@ In the resource documentation (e.g., `website/docs/r/service_example.html.markdo
 In the resource documentation (e.g., `website/docs/r/service_example.html.markdown`), add the following to the attribute reference:
 
 ```markdown
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 ```

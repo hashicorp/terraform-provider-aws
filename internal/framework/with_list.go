@@ -134,7 +134,7 @@ func walkStructSetZeroAttrNull(ctx context.Context, value reflect.Value, diags *
 			continue
 		}
 
-		if attrValue, ok := field.Interface().(attr.Value); ok {
+		if attrValue, ok := reflect.TypeAssert[attr.Value](field); ok {
 			if field.IsZero() {
 				nullValue, d := fwtypes.NullValueOf(ctx, attrValue)
 				if d.HasError() {

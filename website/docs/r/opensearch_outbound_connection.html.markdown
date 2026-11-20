@@ -71,7 +71,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the connection.
+* `id` - The ID of the connection.
 * `connection_status` - Status of the connection request.
 
 `connection_properties` block exports the following:
@@ -82,8 +82,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5m`)
-* `delete` - (Default `5m`)
+* `create` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

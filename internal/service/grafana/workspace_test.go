@@ -687,7 +687,7 @@ func testAccWorkspace_networkAccess(t *testing.T) {
 
 func testAccWorkspace_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 awstypes.WorkspaceDescription
+	var v awstypes.WorkspaceDescription
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_grafana_workspace.test"
 
@@ -698,10 +698,10 @@ func testAccWorkspace_version(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_version(rName, "8.4"),
+				Config: testAccWorkspaceConfig_version(rName, "13.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, t, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "grafana_version", "8.4"),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "grafana_version", "13.2"),
 				),
 			},
 			{
@@ -709,20 +709,35 @@ func testAccWorkspace_version(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
+	})
+}
+
+func testAccWorkspace_versionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 awstypes.WorkspaceDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_grafana_workspace.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.GrafanaEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceConfig_version(rName, "9.4"),
+				Config: testAccWorkspaceConfig_versionUpgrade(rName, "10.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, t, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "grafana_version", "9.4"),
-					testAccCheckWorkspaceNotRecreated(&v2, &v1),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, "grafana_version", "10.4"),
 				),
 			},
 			{
-				Config: testAccWorkspaceConfig_version(rName, "10.4"),
+				Config: testAccWorkspaceConfig_versionUpgrade(rName, "12.4"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(ctx, t, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "grafana_version", "10.4"),
-					testAccCheckWorkspaceNotRecreated(&v3, &v2),
+					testAccCheckWorkspaceExists(ctx, t, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "grafana_version", "12.4"),
+					testAccCheckWorkspaceNotRecreated(&v2, &v1),
 				),
 			},
 		},
@@ -1109,6 +1124,29 @@ resource "aws_grafana_workspace" "test" {
   permission_type          = "SERVICE_MANAGED"
   role_arn                 = aws_iam_role.test.arn
   grafana_version          = %[1]q
+}
+`, version))
+}
+
+func testAccWorkspaceConfig_versionUpgrade(rName, version string) string {
+	return acctest.ConfigCompose(testAccWorkspaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_grafana_workspace" "test" {
+  account_access_type      = "CURRENT_ACCOUNT"
+  authentication_providers = ["SAML"]
+  permission_type          = "SERVICE_MANAGED"
+  role_arn                 = aws_iam_role.test.arn
+  grafana_version          = %[1]q
+
+  # Upgrading to v12 and later requires Grafana alerting to already be enabled.
+  # pluginAdminEnabled is returned by the API, so it is set here to keep the plan empty.
+  configuration = jsonencode({
+    plugins = {
+      pluginAdminEnabled = false
+    }
+    unifiedAlerting = {
+      enabled = true
+    }
+  })
 }
 `, version))
 }

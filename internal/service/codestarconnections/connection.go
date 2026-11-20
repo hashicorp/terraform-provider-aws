@@ -68,7 +68,7 @@ func resourceConnection() *schema.Resource {
 					ConflictsWith:    []string{"host_arn"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

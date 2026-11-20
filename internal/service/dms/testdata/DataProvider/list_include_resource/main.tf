@@ -1,0 +1,40 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_dms_data_provider" "test" {
+  count = var.resource_count
+
+  name        = "${var.rName}-${count.index}"
+  description = "example description"
+  engine      = "postgres"
+  virtual     = false
+
+  settings {
+    postgresql_settings {
+      database_name = "example"
+      port          = 5432
+      server_name   = "${var.rName}-${count.index}.example.com"
+      ssl_mode      = "none"
+    }
+  }
+
+  tags = var.resource_tags
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource"
+  type        = map(string)
+  nullable    = false
+}

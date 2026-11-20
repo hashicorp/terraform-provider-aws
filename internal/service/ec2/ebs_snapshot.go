@@ -94,7 +94,7 @@ func resourceEBSSnapshot() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(enum.Slice(append(awstypes.TargetStorageTier.Values(""), targetStorageTierStandard)...), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"temporary_restore_days": {
 					Type:     schema.TypeInt,
 					Optional: true,

@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 * `posix_user` - Single element list containing operating system user and group applied to all file system requests made using the access point.
     * `gid` - Group ID
     * `secondary_gids` - Secondary group IDs
-    * `uid` - User Id
+    * `uid` - User ID
 * `root_directory`- Single element list containing information on the directory on the Amazon EFS file system that the access point provides access to.
     * `creation_info` - Single element list containing information on the creation permissions of the directory
         * `owner_gid` - POSIX owner group ID

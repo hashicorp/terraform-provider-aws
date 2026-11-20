@@ -7,17 +7,17 @@ import (
 	"context"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 )
 
 var validPolicyPathFramework = stringvalidator.All([]validator.String{
 	stringvalidator.LengthBetween(1, 512),
 	pathBeginsAndEndsWithSlashValidator{},
 	pathContainsNoConsecutiveSlashesValidator{},
-	stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9\.,\+@=_/-]*$`), "value must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -"),
+	lazystringvalidator.RegexMatches(`^[A-Za-z0-9\.,\+@=_/-]*$`, "value must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -"),
 }...)
 
 var _ validator.String = pathBeginsAndEndsWithSlashValidator{}

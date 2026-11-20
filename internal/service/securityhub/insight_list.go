@@ -36,14 +36,6 @@ type insightListResource struct {
 func (l *insightListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().SecurityHubClient(ctx)
 
-	var query listInsightModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input securityhub.GetInsightsInput
 		for item, err := range listInsights(ctx, conn, &input) {
@@ -84,10 +76,6 @@ func (l *insightListResource) List(ctx context.Context, request list.ListRequest
 			}
 		}
 	}
-}
-
-type listInsightModel struct {
-	framework.WithRegionModel
 }
 
 func listInsights(ctx context.Context, conn *securityhub.Client, input *securityhub.GetInsightsInput) iter.Seq2[awstypes.Insight, error] {

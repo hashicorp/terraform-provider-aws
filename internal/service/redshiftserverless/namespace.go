@@ -133,7 +133,7 @@ func resourceNamespace() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
@@ -410,10 +410,6 @@ func waitNamespaceUpdated(ctx context.Context, conn *redshiftserverless.Client, 
 	return nil, err
 }
 
-var (
-	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
-)
-
 func flattenNamespaceIAMRoles(iamRoles []string) []string {
 	var tfList []string
 
@@ -424,7 +420,7 @@ func flattenNamespaceIAMRoles(iamRoles []string) []string {
 		}
 
 		// e.g. "IamRole(applyStatus=in-sync, iamRoleArn=arn:aws:iam::123456789012:role/service-role/test)"
-		if m := reIAMRole.FindStringSubmatch(iamRole); len(m) > 0 {
+		if m := regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`).FindStringSubmatch(iamRole); len(m) > 0 {
 			var key string
 			s := m[1]
 			for s != "" {

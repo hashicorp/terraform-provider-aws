@@ -1,0 +1,23 @@
+```release-note:enhancement
+resource/aws_dx_hosted_private_virtual_interface: Add `bgp_asn_long` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_public_virtual_interface: Add `bgp_asn_long` argument
+```
+
+```release-note:enhancement
+resource/aws_dx_hosted_transit_virtual_interface: Add `bgp_asn_long` argument
+```
+
+```release-note:note
+resource/aws_dx_hosted_private_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```
+
+```release-note:note
+resource/aws_dx_hosted_public_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```
+
+```release-note:note
+resource/aws_dx_hosted_transit_virtual_interface: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

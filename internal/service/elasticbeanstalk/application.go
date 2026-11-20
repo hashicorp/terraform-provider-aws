@@ -81,7 +81,7 @@ func resourceApplication() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 100),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

@@ -35,7 +35,6 @@ This data source exports the following attributes in addition to the arguments a
 * `customer_id` - Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `description` - Description of the API Key.
 * `enabled` - Whether the API Key is enabled.
-* `id` - Set to the ID of the API Key.
 * `last_updated_date` - Date and time when the API Key was last updated.
 * `name` - Set to the name of the API Key.
 * `tags` - Map of tags for the resource.

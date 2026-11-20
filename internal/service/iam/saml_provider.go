@@ -62,7 +62,7 @@ func resourceSAMLProvider() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"valid_until": {
 					Type:     schema.TypeString,
 					Computed: true,

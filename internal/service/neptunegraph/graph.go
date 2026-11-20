@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptunegraph/types"
@@ -35,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -92,8 +92,7 @@ func (r *graphResource) Schema(ctx context.Context, request resource.SchemaReque
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("graph_name_prefix")),
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$"), ""),
+					lazystringvalidator.RegexMatches("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$", ""),
 				},
 			},
 			"graph_name_prefix": schema.StringAttribute{

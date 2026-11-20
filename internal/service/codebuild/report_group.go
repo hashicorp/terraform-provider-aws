@@ -108,7 +108,7 @@ func resourceReportGroup() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(2, 128),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrType: {
 					Type:             schema.TypeString,
 					Required:         true,
