@@ -354,6 +354,32 @@ func TestAccVPCFlowLog_coreNetworkAttachmentID(t *testing.T) {
 	})
 }
 
+// TestAccVPCFlowLog_CoreNetwork_attachmentAfterFlowLog checks that a Cloud WAN attachment created straight after
+// the first flow log on its core network doesn't fail with "Core network state is invalid".
+func TestAccVPCFlowLog_CoreNetwork_attachmentAfterFlowLog(t *testing.T) {
+	ctx := acctest.Context(t)
+	var flowLog awstypes.FlowLog
+	resourceName := "aws_flow_log.test"
+	attachmentResourceName := "aws_networkmanager_vpc_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsWest2RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFlowLogDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCFlowLogConfig_coreNetworkAttachmentAfterFlowLog(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(ctx, t, resourceName, &flowLog),
+					resource.TestCheckResourceAttr(attachmentResourceName, names.AttrState, "AVAILABLE"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCFlowLog_CoreNetwork_maxAggregationIntervalInvalid(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -1981,6 +2007,33 @@ resource "aws_flow_log" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName))
+}
+
+func testAccVPCFlowLogConfig_coreNetworkAttachmentAfterFlowLog(rName string) string {
+	return acctest.ConfigCompose(testAccVPCFlowLogConfig_baseCoreNetwork(rName), fmt.Sprintf(`
+resource "aws_flow_log" "test" {
+  core_network_id          = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  log_destination          = aws_s3_bucket.test.arn
+  log_destination_type     = "s3"
+  max_aggregation_interval = 60
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkmanager_vpc_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  subnet_arns     = aws_subnet.test[*].arn
+  vpc_arn         = aws_vpc.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_flow_log.test]
 }
 `, rName))
 }

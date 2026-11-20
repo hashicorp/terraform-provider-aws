@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -54,6 +56,10 @@ func resourceFlowLog() *schema.Resource {
 		ReadWithoutTimeout:   resourceLogFlowRead,
 		UpdateWithoutTimeout: resourceLogFlowUpdate,
 		DeleteWithoutTimeout: resourceLogFlowDelete,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -250,7 +256,8 @@ func flowLogCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) erro
 
 func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	awsClient := meta.(*conns.AWSClient)
+	conn := awsClient.EC2Client(ctx)
 
 	var resourceID string
 	var resourceType awstypes.FlowLogsResourceType
@@ -364,6 +371,21 @@ func resourceLogFlowCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	d.SetId(outputRaw.(*ec2.CreateFlowLogsOutput).FlowLogIds[0])
+
+	// The first flow log on a core network or edge moves the core network to UPDATING, and a flow log on an
+	// attachment moves that attachment to UPDATING. Network Manager rejects changes to either until it is
+	// AVAILABLE again, which takes under a minute. FlowLogStatus is no signal: it stays PROVISIONING for far longer.
+	switch resourceType {
+	case awstypes.FlowLogsResourceTypeCoreNetwork, awstypes.FlowLogsResourceTypeCoreNetworkEdge:
+		coreNetworkID, _, _ := strings.Cut(resourceID, "/")
+		if _, err := tfnetworkmanager.WaitCoreNetworkStable(ctx, awsClient.NetworkManagerClient(ctx), coreNetworkID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Flow Log (%s) core network (%s) available: %s", d.Id(), coreNetworkID, err)
+		}
+	case awstypes.FlowLogsResourceTypeCoreNetworkAttachment:
+		if _, err := tfnetworkmanager.WaitAttachmentStable(ctx, awsClient.NetworkManagerClient(ctx), resourceID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Flow Log (%s) core network attachment (%s) available: %s", d.Id(), resourceID, err)
+		}
+	}
 
 	return append(diags, resourceLogFlowRead(ctx, d, meta)...)
 }
