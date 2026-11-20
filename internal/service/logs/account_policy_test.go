@@ -10,9 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -105,6 +109,120 @@ func TestAccLogsAccountPolicy_basicDataProtection(t *testing.T) {
 				ImportState:                          true,
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "policy_name",
+			},
+		},
+	})
+}
+
+func TestAccLogsAccountPolicy_basicRetention(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSelectionCriteria := fmt.Sprintf("LogGroupNamePrefix = \"/%s\"", rName)
+	resourceName := "aws_cloudwatch_log_account_policy.test"
+	var accountPolicy types.AccountPolicy
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountPolicyConfig_basicRetention(rName, rSelectionCriteria, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_document"), tfknownvalue.JSONNoDiff(`{"retentionInDays": 90, "enforcementMode": "NEW_ONLY"}`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_type"), tfknownvalue.StringExact(types.PolicyTypeRetentionPolicy)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), tfknownvalue.StringExact(types.ScopeAll)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selection_criteria"), knownvalue.StringExact(rSelectionCriteria)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAccountPolicyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
+			},
+			{
+				Config: testAccAccountPolicyConfig_basicRetention(rName, rSelectionCriteria, 180),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_document"), tfknownvalue.JSONNoDiff(`{"retentionInDays": 180, "enforcementMode": "NEW_ONLY"}`)),
+				},
+			},
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLogsAccountPolicy_basicMetricExtraction(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rSelectionCriteria := fmt.Sprintf("LogGroupNamePrefix IN [\"/%s\"]", rName)
+	resourceName := "aws_cloudwatch_log_account_policy.test"
+	var accountPolicy types.AccountPolicy
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountPolicyConfig_basicMetricExtraction(rName, rSelectionCriteria),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAccountPolicyExists(ctx, t, resourceName, &accountPolicy),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_document"), tfknownvalue.JSONNoDiff(`{"EmbeddedMetricFormat": {"Status": "Disabled"}}`)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_name"), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("policy_type"), tfknownvalue.StringExact(types.PolicyTypeMetricExtractionPolicy)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrScope), tfknownvalue.StringExact(types.ScopeAll)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("selection_criteria"), knownvalue.StringExact(rSelectionCriteria)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAccountPolicyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "policy_name",
+			},
+			{
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -358,4 +476,37 @@ resource "aws_cloudwatch_log_account_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccAccountPolicyConfig_basicRetention(rName, rSelectionCriteria string, retentionInDays int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_account_policy" "test" {
+  policy_name = %[1]q
+  policy_type = "RETENTION_POLICY"
+
+  policy_document = jsonencode({
+    retentionInDays = %[3]d
+    enforcementMode = "NEW_ONLY"
+  })
+
+  selection_criteria = %[2]q
+}
+`, rName, rSelectionCriteria, retentionInDays)
+}
+
+func testAccAccountPolicyConfig_basicMetricExtraction(rName, rSelectionCriteria string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_account_policy" "test" {
+  policy_name = %[1]q
+  policy_type = "METRIC_EXTRACTION_POLICY"
+
+  policy_document = jsonencode({
+    EmbeddedMetricFormat = {
+      Status = "Disabled"
+    }
+  })
+
+  selection_criteria = %[2]q
+}
+`, rName, rSelectionCriteria)
 }
