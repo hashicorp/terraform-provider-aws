@@ -10,13 +10,19 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/athena/types"
+	"github.com/aws/aws-sdk-go-v2/service/s3tables"
+	s3tablestypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +46,7 @@ func RegisterSweepers() {
 	})
 
 	awsv2.Register("aws_athena_capacity_reservation", sweepCapacityReservations)
+	awsv2.Register("aws_athena_system_table_configuration", sweepSystemTableConfigurations)
 }
 
 func sweepCapacityReservations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -220,4 +227,91 @@ func sweepWorkGroups(region string) error {
 	}
 
 	return nil
+}
+
+func sweepSystemTableConfigurations(_ context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	return []sweep.Sweepable{systemTablesSweeper{client: client}}, nil
+}
+
+type systemTablesSweeper struct {
+	client *conns.AWSClient
+}
+
+func (s systemTablesSweeper) Delete(ctx context.Context, _ ...tfresource.OptionsFunc) error {
+	return resetSystemTables(ctx, s.client)
+}
+
+func systemTablesBucketARN(ctx context.Context, client *conns.AWSClient) string {
+	return client.RegionalARN(ctx, names.S3Tables, "bucket/"+systemTablesBucketName)
+}
+
+func findSystemTables(ctx context.Context, client *conns.AWSClient) ([]s3tablestypes.TableSummary, error) {
+	input := s3tables.ListTablesInput{
+		Namespace:      aws.String(systemTablesNamespace),
+		TableBucketARN: aws.String(systemTablesBucketARN(ctx, client)),
+	}
+	var output []s3tablestypes.TableSummary
+
+	pages := s3tables.NewListTablesPaginator(client.S3TablesClient(ctx), &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if errs.IsA[*s3tablestypes.NotFoundException](err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Tables...)
+	}
+
+	return output, nil
+}
+
+func deleteSystemTables(ctx context.Context, client *conns.AWSClient) error {
+	tables, err := findSystemTables(ctx, client)
+	if err != nil {
+		return err
+	}
+
+	conn := client.S3TablesClient(ctx)
+	bucketARN := systemTablesBucketARN(ctx, client)
+	for _, v := range tables {
+		input := s3tables.DeleteTableInput{
+			Name:           v.Name,
+			Namespace:      aws.String(systemTablesNamespace),
+			TableBucketARN: aws.String(bucketARN),
+		}
+		_, err := conn.DeleteTable(ctx, &input)
+		if errs.IsA[*s3tablestypes.NotFoundException](err) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("deleting S3 Tables table (%s): %w", aws.ToString(v.Name), err)
+		}
+	}
+
+	return nil
+}
+
+func deleteSystemTableConfigurations(ctx context.Context, client *conns.AWSClient) error {
+	conn := client.AthenaClient(ctx)
+	for _, name := range enum.EnumValues[awstypes.SystemTableName]() {
+		input := athena.DeleteSystemTableConfigurationInput{
+			TableName: name,
+		}
+		if _, err := conn.DeleteSystemTableConfiguration(ctx, &input); err != nil {
+			return fmt.Errorf("deleting Athena System Table Configuration (%s): %w", name, err)
+		}
+	}
+
+	return nil
+}
+
+func resetSystemTables(ctx context.Context, client *conns.AWSClient) error {
+	if err := deleteSystemTableConfigurations(ctx, client); err != nil {
+		return err
+	}
+
+	return deleteSystemTables(ctx, client)
 }
