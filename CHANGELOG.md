@@ -2,8 +2,12 @@
 
 NOTES:
 
+* data-source/aws_location_geofence_collection: Warn when `kms_key_id` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
 * provider: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
 * provider: Warn when `tags` is set in data source configurations that don't filter by tags. The value was never used. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* resource/aws_kinesis_firehose_delivery_stream: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* resource/aws_kinesis_stream: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* resource/aws_rds_cluster: Warn when `cluster_members` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
 * resource/aws_s3_object: `object_lock_retain_until_date` is now `Computed` because Amazon S3 assigns and advances the value for objects under an event hold. Removing the argument from configuration no longer plans a change. ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 
 FEATURES:
@@ -22,7 +26,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_db_instance: Add `replicate_source_db_cluster` attribute ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
 * data-source/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` attributes ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
+* resource/aws_db_instance: Add `replicate_source_db_cluster` argument to create a read replica from a Multi-AZ DB cluster ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
 * resource/aws_identitystore_group_membership: Add resource identity support ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
 * resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
