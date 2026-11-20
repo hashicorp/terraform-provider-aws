@@ -14,7 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaa/types"
+	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -306,7 +308,44 @@ func resourceEnvironment() *schema.Resource {
 				},
 			}
 		},
+
+		CustomizeDiff: customdiff.Sequence(
+			customdiff.ForceNewIf("airflow_version", func(ctx context.Context, d *schema.ResourceDiff, meta any) bool {
+				o, n := d.GetChange("airflow_version")
+				return airflowVersionChangeRequiresReplacement(o.(string), n.(string))
+			}),
+		),
 	}
+}
+
+// minAirflowVersionForInPlaceMajorUpgrade is the earliest version that MWAA can upgrade in place to a new major version.
+var minAirflowVersionForInPlaceMajorUpgrade = gversion.Must(gversion.NewVersion("2.11.0"))
+
+// airflowVersionChangeRequiresReplacement reports whether MWAA can't apply a change from version o to version n in place.
+//
+// https://docs.aws.amazon.com/mwaa/latest/userguide/upgrading-environment.html:
+//
+//	To perform a major version upgrade, for example from version 2.y.z to 3.y.z, you must first perform a minor upgrade
+//	to the latest Airflow 2.11.x version followed by upgrade to 3.x. Alternatively, to perform a major upgrade from
+//	Airflow 2.10.3 and below, you need to create a new environment and migrate your resources.
+//
+// Major upgrades from 1.x were never supported in place.
+func airflowVersionChangeRequiresReplacement(o, n string) bool {
+	oldVersion, err := gversion.NewVersion(o)
+	if err != nil {
+		return false
+	}
+
+	newVersion, err := gversion.NewVersion(n)
+	if err != nil {
+		return false
+	}
+
+	if oldVersion.Segments()[0] >= newVersion.Segments()[0] {
+		return false
+	}
+
+	return oldVersion.LessThan(minAirflowVersionForInPlaceMajorUpgrade)
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
