@@ -6,9 +6,8 @@ package tags
 import (
 	"sync"
 
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
 
 // TagsSchema returns the schema to use for configurable resource tags.
@@ -35,17 +34,9 @@ var TagsSchemaOptionalComputedWarnShouldBeComputedOnly = sync.OnceValue(func() *
 		Optional:         true,
 		Computed:         true,
 		Elem:             &schema.Schema{Type: schema.TypeString},
-		ValidateDiagFunc: warnComputedTagsConfigured,
+		ValidateDiagFunc: sdkv2.WarnShouldBeComputedOnly,
 	}
 })
-
-func warnComputedTagsConfigured(any, cty.Path) diag.Diagnostics {
-	return diag.Diagnostics{{
-		Severity: diag.Warning,
-		Summary:  "Argument is computed",
-		Detail:   "This attribute is meant to be set only by the provider. The provider accepted a configured value by mistake, and configuring it isn't supported. Remove it from your configuration. A future version of the provider will reject it.",
-	}}
-}
 
 // TagsSchemaComputedOnly returns the schema for tags that only the provider sets: new resource
 // `tags_all`, new data source `tags` that Read doesn't use, and tags nested in blocks users can't
