@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -51,6 +52,12 @@ func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request li
 				GroupName: aws.String(groupName),
 			}
 			for item, err := range listGroupPolicyAttachments(ctx, conn, &attachInput) {
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping", map[string]any{
+						logging.ResourceAttributeKey("group"): groupName,
+					})
+					break
+				}
 				if err != nil {
 					result := fwdiag.NewListResultErrorDiagnostic(err)
 					yield(result)

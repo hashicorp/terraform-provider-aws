@@ -11,7 +11,7 @@ description: |-
 `aws_vpc_ipam_pools` provides details about IPAM pools.
 
 This resource can prove useful when IPAM pools are created in another root
-module and you need the pool ids as input variables. For example, pools
+module and you need the pool IDs as input variables. For example, pools
 can be shared via RAM and used to create vpcs with CIDRs from that pool.
 
 ## Example Usage

@@ -65,7 +65,7 @@ This resource supports the following arguments:
 * `environment` - (Optional) Sets the environment variables in the container that the monitoring job runs. A list of key value pairs.
 * `image_uri` - (Required) The container image that the data quality monitoring job runs.
 * `post_analytics_processor_source_uri` - (Optional) An Amazon S3 URI to a script that is called after analysis has been performed. Applicable only for the built-in (first party) containers.
-* `record_preprocessor_source_uri` - (Optional) An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flatted json so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.
+* `record_preprocessor_source_uri` - (Optional) An Amazon S3 URI to a script that is called per row prior to running analysis. It can base64 decode the payload and convert it into a flatted JSON so that the built-in container can use the converted data. Applicable only for the built-in (first party) containers.
 
 ### data_quality_baseline_config
 
@@ -98,13 +98,13 @@ This resource supports the following arguments:
 * `csv` - (Optional) The CSV dataset used in the monitoring job. Fields are documented below.
 * `json` - (Optional) The JSON dataset used in the monitoring job. Fields are documented below.
 
-#### csv
+#### `csv`
 
 * `header` - (Optional) Indicates if the CSV data has a header.
 
-#### json
+#### `json`
 
-* `line` - (Optional) Indicates if the file should be read as a json object per line.
+* `line` - (Optional) Indicates if the file should be read as a JSON object per line.
 
 #### endpoint_input
 

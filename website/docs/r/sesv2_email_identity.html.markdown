@@ -85,7 +85,6 @@ The `dkim_signing_attributes` configuration block supports the following argumen
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Email Identity.
-* `dkim_signing_attributes` - Block containing DKIM authentication attributes. See [`dkim_signing_attributes` Block](#dkim_signing_attributes-block-1) below.
 * `identity_type` - Email identity type. Valid values: `EMAIL_ADDRESS`, `DOMAIN`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
 * `verification_status` - Verification status of the identity. One of `PENDING`, `SUCCESS`, `FAILED`, `TEMPORARY_FAILURE`, and `NOT_STARTED`.

@@ -170,7 +170,7 @@ func resourceLocationHDFS() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrURI: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -266,7 +266,7 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	subdirectory, err := subdirectoryFromLocationURI(uri)
+	_, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

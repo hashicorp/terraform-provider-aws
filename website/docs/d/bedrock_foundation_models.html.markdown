@@ -3,25 +3,25 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_foundation_models"
 description: |-
-  Terraform data source for managing AWS Bedrock Foundation Models.
+  Provides details about AWS Bedrock Foundation Models.
 ---
 
 # Data Source: aws_bedrock_foundation_models
 
-Terraform data source for managing AWS Bedrock Foundation Models.
+Provides details about AWS Bedrock Foundation Models.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_bedrock_foundation_models" "test" {}
+data "aws_bedrock_foundation_models" "example" {}
 ```
 
 ### Filter by Inference Type
 
 ```terraform
-data "aws_bedrock_foundation_models" "test" {
+data "aws_bedrock_foundation_models" "example" {
   by_inference_type = "ON_DEMAND"
 }
 ```
@@ -30,7 +30,7 @@ data "aws_bedrock_foundation_models" "test" {
 
 This data source supports the following arguments:
 
-* `by_customization_type` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`.
+* `by_customization_type` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`, `CONTINUED_PRE_TRAINING`, and `DISTILLATION`.
 * `by_inference_type` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.
 * `by_output_modality` - (Optional) Output modality to filter on. Valid values are `TEXT`, `IMAGE`, and `EMBEDDING`.
 * `by_provider` - (Optional) Model provider to filter on.

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -91,7 +92,17 @@ func (l *userListResource) List(ctx context.Context, request list.ListRequest, s
 			rd.Set(names.AttrName, name)
 
 			if request.IncludeResource {
-				resourceUserFlatten(&item, rd)
+				user, err := findUserByName(ctx, conn, name)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+
+				resourceUserFlatten(ctx, user, rd)
 			}
 
 			result.DisplayName = aws.ToString(item.UserName)

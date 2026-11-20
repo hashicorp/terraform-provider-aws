@@ -3,11 +3,11 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_guardrail_version"
 description: |-
-  Terraform resource for managing an AWS Bedrock Guardrail Version.
+  Manages an AWS Bedrock Guardrail Version.
 ---
 # Resource: aws_bedrock_guardrail_version
 
-Terraform resource for managing an AWS Bedrock Guardrail Version.
+Manages an AWS Bedrock Guardrail Version.
 
 ## Example Usage
 
@@ -16,7 +16,7 @@ Terraform resource for managing an AWS Bedrock Guardrail Version.
 ```terraform
 resource "aws_bedrock_guardrail_version" "example" {
   description   = "example"
-  guardrail_arn = aws_bedrock_guardrail.test.guardrail_arn
+  guardrail_arn = aws_bedrock_guardrail.example.guardrail_arn
   skip_destroy  = true
 }
 ```
@@ -31,7 +31,7 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the Guardrail version.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Guardrail. Default is `false`
+* `skip_destroy` - (Optional) Whether to retain the old version of a previously deployed Guardrail. Default is `false`.
 
 ## Attribute Reference
 
@@ -53,12 +53,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_bedrock_guardrail_version.example
-  id = "arn:aws:bedrock:us-west-2:123456789012:guardrail-id-12345678,1"
+  id = "arn:aws:bedrock:us-west-2:123456789012:guardrail/guardrail-id-12345678,1"
 }
 ```
 
-Using `terraform import`, import Amazon Bedrock Guardrail Version using using a comma-delimited string of `guardrail_arn` and `version`. For example:
+Using `terraform import`, import Amazon Bedrock Guardrail Version using a comma-delimited string of `guardrail_arn` and `version`. For example:
 
 ```console
-% terraform import aws_bedrock_guardrail_version.example arn:aws:bedrock:us-west-2:123456789012:guardrail-id-12345678,1
+% terraform import aws_bedrock_guardrail_version.example arn:aws:bedrock:us-west-2:123456789012:guardrail/guardrail-id-12345678,1
 ```

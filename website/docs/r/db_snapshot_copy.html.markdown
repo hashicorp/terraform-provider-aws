@@ -17,7 +17,7 @@ resource "aws_db_instance" "example" {
   allocated_storage = 10
   engine            = "mysql"
   engine_version    = "5.6.21"
-  instance_class    = "db.t2.micro"
+  instance_class    = "db.t4g.micro"
   db_name           = "baz"
   password          = "barbarbarbar"
   username          = "foo"
@@ -66,13 +66,9 @@ This resource exports the following attributes in addition to the arguments abov
 * `engine_version` - Version of the database engine.
 * `id` - Snapshot Identifier.
 * `iops` - Provisioned IOPS (I/O operations per second) value of the DB instance at the time of the snapshot.
-* `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
-* `option_group_name` - Provides the option group name for the DB snapshot.
 * `port` - Port that the database engine is listening on.
-* `shared_accounts` - List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `snapshot_type` - Type of the DB snapshot.
-* `source_db_snapshot_identifier` - DB snapshot ARN that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `source_region` - Region that the DB snapshot was created in or copied from.
 * `storage_type` - Storage type associated with DB snapshot.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

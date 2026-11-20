@@ -7,6 +7,8 @@ package identitystore
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -76,6 +78,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_identitystore_group_membership",
 			Name:     "Group Membership",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("identity_store_id", true),
+				inttypes.StringIdentityAttribute("membership_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      groupMembershipImportID{},
+			},
 		},
 		{
 			Factory:  resourceUser,
@@ -84,6 +94,21 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 	}
+}
+
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newGroupMembershipResourceAsListResource,
+			TypeName: "aws_identitystore_group_membership",
+			Name:     "Group Membership",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("identity_store_id", true),
+				inttypes.StringIdentityAttribute("membership_id", true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) ServicePackageName() string {

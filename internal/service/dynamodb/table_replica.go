@@ -95,8 +95,8 @@ func resourceTableReplica() *schema.Resource {
 					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
 				},
-				names.AttrTags:    tftags.TagsSchema(),         // direct to replica
-				names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
+				names.AttrTags:    tftags.TagsSchema(),                                         // direct to replica
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(), // direct to replica
 			}
 		},
 	}

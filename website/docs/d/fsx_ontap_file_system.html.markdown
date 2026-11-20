@@ -42,7 +42,6 @@ This data source exports the following attributes in addition to the arguments a
 * `endpoint_ip_address_range` - (Multi-AZ only) IP address range in which the endpoints to access your file system exist.
 * `endpoints` - Management and Intercluster FileSystemEndpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [`endpoints`](#endpoints-block) below.
 * `ha_pairs` - Number of HA pairs for the file system.
-* `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
 * `network_interface_ids` - IDs of the elastic network interfaces from which a specific file system is accessible.
 * `network_type` - Network type (`IPV4` or `DUAL`).

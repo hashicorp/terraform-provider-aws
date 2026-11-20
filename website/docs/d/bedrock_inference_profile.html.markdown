@@ -3,22 +3,22 @@ subcategory: "Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_inference_profile"
 description: |-
-  Terraform data source for managing an AWS Bedrock Inference Profile.
+  Provides details about an AWS Bedrock Inference Profile.
 ---
 
 # Data Source: aws_bedrock_inference_profile
 
-Terraform data source for managing an AWS Bedrock Inference Profile.
+Provides details about an AWS Bedrock Inference Profile.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_bedrock_inference_profiles" "test" {}
+data "aws_bedrock_inference_profiles" "example" {}
 
-data "aws_bedrock_inference_profile" "test" {
-  inference_profile_id = data.aws_bedrock_inference_profiles.test.inference_profile_summaries[0].inference_profile_id
+data "aws_bedrock_inference_profile" "example" {
+  inference_profile_id = data.aws_bedrock_inference_profiles.example.inference_profile_summaries[0].inference_profile_id
 }
 ```
 
@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 - `created_at` - Time at which the inference profile was created.
 - `description` - Description of the inference profile.
 - `inference_profile_arn` - ARN of the inference profile.
-- `inference_profile_name` - Unique identifier of the inference profile.
+- `inference_profile_name` - Name of the inference profile.
 - `models` - List of information about each model in the inference profile. See [`models`](#models-block).
 - `status` - Status of the inference profile. `ACTIVE` means that the inference profile is available to use.
 - `type` - Type of the inference profile. `SYSTEM_DEFINED` means that the inference profile is defined by Amazon Bedrock. `APPLICATION` means that the inference profile is defined by the user.

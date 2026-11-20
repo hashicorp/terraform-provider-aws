@@ -44,6 +44,81 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 }
 ```
 
+### Model Artifacts in Amazon S3
+
+This example uses a custom inference image from Amazon ECR and model artifacts uploaded to Amazon S3. The inference image must be pushed to the repository before the model is created, and the execution role must be able to pull the image and read the model artifacts.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  key    = "model.tar.gz"
+  source = "model.tar.gz"
+}
+
+resource "aws_ecr_repository" "example" {
+  name = "example"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name               = "example-sagemaker-model"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
+  }
+
+  statement {
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+    resources = [aws_ecr_repository.example.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  name   = "example-sagemaker-model"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
+}
+
+resource "aws_sagemaker_model" "example" {
+  name               = "example"
+  execution_role_arn = aws_iam_role.example.arn
+
+  primary_container {
+    image          = "${aws_ecr_repository.example.repository_url}:latest"
+    model_data_url = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
+  }
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -76,7 +151,7 @@ The `primary_container` and `container` block both support:
 ### Image Config
 
 * `repository_access_mode` - (Required) Whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. Allowed values are: `Platform` and `Vpc`.
-* `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
+* `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified `Vpc` as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
 
@@ -94,9 +169,14 @@ The `primary_container` and `container` block both support:
 #### S3 Data Source
 
 * `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
+* `hub_access_config` - (Optional) Configuration for deploying a model from a SageMaker JumpStart private hub. See [Hub Access Config](#hub-access-config).
 * `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block](#model-access-config). See [Model Access Config](#model-access-config).
 * `s3_data_type` - (Required) Type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
 * `s3_uri` - (Required) The S3 path of model data to deploy.
+
+#### Hub Access Config
+
+* `hub_content_arn` - (Required) Versioned ARN of the private hub content to deploy, such as the `versioned_hub_content_arn` of an [`aws_sagemaker_hub_content_reference`](sagemaker_hub_content_reference.html). `s3_uri` must match the hub content's hosting artifact URI.
 
 #### Model Access Config
 

@@ -102,7 +102,7 @@ func resourceTransitGatewayRouteTableAttachment() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_route_table_arn": {
 					Type:         schema.TypeString,
 					Required:     true,

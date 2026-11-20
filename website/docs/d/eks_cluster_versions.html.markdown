@@ -101,7 +101,7 @@ This data source exports the following attributes in addition to the arguments a
         * `pod_scheduling_rate_per_second` - Maximum pod scheduling rate per second supported by this tier.
         * `cluster_database_size_gb` - Maximum cluster database size in GB supported by this tier.
         * `control_plane_component_config_overrides` - Control plane component configuration overrides specific to this tier (same structure as `control_plane_component_config`).
-    * `default_platform_version` - Default eks platform version for the cluster version.
+    * `default_platform_version` - Default EKS platform version for the cluster version.
     * `default_version` - Default Kubernetes version for the cluster version.
     * `end_of_extended_support_date` - End of extended support date for the cluster version.
     * `end_of_standard_support_date` - End of standard support date for the cluster version.

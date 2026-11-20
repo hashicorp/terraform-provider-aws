@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -71,7 +71,7 @@ func resourceDocument() *schema.Resource {
 								Type:     schema.TypeString,
 								Optional: true,
 								ValidateFunc: validation.All(
-									validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+									lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must contain only alphanumeric, underscore, hyphen, or period characters"),
 									validation.StringLenBetween(3, 128),
 								),
 							},
@@ -135,7 +135,7 @@ func resourceDocument() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+$`, "must contain only alphanumeric, underscore, hyphen, or period characters"),
 						validation.StringLenBetween(3, 128),
 					),
 				},
@@ -188,12 +188,12 @@ func resourceDocument() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_type": {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^\/[\w\.\-\:\/]*$`), "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
+						lazyvalidation.StringMatch(`^\/[\w\.\-\:\/]*$`, "must contain a forward slash optionally followed by a resource type such as AWS::EC2::Instance"),
 						validation.StringLenBetween(1, 200),
 					),
 				},
@@ -201,7 +201,7 @@ func resourceDocument() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{3,128}$`, "must contain only alphanumeric, underscore, hyphen, or period characters"),
 						validation.StringLenBetween(3, 128),
 					),
 				},
@@ -712,6 +712,18 @@ func resourceDocumentFlatten(ctx context.Context, conn *ssm.Client, d *schema.Re
 		}
 
 		output, err := conn.DescribeDocumentPermission(ctx, input)
+
+		// Documents shared via AWS RAM will always return a 4xx error. Fall back
+		// by setting permissions to nil.
+		//
+		// > After you migrate a document, you manage sharing for that document through AWS RAM.
+		// > The ModifyDocumentPermission and DescribeDocumentPermission API operations return
+		// > a 4xx error for a migrated document.
+		//
+		// Ref: https://docs.aws.amazon.com/systems-manager/latest/userguide/documents-ssm-sharing.html#ssm-share-using-ram
+		if errs.IsA[*awstypes.InvalidDocumentOperation](err) {
+			output, err = &ssm.DescribeDocumentPermissionOutput{}, nil
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading SSM Document (%s) permissions: %s", d.Id(), err)

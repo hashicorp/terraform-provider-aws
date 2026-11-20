@@ -16,6 +16,6 @@ import (
 
 {{ range .Services }}
 func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoPackage }}.Client {
-	return errs.Must(client[*{{ .GoPackage }}.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
+	return errs.Must(c.client[*{{ .GoPackage }}.Client](ctx, names.{{ .ProviderNameUpper }}, make(map[string]any)))
 }
 {{ end }}

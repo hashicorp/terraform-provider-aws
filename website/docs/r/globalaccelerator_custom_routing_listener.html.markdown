@@ -40,17 +40,18 @@ resource "aws_globalaccelerator_custom_routing_listener" "example" {
 This resource supports the following arguments:
 
 * `accelerator_arn` - (Required) ARN of a custom routing accelerator.
-* `port_range` - (Optional) The list of port ranges for the connections from clients to the accelerator. Fields documented below.
+* `port_range` - (Optional) Port ranges for the connections from clients to the accelerator. See [`port_range`](#port_range-block) below.
 
-`port_range` supports the following arguments:
+### `port_range` Block
 
-* `from_port` - (Optional) The first port in the range of ports, inclusive.
-* `to_port` - (Optional) The last port in the range of ports, inclusive.
+* `from_port` - (Optional) First port in the range of ports, inclusive.
+* `to_port` - (Optional) Last port in the range of ports, inclusive.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the custom routing listener.
 * `id` - ARN of the custom routing listener.
 
 ## Timeouts

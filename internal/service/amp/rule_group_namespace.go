@@ -56,7 +56,7 @@ func resourceRuleGroupNamespace() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"workspace_id": {
 					Type:     schema.TypeString,
 					Required: true,

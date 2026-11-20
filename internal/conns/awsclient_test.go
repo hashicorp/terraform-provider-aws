@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	s3_types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
@@ -594,6 +595,76 @@ func TestAWSClientRegionalARNWithRegion(t *testing.T) { // nosemgrep:ci.aws-in-f
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientS3BucketLocationConstraint(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name                             string
+		AWSClient                        *AWSClient
+		ExpectedBucketLocationConstraint s3_types.BucketLocationConstraint
+	}{
+		{
+			Name: "native aws global region sends no constraint",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
+			},
+			ExpectedBucketLocationConstraint: "",
+		},
+		{
+			Name: "native aws regional region uses region",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "eu-west-1", //lintignore:AWSAT003
+				},
+			},
+			ExpectedBucketLocationConstraint: s3_types.BucketLocationConstraintEuWest1,
+		},
+		{
+			Name: "s3-compatible substituted region uses original bare constraint",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
+				s3OriginalRegion: ":region-ha-premium",
+			},
+			ExpectedBucketLocationConstraint: s3_types.BucketLocationConstraint(":region-ha-premium"),
+		},
+		{
+			Name: "s3-compatible substituted region uses original prefixed constraint",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
+				s3OriginalRegion: "ceph-objectstore-region1:region-ha-premium",
+			},
+			ExpectedBucketLocationConstraint: s3_types.BucketLocationConstraint("ceph-objectstore-region1:region-ha-premium"),
+		},
+		{
+			Name: "s3-compatible original global region sends no constraint",
+			AWSClient: &AWSClient{
+				awsConfig: &aws.Config{
+					Region: "us-east-1", //lintignore:AWSAT003
+				},
+				s3OriginalRegion: "us-east-1", //lintignore:AWSAT003
+			},
+			ExpectedBucketLocationConstraint: "",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := testCase.AWSClient.S3BucketLocationConstraint(ctx), testCase.ExpectedBucketLocationConstraint; got != want {
+				t.Errorf("AWSClient.S3BucketLocationConstraint = %v, want = %v", got, want)
 			}
 		})
 	}

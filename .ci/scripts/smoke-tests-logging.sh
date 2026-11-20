@@ -28,9 +28,28 @@ SMOKE_TESTS_IAM=(
     TestAccIAMRole_Identity_basic
 )
 
-printf -v run_iam '%s|' "${SMOKE_TESTS_IAM[@]}"
+# Response contains long lines
+SMOKE_TESTS_S3=(
+    TestAccS3ObjectsDataSource_maxKeysLarge
+)
+
+# Response contains long lines
+SMOKE_TESTS_SSM=(
+    TestAccSSMResourceDataSync_basic
+    TestAccSSMResourceDataSync_Update_s3DestinationPrefix
+)
+
+SMOKE_TESTS=(
+    "${SMOKE_TESTS_IAM[@]}"
+    "${SMOKE_TESTS_S3[@]}"
+    "${SMOKE_TESTS_SSM[@]}"
+)
+
+printf -v run_tests '%s|' "${SMOKE_TESTS[@]}"
 
 TF_ACC=1 "${GO_BIN}" test \
     ./internal/service/iam/... \
+    ./internal/service/s3/... \
+    ./internal/service/ssm/... \
     -count 1 -timeout 60m -vet=off -buildvcs=false \
-    -run="${run_iam%|}"
+    -run="${run_tests%|}"

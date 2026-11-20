@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -39,6 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,7 +78,7 @@ func (r *resourceCloudVmCluster) Schema(ctx context.Context, req resource.Schema
 	diskRedundancyType := fwtypes.StringEnumType[odbtypes.DiskRedundancy]()
 	computeModelType := fwtypes.StringEnumType[odbtypes.ComputeModel]()
 	giVersionValidator := []validator.String{
-		stringvalidator.RegexMatches(regexache.MustCompile(MajorGiVersionPattern), "Gi version must be of the format 19.0.0.0"),
+		lazystringvalidator.RegexMatches(MajorGiVersionPattern, "Gi version must be of the format 19.0.0.0"),
 	}
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -774,7 +774,7 @@ func getMajorGiVersion(ctx context.Context, conn *odb.Client, arn *string, giVer
 		return inputGiVersion, nil
 	} else {
 		// This regexp based approach is for backward compatibility
-		giVersionMajor := strings.Split(*giVersionComputed, ".")[0]
+		giVersionMajor, _, _ := strings.Cut(*giVersionComputed, ".")
 		giVersionMajor = giVersionMajor + ".0.0.0"
 		regxGiVersionMajor := regexache.MustCompile(MajorGiVersionPattern)
 		if !regxGiVersionMajor.MatchString(giVersionMajor) {

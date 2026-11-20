@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
 * `enable_continuous_backup` - Whether AWS Backup creates continuous backups.
 * `lifecycle` - Lifecycle defining when a recovery point transitions to cold storage and when it expires. [See below](#lifecycle-block).
 * `recovery_point_tags` - Metadata that you can assign to help organize the resources that you create.
+* `rule_id` - Uniquely identifies a rule that is used to schedule the backup of a selection of resources.
 * `rule_name` - Display name of a backup rule.
 * `scan_action` - Configuration block(s) with malware scanning settings. [See below](#scan_action-block).
 * `schedule` - CRON expression specifying when AWS Backup initiates a backup job.

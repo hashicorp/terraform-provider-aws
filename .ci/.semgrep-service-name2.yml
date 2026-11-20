@@ -4291,6 +4291,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Pricing"
     severity: WARNING
+  - id: pricingplanmanager-in-func-name
+    languages:
+      - go
+    message: Do not use "PricingPlanManager" in func name inside pricingplanmanager package
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager"
+      exclude:
+        - "/internal/service/pricingplanmanager/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PricingPlanManager"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: pricingplanmanager-in-test-name
+    languages:
+      - go
+    message: Include "PricingPlanManager" in test name
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccPricingPlanManager"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: pricingplanmanager-in-const-name
+    languages:
+      - go
+    message: Do not use "PricingPlanManager" in const name inside pricingplanmanager package
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PricingPlanManager"
+    severity: WARNING
+  - id: pricingplanmanager-in-var-name
+    languages:
+      - go
+    message: Do not use "PricingPlanManager" in var name inside pricingplanmanager package
+    paths:
+      include:
+        - "/internal/service/pricingplanmanager"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)PricingPlanManager"
+    severity: WARNING
   - id: prometheus-in-func-name
     languages:
       - go

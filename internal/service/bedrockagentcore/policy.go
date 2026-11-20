@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -91,7 +91,7 @@ func (r *policyResource) Schema(ctx context.Context, request resource.SchemaRequ
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(12, 59),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_]*-[a-z0-9_]{10}$`), ""),
+					lazystringvalidator.RegexMatches(`^[A-Za-z][A-Za-z0-9_]*-[a-z0-9_]{10}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

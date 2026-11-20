@@ -198,7 +198,7 @@ func resourceDomainName() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.SecurityPolicy](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 

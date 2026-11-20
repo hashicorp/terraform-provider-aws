@@ -311,7 +311,7 @@ AWS documentation: [Amazon Cognito Authentication for Kibana](https://docs.aws.a
 
 ### log_publishing_options
 
-* `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
+* `cloudwatch_log_group_arn` - (Required) ARN of the CloudWatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Whether given log publishing option is enabled or not.
 * `log_type` - (Required) Type of Elasticsearch log. Valid values: `INDEX_SLOW_LOGS`, `SEARCH_SLOW_LOGS`, `ES_APPLICATION_LOGS`, `AUDIT_LOGS`.
 
@@ -343,7 +343,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the domain.
 * `domain_id` - Unique identifier for the domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
-* `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
+* `kibana_endpoint` - Domain-specific endpoint for kibana without HTTPS scheme.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.

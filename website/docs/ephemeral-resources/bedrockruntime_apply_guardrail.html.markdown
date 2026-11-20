@@ -88,7 +88,7 @@ This ephemeral resource exports the following attributes in addition to the argu
 * `action_reason` - Reason for the action, when returned by AWS.
 * `assessments` - List of policy assessment objects returned by the guardrail. Marked as sensitive. See [`assessments` Block](#assessments-block) below.
 * `guardrail_coverage` - Singleton list containing content coverage details returned by the guardrail. See [`guardrail_coverage` Block](#guardrail_coverage-block) below.
-* `output` - List of output text objects returned by the guardrail, such as a configured blocking message or redacted content. This is not an echo of the original input. See [`output` Block](#output-block) below.
+* `output` - List of output text objects returned by the guardrail, such as a configured blocking message or redacted content. This is not an echo of the original input. Marked as sensitive. See [`output` Block](#output-block) below.
 * `usage` - Singleton list containing policy units processed by the guardrail. See [`usage` Block](#usage-block) below.
 
 ### `assessments` Block

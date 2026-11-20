@@ -135,9 +135,10 @@ func resourceStream() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: sdkv2.WarnShouldBeComputedOnly,
 				},
 				"encryption_type": {
 					Type:             schema.TypeString,
@@ -202,7 +203,7 @@ func resourceStream() *schema.Resource {
 					DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"warm_throughput_mib_ps": {
 					Type:          schema.TypeInt,
 					Optional:      true,

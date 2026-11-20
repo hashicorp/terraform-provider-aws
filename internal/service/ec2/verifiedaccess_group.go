@@ -85,7 +85,7 @@ func resourceVerifiedAccessGroup() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"verifiedaccess_group_arn": {
 					Type:     schema.TypeString,
 					Computed: true,

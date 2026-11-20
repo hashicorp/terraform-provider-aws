@@ -3,11 +3,11 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_prompt"
 description: |-
-  Terraform resource for managing an AWS Bedrock Agents Prompt.
+  Manages an AWS Bedrock Agents Prompt.
 ---
 # Resource: aws_bedrockagent_prompt
 
-Terraform resource for managing an AWS Bedrock Agents Prompt.
+Manages an AWS Bedrock Agents Prompt.
 
 ## Example Usage
 
@@ -72,7 +72,7 @@ The following arguments are optional:
 
 ### `variant` Block
 
-* `additional_model_request_fields` - (Optional) Model-specific inference configurations that aren’t in the inferenceConfiguration field. To see model-specific inference parameters, see [Inference request parameters and response fields for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html).
+* `additional_model_request_fields` - (Optional) Model-specific inference configurations that aren’t in the `inference_configuration` block. To see model-specific inference parameters, see [Inference request parameters and response fields for foundation models](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters.html).
 * `gen_ai_resource` - (Optional) Generative AI resource with which to use the prompt. If this is not supplied, then a `model_id` must be defined. See [`gen_ai_resource` Block](#gen_ai_resource-block) for more information.
 * `inference_configuration` - (Optional) Inference configurations for the prompt variant. See [`inference_configuration` Block](#inference_configuration-block) for more information.
 * `metadata` - (Optional) List of objects, each containing a key-value pair that defines a metadata tag and value to attach to a prompt variant. See [`metadata` Block](#metadata-block) for more information.
@@ -83,7 +83,7 @@ The following arguments are optional:
 
 ### `gen_ai_resource` Block
 
-* `agent` - (Optional) Amazon Bedrock agent with which to use the prompt. See [`agent` Block](#agent-block) for more information.
+* `agent` - (Required) Amazon Bedrock agent with which to use the prompt. See [`agent` Block](#agent-block) for more information.
 
 ### `agent` Block
 
@@ -91,7 +91,7 @@ The following arguments are optional:
 
 ### `inference_configuration` Block
 
-* `text` - (Optional) Inference configurations for the prompt variant. See [`variant.inference_configuration.text` Block](#variantinference_configurationtext-block) for more information.
+* `text` - (Required) Inference configurations for the prompt variant. See [`variant.inference_configuration.text` Block](#variantinference_configurationtext-block) for more information.
 
 ### `variant.inference_configuration.text` Block
 
@@ -113,13 +113,13 @@ The following arguments are optional:
 ### `chat` Block
 
 * `input_variable` - (Optional) List of variables in the prompt template. See [`input_variable` Block](#input_variable-block) for more information.
-* `message` - (Optional) List of messages in the chat for the prompt. See [`message` Block](#message-block) for more information.
+* `message` - (Required) List of messages in the chat for the prompt. See [`message` Block](#message-block) for more information.
 * `system` - (Optional) List of system prompts to provide context to the model or to describe how it should behave. See [`system` Block](#system-block) for more information.
 * `tool_configuration` - (Optional) Configuration information for the tools that the model can use when generating a response. See [`tool_configuration` Block](#tool_configuration-block) for more information.
 
 ### `message` Block
 
-* `content` - (Required) Content for the message you pass to, or receive from a model. See [`content` Block](#content-block) for more information.
+* `content` - (Required) Content for the message you pass to, or receive from, a model. See [`content` Block](#content-block) for more information.
 * `role` - (Required) Role that the message belongs to.
 
 ### `content` Block

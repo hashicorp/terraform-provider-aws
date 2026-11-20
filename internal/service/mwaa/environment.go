@@ -278,7 +278,7 @@ func resourceEnvironment() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"webserver_access_mode": {
 					Type:             schema.TypeString,
 					Optional:         true,
