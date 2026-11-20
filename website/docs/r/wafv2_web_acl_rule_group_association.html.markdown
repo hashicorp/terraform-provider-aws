@@ -246,8 +246,8 @@ resource "aws_wafv2_web_acl_rule_group_association" "example" {
 
 The following arguments are required:
 
-* `rule_name` - (Required) Name of the rule to create in the Web ACL that references the rule group. Must be between 1 and 128 characters.
 * `priority` - (Required) Priority of the rule within the Web ACL. Rules are evaluated in order of priority, with lower numbers evaluated first.
+* `rule_name` - (Required) Name of the rule to create in the Web ACL that references the rule group. Must be between 1 and 128 characters.
 * `web_acl_arn` - (Required) ARN of the Web ACL to associate the Rule Group with.
 
 The following arguments are optional:
@@ -256,7 +256,7 @@ The following arguments are optional:
 * `override_action` - (Optional) Override action for the rule group. Valid values are `none` and `count`. Defaults to `none`. When set to `count`, the actions defined in the rule group rules are overridden to count matches instead of blocking or allowing requests.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rule_group_reference` - (Optional) Custom Rule Group reference configuration. One of `rule_group_reference` or `managed_rule_group` is required. Conflicts with `managed_rule_group`. [See below](#rule_group_reference).
-* `visibility_config` - (Optional) Defines and enables Amazon CloudWatch metrics and web request sample collection. [See below](#visibility_config).
+* `visibility_config` - (Optional) Configuration for Amazon CloudWatch metrics and web request sample collection. [See below](#visibility_config).
 
 ### visibility_config
 
@@ -279,8 +279,8 @@ The following arguments are optional:
 
 ### rule_action_override
 
-* `name` - (Required) Name of the rule to override within the rule group. Verify the name carefully. With managed rule groups, WAF silently ignores any override that uses an invalid rule name. With customer-owned rule groups, invalid rule names in your overrides will cause web ACL updates to fail. An invalid rule name is any name that doesn't exactly match the case-sensitive name of an existing rule in the rule group.
 * `action_to_use` - (Required) Action to use instead of the rule's original action. [See below](#action_to_use).
+* `name` - (Required) Name of the rule to override within the rule group. Verify the name carefully. With managed rule groups, WAF silently ignores any override that uses an invalid rule name. With customer-owned rule groups, invalid rule names in your overrides will cause web ACL updates to fail. An invalid rule name is any name that doesn't exactly match the case-sensitive name of an existing rule in the rule group.
 
 ### action_to_use
 
@@ -289,7 +289,7 @@ Exactly one of the following action blocks must be specified:
 * `allow` - (Optional) Allow the request. [See below](#allow).
 * `block` - (Optional) Block the request. [See below](#block).
 * `captcha` - (Optional) Require CAPTCHA verification. [See below](#captcha).
-* `challenge` - (Optional) Require challenge verification. [See below](#challenge).
+* `challenge` - (Optional) Require challenge verification. [See below](#action_to_usechallenge-block).
 * `count` - (Optional) Count the request without taking action. [See below](#count).
 
 ### allow
@@ -304,7 +304,7 @@ Exactly one of the following action blocks must be specified:
 
 * `custom_request_handling` - (Optional) Custom handling for CAPTCHA requests. [See below](#custom_request_handling).
 
-### challenge
+### `action_to_use.challenge` Block
 
 * `custom_request_handling` - (Optional) Custom handling for challenge requests. [See below](#custom_request_handling).
 
@@ -342,17 +342,17 @@ Exactly one of the following action blocks must be specified:
 ### aws_managed_rules_bot_control_rule_set
 
 * `enable_machine_learning` - (Optional) Applies only to the targeted inspection level. Determines whether to use machine learning (ML) to analyze your web traffic for bot-related activity. Defaults to `false`.
-* `inspection_level` - (Optional) Inspection level to use for the Bot Control rule group.
+* `inspection_level` - (Required) Inspection level to use for the Bot Control rule group.
 
 ### aws_managed_rules_acfp_rule_set
 
 * `creation_path` - (Required) Path of the account creation endpoint for your application. This is the page on your website that accepts the completed registration form for a new user. This page must accept POST requests.
 * `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `registration_page_path` - (Required) Path of the account registration endpoint for your application. This is the page on your website that presents the registration form to new users. This page must accept GET text/html requests.
-* `request_inspection` - (Optional) Criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. [See below](#request_inspection_acfp).
+* `request_inspection` - (Optional) Criteria for inspecting login requests, used by the ACFP rule group to validate credentials usage. [See below](#aws_managed_rules_acfp_rule_setrequest_inspection-block).
 * `response_inspection` - (Optional) Criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. [See below](#response_inspection).
 
-### request_inspection_acfp
+### `aws_managed_rules_acfp_rule_set.request_inspection` Block
 
 * `address_fields` - (Optional) Names of the fields in the request payload that contain your customer's primary physical address. [See below](#address_fields).
 * `email_field` - (Optional) Name of the field in the request payload that contains your customer's email. [See below](#email_field).
@@ -368,9 +368,9 @@ Exactly one of the following action blocks must be specified:
 
 ### client_side_action_config
 
-* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`. [See below](#challenge_config).
+* `challenge` - (Required) Configuration for the use of the `AWSManagedRulesAntiDDoSRuleSet` rules `ChallengeAllDuringEvent` and `ChallengeDDoSRequests`. [See below](#client_side_action_configchallenge-block).
 
-### challenge_config
+### `client_side_action_config.challenge` Block
 
 * `exempt_uri_regular_expression` - (Optional) Block for the list of the regular expressions to match against the web request URI, used to identify requests that can't handle a silent browser challenge. [See below](#exempt_uri_regular_expression).
 * `sensitivity` - (Optional) Sensitivity that the rule group rule ChallengeDDoSRequests uses when matching against the DDoS suspicion labeling on a request. Valid values are `LOW`, `MEDIUM` and `HIGH` (Default).
@@ -384,10 +384,10 @@ Exactly one of the following action blocks must be specified:
 
 * `enable_regex_in_path` - (Optional) Whether or not to allow the use of regular expressions in the login page path.
 * `login_path` - (Required) Path of the login endpoint for your application.
-* `request_inspection` - (Optional) Criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. [See below](#request_inspection).
+* `request_inspection` - (Optional) Criteria for inspecting login requests, used by the ATP rule group to validate credentials usage. [See below](#aws_managed_rules_atp_rule_setrequest_inspection-block).
 * `response_inspection` - (Optional) Criteria for inspecting responses to login requests, used by the ATP rule group to track login failure rates. Note that Response Inspection is available only on web ACLs that protect CloudFront distributions. [See below](#response_inspection).
 
-### request_inspection
+### `aws_managed_rules_atp_rule_set.request_inspection` Block
 
 * `password_field` - (Optional) Details about your login page password field. [See below](#password_field).
 * `payload_type` - (Required) Payload type for your login endpoint, either JSON or form encoded.
@@ -417,7 +417,7 @@ Exactly one of the following action blocks must be specified:
 
 * `body_contains` - (Optional) Configures inspection of the response body. [See below](#body_contains).
 * `header` - (Optional) Configures inspection of the response header. [See below](#header).
-* `json` - (Optional) Configures inspection of the response JSON. [See below](#json).
+* `json` - (Optional) Configures inspection of the response JSON. [See below](#json-block).
 * `status_code` - (Optional) Configures inspection of the response status code. [See below](#status_code).
 
 ### body_contains
@@ -431,16 +431,16 @@ Exactly one of the following action blocks must be specified:
 * `name` - (Required) Name of the header to match against. The name must be an exact match, including case.
 * `success_values` - (Required) Values in the response header with the specified name that indicate a successful login attempt.
 
-### JSON
+### `json` Block
 
-* `failure_strings` - (Required) Strings in the body of the response that indicate a failed login attempt.
+* `failure_values` - (Required) Values in the response's JSON that indicate a failed login attempt.
 * `identifier` - (Required) Identifier for the value to match against in the JSON.
-* `success_strings` - (Required) Strings in the body of the response that indicate a successful login attempt.
+* `success_values` - (Required) Values in the response's JSON that indicate a successful login attempt.
 
 ### status_code
 
-* `success_codes` (Required) Status codes in the response that indicate a successful login attempt.
-* `failure_codes` (Required) Status codes in the response that indicate a failed login attempt.
+* `failure_codes` - (Required) Status codes in the response that indicate a failed login attempt.
+* `success_codes` - (Required) Status codes in the response that indicate a successful login attempt.
 
 ## Attribute Reference
 

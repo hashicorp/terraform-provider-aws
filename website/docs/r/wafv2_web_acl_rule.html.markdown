@@ -444,9 +444,9 @@ One of the following action blocks must be specified:
 
 * `allow` - (Optional) Allow the request. See [Allow](#allow) below.
 * `block` - (Optional) Block the request. See [Block](#block) below.
-* `count` - (Optional) Count the request without blocking. See [Count](#count) below.
 * `captcha` - (Optional) Present a CAPTCHA challenge. See [Captcha](#captcha) below.
 * `challenge` - (Optional) Present a silent challenge. See [Challenge](#challenge) below.
+* `count` - (Optional) Count the request without blocking. See [Count](#count) below.
 
 #### Allow
 
@@ -479,8 +479,8 @@ One of the following action blocks must be specified:
 
 #### Custom Response
 
-* `response_code` - (Required) HTTP status code to return (200-599).
 * `custom_response_body_key` - (Optional) Key of a custom response body defined in the Web ACL.
+* `response_code` - (Required) HTTP status code to return (200-599).
 * `response_header` - (Optional) Custom headers to include in the response. See [Response Header](#response-header) below.
 
 #### Response Header
@@ -536,9 +536,9 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 #### Byte Match Statement
 
-* `search_string` - (Required) String value to search for within the request (1-200 characters).
-* `positional_constraint` - (Required) Area within the portion of the web request that you want WAF to search for `search_string`. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `positional_constraint` - (Required) Area within the portion of the web request that you want WAF to search for `search_string`. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
+* `search_string` - (Required) String value to search for within the request (1-200 characters).
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
 #### Geo Match Statement
@@ -570,10 +570,10 @@ Combines multiple statements using logical OR. At least one nested statement mus
 #### Managed Rule Group Statement
 
 * `name` - (Required) Name of the managed rule group.
-* `vendor_name` - (Required) Name of the managed rule group vendor (e.g., "AWS").
-* `version` - (Optional) Version of the managed rule group.
 * `rule_action_override` - (Optional) Override actions for specific rules within the managed rule group. See [Rule Action Override](#rule-action-override) below.
 * `scope_down_statement` - (Optional) Additional statement to narrow the scope of requests that the managed rule group evaluates. See [Scope Down Statement](#scope-down-statement) below.
+* `vendor_name` - (Required) Name of the managed rule group vendor (e.g., "AWS").
+* `version` - (Optional) Version of the managed rule group.
 
 #### Rule Group Reference Statement
 
@@ -584,8 +584,8 @@ Combines multiple statements using logical OR. At least one nested statement mus
 #### Size Constraint Statement
 
 * `comparison_operator` - (Required) Operator to use to compare the request part to the size setting. Valid values: `EQ`, `NE`, `LE`, `LT`, `GE`, `GT`.
-* `size` - (Required) Size, in bytes, to compare to the request part, after any transformations.
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `size` - (Required) Size, in bytes, to compare to the request part, after any transformations.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
 #### Regex Pattern Set Reference Statement
@@ -596,24 +596,24 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 #### Rate Based Statement
 
-* `limit` - (Required) Rate limit threshold (requests per evaluation window period).
-* `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Defaults to `IP`. Valid values: `IP`, `FORWARDED_IP`, `CUSTOM_KEYS`, `CONSTANT`.
+* `aggregate_key_type` - (Required) Setting that indicates how to aggregate the request counts. Valid values: `IP`, `FORWARDED_IP`, `CUSTOM_KEYS`, `CONSTANT`.
 * `custom_keys` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [Custom Keys](#custom-keys) below.
 * `evaluation_window_sec` - (Optional) Time window for which the rate limit applies, in seconds. Defaults to `300` (5 minutes). Valid values: `60`, `120`, `300`, `600`.
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header instead of using the web request origin. See [Forwarded IP Config](#forwarded-ip-config) below.
+* `limit` - (Required) Rate limit threshold (requests per evaluation window period).
 * `scope_down_statement` - (Optional) Additional statement to narrow the scope of requests that the rate-based rule evaluates. See [Scope Down Statement](#scope-down-statement) below.
 
 #### Regex Match Statement
 
-* `regex_string` - (Required) Regular expression pattern to match against the web request component.
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
+* `regex_string` - (Required) Regular expression pattern to match against the web request component.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
 #### SQL Injection Match Statement
 
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field-to-match) below.
-* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 * `sensitivity_level` - (Optional) Sensitivity level for detecting SQL injection attacks. Valid values: `HIGH`, `LOW`. Defaults to `LOW`. `HIGH` detects more attacks but might generate more false positives.
+* `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text-transformation) below.
 
 #### Cross-Site Scripting Match Statement
 
@@ -683,8 +683,8 @@ Exactly one of the following field to match blocks must be specified:
 Exactly one of the following must be specified:
 
 * `all` - (Optional) Inspect all cookies.
-* `included_cookies` - (Optional) List of cookie names to inspect.
 * `excluded_cookies` - (Optional) List of cookie names to exclude from inspection.
+* `included_cookies` - (Optional) List of cookie names to inspect.
 
 #### Header Order
 
@@ -701,8 +701,8 @@ Exactly one of the following must be specified:
 Exactly one of the following must be specified:
 
 * `all` - (Optional) Inspect all headers.
-* `included_headers` - (Optional) List of header names to inspect.
 * `excluded_headers` - (Optional) List of header names to exclude from inspection.
+* `included_headers` - (Optional) List of header names to inspect.
 
 #### JA3 Fingerprint
 
@@ -714,9 +714,9 @@ Exactly one of the following must be specified:
 
 #### JSON Body
 
+* `invalid_fallback_behavior` - (Optional) How to handle requests with invalid JSON body. Valid values: `EVALUATE_AS_STRING`, `MATCH`, `NO_MATCH`.
 * `match_pattern` - (Required) JSON content to inspect. See [JSON Body Match Pattern](#json-body-match-pattern) below.
 * `match_scope` - (Required) Parts of the JSON to inspect. Valid values: `ALL`, `KEY`, `VALUE`.
-* `invalid_fallback_behavior` - (Optional) How to handle requests with invalid JSON body. Valid values: `EVALUATE_AS_STRING`, `MATCH`, `NO_MATCH`.
 * `oversize_handling` - (Optional) How to handle requests with a body larger than the inspection limit. Valid values: `CONTINUE`, `MATCH`, `NO_MATCH`. Defaults to `CONTINUE`.
 
 #### JSON Body Match Pattern
@@ -745,8 +745,8 @@ Exactly one of the following must be specified:
 
 ### Rule Action Override
 
-* `name` - (Required) Name of the rule to override.
 * `action_to_use` - (Required) Override action to use for the rule. See [Action](#action) below.
+* `name` - (Required) Name of the rule to override.
 
 ### Scope Down Statement
 
