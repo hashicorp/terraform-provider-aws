@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_endpoint: Allow `secrets_manager_arn` to be a partial ARN or the friendly name of the Secrets Manager secret
+```
