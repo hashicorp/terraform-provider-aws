@@ -41,8 +41,8 @@ resource "aws_workspacesweb_user_access_logging_settings_association" "example" 
 
 The following arguments are required:
 
-* `user_access_logging_settings_arn` - (Required) ARN of the user access logging settings to associate with the portal. Forces replacement if changed.
 * `portal_arn` - (Required) ARN of the portal to associate with the user access logging settings. Forces replacement if changed.
+* `user_access_logging_settings_arn` - (Required) ARN of the user access logging settings to associate with the portal. Forces replacement if changed.
 
 The following arguments are optional:
 
