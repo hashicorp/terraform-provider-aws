@@ -8,6 +8,7 @@ var (
 	ResourceContainerAssociation                     = newContainerAssociationResource
 	ResourceFirewall                                 = resourceFirewall
 	ResourceFirewallPolicy                           = resourceFirewallPolicy
+	ResourceFirewallPolicyV2                         = newFirewallPolicyV2Resource
 	ResourceFirewallTransitGatewayAttachmentAccepter = newFirewallTransitGatewayAttachmentAccepterResource
 	ResourceLoggingConfiguration                     = resourceLoggingConfiguration
 	ResourceResourcePolicy                           = resourceResourcePolicy
@@ -18,6 +19,7 @@ var (
 	FindContainerAssociationByARN       = findContainerAssociationByARN
 	FindFirewallByARN                   = findFirewallByARN
 	FindFirewallPolicyByARN             = findFirewallPolicyByARN
+	FindFirewallPolicyV2ByARN           = findFirewallPolicyV2ByARN
 	FindLoggingConfigurationByARN       = findLoggingConfigurationByARN
 	FindResourcePolicyByARN             = findResourcePolicyByARN
 	FindRuleGroupByARN                  = findRuleGroupByARN

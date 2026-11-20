@@ -39,6 +39,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newFirewallPolicyV2Resource,
+			TypeName: "aws_networkfirewall_firewall_policy_v2",
+			Name:     "Firewall Policy V2",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newFirewallTransitGatewayAttachmentAccepterResource,
 			TypeName: "aws_networkfirewall_firewall_transit_gateway_attachment_accepter",
 			Name:     "Firewall Transit Gateway Attachment Accepter",
@@ -74,6 +85,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Tags:     inttypes.ResourceTagsAttribute("container_association_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("container_association_arn"),
+		},
+		{
+			Factory:  newFirewallPolicyV2ResourceAsListResource,
+			TypeName: "aws_networkfirewall_firewall_policy_v2",
+			Name:     "Firewall Policy V2",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 	})
 }
