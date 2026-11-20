@@ -63,6 +63,7 @@ This resource supports the following arguments:
 * `domain` - (Required) For custom domains, this is the fully-qualified domain name, such as auth.example.com. For Amazon Cognito prefix domains, this is the prefix alone, such as auth.
 * `user_pool_id` - (Required) The user pool ID.
 * `certificate_arn` - (Optional) The ARN of an ISSUED ACM certificate in us-east-1 for a custom domain.
+* `security_policy` - (Optional) The security policy for the custom domain. Defines the minimum TLS version and cipher suites that CloudFront uses when communicating with viewers (clients). Valid values: `TLS_V1`, `TLS_V1_2_2021`, `TLS_V1_3_2025`.
 * `managed_login_version` - (Optional) A version number that indicates the state of managed login for your domain. Valid values: `1` for hosted UI (classic), `2` for the newer managed login with the branding designer.
 
 ## Attribute Reference
