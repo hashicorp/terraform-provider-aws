@@ -21,7 +21,7 @@ import (
 
 func RegisterSweepers() {
 	awsv2.Register("aws_bedrockagentcore_agent_runtime", sweepAgentRuntimes, "aws_bedrockagentcore_agent_runtime_endpoint")
-	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints)
+	awsv2.Register("aws_bedrockagentcore_agent_runtime_endpoint", sweepAgentRuntimeEndpoints, "aws_bedrockagentcore_harness")
 	awsv2.Register("aws_bedrockagentcore_workload_identity", sweepWorkloadIdentities)
 	awsv2.Register("aws_bedrockagentcore_code_interpreter", sweepCodeInterpreters)
 	awsv2.Register("aws_bedrockagentcore_browser", sweepBrowsers)
@@ -338,6 +338,13 @@ func sweepMemories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepa
 		}
 
 		for _, v := range page.Memories {
+			if arn := aws.ToString(v.ManagedByResourceArn); arn != "" {
+				tflog.Info(ctx, "Skipping resource", map[string]any{
+					"managed_by": arn,
+					"memory_id":  aws.ToString(v.Id),
+				})
+				continue
+			}
 			sweepResources = append(sweepResources, framework.NewSweepResource(newMemoryResource, client,
 				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))),
 			)

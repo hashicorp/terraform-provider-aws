@@ -101,6 +101,10 @@ func dataSourceFunction() *schema.Resource {
 								Type:     schema.TypeInt,
 								Computed: true,
 							},
+							names.AttrKMSKeyARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							names.AttrRetentionPeriod: {
 								Type:     schema.TypeInt,
 								Computed: true,
@@ -255,7 +259,7 @@ func dataSourceFunction() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTimeout: {
 					Type:     schema.TypeInt,
 					Computed: true,

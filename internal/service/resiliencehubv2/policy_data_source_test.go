@@ -39,6 +39,7 @@ func TestAccResilienceHubV2PolicyDataSource_basic(t *testing.T) {
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrDescription), resourceName, tfjsonpath.New(names.AttrDescription), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrKMSKeyID), resourceName, tfjsonpath.New(names.AttrKMSKeyID), compare.ValuesSame()),
 					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrName), resourceName, tfjsonpath.New(names.AttrName), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("sharing_enabled"), resourceName, tfjsonpath.New("sharing_enabled"), compare.ValuesSame()),
 				},
 			},
 		},

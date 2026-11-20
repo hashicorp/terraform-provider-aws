@@ -12,6 +12,8 @@ Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
 ~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
 
+~> **NOTE:** WorkSpaces is available only in [certain Availability Zones](https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html) in each Region, identified by Availability Zone ID. Because Availability Zone names map to different Availability Zone IDs in each AWS account, use the `availability_zone_id` argument of the `aws_subnet` resource to place subnets in supported Availability Zones. The example below uses Availability Zone IDs supported in the `us-east-1` Region.
+
 ## Example Usage
 
 ```terraform
@@ -114,26 +116,26 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_subnet" "example_a" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1a"
-  cidr_block        = "10.0.0.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az2"
+  cidr_block           = "10.0.0.0/24"
 }
 
 resource "aws_subnet" "example_b" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1b"
-  cidr_block        = "10.0.1.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az4"
+  cidr_block           = "10.0.1.0/24"
 }
 resource "aws_subnet" "example_c" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1c"
-  cidr_block        = "10.0.2.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az4"
+  cidr_block           = "10.0.2.0/24"
 }
 
 resource "aws_subnet" "example_d" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1d"
-  cidr_block        = "10.0.3.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az6"
+  cidr_block           = "10.0.3.0/24"
 }
 ```
 
@@ -338,7 +340,7 @@ This resource supports the following arguments:
 
 -> **Note:** Once you specified `custom_security_group_id` or `default_ou`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
-* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
 * `default_ou` - (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
 * `enable_internet_access` - (Optional) Indicates whether internet access is enabled for your WorkSpaces.
 * `enable_maintenance_mode` - (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
@@ -369,7 +371,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces directory using the directory ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces directory using the directory ID. For example:
 
 ```terraform
 import {
@@ -378,7 +380,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Workspaces directory using the directory ID. For example:
+Using `terraform import`, import WorkSpaces directory using the directory ID. For example:
 
 ```console
 % terraform import aws_workspaces_directory.main d-4444444444

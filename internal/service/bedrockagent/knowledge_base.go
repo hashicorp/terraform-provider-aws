@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -41,6 +40,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -681,10 +681,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 																		names.AttrURI: schema.StringAttribute{
 																			Required: true,
 																			Validators: []validator.String{
-																				stringvalidator.RegexMatches(
-																					regexache.MustCompile(`^s3://[a-z0-9.-]+(/.*)?$`),
-																					"must be a valid S3 URI",
-																				),
+																				lazystringvalidator.RegexMatches(`^s3://[a-z0-9.-]+(/.*)?$`, "must be a valid S3 URI"),
 																			},
 																			PlanModifiers: []planmodifier.String{
 																				stringplanmodifier.RequiresReplace(),
@@ -908,10 +905,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 									"domain_endpoint": schema.StringAttribute{
 										Required: true,
 										Validators: []validator.String{
-											stringvalidator.RegexMatches(
-												regexache.MustCompile(`^https://.*$`),
-												"must be a valid HTTPS URL",
-											),
+											lazystringvalidator.RegexMatches(`^https://.*$`, "must be a valid HTTPS URL"),
 										},
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),

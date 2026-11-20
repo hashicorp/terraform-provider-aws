@@ -56,4 +56,4 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `ids` - List of all the experiment template ids found.
+* `ids` - List of all the experiment template IDs found.

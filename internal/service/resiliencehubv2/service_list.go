@@ -38,14 +38,6 @@ type serviceListResource struct {
 func (l *serviceListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ResilienceHubV2Client(ctx)
 
-	var query listServiceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input resiliencehubv2.ListServicesInput
 		for item, err := range listServices(ctx, conn, &input) {
@@ -96,10 +88,6 @@ func (l *serviceListResource) List(ctx context.Context, request list.ListRequest
 			}
 		}
 	}
-}
-
-type listServiceModel struct {
-	framework.WithRegionModel
 }
 
 func listServices(ctx context.Context, conn *resiliencehubv2.Client, input *resiliencehubv2.ListServicesInput, optFns ...func(*resiliencehubv2.Options)) iter.Seq2[awstypes.ServiceSummary, error] {

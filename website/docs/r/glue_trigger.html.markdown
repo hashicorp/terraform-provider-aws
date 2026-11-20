@@ -107,48 +107,48 @@ resource "aws_glue_trigger" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `actions` - (Required) List of actions initiated by this trigger when it fires. See [Actions](#actions) Below.
-* `description` - (Optional) A description of the new trigger.
+* `actions` - (Required) List of actions initiated by this trigger when it fires. See [`actions`](#actions-block) below.
+* `description` - (Optional) Description of the new trigger.
 * `enabled` - (Optional) Start the trigger. Defaults to `true`.
-* `name` - (Required) The name of the trigger.
-* `predicate` - (Optional) A predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. See [Predicate](#predicate) Below.
-* `schedule` - (Optional) A cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `event_batching_condition` - (Optional) Batch condition that must be met (specified number of events received or batch time window expired) before EventBridge event trigger fires. See [`event_batching_condition`](#event_batching_condition-block).
+* `name` - (Required) Name of the trigger.
+* `predicate` - (Optional) Predicate to specify when the new trigger should fire. Required when trigger type is `CONDITIONAL`. See [`predicate`](#predicate-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `schedule` - (Optional) Cron expression used to specify the schedule. [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html)
 * `start_on_creation` - (Optional) Set to true to start `SCHEDULED` and `CONDITIONAL` triggers when created. True is not supported for `ON_DEMAND` triggers.
-* `type` - (Required) The type of trigger. Valid values are `CONDITIONAL`, `EVENT`, `ON_DEMAND`, and `SCHEDULED`.
-* `workflow_name` - (Optional) A workflow to which the trigger should be associated to. Every workflow graph (DAG) needs a starting trigger (`ON_DEMAND` or `SCHEDULED` type) and can contain multiple additional `CONDITIONAL` triggers.
-* `event_batching_condition` - (Optional) Batch condition that must be met (specified number of events received or batch time window expired) before EventBridge event trigger fires. See [Event Batching Condition](#event-batching-condition).
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `type` - (Required) Type of trigger. Valid values are `CONDITIONAL`, `EVENT`, `ON_DEMAND`, and `SCHEDULED`.
+* `workflow_name` - (Optional) Workflow to which the trigger should be associated to. Every workflow graph (DAG) needs a starting trigger (`ON_DEMAND` or `SCHEDULED` type) and can contain multiple additional `CONDITIONAL` triggers.
 
-### Actions
+### `actions` Block
 
 * `arguments` - (Optional) Arguments to be passed to the job. You can specify arguments here that your own job-execution script consumes, as well as arguments that AWS Glue itself consumes.
-* `crawler_name` - (Optional) The name of the crawler to be executed. Conflicts with `job_name`.
-* `job_name` - (Optional) The name of a job to be executed. Conflicts with `crawler_name`.
-* `timeout` - (Optional) The job run timeout in minutes. It overrides the timeout value of the job.
-* `security_configuration` - (Optional) The name of the Security Configuration structure to be used with this action.
-* `notification_property` - (Optional) Specifies configuration properties of a job run notification. See [Notification Property](#notification-property) details below.
+* `crawler_name` - (Optional) Name of the crawler to be executed. Conflicts with `job_name`.
+* `job_name` - (Optional) Name of a job to be executed. Conflicts with `crawler_name`.
+* `notification_property` - (Optional) Configuration properties of a job run notification. See [`notification_property`](#notification_property-block) details below.
+* `security_configuration` - (Optional) Name of the Security Configuration structure to be used with this action.
+* `timeout` - (Optional) Job run timeout in minutes. It overrides the timeout value of the job.
 
-#### Notification Property
+#### `notification_property` Block
 
 * `notify_delay_after` - (Optional) After a job run starts, the number of minutes to wait before sending a job run delay notification.
 
-### Predicate
+### `predicate` Block
 
-* `conditions` - (Required) A list of the conditions that determine when the trigger will fire. See [Conditions](#conditions).
+* `conditions` - (Required) List of the conditions that determine when the trigger will fire. See [`conditions`](#conditions-block).
 * `logical` - (Optional) How to handle multiple conditions. Defaults to `AND`. Valid values are `AND` or `ANY`.
 
-#### Conditions
+#### `conditions` Block
 
-* `job_name` - (Optional) The name of the job to watch. If this is specified, `state` must also be specified. Conflicts with `crawler_name`.
-* `state` - (Optional) The condition job state. Currently, the values supported are `SUCCEEDED`, `STOPPED`, `TIMEOUT` and `FAILED`. If this is specified, `job_name` must also be specified. Conflicts with `crawler_state`.
-* `crawler_name` - (Optional) The name of the crawler to watch. If this is specified, `crawl_state` must also be specified. Conflicts with `job_name`.
-* `crawl_state` - (Optional) The condition crawl state. Currently, the values supported are `RUNNING`, `SUCCEEDED`, `CANCELLED`, and `FAILED`. If this is specified, `crawler_name` must also be specified. Conflicts with `state`.
-* `logical_operator` - (Optional) A logical operator. Defaults to `EQUALS`.
+* `crawl_state` - (Optional) Condition crawl state. Currently, the values supported are `RUNNING`, `SUCCEEDED`, `CANCELLED`, and `FAILED`. If this is specified, `crawler_name` must also be specified. Conflicts with `state`.
+* `crawler_name` - (Optional) Name of the crawler to watch. If this is specified, `crawl_state` must also be specified. Conflicts with `job_name`.
+* `job_name` - (Optional) Name of the job to watch. If this is specified, `state` must also be specified. Conflicts with `crawler_name`.
+* `logical_operator` - (Optional) Logical operator. Defaults to `EQUALS`.
+* `state` - (Optional) Condition job state. Currently, the values supported are `SUCCEEDED`, `STOPPED`, `TIMEOUT` and `FAILED`. If this is specified, `job_name` must also be specified. Conflicts with `crawler_state`.
 
-### Event Batching Condition
+### `event_batching_condition` Block
 
-* `batch_size` - (Required)Number of events that must be received from Amazon EventBridge before EventBridge  event trigger fires.
+* `batch_size` - (Required) Number of events that must be received from Amazon EventBridge before EventBridge event trigger fires.
 * `batch_window` - (Optional) Window of time in seconds after which EventBridge event trigger fires. Window starts when first event is received. Default value is `900`.
 
 ## Attribute Reference
@@ -157,8 +157,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of Glue Trigger
 * `id` - Trigger name
-* `state` - The current state of the trigger.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `state` - Current state of the trigger.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

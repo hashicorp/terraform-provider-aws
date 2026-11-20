@@ -26,6 +26,7 @@ import (
 
 // @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
 // @Tags
+// @Testing(name="OpenIDConnectProvider")
 // @Testing(tagsIdentifierAttribute="arn", tagsResourceType="OIDCProvider")
 func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
@@ -45,7 +46,7 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"thumbprint_list": {
 					Type:     schema.TypeList,
 					Computed: true,

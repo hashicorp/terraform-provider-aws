@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -38,6 +40,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -51,12 +54,12 @@ const (
 	bucketPropagationTimeout = 2 * time.Minute
 )
 
-var (
-	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
-	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
-	// e.g. example-123456789012-us-west-2-an.
-	accountRegionalBucketNameRegex = regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
-)
+// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#account-regional-naming.
+// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/gpbucketnamespaces.html#region-code-format.
+// e.g. example-123456789012-us-west-2-an.
+func accountRegionalBucketNameRegex() *regexp.Regexp {
+	return regexache.MustCompile(`^[a-z0-9-.]+-` + inttypes.CanonicalAccountIDPatternNoAnchors + `-(?:` + inttypes.CanonicalRegionPatternNoAnchors + `)-an$`)
+}
 
 func isGeneralPurposeBucket(bucket string) bool {
 	return bucketNameTypeFor(bucket) == bucketNameTypeGeneralPurposeBucket
@@ -86,6 +89,11 @@ func resourceBucket() *schema.Resource {
 				return []*schema.ResourceData{rd}, nil
 			},
 		},
+
+		CustomizeDiff: customdiff.ForceNewIf("object_lock_enabled", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+			o, n := diff.GetChange("object_lock_enabled")
+			return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
+		}),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(20 * time.Minute),
@@ -123,7 +131,7 @@ func resourceBucket() *schema.Resource {
 					ConflictsWith: []string{names.AttrBucketPrefix},
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 63),
-						validation.StringDoesNotMatch(directoryBucketNameRegex, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
+						lazyvalidation.StringDoesNotMatch(directoryBucketNameRegexPattern, `must not be in the format [bucket_name]--[azid]--x-s3. Use the aws_s3_directory_bucket resource to manage S3 Express buckets`),
 					),
 				},
 				"bucket_domain_name": {
@@ -372,7 +380,6 @@ func resourceBucket() *schema.Resource {
 							"object_lock_enabled": {
 								Type:             schema.TypeString,
 								Optional:         true,
-								ForceNew:         true,
 								ConflictsWith:    []string{"object_lock_enabled"},
 								ValidateDiagFunc: enum.Validate[types.ObjectLockEnabled](),
 								Deprecated:       "object_lock_enabled is deprecated. Use the top-level parameter object_lock_enabled instead.",
@@ -419,7 +426,6 @@ func resourceBucket() *schema.Resource {
 					Type:          schema.TypeBool,
 					Optional:      true,
 					Computed:      true, // Can be removed when object_lock_configuration.0.object_lock_enabled is removed
-					ForceNew:      true,
 					ConflictsWith: []string{"object_lock_configuration"},
 				},
 				names.AttrPolicy: {
@@ -658,7 +664,7 @@ func resourceBucket() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"versioning": {
 					Type:       schema.TypeList,
 					Optional:   true,
@@ -783,9 +789,9 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
-	if region != endpoints.UsEast1RegionID {
+	if locationConstraint := c.S3BucketLocationConstraint(ctx); locationConstraint != "" {
 		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
-			LocationConstraint: types.BucketLocationConstraint(region),
+			LocationConstraint: locationConstraint,
 		}
 	}
 
@@ -1629,6 +1635,26 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	//
 	// Bucket Object Lock Configuration.
 	//
+	// Handle modifications to either the object_lock_enabled argument, or the
+	// deprecated object_lock_configuration block.
+
+	// Only act when object_lock_enabled has changed to "true".
+	if v, ok := d.GetOk("object_lock_enabled"); ok && v.(bool) && d.HasChange("object_lock_enabled") {
+		// S3 Object Lock configuration cannot be deleted, only updated.
+		input := &s3.PutObjectLockConfigurationInput{
+			Bucket:                  aws.String(d.Id()),
+			ObjectLockConfiguration: &types.ObjectLockConfiguration{ObjectLockEnabled: types.ObjectLockEnabledEnabled},
+		}
+
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func(ctx context.Context) (any, error) {
+			return conn.PutObjectLockConfiguration(ctx, input)
+		}, errCodeNoSuchBucket)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
+		}
+	}
+
 	// Only act if the practitioner has explicitly configured `object_lock_configuration` in HCL.
 	// When unset, defer to the dedicated `aws_s3_bucket_object_lock_configuration` resource.
 	if d.HasChange("object_lock_configuration") && deprecatedAttributeInRawConfig(d, "object_lock_configuration") {
@@ -1853,7 +1879,7 @@ func bucketWebsiteEndpointAndDomain(bucket, region string) (string, string) {
 }
 
 func bucketNamespace(bucket string) types.BucketNamespace {
-	if accountRegionalBucketNameRegex.MatchString(bucket) {
+	if accountRegionalBucketNameRegex().MatchString(bucket) {
 		return types.BucketNamespaceAccountRegional
 	}
 	return types.BucketNamespaceGlobal
@@ -3148,11 +3174,11 @@ func validBucketName(bucket, region string, ns types.BucketNamespace) error {
 
 	switch ns {
 	case types.BucketNamespaceAccountRegional:
-		if !accountRegionalBucketNameRegex.MatchString(bucket) {
+		if !accountRegionalBucketNameRegex().MatchString(bucket) {
 			return fmt.Errorf("%s is not an account-regional namespace bucket", bucket)
 		}
 	default:
-		if accountRegionalBucketNameRegex.MatchString(bucket) {
+		if accountRegionalBucketNameRegex().MatchString(bucket) {
 			return fmt.Errorf("%s is an account-regional namespace bucket", bucket)
 		}
 	}

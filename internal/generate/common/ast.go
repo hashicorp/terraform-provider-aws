@@ -33,6 +33,21 @@ func (file *PackageFile) PackageName() string {
 	return file.file.Name.Name
 }
 
+// TopLevelFuncDecls returns the top-level function declarations in file.
+func TopLevelFuncDecls(file *ast.File) iter.Seq[*ast.FuncDecl] {
+	return func(yield func(*ast.FuncDecl) bool) {
+		for _, decl := range file.Decls {
+			funcDecl, ok := decl.(*ast.FuncDecl)
+			if !ok {
+				continue
+			}
+			if !yield(funcDecl) {
+				return
+			}
+		}
+	}
+}
+
 type Package struct {
 	name  string
 	files []*PackageFile
@@ -115,14 +130,14 @@ func ScanDirectory(path string) iter.Seq2[*PackageFile, error] {
 		fileSet := token.NewFileSet()
 
 		for _, entry := range entries {
-			// Skip directories, test files, and service_package_gen.go.
-			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") || entry.Name() == "service_package_gen.go" {
+			// Skip directories, test files, and generated files without factory annotations.
+			if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".go") || strings.HasSuffix(entry.Name(), "_test.go") || entry.Name() == "service_package_gen.go" || entry.Name() == "service_endpoint_resolver_gen.go" {
 				continue
 			}
 
 			name := path + "/" + entry.Name()
 
-			file, err := parser.ParseFile(fileSet, name, nil, parser.ParseComments)
+			file, err := parser.ParseFile(fileSet, name, nil, parser.ParseComments|parser.SkipObjectResolution)
 			if err != nil {
 				yield(nil, err)
 				return

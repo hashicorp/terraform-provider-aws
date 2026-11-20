@@ -52,6 +52,87 @@ resource "aws_apigatewayv2_route" "example" {
 }
 ```
 
+### WebSocket API with Lambda Integration
+
+This example routes the `$connect` and `$disconnect` special routes and a custom `sendmessage` route (selected by the `action` property of the message body) to an existing Lambda function. The function's execution role is granted `execute-api:ManageConnections` so that it can send messages to connected clients using the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html). Clients connect to the stage's `invoke_url`.
+
+```terraform
+resource "aws_apigatewayv2_api" "example" {
+  name                       = "example-websocket-api"
+  protocol_type              = "WEBSOCKET"
+  route_selection_expression = "$request.body.action"
+}
+
+resource "aws_apigatewayv2_integration" "example" {
+  api_id             = aws_apigatewayv2_api.example.id
+  integration_type   = "AWS_PROXY"
+  integration_method = "POST"
+  integration_uri    = aws_lambda_function.example.invoke_arn
+}
+
+resource "aws_apigatewayv2_route" "connect" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "$connect"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
+}
+
+resource "aws_apigatewayv2_route" "disconnect" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "$disconnect"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
+}
+
+resource "aws_apigatewayv2_route" "sendmessage" {
+  api_id    = aws_apigatewayv2_api.example.id
+  route_key = "sendmessage"
+  target    = "integrations/${aws_apigatewayv2_integration.example.id}"
+}
+
+resource "aws_apigatewayv2_deployment" "example" {
+  api_id = aws_apigatewayv2_api.example.id
+
+  triggers = {
+    redeployment = sha1(join(",", tolist([
+      jsonencode(aws_apigatewayv2_integration.example),
+      jsonencode(aws_apigatewayv2_route.connect),
+      jsonencode(aws_apigatewayv2_route.disconnect),
+      jsonencode(aws_apigatewayv2_route.sendmessage),
+    ])))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_apigatewayv2_stage" "example" {
+  api_id        = aws_apigatewayv2_api.example.id
+  name          = "example"
+  deployment_id = aws_apigatewayv2_deployment.example.id
+}
+
+resource "aws_lambda_permission" "example" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.example.execution_arn}/*"
+}
+
+data "aws_iam_policy_document" "manage_connections" {
+  statement {
+    effect    = "Allow"
+    actions   = ["execute-api:ManageConnections"]
+    resources = ["${aws_apigatewayv2_api.example.execution_arn}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "manage_connections" {
+  name   = "manage-connections"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.manage_connections.json
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:

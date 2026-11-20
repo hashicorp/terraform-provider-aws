@@ -43,6 +43,16 @@ func TestRemoveEmptyFieldsFromJSON(t *testing.T) {
 			want:     `{}`,
 		},
 		{
+			testName: "nested empty arrays and nulls",
+			input:    `{"values":[[[]],[],[1,[]],null],"object":{"empty":[],"null":null}}`,
+			want:     `{"values":[[1]],"object":{}}`,
+		},
+		{
+			testName: "empty objects retained",
+			input:    `{"empty":{},"becomesEmpty":{"null":null}}`,
+			want:     `{"empty":{},"becomesEmpty":{}}`,
+		},
+		{
 			testName: "AWS DNS_FIREWALL example",
 			input:    "{\"type\":\"DNS_FIREWALL\",\"preProcessRuleGroups\":[{\"ruleGroupId\":\"rslvr-frg-1\",\"priority\":10}],\"postProcessRuleGroups\":[{\"ruleGroupId\":\"rslvr-frg-2\",\"priority\":9911}]}",
 			want:     "{\"type\":\"DNS_FIREWALL\",\"preProcessRuleGroups\":[{\"ruleGroupId\":\"rslvr-frg-1\",\"priority\":10}],\"postProcessRuleGroups\":[{\"ruleGroupId\":\"rslvr-frg-2\",\"priority\":9911}]}",

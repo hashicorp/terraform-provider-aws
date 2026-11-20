@@ -1,0 +1,22 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: use-lazystringvalidator-regex-matches
+    languages: [go]
+    message: Prefer `lazystringvalidator.RegexMatches` to `stringvalidator.RegexMatches(regexache.MustCompile(...), ...)`
+    pattern: stringvalidator.RegexMatches(regexache.MustCompile($PATTERN), $MESSAGE)
+    fix: lazystringvalidator.RegexMatches($PATTERN, $MESSAGE)
+    severity: WARNING
+
+  - id: use-lazystringvalidator-regex-matches-precompiled-regex
+    languages: [go]
+    message: Replace the regular expression with a pattern string and use `lazystringvalidator.RegexMatches`
+    patterns:
+      - pattern: stringvalidator.RegexMatches($REGEX, $...ARGS)
+      - pattern-not: stringvalidator.RegexMatches(regexache.MustCompile(...), ...)
+    paths:
+      exclude:
+        # The lazy validator delegates to the upstream validator with the compiled regular expression.
+        - "/internal/framework/validators/stringvalidator/lazy/"
+    severity: WARNING

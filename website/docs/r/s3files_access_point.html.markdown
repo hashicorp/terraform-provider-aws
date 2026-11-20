@@ -28,12 +28,12 @@ resource "aws_s3files_access_point" "example" {
 The following arguments are required:
 
 * `file_system_id` - (Required) File system ID. Changing this value forces replacement.
-* `posix_user` - (Required) POSIX user configuration. See [`posix_user`](#posix_user) below. Changing this value forces replacement.
+* `posix_user` - (Required) POSIX user configuration. See [`posix_user`](#posix_user-block) below. Changing this value forces replacement.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `root_directory` - (Optional) Root directory configuration. See [`root_directory`](#root_directory) below. Changing this value forces replacement.
+* `root_directory` - (Optional) Root directory configuration. See [`root_directory`](#root_directory-block) below. Changing this value forces replacement.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `posix_user` Block

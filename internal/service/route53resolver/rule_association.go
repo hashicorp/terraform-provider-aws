@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_route53_resolver_rule_association", name="Rule Association")
 // @IdentityAttribute("id")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes.ResolverRuleAssociation")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53resolver/types;awstypes;awstypes.ResolverRuleAssociation")
 // @Testing(preIdentityVersion="v6.10.0")
 // @Testing(domainTfVar="domain")
 func resourceRuleAssociation() *schema.Resource {

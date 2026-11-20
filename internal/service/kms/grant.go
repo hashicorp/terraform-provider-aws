@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -343,13 +344,13 @@ func findGrantByTwoPartKeyWithRetry(ctx context.Context, conn *kms.Client, keyID
 		}
 
 		if principal := aws.ToString(grant.GranteePrincipal); principal != "" {
-			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
+			if !arn.IsARN(principal) && !inttypes.IsServicePrincipal(principal) {
 				return tfresource.RetryableError(fmt.Errorf("grantee principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}
 
 		if principal := aws.ToString(grant.RetiringPrincipal); principal != "" {
-			if !arn.IsARN(principal) && !verify.IsServicePrincipal(principal) {
+			if !arn.IsARN(principal) && !inttypes.IsServicePrincipal(principal) {
 				return tfresource.RetryableError(fmt.Errorf("retiring principal (%s) is invalid. Perhaps the principal has been deleted or recreated", principal))
 			}
 		}

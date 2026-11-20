@@ -86,11 +86,11 @@ This resource supports the following arguments:
 * `csv` - (Optional) CSV dataset used in the monitoring job. Fields are documented below.
 * `json` - (Optional) JSON dataset used in the monitoring job. Fields are documented below.
 
-### csv
+### `csv`
 
 * `header` - (Optional) Indicates if the CSV data has a header.
 
-### json
+### `json`
 
 * `line` - (Optional) Indicates if the file should be read as a JSON object per line.
 

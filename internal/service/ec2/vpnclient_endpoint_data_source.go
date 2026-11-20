@@ -182,7 +182,7 @@ func dataSourceClientVPNEndpoint() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"traffic_ip_address_type": {
 					Type:     schema.TypeString,
 					Computed: true,

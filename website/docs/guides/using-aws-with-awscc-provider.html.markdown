@@ -25,7 +25,7 @@ For more information about the AWSCC provider, please see the provider documenta
 
 ## AWS Cloud Wan
 
-In this guide we will deploy [AWS Cloud WAN](https://aws.amazon.com/cloud-wan/) to demonstrate how both AWS & AWSCC can work togther. Cloud WAN is a wide area networking (WAN) service that helps you build, manage, and monitor a unified global network that manages traffic running between resources in your cloud and on-premises environments.
+In this guide we will deploy [AWS Cloud WAN](https://aws.amazon.com/cloud-wan/) to demonstrate how both AWS & AWSCC can work together. Cloud WAN is a wide area networking (WAN) service that helps you build, manage, and monitor a unified global network that manages traffic running between resources in your cloud and on-premises environments.
 
 With Cloud WAN, you define network policies that are used to create a global network that spans multiple locations and networks—eliminating the need to configure and manage different networks individually using different technologies. Your network policies can be used to specify which of your Amazon Virtual Private Clouds (VPCs) and on-premises locations you wish to connect through AWS VPN or third-party software-defined WAN (SD-WAN) products, and the Cloud WAN central dashboard generates a complete view of the network to monitor network health, security, and performance. Cloud WAN automatically creates a global network across AWS Regions using Border Gateway Protocol (BGP), so you can easily exchange routes around the world.
 
@@ -132,4 +132,4 @@ data "aws_networkmanager_core_network_policy_document" "main" {
 }
 ```
 
-Thanks to Terraform's plugin design, the providers work together seemlessly!
+Thanks to Terraform's plugin design, the providers work together seamlessly!

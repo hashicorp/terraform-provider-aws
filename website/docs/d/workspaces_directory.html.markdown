@@ -51,6 +51,11 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - A map of tags assigned to the WorkSpaces directory.
 * `user_identity_type` - The user identity type for the WorkSpaces directory.
 * `workspace_access_properties` - Specifies which devices and operating systems users can use to access their WorkSpaces.
+    * `access_endpoint_config` - Configuration for accessing WorkSpaces through VPC endpoints instead of the public internet.
+        * `access_endpoints` - Set of access endpoints used to control the network paths that users use to access their WorkSpaces.
+            * `access_endpoint_type` - Type of access endpoint.
+            * `vpc_endpoint_id` - Identifier of the VPC endpoint that the access endpoint uses.
+        * `internet_fallback_protocols` - List of protocols that fall back to the public internet when streaming over a VPC endpoint is unavailable.
     * `device_type_android` - (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
     * `device_type_chromeos` - (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
     * `device_type_ios` - (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
@@ -60,7 +65,7 @@ This data source exports the following attributes in addition to the arguments a
     * `device_type_windows` - (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
     * `device_type_zeroclient` - (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
 * `workspace_creation_properties` - The default properties that are used for creating WorkSpaces.
-    * `custom_security_group_id` - The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
+    * `custom_security_group_id` - The identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
     * `default_ou` - The default organizational unit (OU) for your WorkSpace directories.
     * `enable_internet_access` - Indicates whether internet access is enabled for your WorkSpaces.
     * `enable_maintenance_mode` - Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html).

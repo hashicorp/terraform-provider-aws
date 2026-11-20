@@ -110,20 +110,25 @@ func resourcePrivateVirtualInterface() *schema.Resource {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.IntBetween(0, 1000),
+					ValidateFunc: validation.IntAtLeast(0),
 				},
 				"prefix_pool_allocated_count_ipv6": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.IntBetween(0, 1000),
+					ValidateFunc: validation.IntAtLeast(0),
+				},
+				"rate_limit": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
 				},
 				"sitelink_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -190,6 +195,10 @@ func resourcePrivateVirtualInterfaceCreate(ctx context.Context, d *schema.Resour
 		input.NewPrivateVirtualInterface.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("rate_limit"); ok {
+		input.NewPrivateVirtualInterface.RateLimit = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("vpn_gateway_id"); ok {
 		input.NewPrivateVirtualInterface.VirtualGatewayId = aws.String(v.(string))
 	}
@@ -249,6 +258,7 @@ func resourcePrivateVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
 	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
+	d.Set("rate_limit", vif.RateLimit)
 	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 	d.Set("vpn_gateway_id", vif.VirtualGatewayId)

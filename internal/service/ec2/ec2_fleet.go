@@ -613,7 +613,7 @@ func resourceFleet() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_capacity_specification": {
 					Type:     schema.TypeList,
 					Required: true,

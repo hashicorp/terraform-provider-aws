@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/notifications"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/notifications/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,7 +63,7 @@ func (r *eventRuleResource) Schema(ctx context.Context, request resource.SchemaR
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`([a-zA-Z0-9 \-\(\)])+`), ""),
+					lazystringvalidator.RegexMatches(`([a-zA-Z0-9 \-\(\)])+`, ""),
 				},
 			},
 			"notification_configuration_arn": schema.StringAttribute{
@@ -88,7 +88,7 @@ func (r *eventRuleResource) Schema(ctx context.Context, request resource.SchemaR
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 36),
-					stringvalidator.RegexMatches(regexache.MustCompile(`aws.([a-z0-9\-])+`), ""),
+					lazystringvalidator.RegexMatches(`aws.([a-z0-9\-])+`, ""),
 				},
 			},
 		},

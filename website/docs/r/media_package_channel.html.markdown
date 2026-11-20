@@ -23,23 +23,23 @@ resource "aws_media_package_channel" "kittens" {
 
 This resource supports the following arguments:
 
+* `channel_id` - (Required) Unique identifier describing the channel
+* `description` - (Optional) Description of the channel
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `channel_id` - (Required) A unique identifier describing the channel
-* `description` - (Optional) A description of the channel
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The same as `channel_id`
-* `arn` - The ARN of the channel
-* `hls_ingest` - A single item list of HLS ingest information
-    * `ingest_endpoints` - A list of the ingest endpoints
-        * `password` - The password
-        * `url` - The URL
-        * `username` - The username
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the channel
+* `hls_ingest` - Single item list of HLS ingest information
+    * `ingest_endpoints` - List of the ingest endpoints
+        * `password` - Password
+        * `url` - URL
+        * `username` - Username
+* `id` - Same as `channel_id`
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

@@ -124,14 +124,16 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_disappears_Policy(t *testing.T) {
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, t, resourceName),
 					// Managed policy must be detached before it can be deleted
 					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourceGroupPolicyAttachment(), attachmentResourceName),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfiam.ResourcePolicy(), policyResourceName), // nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(policyResourceName, plancheck.ResourceActionCreate),
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(policyResourceName, plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 				ExpectNonEmptyPlan: true,

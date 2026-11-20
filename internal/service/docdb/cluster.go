@@ -77,6 +77,7 @@ func resourceCluster() *schema.Resource {
 				},
 				names.AttrAvailabilityZones: {
 					Type:     schema.TypeSet,
+					MaxItems: 3,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 					Optional: true,
 					Computed: true,
@@ -373,7 +374,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,

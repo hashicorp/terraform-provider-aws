@@ -291,7 +291,7 @@ func resourceBudget() *schema.Resource {
 					ConflictsWith: []string{"limit_amount", "limit_unit"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"time_period_end": {
 					Type:         schema.TypeString,
 					Optional:     true,

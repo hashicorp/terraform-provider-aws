@@ -35,7 +35,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
 // @Testing(preIdentityVersion="v6.55.0")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes.FlowLog")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.FlowLog")
 func resourceFlowLog() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLogFlowCreate,
@@ -158,7 +158,7 @@ func resourceFlowLog() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"traffic_type": {
 					Type:             schema.TypeString,
 					Optional:         true,

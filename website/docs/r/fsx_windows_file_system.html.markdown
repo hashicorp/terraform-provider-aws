@@ -121,8 +121,8 @@ The `self_managed_active_directory` configuration block supports the following a
 * `file_system_administrators_group` - (Optional) Name of the domain group whose members are granted administrative privileges for the file system. Administrative privileges include taking ownership of files and folders, and setting audit controls (audit ACLs) on files and folders. The group that you specify must already exist in your domain. Defaults to `Domain Admins`.
 * `organizational_unit_distinguished_name` - (Optional) Fully qualified distinguished name of the organizational unit within your self-managed AD directory that the Windows File Server instance will join. For example, `OU=FSx,DC=yourdomain,DC=corp,DC=com`. Only accepts OU as the direct parent of the file system. If none is provided, the FSx file system is created in the default location of your self-managed AD directory. To learn more, see [RFC 2253](https://tools.ietf.org/html/rfc2253).
 * `password` - (Optional) Password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. Conflicts with `domain_join_service_account_secret` and `password_wo`.
-* `password_wo` - (Optional) Password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. This is a [write-only](https://developer.hashicorp.com/terraform/plugin/sdkv2/resources/write-only-arguments) argument which is not persisted to state. Conflicts with `domain_join_service_account_secret` and `password`. Required with `password_wo_version`.
-* `password_wo_version` - (Optional) Version of the password. Required with `password_wo`. Update this argument when the value of `password_wo` has changed to trigger an update to the remote password.
+* `password_wo` - (Optional, Write-Only) Password for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. This argument is not persisted to state. Conflicts with `domain_join_service_account_secret` and `password`. If set, requires `password_wo_version` to be set.
+* `password_wo_version` - (Optional) Required when `password_wo` is set. Changing this value triggers an update to `password_wo`.
 * `username` - (Optional) User name for the service account on your self-managed AD domain that Amazon FSx will use to join to your AD domain. Conflicts with `domain_join_service_account_secret`.
 
 ## Attribute Reference
@@ -164,7 +164,7 @@ Using `terraform import`, import FSx File Systems using the `id`. For example:
 % terraform import aws_fsx_windows_file_system.example fs-543ab12b1ca672f33
 ```
 
-Certain resource arguments, like `security_group_ids` and the `self_managed_active_directory` configuation block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
+Certain resource arguments, like `security_group_ids` and the `self_managed_active_directory` configuration block `password`, do not have a FSx API method for reading the information after creation. If these arguments are set in the Terraform configuration on an imported resource, Terraform will always show a difference. To workaround this behavior, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```terraform
 resource "aws_fsx_windows_file_system" "example" {

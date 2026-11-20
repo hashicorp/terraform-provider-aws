@@ -91,7 +91,7 @@ resource "aws_workspaces_pool" "example" {
 The following arguments are required:
 
 * `bundle_id` - (Required) ID of the bundle for the WorkSpaces Pool.
-* `capacity` - (Required) Capacity configuration for the WorkSpaces Pool. See [`capacity`](#capacity) below.
+* `capacity` - (Required) Capacity configuration for the WorkSpaces Pool. See [`capacity`](#capacity-block) below.
 * `description` - (Required) Description of the WorkSpaces Pool.
 * `directory_id` - (Required) ID of the directory for the WorkSpaces Pool.
 * `pool_name` - (Required) Name of the WorkSpaces Pool. This cannot be changed after creation.

@@ -80,6 +80,7 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"tags":                    testAccConnectorV2_tags,
 			"KMSKeyARN":               testAccConnectorV2_kmsKeyARN,
 			"ConnectorProviderUpdate": testAccConnectorV2_connectorProviderUpdate,
+			"Azure":                   testAccConnectorV2_azure,
 			"Identity":                testAccSecurityHubConnectorV2_identitySerial,
 			"ListBasic":               testAccConnectorV2_List_basic,
 			"ListIncludeResource":     testAccConnectorV2_List_includeResource,

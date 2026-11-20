@@ -31,15 +31,15 @@ resource "aws_pinpoint_app" "app" {}
 This resource supports the following arguments:
 
 * `application_id` - (Required) Application ID.
-* `bundle_id` - (Required) ID assigned to your iOS app. To find this value, choose Certificates, IDs & Profiles, choose App IDs in the Identifiers section, and choose your app. Required if using Key credentials.
-* `certificate` - (Required) Pem encoded TLS Certificate from Apple. Required if using Certificate credentials.
+* `bundle_id` - (Optional) ID assigned to your iOS app. To find this value, choose Certificates, IDs & Profiles, choose App IDs in the Identifiers section, and choose your app. Required if using Key credentials.
+* `certificate` - (Optional) Pem encoded TLS Certificate from Apple. Required if using Certificate credentials.
 * `default_authentication_method` - (Optional) Default authentication method used for APNs Sandbox. __NOTE__: AWS End User Messaging uses this default for every APNs push notification that you send using the console. You can override the default when you send a message programmatically using the AWS End User Messaging API, the AWS CLI, or an AWS SDK. If your default authentication type fails, AWS End User Messaging doesn't attempt to use the other authentication type.
 * `enabled` - (Optional) Whether the channel is enabled or disabled. Defaults to `true`.
-* `private_key` - (Required) Certificate Private Key file (ie. `.key` file). Required if using Certificate credentials.
+* `private_key` - (Optional) Certificate Private Key file (ie. `.key` file). Required if using Certificate credentials.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `team_id` - (Required) ID assigned to your Apple developer account team. This value is provided on the Membership page. Required if using Key credentials.
-* `token_key` - (Required) `.p8` file that you download from your Apple developer account when you create an authentication key. Required if using Key credentials.
-* `token_key_id` - (Required) ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section. Required if using Key credentials.
+* `team_id` - (Optional) ID assigned to your Apple developer account team. This value is provided on the Membership page. Required if using Key credentials.
+* `token_key` - (Optional) `.p8` file that you download from your Apple developer account when you create an authentication key. Required if using Key credentials.
+* `token_key_id` - (Optional) ID assigned to your signing key. To find this value, choose Certificates, IDs & Profiles, and choose your key in the Keys section. Required if using Key credentials.
 
 ## Attribute Reference
 
