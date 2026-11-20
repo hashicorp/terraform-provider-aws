@@ -29,6 +29,8 @@ import (
 
 // @SDKResource("aws_iot_domain_configuration", name="Domain Configuration")
 // @Tags(identifierAttribute="arn")
+// @Testing(acmRootDomainTfVar="rootDomain")
+// @Testing(acmSubdomainTfVar="rootDomain;domainName")
 func resourceDomainConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainConfigurationCreate,

@@ -83,47 +83,6 @@ func TestAccIoTCACertificate_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIoTCACertificate_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	caKey := acctest.TLSRSAPrivateKeyPEM(t, 2048)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
-	resourceName := "aws_iot_ca_certificate.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCACertificateDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCACertificateConfig_tags1(caCertificate, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCACertificateExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccCACertificateConfig_tags2(caCertificate, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCACertificateExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccCACertificateConfig_tags1(caCertificate, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCACertificateExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIoTCACertificate_defaultMode(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iot_ca_certificate.test"
@@ -251,37 +210,6 @@ resource "aws_iot_ca_certificate" "test" {
   certificate_mode        = "SNI_ONLY"
 }
 `, acctest.TLSPEMEscapeNewlines(caCertificate))
-}
-
-func testAccCACertificateConfig_tags1(caCertificate, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_ca_certificate" "test" {
-  active                  = true
-  allow_auto_registration = true
-  ca_certificate_pem      = "%[1]s"
-  certificate_mode        = "SNI_ONLY"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, acctest.TLSPEMEscapeNewlines(caCertificate), tagKey1, tagValue1)
-}
-
-func testAccCACertificateConfig_tags2(caCertificate, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iot_ca_certificate" "test" {
-  active                  = true
-  allow_auto_registration = true
-  ca_certificate_pem      = "%[1]s"
-  certificate_mode        = "SNI_ONLY"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, acctest.TLSPEMEscapeNewlines(caCertificate), tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccCACertificateConfig_defaultMode(active, allowAutoRegistration bool) string {

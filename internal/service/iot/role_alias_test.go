@@ -111,51 +111,6 @@ func TestAccIoTRoleAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIoTRoleAlias_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_iot_role_alias.tags"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoleAliasConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRoleAliasConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccRoleAliasConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleAliasExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckRoleAliasDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).IoTClient(ctx)
@@ -403,67 +358,4 @@ resource "aws_iot_role_alias" "ra2" {
   role_arn = "${aws_iam_role.role.arn}/bogus"
 }
 `, alias, alias2)
-}
-
-func testAccRoleAliasConfig_tags1(alias, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "role" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "credentials.iot.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }
-}
-EOF
-
-}
-
-resource "aws_iot_role_alias" "tags" {
-  alias    = %[1]q
-  role_arn = aws_iam_role.role.arn
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, alias, tagKey1, tagValue1)
-}
-
-func testAccRoleAliasConfig_tags2(alias, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "role" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Principal": {
-      "Service": "credentials.iot.amazonaws.com"
-    },
-    "Action": "sts:AssumeRole"
-  }
-}
-EOF
-
-}
-
-resource "aws_iot_role_alias" "tags" {
-  alias    = %[1]q
-  role_arn = aws_iam_role.role.arn
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, alias, tagKey1, tagValue1, tagKey2, tagValue2)
 }

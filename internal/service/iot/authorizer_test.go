@@ -163,52 +163,6 @@ func TestAccIoTAuthorizer_update(t *testing.T) {
 	})
 }
 
-func TestAccIoTAuthorizer_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.AuthorizerDescription
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_iot_authorizer.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAuthorizerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAuthorizerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccAuthorizerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizerExists(ctx, t, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckAuthorizerExists(ctx context.Context, t *testing.T, n string, v *awstypes.AuthorizerDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -334,41 +288,4 @@ resource "aws_iot_authorizer" "test" {
   status                  = "INACTIVE"
 }
 `, rName))
-}
-
-func testAccAuthorizerConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
-resource "aws_iot_authorizer" "test" {
-  name                    = %[1]q
-  authorizer_function_arn = aws_lambda_function.test.arn
-  token_key_name          = "Token-Header-1"
-
-  token_signing_public_keys = {
-    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccAuthorizerConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccAuthorizerConfig_base(rName), fmt.Sprintf(`
-resource "aws_iot_authorizer" "test" {
-  name                    = %[1]q
-  authorizer_function_arn = aws_lambda_function.test.arn
-  token_key_name          = "Token-Header-1"
-
-  token_signing_public_keys = {
-    Key1 = file("test-fixtures/iot-authorizer-signing-key.pem")
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
