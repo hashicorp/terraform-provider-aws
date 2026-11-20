@@ -6,6 +6,7 @@ package continuum
 import (
 	"context"
 	"reflect"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -33,6 +34,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	iamPropagationTimeout = 2 * time.Minute
 )
 
 // @FrameworkResource("aws_continuum_integration", name="Integration")
