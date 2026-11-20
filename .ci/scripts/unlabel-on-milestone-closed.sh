@@ -66,7 +66,7 @@ milestone_pulls () {
 
 main () {
   local records
-  records=$( { milestone_issues; milestone_pulls; } | jq --compact-output --slurp 'unique_by(.url) | .[]')
+  records=$( { milestone_issues && milestone_pulls; } | jq --compact-output --slurp 'unique_by(.url) | .[]')
 
   if [[ -z "$records" ]]; then
     echo "No items found in milestone $MILESTONE"
