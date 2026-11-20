@@ -72,7 +72,7 @@ func resourceAccessLogSubscription() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.ServiceNetworkLogType](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

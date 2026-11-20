@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3_types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -50,6 +51,7 @@ type AWSClient struct {
 	s3OriginalRegion          string // Original region for S3-compatible storage
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
+	skipRegionValidation      bool   // From provider configuration.
 	stsRegion                 string // From provider configuration.
 	tagPolicyConfig           *tftags.TagPolicyConfig
 	terraformVersion          string // From provider configuration.
@@ -107,6 +109,11 @@ func (c *AWSClient) AccountID(context.Context) string {
 // Partition returns the ID of the configured AWS partition.
 func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
+}
+
+// SkipRegionValidation returns whether the provider is configured to skip Region validation.
+func (c *AWSClient) SkipRegionValidation(context.Context) bool {
+	return c.skipRegionValidation
 }
 
 // RandomnessSource returns the VCR randomness source if set.
@@ -258,6 +265,32 @@ func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string 
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region(ctx), c.DNSSuffix(ctx))
 }
 
+// S3BucketLocationConstraint returns the LocationConstraint value to send in
+// an S3 CreateBucket request, or an empty value when none should be sent.
+func (c *AWSClient) S3BucketLocationConstraint(ctx context.Context) s3_types.BucketLocationConstraint {
+	locationConstraint := c.Region(ctx)
+
+	// originalRegion is the non-standard region preserved for S3-compatible storage
+	// (Ceph, MinIO, etc.) and is empty for native AWS.
+	// For S3-compatible storage the configured region is substituted
+	// with a compliant dummy value (us-east-1) during SDK initialization, so the
+	// original region is preferred here to avoid sending an empty
+	// CreateBucketConfiguration. Any non-standard string (e.g. ":region-ha-premium"
+	// or "ceph-objectstore-region1:region-ha-premium") is passed through verbatim.
+	if originalRegion := c.s3OriginalRegion; originalRegion != "" {
+		locationConstraint = originalRegion
+	}
+
+	// As on native AWS, us-east-1 must not send a LocationConstraint, so an empty
+	// value is returned in that case.
+	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
+	if locationConstraint == endpoints.UsEast1RegionID {
+		return ""
+	}
+
+	return s3_types.BucketLocationConstraint(locationConstraint)
+}
+
 // S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
@@ -270,7 +303,7 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 	if c.s3ExpressClient == nil {
 		if s3Client.Options().Region == endpoints.AwsGlobalRegionID {
 			// No global endpoint for S3 Express.
-			c.s3ExpressClient = errs.Must(client[*s3.Client](ctx, c, names.S3, map[string]any{
+			c.s3ExpressClient = errs.Must(c.client[*s3.Client](ctx, names.S3, map[string]any{
 				"s3_us_east_1_regional_endpoint": "regional",
 			}))
 		} else {
@@ -417,7 +450,7 @@ func (c *AWSClient) ValidateInContextRegionInPartition(ctx context.Context) erro
 }
 
 func convertIPToDashIP(ip string) string {
-	return strings.Replace(ip, ".", "-", -1)
+	return strings.ReplaceAll(ip, ".", "-")
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
@@ -449,8 +482,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
-// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
-func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
+func (c *AWSClient) client[T any](ctx context.Context, servicePackageName string, extra map[string]any) (T, error) {
 	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
 	region := c.Region(ctx)
 

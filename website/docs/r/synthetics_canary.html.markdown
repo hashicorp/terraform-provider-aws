@@ -46,6 +46,7 @@ The following arguments are optional:
 * `artifact_config` - (Optional) configuration for canary artifacts, including the encryption-at-rest settings for artifacts that the canary uploads to Amazon S3. See [Artifact Config](#artifact_config).
 * `delete_lambda` - (Optional)  Specifies whether to also delete the Lambda functions and layers used by this canary. The default is `false`.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
+* `kms_key_arn` - (Optional) ARN of the customer-managed KMS key used to encrypt the environment variables of the canary's Lambda function at rest. If omitted, an AWS owned key is used. Note that this is distinct from `artifact_config.s3_encryption.kms_key_arn`, which encrypts the artifacts the canary uploads to Amazon S3.
 * `run_config` - (Optional) Configuration block for individual canary runs. Detailed [below](#run_config).
 * `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
 * `s3_key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**

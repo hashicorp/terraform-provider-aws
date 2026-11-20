@@ -259,7 +259,7 @@ func resourceReplicationGroupConfigV1() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,

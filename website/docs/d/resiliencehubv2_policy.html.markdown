@@ -38,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `multi_az` - Multi-AZ disaster recovery configuration. See [`multi_az` Block](#multi_az-block) below.
 * `multi_region` - Multi-region disaster recovery configuration. See [`multi_region` Block](#multi_region-block) below.
 * `name` - Name of the policy.
+* `sharing_enabled` - Whether the policy is shared with other member accounts of the organization.
 * `tags` - Map of tags assigned to the resource.
 
 ### `availability_slo` Block

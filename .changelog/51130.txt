@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_opensearch_outbound_connection: Fix `UnknownError` when deleting a connection that is still validating or provisioning
+```
+
+```release-note:bug
+resource/aws_opensearch_inbound_connection_accepter: Fix `UnknownError` when deleting a connection that is still provisioning
+```
+
+```release-note:enhancement
+resource/aws_opensearch_outbound_connection: Increase default `timeouts` values to `15m`
+```
+
+```release-note:enhancement
+resource/aws_opensearch_inbound_connection_accepter: Increase default `timeouts` values to `15m`
+```

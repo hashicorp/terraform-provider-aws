@@ -87,7 +87,7 @@ This resource supports the following arguments:
 * `managed_logging_configuration` - (Optional) Configuration block for managed log persistence. See [Managed Logging Configuration](#managed-logging-configuration) below.
 * `s3_logging_configuration` - (Optional) Configuration block for delivering logs to Amazon S3 buckets. See [S3 Logging Configuration](#s3-logging-configuration) below.
 
-##### CloudWatch Logging Configuration
+#### CloudWatch Logging Configuration
 
 * `enabled` - (Required) Boolean whether Amazon CloudWatch logging is enabled for the workgroup.
 * `log_group` - (Optional) Name of the log group in Amazon CloudWatch Logs where you want to publish your logs.
@@ -114,11 +114,11 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `output_location` - (Optional) Location in Amazon S3 where your query results are stored, such as `s3://path/to/query/bucket/`. For more information, see [Queries and Query Result Files](https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 
-##### ACL Configuration
+#### ACL Configuration
 
 * `s3_acl_option` - (Required) Amazon S3 canned ACL that Athena should specify when storing query results. Valid value is `BUCKET_OWNER_FULL_CONTROL`.
 
-##### Encryption Configuration
+#### Encryption Configuration
 
 * `encryption_option` - (Required) Whether Amazon S3 server-side encryption with Amazon S3-managed keys (`SSE_S3`), server-side encryption with KMS-managed keys (`SSE_KMS`), or client-side encryption with KMS-managed keys (`CSE_KMS`) is used. If a query runs in a workgroup and the workgroup overrides client-side settings, then the workgroup's setting for encryption is used. It specifies whether query results must be encrypted, for all queries that run in this workgroup.
 * `kms_key_arn` - (Optional) For `SSE_KMS` and `CSE_KMS`, this is the KMS key ARN.
@@ -128,7 +128,7 @@ This resource supports the following arguments:
 * `enabled` - (Optional) If set to `true`, allows you to store query results in Athena owned storage. If set to `false`, workgroup member stores query results in the location specified under `result_configuration.output_location`. The default is `false`. A workgroup cannot have the `result_configuration.output_location` set when this is `true`.
 * `encryption_configuration` - (Optional) Configuration block for the encryption configuration. See [Managed Query Results Encryption Configuration](#managed-query-results-encryption-configuration) below.
 
-##### Managed Query Results Encryption Configuration
+#### Managed Query Results Encryption Configuration
 
 * `kms_key` - (Optional) KMS key ARN for encrypting managed query results.
 

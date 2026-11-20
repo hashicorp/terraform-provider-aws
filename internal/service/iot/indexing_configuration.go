@@ -8,7 +8,6 @@ package iot
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -133,7 +133,7 @@ func resourceIndexingConfiguration() *schema.Resource {
 												Type: schema.TypeString,
 												ValidateFunc: validation.All(
 													validation.StringLenBetween(1, 64),
-													validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
+													lazyvalidation.StringMatch(`^[$a-zA-Z0-9:_-]+`, "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
 												),
 											},
 										},

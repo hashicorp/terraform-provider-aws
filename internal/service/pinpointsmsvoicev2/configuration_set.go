@@ -9,11 +9,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -54,20 +53,20 @@ func (r *configurationSetResource) Schema(ctx context.Context, request resource.
 				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.MessageType](),
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^(TRANSACTIONAL|PROMOTIONAL)$`), "must be either TRANSACTIONAL or PROMOTIONAL"),
+					lazystringvalidator.RegexMatches(`^(TRANSACTIONAL|PROMOTIONAL)$`, "must be either TRANSACTIONAL or PROMOTIONAL"),
 				},
 			},
 			"default_sender_id": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_-]{1,11}$`), "must be between 1 and 11 characters long and contain only letters, numbers, underscores, and dashes"),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9_-]{1,11}$`, "must be between 1 and 11 characters long and contain only letters, numbers, underscores, and dashes"),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$`), ""),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

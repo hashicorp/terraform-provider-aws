@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_odb_db_node
 
-Terraform data source for manging db nodes linked to cloud vm cluster of Oracle Database@AWS.
+Terraform data source for managing DB nodes linked to cloud vm cluster of Oracle Database@AWS.
 
 You can find out more about Oracle Database@AWS from [User Guide](https://docs.aws.amazon.com/odb/latest/UserGuide/what-is-odb.html).
 
@@ -28,7 +28,7 @@ data "aws_odb_db_node" "example" {
 The following arguments are required:
 
 * `cloud_vm_cluster_id` - (Required) Unique identifier of the cloud vm cluster.
-* `id` - (Required) Unique identifier of db node associated with vm cluster.
+* `id` - (Required) Unique identifier of DB node associated with vm cluster.
 
 The following arguments are optional:
 
@@ -43,7 +43,6 @@ This data source exports the following attributes in addition to the arguments a
 * `backup_ip_id` - Oracle Cloud ID (OCID) of the backup IP address that's associated with the DB node.
 * `backup_vnic2_id` - OCID of the second backup VNIC.
 * `backup_vnic_id` - OCID of the backup VNIC.
-* `cloud_vm_cluster_id` - ID of the cloud VM cluster.
 * `cpu_core_count` - Number of CPU cores enabled on the DB node.
 * `created_at` - Date and time when the DB node was created.
 * `db_server_id` - Unique identifier of the DB server that is associated with the DB node.

@@ -56,7 +56,7 @@ func resourceVPCLink() *schema.Resource {
 					Required: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_arns": {
 					Type:     schema.TypeList,
 					MaxItems: 1,

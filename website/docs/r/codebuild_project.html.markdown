@@ -426,7 +426,7 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 for more details of the fields.
 
 * `identifier` - (Optional) The name used to access a file system created by Amazon EFS. CodeBuild creates an
-  environment variable by appending the identifier in all capital letters to CODEBUILD\_. For example, if you specify
+  environment variable by appending the identifier in all capital letters to `CODEBUILD_`. For example, if you specify
   my-efs for identifier, a new environment variable is create named CODEBUILD_MY-EFS.
 * `location` - (Optional) A string that specifies the location of the file system created by Amazon EFS. Its format is
   `efs-dns-name:/directory-path`.
@@ -528,7 +528,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of
   this parameter depends on the source provider.
-* `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The
+* `target_url` - (Optional) Specifies the target URL of the build status CodeBuild sends to the source provider. The
   usage of this parameter depends on the source provider.
 
 ### secondary_source_version
@@ -579,7 +579,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB`, `GITHUB_ENTE
 
 * `context` - (Optional) Specifies the context of the build status CodeBuild sends to the source provider. The usage of
   this parameter depends on the source provider.
-* `target_url` - (Optional) Specifies the target url of the build status CodeBuild sends to the source provider. The
+* `target_url` - (Optional) Specifies the target URL of the build status CodeBuild sends to the source provider. The
   usage of this parameter depends on the source provider.
 
 ### vpc_config

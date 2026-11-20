@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 )
 
 func validIdentityProviderName(v any, k string) (ws []string, es []error) {
@@ -294,12 +295,6 @@ var userPoolClientURLValidator = []validator.String{
 	stringValidatorpLpMpSpNpP,
 }
 
-var stringValidatorUserPoolClientName = stringvalidator.RegexMatches(
-	regexache.MustCompile(`[\w\s+=,.@-]+`),
-	`can include any letter, number, space, tab, or one of "+=,.@-"`,
-)
+var stringValidatorUserPoolClientName = lazystringvalidator.RegexMatches(`[\w\s+=,.@-]+`, `can include any letter, number, space, tab, or one of "+=,.@-"`)
 
-var stringValidatorpLpMpSpNpP = stringvalidator.RegexMatches(
-	regexache.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`),
-	"can include any valid Unicode letter, combining character, symbol, number, or punctuation",
-)
+var stringValidatorpLpMpSpNpP = lazystringvalidator.RegexMatches(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`, "can include any valid Unicode letter, combining character, symbol, number, or punctuation")

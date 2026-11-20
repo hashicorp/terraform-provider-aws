@@ -131,7 +131,7 @@ func resourceMonitor() *schema.Resource {
 					), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"traffic_percentage_to_monitor": {
 					Type:         schema.TypeInt,
 					Optional:     true,

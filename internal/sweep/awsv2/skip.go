@@ -180,6 +180,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
 		return true
 	}
+	// Example (networksecuritymanager): ValidationException: The account is not onboarded to Network Security Manager
+	if tfawserr.ErrMessageContains(err, "ValidationException", "is not onboarded to Network Security Manager") {
+		return true
+	}
 	// Example (redshiftserverless): ValidationException: The ServerlessToServerlessRestore operation isn't supported
 	if tfawserr.ErrMessageContains(err, "ValidationException", "operation isn't supported") {
 		return true

@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_bedrockagentcore_resource_policy
 
-Manages an AWS Bedrock Agent Core Resource Policy. Resource-based policies in Amazon Bedrock Agent Core allow you to control which principals (AWS accounts, IAM users, or IAM roles) can invoke and manage your Amazon Bedrock Agent Core Runtime and Gateway resources.
+Manages an AWS Bedrock AgentCore Resource Policy. Resource-based policies in Amazon Bedrock AgentCore allow you to control which principals (AWS accounts, IAM users, or IAM roles) can invoke and manage your Amazon Bedrock AgentCore Runtime and Gateway resources.
 
 ## Example Usage
 
@@ -51,7 +51,7 @@ resource "aws_bedrockagentcore_resource_policy" "example" {
 
 The following arguments are required:
 
-* `policy` - (Required) Resource policy definition
+* `policy` - (Required) Resource policy document in JSON format.
 * `resource_arn` - (Required) ARN of the resource for which to create or update the resource policy.
 
 The following arguments are optional:
@@ -83,9 +83,9 @@ resource "aws_bedrockagentcore_resource_policy" "example" {
 
 #### Required
 
-* `resource_arn` - ARN of the resource to which the Resource Policy is attached.
+* `resource_arn` (String) ARN of the resource to which the Resource Policy is attached.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Agent Core Resource Policy using the `resource_arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock AgentCore Resource Policy using the `resource_arn`. For example:
 
 ```terraform
 import {
@@ -94,7 +94,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Bedrock Agent Core Resource Policy using the `resource_arn`. For example:
+Using `terraform import`, import Bedrock AgentCore Resource Policy using the `resource_arn`. For example:
 
 ```console
 % terraform import aws_bedrockagentcore_resource_policy.example arn:aws:bedrock-agentcore:us-west-2:012345678901:runtime/abcd1234

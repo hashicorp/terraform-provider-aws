@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -24,8 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,13 +80,10 @@ func ResourceFaq() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.FaqFileFormat](),
 				},
 				"index_id": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
-						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z-]{35}`, "Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36."),
 				},
 				names.AttrLanguageCode: {
 					Type:     schema.TypeString,
@@ -94,10 +92,7 @@ func ResourceFaq() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(2, 10),
-						validation.StringMatch(
-							regexache.MustCompile(`[A-Za-z-]*`),
-							"Must have alphanumeric characters or hyphens.",
-						),
+						lazyvalidation.StringMatch(`[A-Za-z-]*`, "Must have alphanumeric characters or hyphens."),
 					),
 				},
 				names.AttrName: {
@@ -106,10 +101,7 @@ func ResourceFaq() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 100),
-						validation.StringMatch(
-							regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
-							"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
-						),
+						lazyvalidation.StringMatch(`[0-9A-Za-z][0-9A-Za-z_-]*`, "Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores."),
 					),
 				},
 				names.AttrRoleARN: {
@@ -147,7 +139,7 @@ func ResourceFaq() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
@@ -289,8 +281,7 @@ func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta any) di
 		IndexId: aws.String(indexId),
 	})
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 

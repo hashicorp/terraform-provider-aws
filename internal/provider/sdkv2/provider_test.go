@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -683,7 +684,7 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 				}
 			}
 
-			if !tfunique.IsHandleNil(v.Tags) {
+			if v.Tags.Enabled() {
 				// The data source has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -728,7 +729,7 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 				}
 			}
 
-			if !tfunique.IsHandleNil(resource.Tags) {
+			if resource.Tags.Enabled() {
 				// The resource has opted in to transparent tagging.
 				// Ensure that the schema look OK.
 				if v, ok := s[names.AttrTags]; ok {
@@ -761,4 +762,170 @@ func validateResourceSchemas(ctx context.Context, servicePackages iter.Seq2[int,
 	}
 
 	return errors.Join(errs...)
+}
+
+func TestTagsSchemas(t *testing.T) {
+	t.Parallel()
+
+	p, err := NewProvider(t.Context())
+	if err != nil {
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	t.Run("nested tags users can't configure are Computed only", func(t *testing.T) {
+		t.Parallel()
+
+		// TagsSchemaOptionalComputedWarnShouldBeComputedOnly stays Optional only so that existing
+		// configurations keep working. Under a block users can't configure, nobody can set it, so
+		// it must be TagsSchemaComputedOnly. Optional+Computed there also changes the set hash
+		// (https://github.com/hashicorp/terraform-provider-aws/issues/40314).
+		warn := tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly()
+		var walk func(name, path string, settable bool, m map[string]*schema.Schema)
+		walk = func(name, path string, settable bool, m map[string]*schema.Schema) {
+			for k, s := range m {
+				if s == warn && !settable {
+					t.Errorf("%s: %s%s uses tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly; use tftags.TagsSchemaComputedOnly", name, path, k)
+				}
+				if r, ok := s.Elem.(*schema.Resource); ok {
+					walk(name, path+k+".", settable && (s.Optional || s.Required), r.SchemaMap())
+				}
+			}
+		}
+		for name, r := range p.DataSourcesMap {
+			walk(name, "", true, r.SchemaMap())
+		}
+		for name, r := range p.ResourcesMap {
+			walk(name, "", true, r.SchemaMap())
+		}
+	})
+
+	testCases := map[string]struct {
+		typeName     string
+		dataSource   bool
+		config       map[string]any
+		wantWarnings int
+		wantErrors   int
+	}{
+		"resource tags": {
+			typeName: "aws_sns_topic",
+			config:   map[string]any{names.AttrTags: map[string]any{"k": "v"}},
+		},
+		"resource tags_all": {
+			typeName:     "aws_sns_topic",
+			config:       map[string]any{names.AttrTagsAll: map[string]any{"k": "v"}},
+			wantWarnings: 1,
+		},
+		"resource empty tags_all": {
+			typeName:     "aws_sns_topic",
+			config:       map[string]any{names.AttrTagsAll: map[string]any{}},
+			wantWarnings: 1,
+		},
+		"data source attribute tags": {
+			typeName:     "aws_sns_topic",
+			dataSource:   true,
+			config:       map[string]any{names.AttrName: "n", names.AttrTags: map[string]any{"k": "v"}},
+			wantWarnings: 1,
+		},
+		"data source filter tags": {
+			typeName:   "aws_vpc",
+			dataSource: true,
+			config:     map[string]any{names.AttrTags: map[string]any{"k": "v"}},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			r := p.ResourcesMap[tc.typeName]
+			if tc.dataSource {
+				r = p.DataSourcesMap[tc.typeName]
+			}
+
+			var warnings, errs int
+			for _, d := range r.Validate(terraform.NewResourceConfigRaw(tc.config)) {
+				if d.Severity == diag.Warning {
+					warnings++
+				} else {
+					errs++
+				}
+			}
+			if warnings != tc.wantWarnings || errs != tc.wantErrors {
+				t.Errorf("got %d warnings and %d errors, want %d and %d", warnings, errs, tc.wantWarnings, tc.wantErrors)
+			}
+		})
+	}
+}
+
+func TestWarnShouldBeComputedOnly(t *testing.T) {
+	t.Parallel()
+
+	p, err := NewProvider(t.Context())
+	if err != nil {
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	testCases := map[string]struct {
+		typeName   string
+		dataSource bool
+		config     map[string]any
+	}{
+		"aws_kinesis_firehose_delivery_stream arn": {
+			typeName: "aws_kinesis_firehose_delivery_stream",
+			config:   map[string]any{names.AttrName: "n", names.AttrDestination: "extended_s3", names.AttrARN: "a"},
+		},
+		"aws_kinesis_stream arn": {
+			typeName: "aws_kinesis_stream",
+			config:   map[string]any{names.AttrName: "n", names.AttrARN: "a"},
+		},
+		"aws_location_geofence_collection kms_key_id": {
+			typeName:   "aws_location_geofence_collection",
+			dataSource: true,
+			config:     map[string]any{"collection_name": "n", names.AttrKMSKeyID: "k"},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			r := p.ResourcesMap[tc.typeName]
+			if tc.dataSource {
+				r = p.DataSourcesMap[tc.typeName]
+			}
+			var warnings int
+			for _, d := range r.Validate(terraform.NewResourceConfigRaw(tc.config)) {
+				if d.Severity == diag.Warning && d.Summary == "Argument is computed" {
+					warnings++
+				}
+			}
+			if warnings != 1 {
+				t.Errorf("got %d computed-argument warnings, want 1", warnings)
+			}
+		})
+	}
+
+	t.Run("aws_rds_cluster cluster_members", func(t *testing.T) {
+		t.Parallel()
+
+		r := p.ResourcesMap["aws_rds_cluster"]
+		vals := make(map[string]cty.Value)
+		for k, ty := range r.CoreConfigSchema().ImpliedType().AttributeTypes() {
+			vals[k] = cty.NullVal(ty)
+		}
+		for _, members := range []cty.Value{cty.NullVal(cty.Set(cty.String)), cty.SetVal([]cty.Value{cty.StringVal("m")})} {
+			vals["cluster_members"] = members
+			var resp schema.ValidateResourceConfigFuncResponse
+			for _, f := range r.ValidateRawResourceConfigFuncs {
+				f(t.Context(), schema.ValidateResourceConfigFuncRequest{RawConfig: cty.ObjectVal(vals)}, &resp)
+			}
+			want := 0
+			if !members.IsNull() {
+				want = 1
+			}
+			if got := len(resp.Diagnostics); got != want {
+				t.Errorf("cluster_members %#v: got %d diagnostics, want %d", members, got, want)
+			}
+		}
+	})
 }

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_lambda_function: Add `kms_key_arn` argument to the `durable_config` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_lambda_function: Add `kms_key_arn` attribute to the `durable_config` block
+```

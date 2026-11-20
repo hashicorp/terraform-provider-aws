@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_eks_node_group
 
-Manages an EKS Node Group, which can provision and optionally update an Auto Scaling Group of Kubernetes worker nodes compatible with EKS. Additional documentation about this functionality can be found in the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html).
+Manages an EKS Node Group, which can provision and optionally update an Auto Scaling group of Kubernetes worker nodes compatible with EKS. Additional documentation about this functionality can be found in the [EKS User Guide](https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html).
 
 ## Example Usage
 
@@ -41,7 +41,7 @@ resource "aws_eks_node_group" "example" {
 
 ### Ignoring Changes to Desired Size
 
-You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an EKS Node Group with an initial size of running instances, then ignore any changes to that count caused externally (e.g., Application Autoscaling).
+You can utilize the generic Terraform resource [lifecycle configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) with `ignore_changes` to create an EKS Node Group with an initial size of running instances, then ignore any changes to that count caused externally (e.g., Application Auto Scaling).
 
 ```terraform
 resource "aws_eks_node_group" "example" {
@@ -213,10 +213,10 @@ The following arguments are mutually exclusive.
 
 Including a `warm_pool_config` block enables the warm pool for the node group. To disable and remove the warm pool, remove the `warm_pool_config` block.
 
-* `max_group_prepared_capacity` - (Optional) Maximum number of instances that are allowed to be in the warm pool combined with the Auto Scaling Group. Use `-1` to specify an unlimited capacity.
+* `max_group_prepared_capacity` - (Optional) Maximum number of instances that are allowed to be in the warm pool combined with the Auto Scaling group. Use `-1` to specify an unlimited capacity.
 * `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. Defaults to `0`.
 * `pool_state` - (Optional) Instance state to transition warm pool instances to. Valid values: `STOPPED`, `RUNNING`, `HIBERNATED`. Defaults to `STOPPED`.
-* `reuse_on_scale_in` - (Optional) Whether to return instances in the Auto Scaling Group to the warm pool on scale in. Not supported on Bottlerocket. Defaults to `false`.
+* `reuse_on_scale_in` - (Optional) Whether to return instances in the Auto Scaling group to the warm pool on scale in. Not supported on Bottlerocket. Defaults to `false`.
 
 ## Attribute Reference
 
@@ -225,8 +225,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `resources` - List of objects containing information about underlying resources.
-    * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
-        * `name` - Name of the AutoScaling Group.
+    * `autoscaling_groups` - List of objects containing information about Auto Scaling groups.
+        * `name` - Name of the Auto Scaling group.
     * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `status` - Status of the EKS Node Group.

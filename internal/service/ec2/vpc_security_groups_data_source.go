@@ -41,7 +41,7 @@ func dataSourceSecurityGroups() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"vpc_ids": {
 					Type:     schema.TypeList,
 					Computed: true,

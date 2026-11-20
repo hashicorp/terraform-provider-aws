@@ -301,7 +301,7 @@ func resourceTargetGroup() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_control_port": {
 					Type:         schema.TypeInt,
 					Optional:     true,

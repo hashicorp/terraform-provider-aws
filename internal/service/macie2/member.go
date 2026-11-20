@@ -93,7 +93,7 @@ func resourceMember() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"updated_at": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -404,9 +404,7 @@ func unprocessedAccountsError(apiObjects []awstypes.UnprocessedAccount) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := unprocessedAccountError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AccountId), unprocessedAccountError(apiObject)))
 	}
 
 	return errors.Join(errs...)

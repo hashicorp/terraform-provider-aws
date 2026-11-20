@@ -271,7 +271,7 @@ func resourceCluster() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tls_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,

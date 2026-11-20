@@ -203,8 +203,8 @@ The following arguments are optional:
 
 ### `environment` Block
 
-* `name` - (Required) Name of the environment variable.
-* `value` - (Required) Value of the environment variable.
+* `name` - (Optional) Name of the environment variable.
+* `value` - (Optional) Value of the environment variable.
 
 ### `environment_file` Block
 

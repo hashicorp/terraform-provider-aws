@@ -113,19 +113,19 @@ resource "aws_prometheus_resource_policy" "service_access" {
 
 This resource supports the following arguments:
 
-* `workspace_id` - (Required) The ID of the workspace to attach the resource-based policy to.
-* `policy_document` - (Required) The JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
+The following arguments are required:
+
+* `policy_document` - (Required) JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
+* `workspace_id` - (Required) ID of the workspace to attach the resource-based policy to.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `revision_id` - (Optional) Revision ID of the resource-based policy. When set, it is used for optimistic concurrency so a change is applied only if it matches the policy's current revision. If omitted, it is computed and exported after apply.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `policy_status` - The current status of the resource-based policy. Can be `CREATING`, `ACTIVE`, `UPDATING`, or `DELETING`.
-* `revision_id` - The revision ID of the current resource-based policy.
+This resource exports no additional attributes.
 
 ## Timeouts
 

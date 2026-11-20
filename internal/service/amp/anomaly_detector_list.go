@@ -16,11 +16,11 @@ import (
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -58,7 +58,7 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 	var query listAnomalyDetectorModel
 	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
 		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
+			stream.Results = smerr.ListStreamEnrich(ctx, diags)
 			return
 		}
 	}
@@ -79,8 +79,7 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 
 		for item, err := range listAnomalyDetectors(ctx, conn, &input) {
 			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
+				yield(smerr.NewListResultError(ctx, err))
 				return
 			}
 
@@ -95,7 +94,7 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 					continue
 				}
 				if err != nil {
-					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					yield(smerr.NewListResultError(ctx, err, smerr.ID, id))
 					return
 				}
 			}
@@ -107,14 +106,14 @@ func (l *anomalyDetectorListResource) List(ctx context.Context, request list.Lis
 				data.WorkspaceID = types.StringValue(workspaceID)
 
 				if request.IncludeResource {
-					result.Diagnostics.Append(fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AnomalyDetector"))...)
+					smerr.AddEnrich(ctx, &result.Diagnostics, fwflex.Flatten(ctx, out, &data, fwflex.WithFieldNamePrefix("AnomalyDetector")), smerr.ID, id)
 					if result.Diagnostics.HasError() {
 						return
 					}
 
 					setTagsOut(ctx, out.Tags)
 				} else {
-					result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data), smerr.ID, id)
 					if result.Diagnostics.HasError() {
 						return
 					}

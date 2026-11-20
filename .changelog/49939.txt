@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Filter server-only `config_parameter` entries from state and allow newly returned config parameter keys without a provider update
+```

@@ -19,13 +19,42 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccBedrockEvaluationJob_tags(t *testing.T) {
+func testAccBedrockEvaluationJob_tagsSerial(t *testing.T) {
+	t.Helper()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:                             testAccBedrockEvaluationJob_tags,
+		"null":                                      testAccBedrockEvaluationJob_Tags_null,
+		"EmptyMap":                                  testAccBedrockEvaluationJob_Tags_emptyMap,
+		"AddOnUpdate":                               testAccBedrockEvaluationJob_Tags_addOnUpdate,
+		"EmptyTag_OnCreate":                         testAccBedrockEvaluationJob_Tags_EmptyTag_onCreate,
+		"EmptyTag_OnUpdate_Add":                     testAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_add,
+		"EmptyTag_OnUpdate_Replace":                 testAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_replace,
+		"DefaultTags_providerOnly":                  testAccBedrockEvaluationJob_Tags_DefaultTags_providerOnly,
+		"DefaultTags_nonOverlapping":                testAccBedrockEvaluationJob_Tags_DefaultTags_nonOverlapping,
+		"DefaultTags_overlapping":                   testAccBedrockEvaluationJob_Tags_DefaultTags_overlapping,
+		"DefaultTags_updateToProviderOnly":          testAccBedrockEvaluationJob_Tags_DefaultTags_updateToProviderOnly,
+		"DefaultTags_updateToResourceOnly":          testAccBedrockEvaluationJob_Tags_DefaultTags_updateToResourceOnly,
+		"DefaultTags_emptyResourceTag":              testAccBedrockEvaluationJob_Tags_DefaultTags_emptyResourceTag,
+		"DefaultTags_nullOverlappingResourceTag":    testAccBedrockEvaluationJob_Tags_DefaultTags_nullOverlappingResourceTag,
+		"DefaultTags_nullNonOverlappingResourceTag": testAccBedrockEvaluationJob_Tags_DefaultTags_nullNonOverlappingResourceTag,
+		"ComputedTag_OnCreate":                      testAccBedrockEvaluationJob_Tags_ComputedTag_onCreate,
+		"ComputedTag_OnUpdate_Add":                  testAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_add,
+		"ComputedTag_OnUpdate_Replace":              testAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_replace,
+		"IgnoreTags_Overlap_DefaultTag":             testAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_defaultTag,
+		"IgnoreTags_Overlap_ResourceTag":            testAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_resourceTag,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccBedrockEvaluationJob_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -215,13 +244,13 @@ func TestAccBedrockEvaluationJob_tags(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_null(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -285,13 +314,13 @@ func TestAccBedrockEvaluationJob_Tags_null(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_emptyMap(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -343,13 +372,13 @@ func TestAccBedrockEvaluationJob_Tags_emptyMap(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_addOnUpdate(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_addOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -431,13 +460,13 @@ func TestAccBedrockEvaluationJob_Tags_addOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_EmptyTag_onCreate(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_EmptyTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -531,13 +560,13 @@ func TestAccBedrockEvaluationJob_Tags_EmptyTag_onCreate(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -680,13 +709,13 @@ func TestAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -778,13 +807,13 @@ func TestAccBedrockEvaluationJob_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_providerOnly(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -973,13 +1002,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_nonOverlapping(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1145,13 +1174,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_nonOverlapping(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_overlapping(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1333,13 +1362,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1431,13 +1460,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_updateToProviderOnly(t *testin
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1528,13 +1557,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_updateToResourceOnly(t *testin
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1602,13 +1631,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_emptyResourceTag(t *testing.T)
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1668,13 +1697,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_emptyProviderOnlyTag(t *testin
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1745,13 +1774,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_nullOverlappingResourceTag(t *
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1824,13 +1853,13 @@ func TestAccBedrockEvaluationJob_Tags_DefaultTags_nullNonOverlappingResourceTag(
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_ComputedTag_onCreate(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_ComputedTag_onCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1887,13 +1916,13 @@ func TestAccBedrockEvaluationJob_Tags_ComputedTag_onCreate(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -1992,13 +2021,13 @@ func TestAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_replace(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2087,13 +2116,13 @@ func TestAccBedrockEvaluationJob_Tags_ComputedTag_OnUpdate_replace(t *testing.T)
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
@@ -2255,13 +2284,13 @@ func TestAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_defaultTag(t *testing.T
 	})
 }
 
-func TestAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
+func testAccBedrockEvaluationJob_Tags_IgnoreTags_Overlap_resourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_bedrock_evaluation_job.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_1_0),
 		},
