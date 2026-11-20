@@ -89,13 +89,18 @@ labeled_keys () {
   gh api graphql --paginate -f searchQuery="$query" -f query='
     query($searchQuery: String!, $endCursor: String) {
       search(query: $searchQuery, type: ISSUE, first: 100, after: $endCursor) {
+        issueCount
         nodes {
           ...on Issue { number repository { nameWithOwner } }
           ...on PullRequest { number repository { nameWithOwner } }
         }
         pageInfo { endCursor hasNextPage }
       }
-    }' --jq '.data.search.nodes[] | "\(.repository.nameWithOwner)#\(.number)"'
+    }' --jq 'if .data.search.issueCount > 1000 then
+      error("Prioritized search exceeds 1,000 matches; refusing incomplete reconciliation")
+    else
+      .data.search.nodes[] | "\(.repository.nameWithOwner)#\(.number)"
+    end'
 }
 
 main () {
