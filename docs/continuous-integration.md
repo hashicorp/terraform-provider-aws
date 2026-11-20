@@ -257,7 +257,7 @@ make deps-check
 
 ### Documentation Checks
 
-"Documentation" is the context of these checks is the documentation found in the `docs/` directory of the provider. This include contributor and related guides. This is developer-facing unlike the [Examples](#examples-checks) and [Website](#website-checks) checks.
+"Documentation" is the context of these checks is the documentation found in the `docs/` directory of the provider. This include contributor and related guides. This is developer-facing unlike the [Website](#website-checks) checks.
 
 #### markdown-link-check
 
@@ -291,29 +291,6 @@ make docs-misspell
 
 !!! note
     Install [tools](#before-running-tests) before running this check.
-
-### Examples Checks
-
-These checks help ensure that examples included with the provider are correct.
-
-#### tflint
-
-Use the target `examples-tflint` to lint the examples:
-
-```console
-make examples-tflint
-```
-
-!!! note
-    Install [tools](#before-running-tests) before running this check.
-
-#### validate-terraform (0.12.31)
-
-This check is not currently available in the Makefile.
-
-#### validate-terraform (1.0.6)
-
-This check is not currently available in the Makefile.
 
 ### golangci-lint Checks
 

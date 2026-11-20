@@ -22,7 +22,6 @@ on:
       - .changelog/**
       - .devcontainer/**
       - docs/**
-      - examples/**
       - META.d/**
 
 ## NOTE: !!!

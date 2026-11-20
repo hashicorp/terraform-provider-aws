@@ -56,7 +56,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "example" {
 }
 ```
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and attach a to a Transit Gateway in the second account via the `aws_ec2_transit_gateway_peering_attachment` resource can be found in [the `./examples/transit-gateway-cross-account-peering-attachment` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/transit-gateway-cross-account-peering-attachment).
+The peering attachment must be accepted in the account and Region of the peer Transit Gateway, even when both Transit Gateways are in the same account. For an example of how to request a peering attachment from one AWS account and accept it in a second AWS account, see the [`aws_ec2_transit_gateway_peering_attachment_accepter` resource](/docs/providers/aws/r/ec2_transit_gateway_peering_attachment_accepter.html#cross-account-usage).
 
 ## Argument Reference
 

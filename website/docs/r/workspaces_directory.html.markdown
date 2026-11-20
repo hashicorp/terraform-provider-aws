@@ -12,6 +12,8 @@ Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
 ~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
 
+~> **NOTE:** WorkSpaces is available only in [certain Availability Zones](https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html) in each Region, identified by Availability Zone ID. Because Availability Zone names map to different Availability Zone IDs in each AWS account, use the `availability_zone_id` argument of the `aws_subnet` resource to place subnets in supported Availability Zones. The example below uses Availability Zone IDs supported in the `us-east-1` Region.
+
 ## Example Usage
 
 ```terraform
@@ -114,26 +116,26 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_subnet" "example_a" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1a"
-  cidr_block        = "10.0.0.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az2"
+  cidr_block           = "10.0.0.0/24"
 }
 
 resource "aws_subnet" "example_b" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1b"
-  cidr_block        = "10.0.1.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az4"
+  cidr_block           = "10.0.1.0/24"
 }
 resource "aws_subnet" "example_c" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1c"
-  cidr_block        = "10.0.2.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az4"
+  cidr_block           = "10.0.2.0/24"
 }
 
 resource "aws_subnet" "example_d" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1d"
-  cidr_block        = "10.0.3.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az6"
+  cidr_block           = "10.0.3.0/24"
 }
 ```
 
