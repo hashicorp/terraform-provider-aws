@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -24,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -4164,16 +4166,19 @@ func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
 	minIOAccessKey := acctest.SkipIfEnvVarNotSet(t, "MINIO_ACCESS_KEY")
 	minIOSecretKey := acctest.SkipIfEnvVarNotSet(t, "MINIO_SECRET_KEY")
 	minIOEndpoint := acctest.SkipIfEnvVarNotSet(t, "MINIO_ENDPOINT")
+	// Test-local provider instance, configured by the fixture's MinIO provider block.
+	// Checks must use it rather than acctest.ProviderMeta, which targets AWS.
+	providers := make(map[string]*schema.Provider)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck: acctest.ErrorCheck(t, names.S3ServiceID),
-		// Test validation error: TestStep 1/1 validation error: Providers must only be specified either at the TestCase or TestStep level.
-		// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
+		CheckDestroy: acctest.CheckWithNamedProviders(testAccCheckBucketLifecycleConfigurationDestroyWithProvider(ctx), providers),
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BucketLifecycleConfiguration/minio.basic/"),
+				// Set at the TestStep level as the configuration directory contains a provider block.
+				ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers, acctest.ProviderName),
+				ConfigDirectory:          config.StaticDirectory("testdata/BucketLifecycleConfiguration/minio.basic/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:  config.StringVariable(rName),
 					"minioRegion":    config.StringVariable(endpoints.UsEast1RegionID),
@@ -4182,7 +4187,7 @@ func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
 					"minioEndpoint":  config.StringVariable(minIOEndpoint),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
+					testAccCheckBucketLifecycleConfigurationExistsWithProvider(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -4215,82 +4220,98 @@ func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
 
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
-
-			if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
-				continue
-			}
-
-			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-
-			if tfs3.IsDirectoryBucket(bucket) {
-				conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
-			}
-
-			_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-
-			if retry.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("S3 Bucket Lifecycle Configuration %s still exists", rs.Primary.ID)
-		}
-
-		return nil
+		return testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx, s, acctest.ProviderMeta(ctx, t))
 	}
 }
 
-func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+func testAccCheckBucketLifecycleConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+	return func(s *terraform.State, provider *schema.Provider) error {
+		return testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx, s, provider.Meta().(*conns.AWSClient))
+	}
+}
 
-		conn := acctest.ProviderMeta(ctx, t).S3Client(ctx)
+func testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx context.Context, s *terraform.State, meta *conns.AWSClient) error {
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
+			continue
+		}
 
 		bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
+		conn := meta.S3Client(ctx)
 		if tfs3.IsDirectoryBucket(bucket) {
-			conn = acctest.ProviderMeta(ctx, t).S3ExpressClient(ctx)
+			conn = meta.S3ExpressClient(ctx)
 		}
 
-		const (
-			lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
-		)
-		var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
-		err = tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
-			var err error
+		_, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
-			output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
-			if retry.NotFound(err) {
-				return tfresource.RetryableError(err)
-			}
-			if err != nil {
-				return tfresource.NonRetryableError(err)
-			}
+		if retry.NotFound(err) {
+			continue
+		}
 
-			if lastOutput == nil || !tfs3.LifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
-				lastOutput = output
-				return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
-			}
+		if err != nil {
+			return err
+		}
 
-			return nil
-		})
+		return fmt.Errorf("S3 Bucket Lifecycle Configuration %s still exists", rs.Primary.ID)
+	}
 
+	return nil
+}
+
+func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx, s, n, acctest.ProviderMeta(ctx, t))
+	}
+}
+
+func testAccCheckBucketLifecycleConfigurationExistsWithProvider(ctx context.Context, n string, providerF acctest.ProviderFunc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx, s, n, providerF().Meta().(*conns.AWSClient))
+	}
+}
+
+func testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx context.Context, s *terraform.State, n string, meta *conns.AWSClient) error {
+	rs, ok := s.RootModule().Resources[n]
+	if !ok {
+		return fmt.Errorf("Not found: %s", n)
+	}
+
+	bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
+	if err != nil {
 		return err
 	}
+
+	conn := meta.S3Client(ctx)
+	if tfs3.IsDirectoryBucket(bucket) {
+		conn = meta.S3ExpressClient(ctx)
+	}
+
+	const (
+		lifecycleConfigurationRulesSteadyTimeout = 2 * time.Minute
+	)
+	var lastOutput, output *s3.GetBucketLifecycleConfigurationOutput
+	return tfresource.Retry(ctx, lifecycleConfigurationRulesSteadyTimeout, func(ctx context.Context) *tfresource.RetryError {
+		var err error
+
+		output, err = tfs3.FindBucketLifecycleConfiguration(ctx, conn, bucket, expectedBucketOwner)
+		if retry.NotFound(err) {
+			return tfresource.RetryableError(err)
+		}
+		if err != nil {
+			return tfresource.NonRetryableError(err)
+		}
+
+		if lastOutput == nil || !tfs3.LifecycleConfigEqual(lastOutput.TransitionDefaultMinimumObjectSize, lastOutput.Rules, output.TransitionDefaultMinimumObjectSize, output.Rules) {
+			lastOutput = output
+			return tfresource.RetryableError(fmt.Errorf("S3 Bucket Lifecycle Configuration (%s) has not stablized; retrying", bucket))
+		}
+
+		return nil
+	})
 }
 
 func checkAbortIncompleteMultipartUpload_None() knownvalue.Check {
