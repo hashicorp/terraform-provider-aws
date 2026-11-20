@@ -4,9 +4,8 @@
 package validators
 
 import (
-	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 )
 
 const (
@@ -20,7 +19,4 @@ const (
 //   - Is a string, which represents a valid S3 bucket name.
 //
 // Null (unconfigured) and unknown (known after apply) values are skipped.
-var S3BucketName validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(canonicalBucketNamePattern),
-	`Bucket names must be 3 to 63 characters and begin and end with a letter or number. Valid characters are a-z, 0-9, periods (.), and hyphens.`,
-)
+var S3BucketName validator.String = lazystringvalidator.RegexMatches(canonicalBucketNamePattern, `Bucket names must be 3 to 63 characters and begin and end with a letter or number. Valid characters are a-z, 0-9, periods (.), and hyphens.`)

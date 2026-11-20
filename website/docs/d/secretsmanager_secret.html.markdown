@@ -40,7 +40,6 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the secret.
 * `created_date` - Created date of the secret in UTC.
 * `description` - Description of the secret.
 * `id` - ARN of the secret.

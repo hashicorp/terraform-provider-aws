@@ -50,7 +50,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the Resource Set.
 * `id` - Unique identifier for the resource set. It's returned in the responses to create and list commands. You provide it to operations like update and delete.
-* `resource_set` - Details about the resource set. See [`resource_set` Block](#resource_set-block) below.
 
 ### `resource_set` Block
 

@@ -88,7 +88,7 @@ func resourceTrustStore() *schema.Resource {
 					ValidateFunc:  validNamePrefix,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

@@ -118,7 +118,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-lint-fix` | Fix documentation linter findings |  | ✔️ |  |
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
-| `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
 | `fix` | Apply `go fix` (all packages, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-check` | Go Fix Check / go fix | ✔️ |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |

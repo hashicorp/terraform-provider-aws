@@ -318,7 +318,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(storageType_Values(), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,

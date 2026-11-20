@@ -121,12 +121,11 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `revision_id` - (Optional) Revision ID of the resource-based policy. When set, it is used for optimistic concurrency so a change is applied only if it matches the policy's current revision. If omitted, it is computed and exported after apply.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `revision_id` - Revision ID of the current resource-based policy.
+This resource exports no additional attributes.
 
 ## Timeouts
 

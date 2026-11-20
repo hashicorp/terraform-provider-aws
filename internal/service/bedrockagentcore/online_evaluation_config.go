@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -38,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -156,7 +156,7 @@ func (r *onlineEvaluationConfigResource) Schema(ctx context.Context, request res
 						"evaluator_id": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
-								stringvalidator.RegexMatches(regexache.MustCompile(`^(Builtin\.[a-zA-Z0-9_-]+|[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10})$`), "must be a builtin evaluator (e.g. Builtin.Helpfulness) or a custom evaluator ID"),
+								lazystringvalidator.RegexMatches(`^(Builtin\.[a-zA-Z0-9_-]+|[a-zA-Z][a-zA-Z0-9-_]{0,99}-[a-zA-Z0-9]{10})$`, "must be a builtin evaluator (e.g. Builtin.Helpfulness) or a custom evaluator ID"),
 							},
 						},
 					},

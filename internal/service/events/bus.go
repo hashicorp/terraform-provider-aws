@@ -104,7 +104,7 @@ func resourceBus() *schema.Resource {
 					ValidateFunc: validCustomEventBusName,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

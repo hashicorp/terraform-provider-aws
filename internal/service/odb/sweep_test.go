@@ -21,10 +21,8 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		pages     []string
-		errorCode string
-		wantIDs   []string
-		wantSkip  bool
+		pages   []string
+		wantIDs []string
 	}{
 		"all pages and test names only": {
 			pages: []string{
@@ -40,9 +38,7 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 		"nonstandard prefixes are not swept": {
 			pages: []string{`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-old-prefix","displayName":"tf-odb-adbs-example"},{"autonomousDatabaseId":"adb-prefix-only","displayName":"tf-acc-test"},{"autonomousDatabaseId":"adb-prefix-lookalike","displayName":"tf-acc-testexample"},{"autonomousDatabaseId":"adb-prefix-suffix","displayName":"production-tf-acc-test-example"}]}`},
 		},
-		"empty inventory":                       {pages: []string{`{"autonomousDatabases":[]}`}},
-		"failure discards partial inventory":    {pages: []string{`{"autonomousDatabases":[{"autonomousDatabaseId":"adb-first","displayName":"tf-acc-test-first"}],"nextToken":"second-page"}`}, errorCode: "ValidationException"},
-		"unsupported account remains skippable": {errorCode: "AccessDeniedException", wantSkip: true},
+		"empty inventory": {pages: []string{`{"autonomousDatabases":[]}`}},
 	}
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
@@ -50,8 +46,7 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 			ctx := t.Context()
 			var pageCount int
 			var deletedIDs []string
-			client := new(conns.AWSClient)
-			client.SetHTTPClient(ctx, &http.Client{Transport: autonomousDatabaseSweepTransport(func(request *http.Request) (*http.Response, error) {
+			client := newAutonomousDatabaseSweepClient(t, autonomousDatabaseSweepTransport(func(request *http.Request) (*http.Response, error) {
 				var input map[string]string
 				if err := json.NewDecoder(request.Body).Decode(&input); err != nil {
 					t.Fatal(err)
@@ -67,15 +62,10 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 					if got := input["nextToken"]; got != wantToken {
 						t.Errorf("nextToken = %q, want %q", got, wantToken)
 					}
-					if pageCount < len(testCase.pages) {
-						body = testCase.pages[pageCount]
-					} else {
-						if testCase.errorCode == "" {
-							t.Fatal("unexpected extra list request")
-						}
-						status = http.StatusBadRequest
-						body = `{"__type":"` + testCase.errorCode + `","message":"listing failed"}`
+					if pageCount >= len(testCase.pages) {
+						t.Fatal("unexpected extra list request")
 					}
+					body = testCase.pages[pageCount]
 					pageCount++
 				case "Odb.DeleteAutonomousDatabase":
 					deletedIDs = append(deletedIDs, input["autonomousDatabaseId"])
@@ -85,27 +75,9 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 					t.Fatalf("unexpected AWS operation: %s", request.Header.Get("X-Amz-Target"))
 				}
 				return &http.Response{StatusCode: status, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
-			})})
-			client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
-			config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
-			client, diags := config.ConfigureProvider(ctx, client)
-			if diags.HasError() {
-				t.Fatal(diags)
-			}
+			}))
 
 			resources, err := sweepAutonomousDatabases(ctx, client)
-			if testCase.errorCode != "" {
-				if err == nil || !strings.Contains(err.Error(), testCase.errorCode) {
-					t.Fatalf("error = %v, want %s", err, testCase.errorCode)
-				}
-				if resources != nil {
-					t.Fatalf("partial inventory must be discarded on list failure: %v", resources)
-				}
-				if got := awsv2.SkipSweepError(err); got != testCase.wantSkip {
-					t.Errorf("SkipSweepError = %t, want %t", got, testCase.wantSkip)
-				}
-				return
-			}
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -125,6 +97,93 @@ func TestSweepAutonomousDatabases(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestSweepAutonomousDatabases_listErrors(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		body      string
+		wantError string
+		wantSkip  bool
+		firstPage string
+	}{
+		"failure discards partial inventory": {
+			firstPage: `{"autonomousDatabases":[{"autonomousDatabaseId":"adb-first","displayName":"tf-acc-test-first"}],"nextToken":"second-page"}`,
+			body:      `{"__type":"ValidationException","message":"listing failed"}`,
+			wantError: "ValidationException",
+		},
+		"unsupported account remains skippable": {
+			body:      `{"__type":"AccessDeniedException","message":"listing failed"}`,
+			wantError: "AccessDeniedException",
+			wantSkip:  true,
+		},
+		"unsupported region": {
+			body: `{"__type":"ValidationException","message":"Oracle Database@AWS doesn't support Autonomous Database in the current Region. Switch to a Region where Autonomous Database is available and try again."}`,
+		},
+		"unrelated validation error": {
+			body:      `{"__type":"ValidationException","message":"listing failed"}`,
+			wantError: "ValidationException",
+		},
+		"unrelated error with same message": {
+			body:      `{"__type":"InternalServerException","message":"Oracle Database@AWS doesn't support Autonomous Database in the current Region"}`,
+			wantError: "InternalServerException",
+		},
+	}
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			ctx := t.Context()
+			requests := 0
+			client := newAutonomousDatabaseSweepClient(t, autonomousDatabaseSweepTransport(func(request *http.Request) (*http.Response, error) {
+				if got := request.Header.Get("X-Amz-Target"); got != "Odb.ListAutonomousDatabases" {
+					t.Fatalf("unexpected AWS operation: %s", got)
+				}
+				requests++
+				status, body := http.StatusBadRequest, testCase.body
+				if requests == 1 && testCase.firstPage != "" {
+					status, body = http.StatusOK, testCase.firstPage
+				}
+				return &http.Response{StatusCode: status, Header: http.Header{"Content-Type": {"application/x-amz-json-1.0"}}, Body: io.NopCloser(strings.NewReader(body)), Request: request}, nil
+			}))
+
+			resources, err := sweepAutonomousDatabases(ctx, client)
+			if testCase.wantError == "" {
+				if err != nil {
+					t.Fatalf("unexpected error: %s", err)
+				}
+			} else if err == nil || !strings.Contains(err.Error(), testCase.wantError) {
+				t.Fatalf("error = %v, want %s", err, testCase.wantError)
+			}
+			if resources != nil {
+				t.Errorf("resources = %v, want nil", resources)
+			}
+			if got := awsv2.SkipSweepError(err); got != testCase.wantSkip {
+				t.Errorf("SkipSweepError = %t, want %t", got, testCase.wantSkip)
+			}
+			wantRequests := 1
+			if testCase.firstPage != "" {
+				wantRequests++
+			}
+			if requests != wantRequests {
+				t.Errorf("requests = %d, want %d", requests, wantRequests)
+			}
+		})
+	}
+}
+
+func newAutonomousDatabaseSweepClient(t *testing.T, transport http.RoundTripper) *conns.AWSClient {
+	t.Helper()
+	ctx := t.Context()
+	client := new(conns.AWSClient)
+	client.SetHTTPClient(ctx, &http.Client{Transport: transport})
+	client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.ODB: &servicePackage{}})
+	config := conns.Config{AccessKey: "test", SecretKey: "test", Region: endpoints.UsEast1RegionID, SkipCredsValidation: true, SkipRequestingAccountId: true, MaxRetries: 0, SharedConfigFiles: []string{}, SharedCredentialsFiles: []string{}}
+	client, diags := config.ConfigureProvider(ctx, client)
+	if diags.HasError() {
+		t.Fatal(diags)
+	}
+	return client
 }
 
 type autonomousDatabaseSweepTransport func(*http.Request) (*http.Response, error)

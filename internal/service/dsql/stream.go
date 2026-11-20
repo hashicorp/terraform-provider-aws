@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dsql"
@@ -37,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -85,7 +85,7 @@ func (r *streamResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z0-9]{26}$`), ""),
+					lazystringvalidator.RegexMatches(`^[a-z0-9]{26}$`, ""),
 				},
 			},
 			names.AttrCreationTime: schema.StringAttribute{
@@ -158,7 +158,7 @@ func (r *streamResource) Schema(ctx context.Context, request resource.SchemaRequ
 										},
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(20, 2048),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws(-[^:]+)?:iam::[0-9]{12}:role(/[a-zA-Z0-9+=,.@_-]+)+$`), ""),
+											lazystringvalidator.RegexMatches(`^arn:aws(-[^:]+)?:iam::[0-9]{12}:role(/[a-zA-Z0-9+=,.@_-]+)+$`, ""),
 										},
 									},
 									names.AttrStreamARN: schema.StringAttribute{
@@ -169,7 +169,7 @@ func (r *streamResource) Schema(ctx context.Context, request resource.SchemaRequ
 										},
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 2048),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws.*:kinesis:.*:\d{12}:stream/\S+$`), ""),
+											lazystringvalidator.RegexMatches(`^arn:aws.*:kinesis:.*:\d{12}:stream/\S+$`, ""),
 										},
 									},
 								},

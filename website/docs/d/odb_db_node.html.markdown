@@ -43,7 +43,6 @@ This data source exports the following attributes in addition to the arguments a
 * `backup_ip_id` - Oracle Cloud ID (OCID) of the backup IP address that's associated with the DB node.
 * `backup_vnic2_id` - OCID of the second backup VNIC.
 * `backup_vnic_id` - OCID of the backup VNIC.
-* `cloud_vm_cluster_id` - ID of the cloud VM cluster.
 * `cpu_core_count` - Number of CPU cores enabled on the DB node.
 * `created_at` - Date and time when the DB node was created.
 * `db_server_id` - Unique identifier of the DB server that is associated with the DB node.

@@ -45,6 +45,8 @@ func sweepDomains(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newDomainResource, client,
 				framework.NewAttribute(names.AttrID, id),
+				// Delete domains whose projects are stuck deleting, e.g. after the domain execution role is gone.
+				framework.NewAttribute("skip_deletion_check", true),
 			))
 		}
 	}

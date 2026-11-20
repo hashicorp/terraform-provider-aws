@@ -339,7 +339,7 @@ For more detailed documentation about each argument, refer to the AWS official d
 * `master_password_wo` - (Optional, Write-Only, required unless `manage_master_user_password` is set to true, a `snapshot_identifier`, `replication_source_identifier`, or `master_password` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). Cannot be set if `manage_master_user_password` is set to `true`. If set, requires `master_password_wo_version` to be set.
 * `master_password_wo_version` - (Optional) Required when `master_password_wo` is set. Changing this value triggers an update to `master_password_wo`.
 * `master_user_secret_kms_key_id` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
-* `master_username` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). This argument does not support in-place updates and cannot be changed during a restore from snapshot.
+* `master_username` - (Optional) Username for the master DB user. Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB cluster. To turn off collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html#USER_Monitoring.OS.IAMRole.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Clusters.
 * `network_type` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
@@ -410,27 +410,15 @@ Full details on the core parameters and impacts are in the API Docs: [RestoreDBC
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of cluster
-* `availability_zones` - Availability zone of the instance
-* `backup_retention_period` - Backup retention period
-* `ca_certificate_identifier` - CA identifier of the CA certificate used for the DB instance's server certificate
 * `ca_certificate_valid_till` - Expiration date of the DB instance’s server certificate
-* `cluster_identifier` - RDS Cluster Identifier
 * `cluster_members` - List of RDS Instances that are a part of this cluster
 * `cluster_resource_id` - RDS Cluster Resource ID
-* `database_name` - Database name
 * `endpoint` - DNS address of the RDS instance
-* `engine` - Database engine
 * `engine_version_actual` - Running version of the database.
 * `hosted_zone_id` - Route53 Hosted Zone ID of the endpoint
 * `id` - RDS Cluster Identifier
 * `master_user_secret` - Block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret-block).
-* `master_username` - Master username for the database
-* `port` - Database port
-* `preferred_backup_window` - Daily time range during which the backups happen
-* `preferred_maintenance_window` - Maintenance window
 * `reader_endpoint` - Read-only endpoint for the Aurora cluster, automatically load-balanced across replicas
-* `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
-* `storage_encrypted` - Whether the DB cluster is encrypted
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `upgrade_rollout_order` - Order in which the clusters are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 

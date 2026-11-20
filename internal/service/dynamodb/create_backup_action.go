@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -64,10 +64,7 @@ func (a *createBackupAction) Schema(ctx context.Context, req action.SchemaReques
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 255),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
-						"must contain only alphanumeric characters, underscores, periods, and hyphens",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_.-]+$`, "must contain only alphanumeric characters, underscores, periods, and hyphens"),
 				},
 			},
 			names.AttrTimeout: schema.Int64Attribute{

@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -81,7 +81,7 @@ func resourceType() *schema.Resource {
 								ForceNew: true,
 								ValidateFunc: validation.All(
 									validation.StringLenBetween(1, 512),
-									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_./#-]+`), "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
+									lazyvalidation.StringMatch(`[0-9A-Za-z_./#-]+`, "must contain only alphanumeric, period, hyphen, forward slash, and octothorp characters"),
 								),
 							},
 							"log_role_arn": {
@@ -109,7 +109,7 @@ func resourceType() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
+					ValidateFunc: lazyvalidation.StringMatch(`^(https|s3)\:\/\/.+`, "must begin with s3:// or https://"),
 				},
 				names.AttrType: {
 					Type:             schema.TypeString,
@@ -128,7 +128,7 @@ func resourceType() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(10, 204),
-						validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+						lazyvalidation.StringMatch(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`, "three alphanumeric character sections separated by double colons (::)"),
 					),
 				},
 				"version_id": {
