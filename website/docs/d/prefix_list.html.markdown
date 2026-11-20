@@ -83,7 +83,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `cidr_blocks` - List of CIDR blocks for the AWS service associated with the prefix list.
 * `id` - ID of the selected prefix list.
-* `name` - Name of the selected prefix list.
 
 ## Timeouts
 

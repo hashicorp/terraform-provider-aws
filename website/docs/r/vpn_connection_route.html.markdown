@@ -50,7 +50,4 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `destination_cidr_block` - CIDR block associated with the local subnet of the customer network.
-* `vpn_connection_id` - ID of the VPN connection.
+This resource exports no additional attributes.

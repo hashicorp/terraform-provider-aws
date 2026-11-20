@@ -52,11 +52,7 @@ This resource supports the following arguments:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `device_name` - Device name exposed to the instance
-* `instance_id` - ID of the Instance
-* `volume_id` - ID of the Volume
+This resource exports no additional attributes.
 
 ## Timeouts
 

@@ -61,4 +61,3 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - List of the Auto Scaling groups ARNs in the current region.
 * `id` - AWS Region.
-* `names` - List of the Auto Scaling groups in the current region.

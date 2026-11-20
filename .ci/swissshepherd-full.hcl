@@ -273,6 +273,12 @@ check "schema_docs" {
   nested_object_attributes = true
   allow_inline_read_only   = true
 
+  # Data source `tags` is Optional+Computed in the schema whether the data
+  # source filters on it or only returns it. Document a filter under Argument
+  # Reference and an output under Attribute Reference. Remove once output-only
+  # `tags` is Computed-only in the schema (#50581).
+  allow_either_section = ["data_source/tags"]
+
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
     "`{Path}` Block",

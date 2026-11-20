@@ -42,7 +42,6 @@ This data source exports the following attributes in addition to the arguments a
 * `deployment_type` - File system deployment type.
 * `disk_iops_configuration` - SSD IOPS configuration for the file system.
 * `dns_name` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
-* `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
 * `network_interface_ids` - Set of network interface identifiers for the file system.
 * `network_type` - Network type (`IPV4` or `DUAL`).

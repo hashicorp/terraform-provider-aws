@@ -86,18 +86,12 @@ the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/referenc
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of cluster instance
-* `availability_zone` - Availability zone of the instance
-* `cluster_identifier` - RDS Cluster Identifier
 * `dbi_resource_id` - Region-unique, immutable identifier for the DB instance.
 * `endpoint` - DNS address for this instance. May not be writable
-* `engine` - Database engine
 * `engine_version_actual` - Database engine version
 * `id` - Instance identifier
-* `identifier` - Instance identifier
 * `kms_key_id` - ARN for the KMS encryption key if one is set to the cluster.
 * `network_type` - Network type of the DB instance.
-* `performance_insights_enabled` - Whether Performance Insights is enabled.
-* `performance_insights_kms_key_id` - ARN for the KMS encryption key used by Performance Insights.
 * `port` - Database port
 * `storage_encrypted` - Whether the DB cluster is encrypted.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
