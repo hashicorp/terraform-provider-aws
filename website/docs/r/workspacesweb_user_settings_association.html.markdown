@@ -37,8 +37,8 @@ resource "aws_workspacesweb_user_settings_association" "example" {
 
 The following arguments are required:
 
-* `user_settings_arn` - (Required) ARN of the user settings to associate with the portal. Forces replacement if changed.
 * `portal_arn` - (Required) ARN of the portal to associate with the user settings. Forces replacement if changed.
+* `user_settings_arn` - (Required) ARN of the user settings to associate with the portal. Forces replacement if changed.
 
 The following arguments are optional:
 
