@@ -24,8 +24,11 @@ resource "aws_pinpoint_event_stream" "stream" {
 resource "aws_pinpoint_app" "app" {}
 
 resource "aws_kinesis_stream" "test_stream" {
-  name        = "pinpoint-kinesis-test"
-  shard_count = 1
+  name = "pinpoint-kinesis-test"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 data "aws_iam_policy_document" "assume_role" {

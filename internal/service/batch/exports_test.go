@@ -20,6 +20,9 @@ var (
 	FindJobDefinitionByARN                  = findJobDefinitionByARN
 	FindJobQueueByID                        = findJobQueueByID
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
+	FlattenContainerProperties              = flattenContainerProperties
+	FlattenECSProperties                    = flattenECSProperties
+	FlattenNodeProperties                   = flattenNodeProperties
 
 	ListTags = listTags
 

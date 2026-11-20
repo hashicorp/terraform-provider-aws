@@ -119,7 +119,7 @@ func resourceUser() *schema.Resource {
 					ValidateFunc: validServerID,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrUserName: {
 					Type:         schema.TypeString,
 					Required:     true,

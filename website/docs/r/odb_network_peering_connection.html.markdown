@@ -38,6 +38,7 @@ The following arguments are optional:
 
 * `odb_network_arn` - (Optional) ARN of the ODB network that initiates the peering connection. Changing this will force Terraform to create a new resource. Either odb_network_id or odb_network_arn should be used.
 * `odb_network_id` - (Optional) Unique identifier of the ODB network that initiates the peering connection. A sample ID is `odbpcx-abcdefgh12345678`. Changing this will force Terraform to create a new resource.
+* `peer_network_cidrs` - (Optional) Set of peer network CIDRs. Adding or removing CIDRs is only supported during an update; during create the value is computed by the service.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -50,7 +51,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Unique identifier of odb network peering connection.
 * `odb_peering_connection_type` - Type of the ODB peering connection.
 * `peer_network_arn` - ARN of the peer network peering connection.
-* `peer_network_cidrs` - Set of peer network cidrs. Add remove is only supported during update operation. During create this attribute is compute only.
 * `percent_progress` - Progress of the ODB network peering connection.
 * `status` - Status of the ODB network peering connection.
 * `status_reason` - Reason for the current status of the ODB peering connection.

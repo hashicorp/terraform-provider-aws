@@ -93,7 +93,7 @@ func flowLogSchemaV0() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"traffic_type": {
 					Type:     schema.TypeString,
 					Optional: true,

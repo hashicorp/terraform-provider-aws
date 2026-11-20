@@ -26,7 +26,7 @@ resource "aws_odb_cloud_autonomous_vm_cluster" "avmc_with_minimum_parameters" {
   total_container_databases             = 1
   cpu_core_count_per_node               = 40
   license_model                         = "LICENSE_INCLUDED"
-  # ids of db server. refer your exa infra. This is a manadatory fileld. Refer your cloud exadata infrastructure for db server id
+  # ids of db server. refer your exa infra. This is a manadatory field. Refer your cloud exadata infrastructure for db server id
   db_servers                 = ["<my_db_server_id>"]
   scan_listener_port_tls     = 8561
   scan_listener_port_non_tls = 1024
@@ -83,7 +83,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cloud_exadata_infrastructure_arn` - (Optional) Exadata infrastructure ARN. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
-* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure id. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
+* `cloud_exadata_infrastructure_id` - (Optional) Exadata infrastructure ID. Changing this will force Terraform to create a new resource. Either the combination of `cloud_exadata_infrastructure_id` and `odb_network_id` or `cloud_exadata_infrastructure_arn` and `odb_network_arn` must be used.
 * `description` - (Optional) Description of the Autonomous VM cluster.
 * `is_mtls_enabled_vm_cluster` - (Optional) Whether mutual TLS (mTLS) authentication is enabled for the Autonomous VM cluster. Changing this will force terraform to create new resource.
 * `license_model` - (Optional) License model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE. Changing this will force terraform to create new resource.
@@ -129,7 +129,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `exadata_storage_in_tbs_lowest_scaled_value` - Minimum value to which you can scale down the Exadata storage, in TB.
 * `hostname` - Hostname of the Autonomous VM cluster.
 * `id` - Unique identifier of autonomous vm cluster.
-* `license_model` - License model for the Autonomous VM cluster. Valid values are LICENSE_INCLUDED or BRING_YOUR_OWN_LICENSE.
 * `max_acds_lowest_scaled_value` - Minimum value to which you can scale down the maximum number of Autonomous CDBs.
 * `memory_size_in_gbs` - Total amount of memory allocated to the Autonomous VM cluster, in gigabytes(GB).
 * `node_count` - Number of database server nodes in the Autonomous VM cluster.
@@ -150,7 +149,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - Combined set of user-defined and provider-defined tags.
 * `time_database_ssl_certificate_expires` - Expiration date and time of the database SSL certificate.
 * `time_ords_certificate_expires` - Expiration date and time of the ORDS certificate.
-* `time_zone` - Time zone of the Autonomous VM cluster.
 
 ## Timeouts
 

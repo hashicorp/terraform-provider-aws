@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_workspaces_workspace
 
-Provides a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service
+Provides a workspace in [AWS WorkSpaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service
 
 ~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
 
@@ -72,7 +72,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The workspaces ID.
+* `id` - The WorkSpaces ID.
 * `ip_address` - The IP address of the WorkSpace.
 * `computer_name` - The name of the WorkSpace, as seen by the operating system.
 * `state` - The operational state of the WorkSpace.
@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces using their ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WorkSpaces using their ID. For example:
 
 ```terraform
 import {
@@ -97,7 +97,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Workspaces using their ID. For example:
+Using `terraform import`, import WorkSpaces using their ID. For example:
 
 ```console
 % terraform import aws_workspaces_workspace.example ws-9z9zmbkhv

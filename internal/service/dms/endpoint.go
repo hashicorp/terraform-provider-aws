@@ -833,7 +833,7 @@ func resourceEndpoint() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.DmsSslModeValue](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrUsername: {
 					Type:          schema.TypeString,
 					Optional:      true,

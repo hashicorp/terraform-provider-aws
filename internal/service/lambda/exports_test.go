@@ -17,6 +17,7 @@ var (
 	ResourceLayerVersion                 = resourceLayerVersion
 	ResourceLayerVersionPermission       = resourceLayerVersionPermission
 	ResourcePermission                   = resourcePermission
+	ResourcePolicy                       = newResourcePolicyResource
 	ResourceProvisionedConcurrencyConfig = resourceProvisionedConcurrencyConfig
 
 	FindAliasByTwoPartKey                        = findAliasByTwoPartKey
@@ -32,6 +33,7 @@ var (
 	FindLayerVersionPolicyByTwoPartKey           = findLayerVersionPolicyByTwoPartKey
 	FindPolicyStatementByTwoPartKey              = findPolicyStatementByTwoPartKey
 	FindProvisionedConcurrencyConfigByTwoPartKey = findProvisionedConcurrencyConfigByTwoPartKey
+	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	FindRuntimeManagementConfigByTwoPartKey      = findRuntimeManagementConfigByTwoPartKey
 	FunctionEventInvokeConfigParseResourceID     = functionEventInvokeConfigParseResourceID
 	GetFunctionNameFromARN                       = getFunctionNameFromARN

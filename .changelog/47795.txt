@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_devopsagent_agent_space
+```
+
+```release-note:new-list-resource
+aws_devopsagent_agent_space
+```

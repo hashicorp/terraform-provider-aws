@@ -124,6 +124,33 @@ func CheckAPICallNotMade(rec *apicall.Recorder, since *apicall.Cursor, service, 
 	}
 }
 
+// CheckAPICallCountAtMost fails if service.operation was recorded since the
+// cursor pointed to by since more than limit times.
+func CheckAPICallCountAtMost(rec *apicall.Recorder, since *apicall.Cursor, service, operation string, limit int) resource.TestCheckFunc {
+	return func(_ *terraform.State) error {
+		if rec == nil {
+			return fmt.Errorf("CheckAPICallCountAtMost: recorder is nil")
+		}
+		var cursor apicall.Cursor
+		if since != nil {
+			cursor = *since
+		}
+
+		var n int
+		for _, c := range rec.CallsSince(cursor) {
+			if c.Service == service && c.Operation == operation {
+				n++
+			}
+		}
+
+		if n > limit {
+			return fmt.Errorf("expected at most %d %s.%s calls, got %d", limit, service, operation, n)
+		}
+
+		return nil
+	}
+}
+
 // formatCalls renders calls compactly for failure messages.
 func formatCalls(calls []apicall.Call) string {
 	if len(calls) == 0 {

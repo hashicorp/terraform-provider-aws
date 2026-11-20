@@ -6,7 +6,6 @@ package resiliencehubv2
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -30,6 +30,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwplanmodifiers "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -37,10 +38,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var validResourceName validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`),
-	`Must start with a letter or number. 2-60 characters. Use letters, numbers, hyphens, and underscores only.`,
-)
+var validResourceName validator.String = lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`, `Must start with a letter or number. 2-60 characters. Use letters, numbers, hyphens, and underscores only.`)
 
 // @FrameworkResource("aws_resiliencehubv2_policy", name="Policy")
 // @Tags(identifierAttribute="arn")
@@ -80,6 +78,13 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"sharing_enabled": fwschema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -208,6 +213,7 @@ func (r *policyResource) Create(ctx context.Context, req resource.CreateRequest,
 
 	// Set values for unknowns.
 	plan.PolicyARN = fwflex.StringToFramework(ctx, output.Policy.PolicyArn)
+	plan.SharingEnabled = fwflex.BoolToFramework(ctx, output.Policy.SharingEnabled)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, plan))
 }
@@ -361,6 +367,7 @@ type policyResourceModel struct {
 	MultiRegion     fwtypes.ListNestedObjectValueOf[multiRegionTargetsModel]  `tfsdk:"multi_region"`
 	Name            types.String                                              `tfsdk:"name"`
 	PolicyARN       types.String                                              `tfsdk:"arn"`
+	SharingEnabled  types.Bool                                                `tfsdk:"sharing_enabled"`
 	Tags            tftags.Map                                                `tfsdk:"tags"`
 	TagsAll         tftags.Map                                                `tfsdk:"tags_all"`
 }

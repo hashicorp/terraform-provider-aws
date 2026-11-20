@@ -220,6 +220,12 @@ func resourceCluster() *schema.Resource {
 					Computed: true,
 					ForceNew: true,
 				},
+				"network_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(networkType_Values(), false),
+				},
 				names.AttrPort: {
 					Type:     schema.TypeInt,
 					Optional: true,
@@ -312,7 +318,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(storageType_Values(), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -434,6 +440,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		inputC.DBSubnetGroupName = aws.String(v)
 		inputR.DBSubnetGroupName = aws.String(v)
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		v := v.(string)
+
+		inputC.NetworkType = aws.String(v)
+		inputR.NetworkType = aws.String(v)
 	}
 
 	if v, ok := d.GetOk("preferred_backup_window"); ok {
@@ -608,6 +621,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set(names.AttrKMSKeyARN, dbc.KmsKeyId)
 	d.Set("neptune_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
 	d.Set("neptune_subnet_group_name", dbc.DBSubnetGroup)
+	d.Set("network_type", dbc.NetworkType)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
@@ -689,6 +703,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 			if v, ok := d.GetOk("neptune_instance_parameter_group_name"); ok {
 				input.DBInstanceParameterGroupName = aws.String(v.(string))
 			}
+		}
+
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
 		}
 
 		if d.HasChange("preferred_backup_window") {

@@ -5,11 +5,9 @@ package dynamodb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
@@ -26,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,10 +64,7 @@ func (a *createBackupAction) Schema(ctx context.Context, req action.SchemaReques
 				Optional:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 255),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
-						"must contain only alphanumeric characters, underscores, periods, and hyphens",
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_.-]+$`, "must contain only alphanumeric characters, underscores, periods, and hyphens"),
 				},
 			},
 			names.AttrTimeout: schema.Int64Attribute{
@@ -158,14 +154,11 @@ func (a *createBackupAction) Invoke(ctx context.Context, req action.InvokeReques
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var failureErr *actionwait.FailureStateError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError("Backup timeout", "Backup did not complete within the specified timeout")
-		} else if errors.As(err, &failureErr) {
+		} else if errs.IsA[*actionwait.FailureStateError](err) {
 			resp.Diagnostics.AddError("Backup failed", "Backup completed with status: "+err.Error())
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError("Unexpected backup status", err.Error())
 		} else {
 			resp.Diagnostics.AddError("Error waiting for backup", err.Error())

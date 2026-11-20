@@ -169,6 +169,26 @@ func dataSourceService() *schema.Resource {
 											Type:     schema.TypeString,
 											Computed: true,
 										},
+										"target_type": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"timeout_configuration": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrAction: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													"timeout_in_minutes": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
+										},
 									},
 								},
 							},
@@ -489,7 +509,7 @@ func dataSourceService() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

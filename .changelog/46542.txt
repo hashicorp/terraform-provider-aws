@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `replicate_source_db_cluster` argument to create a read replica from a Multi-AZ DB cluster
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `replicate_source_db_cluster` attribute
+```

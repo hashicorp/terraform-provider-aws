@@ -103,7 +103,6 @@ This data source exports the following attributes in addition to the arguments a
 * `sse_kms_key_id` - If present, specifies the ID of the KMS master encryption key that was used for the object.
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `tags`  - Map of tags assigned to the object.
-* `version_id` - Latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.

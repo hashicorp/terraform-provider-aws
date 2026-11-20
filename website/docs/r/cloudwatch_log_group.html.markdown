@@ -76,7 +76,7 @@ resource "aws_cloudwatch_log_group" "example" {
 * `account_id` (String) AWS Account where this resource is managed.
 * `region` (String) Region where this resource is managed.
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch Log Groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Log Groups using the `name`. For example:
 
 ```terraform
 import {
@@ -85,7 +85,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cloudwatch Log Groups using the `name`. For example:
+Using `terraform import`, import CloudWatch Log Groups using the `name`. For example:
 
 ```console
 % terraform import aws_cloudwatch_log_group.example yada

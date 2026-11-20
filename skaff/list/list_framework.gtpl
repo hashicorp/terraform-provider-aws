@@ -23,16 +23,22 @@ type {{ template "ListResourceStructName" . }} struct {
 
 {{- define "ReadBody" -}}
 	 		{{- template "ReadBodyLogging" . }}
+			id := aws.ToString(item.{{ .ListResource }}Id)
 
 			result := request.NewListResult(ctx)
 			
 			var data {{ .ListResourceLowerCamel }}ResourceModel
 			{{ if .IncludeComments -}}
 			// TIP: -- 6. Set the ID, arguments, and attributes
-			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`
+			// Using a field name prefix allows mapping fields such as `{{ .ListResource }}Id` to `ID`.
+			//
+			// smerr.AddEnrich runs the framework diagnostics returned by flatten through
+			// smarterr, attaching smerr.ID for context. Pair it with smerr.NewListResultError
+			// (per-item and pagination errors) and smerr.ListStreamEnrich (config decode)
+			// above, so every diagnostic this list resource emits is enriched consistently.
 			{{- end }}
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				result.Diagnostics.Append(l.flatten(ctx, &item, &data)...)
+				smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data), smerr.ID, id)
 				if result.Diagnostics.HasError() {
 					return
 				}

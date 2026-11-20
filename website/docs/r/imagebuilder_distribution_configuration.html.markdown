@@ -66,7 +66,7 @@ The following arguments are optional:
 * `launch_template_configuration` - (Optional) Set of launch template configuration settings that apply to image distribution. Detailed below.
 * `license_configuration_arns` - (Optional) Set of ARNs of License Manager License Configurations.
 * `s3_export_configuration` - (Optional) Configuration block with S3 export settings. Detailed below.
-* `ssm_parameter_configuration` - (Optional) Configuration block with SSM parameter configuration to use as AMI id output. Detailed below.
+* `ssm_parameter_configuration` - (Optional) Configuration block with SSM parameter configuration to use as AMI ID output. Detailed below.
 
 ### ami_distribution_configuration
 

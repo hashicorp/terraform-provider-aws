@@ -31,6 +31,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -108,6 +110,7 @@ func resourceCluster() *schema.Resource {
 				},
 				names.AttrAvailabilityZones: {
 					Type:     schema.TypeSet,
+					MaxItems: 3,
 					Optional: true,
 					ForceNew: true,
 					Computed: true,
@@ -149,6 +152,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc:  validIdentifierPrefix,
 					ConflictsWith: []string{names.AttrClusterIdentifier},
 				},
+				// Warns when configured: see ValidateRawResourceConfigFuncs.
 				"cluster_members": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -257,7 +261,7 @@ func resourceCluster() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.Any(
-						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						lazyvalidation.StringMatch(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
 						validation.StringInSlice(clusterEngine_Values(), false),
 					),
 				},
@@ -454,6 +458,13 @@ func resourceCluster() *schema.Resource {
 						return strings.ToLower(val.(string))
 					},
 					ValidateFunc: verify.ValidOnceAWeekWindowFormat,
+				},
+				names.AttrPubliclyAccessible: {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{"s3_import"},
 				},
 				"reader_endpoint": {
 					Type:     schema.TypeString,
@@ -702,10 +713,15 @@ func resourceCluster() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upgrade_rollout_order": {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
@@ -714,6 +730,10 @@ func resourceCluster() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 			}
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			sdkv2.WarnShouldBeComputedOnlyRawConfig("cluster_members"),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -749,6 +769,8 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		create.WithConfiguredPrefix(d.Get("cluster_identifier_prefix").(string)),
 		create.WithDefaultPrefix("tf-"),
 	).Generate(ctx)
+
+	createStart := time.Now().UTC()
 
 	// get write-only value from configuration
 	masterPasswordWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("master_password_wo"))
@@ -872,6 +894,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if v := d.GetRawConfig().GetAttr(names.AttrPubliclyAccessible); v.IsKnown() && !v.IsNull() {
+			input.PubliclyAccessible = aws.Bool(v.True())
 		}
 
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
@@ -1141,6 +1167,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
+		if v := d.GetRawConfig().GetAttr(names.AttrPubliclyAccessible); v.IsKnown() && !v.IsNull() {
+			input.PubliclyAccessible = aws.Bool(v.True())
+		}
+
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
 			modifyDbClusterInput.PreferredBackupWindow = aws.String(v.(string))
 			requiresModifyDbCluster = true
@@ -1381,6 +1411,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 			input.Port = aws.Int32(int32(v.(int)))
 		}
 
+		if v := d.GetRawConfig().GetAttr(names.AttrPubliclyAccessible); v.IsKnown() && !v.IsNull() {
+			input.PubliclyAccessible = aws.Bool(v.True())
+		}
+
 		if v, ok := d.GetOk("preferred_backup_window"); ok {
 			input.PreferredBackupWindow = aws.String(v.(string))
 		}
@@ -1458,6 +1492,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
 		}
+	}
+
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
@@ -1743,6 +1782,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		const (
 			timeout = 5 * time.Minute
 		)
+
+		modifyStart := time.Now().UTC()
+
 		_, err := tfresource.RetryWhen(ctx, timeout,
 			func(ctx context.Context) (any, error) {
 				return conn.ModifyDBCluster(ctx, input)
@@ -1771,6 +1813,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if _, err := waitDBClusterUpdated(ctx, conn, d.Id(), applyImmediately, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+		}
+
+		if v, ok := d.GetOk("warning_event_categories"); ok {
+			diags = append(diags, surfaceEvents(ctx, conn, d.Id(), types.SourceTypeDbCluster, modifyStart,
+				flex.ExpandStringValueSet(v.(*schema.Set)))...)
 		}
 	}
 
@@ -2422,6 +2469,7 @@ func resourceClusterFlatten(ctx context.Context, conn *rds.Client, dbc *types.DB
 	d.Set("performance_insights_retention_period", dbc.PerformanceInsightsRetentionPeriod)
 	d.Set(names.AttrPort, dbc.Port)
 	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
+	d.Set(names.AttrPubliclyAccessible, dbc.PubliclyAccessible)
 	d.Set(names.AttrPreferredMaintenanceWindow, dbc.PreferredMaintenanceWindow)
 	d.Set("reader_endpoint", dbc.ReaderEndpoint)
 	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)

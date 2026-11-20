@@ -24,8 +24,8 @@ data "aws_medialive_input" "example" {
 
 This data source supports the following arguments:
 
+* `id` - (Required) ID of the Input.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `id` - (Required) The ID of the Input.
 
 ## Attribute Reference
 
@@ -33,16 +33,42 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Input.
 * `attached_channels` - Channels attached to Input.
-* `destionations` - Destination settings for PUSH type inputs.
-* `input_class` - The input class.
-* `input_devices` - Settings for the devices.
-* `input_partner_ids` - A list of IDs for all Inputs which are partners of this one.
+* `destinations` - Destination settings for PUSH type inputs. See [`destinations` Block](#destinations-block) for more details.
+* `input_class` - Input class.
+* `input_devices` - Settings for the devices. See [`input_devices` Block](#input_devices-block) for more details.
+* `input_partner_ids` - IDs for all Inputs which are partners of this one.
 * `input_source_type` - Source type of the input.
-* `media_connect_flows` - A list of the MediaConnect Flows.
+* `media_connect_flows` - MediaConnect Flows. See [`media_connect_flows` Block](#media_connect_flows-block) for more details.
 * `name` - Name of the input.
-* `role_arn` - The ARN of the role this input assumes during and after creation.
+* `role_arn` - ARN of the role this input assumes during and after creation.
 * `security_groups` - List of input security groups.
-* `sources` - The source URLs for a PULL-type input.
-* `state` - The state of the input.
-* `tags` - A map of tags assigned to the Input.
-* `type` - The type of the input.
+* `sources` - Source URLs for a PULL-type input. See [`sources` Block](#sources-block) for more details.
+* `state` - State of the input.
+* `tags` - Map of tags assigned to the Input.
+* `type` - Type of the input.
+
+### `destinations` Block
+
+* `ip` - IP address.
+* `port` - Port.
+* `url` - URL.
+* `vpc` - VPC settings. See [`destinations.vpc` Block](#destinationsvpc-block) for more details.
+
+### `destinations.vpc` Block
+
+* `availability_zone` - Availability Zone.
+* `network_interface_id` - Network interface ID.
+
+### `input_devices` Block
+
+* `id` - ID of the device.
+
+### `media_connect_flows` Block
+
+* `flow_arn` - ARN of the MediaConnect Flow.
+
+### `sources` Block
+
+* `password_param` - Key used to extract the password from EC2 Parameter store.
+* `url` - URL where the stream is pulled from.
+* `username` - Username for the input source.

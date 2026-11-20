@@ -589,7 +589,7 @@ func resourceClassificationJob() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_paused_details": {
 					Type:     schema.TypeList,
 					Computed: true,

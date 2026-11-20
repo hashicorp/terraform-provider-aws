@@ -7,6 +7,8 @@ package identitystore
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
@@ -76,6 +78,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_identitystore_group_membership",
 			Name:     "Group Membership",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("identity_store_id", true),
+				inttypes.StringIdentityAttribute("membership_id", true),
+			}),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+				ImportID:      groupMembershipImportID{},
+			},
 		},
 		{
 			Factory:  resourceUser,
@@ -86,13 +96,28 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	}
 }
 
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newGroupMembershipResourceAsListResource,
+			TypeName: "aws_identitystore_group_membership",
+			Name:     "Group Membership",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("identity_store_id", true),
+				inttypes.StringIdentityAttribute("membership_id", true),
+			}),
+		},
+	})
+}
+
 func (p *servicePackage) ServicePackageName() string {
 	return names.IdentityStore
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*identitystore.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws.Config)
 	optFns := []func(*identitystore.Options){
 		identitystore.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),

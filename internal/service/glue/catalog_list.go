@@ -32,21 +32,9 @@ type catalogListResource struct {
 	framework.WithList
 }
 
-type catalogListModel struct {
-	framework.WithRegionModel
-}
-
 func (r *catalogListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := r.Meta()
 	conn := awsClient.GlueClient(ctx)
-
-	var query catalogListModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)

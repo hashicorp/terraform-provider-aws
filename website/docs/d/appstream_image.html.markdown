@@ -55,7 +55,6 @@ This data source exports the following attributes in addition to the arguments a
     * `platforms` - Array of strings describing the platforms on which the application can run. Values will be from: WINDOWS | WINDOWS_SERVER_2016 | WINDOWS_SERVER_2019 | WINDOWS_SERVER_2022 | AMAZON_LINUX2
     * `working_directory` - Working directory for the application.
 * `appstream_agent_version` - Version of the AppStream 2.0 agent to use for instances that are launched from this image. Has a maximum length of 100 characters.
-* `arn` - ARN of the image.
 * `base_image_arn` - ARN of the image from which the image was created.
 * `created_time` - Time at which this image was created.
 * `description` - Description of image.

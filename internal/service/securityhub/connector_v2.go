@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -83,15 +85,62 @@ func (r *connectorV2Resource) Schema(ctx context.Context, request resource.Schem
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("azure"),
+							path.MatchRelative().AtName("jira_cloud"),
+							path.MatchRelative().AtName("service_now"),
+						),
+					},
 					Blocks: map[string]schema.Block{
+						"azure": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[azureDetailModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"aws_config_connector_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"azure_regions": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Required:    true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"scope_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[azureScopeConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"scope_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.ScopeType](),
+													Required:   true,
+												},
+												"scope_values": schema.SetAttribute{
+													CustomType:  fwtypes.SetOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"jira_cloud": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[jiraCloudDetailModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("jira_cloud"),
-									path.MatchRelative().AtParent().AtName("service_now"),
-								),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -283,7 +332,14 @@ func (r *connectorV2Resource) Delete(ctx context.Context, request resource.Delet
 	input := securityhub.DeleteConnectorV2Input{
 		ConnectorId: aws.String(connectorID),
 	}
-	_, err := conn.DeleteConnectorV2(ctx, &input)
+	// Azure connectors are enabled asynchronously and cannot be deleted while in
+	// the PENDING_ENABLEMENT state, so retry until the connector is deletable.
+	const (
+		timeout = 15 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ConflictException](ctx, timeout, func(ctx context.Context) (any, error) {
+		return conn.DeleteConnectorV2(ctx, &input)
+	}, "cannot be deleted")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
@@ -291,6 +347,18 @@ func (r *connectorV2Resource) Delete(ctx context.Context, request resource.Delet
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting Security Hub V2 Connector (%s)", connectorID), err.Error())
+		return
+	}
+
+	// Wait for the connector to be fully deleted so that any service-linked
+	// configuration recorders it created are removed before dependent resources
+	// (such as aws_config_connector) are deleted.
+	_, err = tfresource.RetryUntilNotFound(ctx, timeout, func(ctx context.Context) (any, error) {
+		return findConnectorV2ByID(ctx, conn, connectorID)
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Hub V2 Connector (%s) delete", connectorID), err.Error())
 		return
 	}
 }
@@ -349,6 +417,7 @@ type healthCheckModel struct {
 }
 
 type providerDetailModel struct {
+	Azure      fwtypes.ListNestedObjectValueOf[azureDetailModel]      `tfsdk:"azure"`
 	JiraCloud  fwtypes.ListNestedObjectValueOf[jiraCloudDetailModel]  `tfsdk:"jira_cloud"`
 	ServiceNow fwtypes.ListNestedObjectValueOf[serviceNowDetailModel] `tfsdk:"service_now"`
 }
@@ -372,6 +441,18 @@ func (m providerDetailModel) ExpandTo(ctx context.Context, targetType reflect.Ty
 func (m providerDetailModel) expandToProviderConfiguration(ctx context.Context) (awstypes.ProviderConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
+	case !m.Azure.IsNull():
+		data, d := m.Azure.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ProviderConfigurationMemberAzure
+		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	case !m.JiraCloud.IsNull():
 		data, d := m.JiraCloud.ToPtr(ctx)
 		diags.Append(d...)
@@ -403,6 +484,18 @@ func (m providerDetailModel) expandToProviderConfiguration(ctx context.Context) 
 func (m providerDetailModel) expandToProviderUpdateConfiguration(ctx context.Context) (awstypes.ProviderUpdateConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	switch {
+	case !m.Azure.IsNull():
+		data, d := m.Azure.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.ProviderUpdateConfigurationMemberAzure
+		diags.Append(fwflex.Expand(ctx, data, &r.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
 	case !m.JiraCloud.IsNull():
 		data, d := m.JiraCloud.ToPtr(ctx)
 		diags.Append(d...)
@@ -434,6 +527,13 @@ func (m providerDetailModel) expandToProviderUpdateConfiguration(ctx context.Con
 func (m *providerDetailModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	switch t := v.(type) {
+	case awstypes.ProviderDetailMemberAzure:
+		var data azureDetailModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.Azure = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.ProviderDetailMemberJiraCloud:
 		var data jiraCloudDetailModel
 		diags.Append(fwflex.Flatten(ctx, t.Value, &data)...)
@@ -469,4 +569,15 @@ type serviceNowDetailModel struct {
 	AuthStatus   types.String `tfsdk:"auth_status"`
 	InstanceName types.String `tfsdk:"instance_name"`
 	SecretARN    fwtypes.ARN  `tfsdk:"secret_arn"`
+}
+
+type azureDetailModel struct {
+	AWSConfigConnectorARN fwtypes.ARN                                                   `tfsdk:"aws_config_connector_arn"`
+	AzureRegions          fwtypes.SetOfString                                           `tfsdk:"azure_regions"`
+	ScopeConfiguration    fwtypes.ListNestedObjectValueOf[azureScopeConfigurationModel] `tfsdk:"scope_configuration"`
+}
+
+type azureScopeConfigurationModel struct {
+	ScopeType   fwtypes.StringEnum[awstypes.ScopeType] `tfsdk:"scope_type"`
+	ScopeValues fwtypes.SetOfString                    `tfsdk:"scope_values"`
 }

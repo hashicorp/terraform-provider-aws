@@ -50,9 +50,10 @@ func dataSourceTags() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrKey: {
-								Type:             schema.TypeString,
-								Optional:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.Metric](),
+								Type:     schema.TypeString,
+								Optional: true,
+								// API accepts valid values in both camel case (`BlendedCost`) and uppercase
+								// (`BLENDED_COST`), so no provider side validation is applied.
 							},
 							"sort_order": {
 								Type:             schema.TypeString,

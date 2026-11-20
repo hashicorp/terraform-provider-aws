@@ -35,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -199,6 +200,7 @@ func resourceInstance() *schema.Resource {
 					ForceNew: true,
 					ConflictsWith: []string{
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 						"s3_import",
 						"restore_to_point_in_time",
 						"snapshot_identifier",
@@ -213,7 +215,7 @@ func resourceInstance() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+					ValidateFunc: lazyvalidation.StringMatch(`^AWSRDSCustom.*$`, "must begin with AWSRDSCustom"),
 				},
 				"customer_owned_ip_enabled": {
 					Type:     schema.TypeBool,
@@ -232,6 +234,7 @@ func resourceInstance() *schema.Resource {
 					ForceNew: true,
 					ConflictsWith: []string{
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 					},
 				},
 				"db_subnet_group_name": {
@@ -332,10 +335,10 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					ValidateFunc: validation.All(
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-						validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must only contain alphanumeric characters and hyphens"),
+						lazyvalidation.StringDoesNotMatch(`--`, "cannot contain two consecutive hyphens"),
+						lazyvalidation.StringDoesNotMatch(`-$`, "cannot end in a hyphen"),
 					),
 				},
 				names.AttrHostedZoneID: {
@@ -476,6 +479,11 @@ func resourceInstance() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"multi_tenant": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
 				"nchar_character_set_name": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -563,6 +571,14 @@ func resourceInstance() *schema.Resource {
 					Optional:              true,
 					DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
 					DiffSuppressOnRefresh: true,
+					ConflictsWith:         []string{"replicate_source_db_cluster"},
+				},
+				"replicate_source_db_cluster": {
+					Type:     schema.TypeString,
+					Optional: true,
+					// An empty string promotes the replica, as with replicate_source_db.
+					ValidateFunc:  validation.Any(validation.StringIsEmpty, validIdentifier), // nosemgrep:ci.avoid-string-is-empty-validation
+					ConflictsWith: []string{"replicate_source_db", "snapshot_identifier"},
 				},
 				names.AttrResourceID: {
 					Type:     schema.TypeString,
@@ -577,6 +593,7 @@ func resourceInstance() *schema.Resource {
 						"s3_import",
 						"snapshot_identifier",
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -613,6 +630,7 @@ func resourceInstance() *schema.Resource {
 					ConflictsWith: []string{
 						"snapshot_identifier",
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -675,7 +693,7 @@ func resourceInstance() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"timezone": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -693,12 +711,17 @@ func resourceInstance() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 				},
+				"warning_event_categories": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
 				names.AttrUsername: {
 					Type:          schema.TypeString,
 					Optional:      true,
 					Computed:      true,
 					ForceNew:      true,
-					ConflictsWith: []string{"replicate_source_db"},
+					ConflictsWith: []string{"replicate_source_db", "replicate_source_db_cluster"},
 				},
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
@@ -730,6 +753,10 @@ func resourceInstance() *schema.Resource {
 				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
 				}
+
+				if d.Get("replicate_source_db_cluster").(string) != "" {
+					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db_cluster" is set.`)
+				}
 				return nil
 			},
 			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
@@ -746,6 +773,15 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
+			// Conversion to the multi-tenant configuration is irreversible.
+			// Skip unknown values, which ResourceDiff reports as false.
+			customdiff.ForceNewIf("multi_tenant", func(_ context.Context, d *schema.ResourceDiff, meta any) bool {
+				if !d.NewValueKnown("multi_tenant") {
+					return false
+				}
+				old, new := d.GetChange("multi_tenant")
+				return old.(bool) && !new.(bool)
+			}),
 		),
 	}
 }
@@ -753,6 +789,8 @@ func resourceInstance() *schema.Resource {
 func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+	createStart := time.Now().UTC()
 
 	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
 	// RestoreDBInstanceToPointInTime do not support all parameters to
@@ -782,17 +820,25 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		return diags
 	}
 
-	if v, ok := d.GetOk("replicate_source_db"); ok {
-		sourceDBInstanceID := v.(string)
+	sourceDBInstanceID := d.Get("replicate_source_db").(string)
+	sourceDBClusterID := d.Get("replicate_source_db_cluster").(string)
+
+	if sourceDBInstanceID != "" || sourceDBClusterID != "" {
 		input := &rds.CreateDBInstanceReadReplicaInput{
-			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
-			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
-			DBInstanceIdentifier:       aws.String(identifier),
-			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       getTagsIn(ctx),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+			DBInstanceIdentifier:    aws.String(identifier),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+			Tags:                    getTagsIn(ctx),
+		}
+
+		// A Multi-AZ DB cluster source must be in the same Region and is always passed by identifier.
+		if sourceDBClusterID != "" {
+			input.SourceDBClusterIdentifier = aws.String(sourceDBClusterID)
+		} else {
+			input.SourceDBInstanceIdentifier = aws.String(sourceDBInstanceID)
 		}
 
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); ok {
@@ -1449,11 +1495,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		// possible to immediately enable mirroring since
 		// BackupRetentionPeriod is not available as a parameter to
 		// RestoreDBInstanceFromDBSnapshot and you receive an error. e.g.
-		// InvalidParameterValue: Mirroring cannot be applied to instances with backup retention set to zero.
+		// InvalidParameterValue: Mirroring or AlwaysOn cannot be applied to instances with backup retention set to zero.
 		// Since engine is not a required argument when using snapshot_identifier
 		// and the RDS API determines this condition, we catch the error
 		// and remove the invalid configuration for it to be fixed afterwards.
-		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "Mirroring cannot be applied to instances with backup retention set to zero") {
+		if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "cannot be applied to instances with backup retention set to zero") {
 			input.MultiAZ = aws.Bool(false)
 			modifyDbInstanceInput.MultiAZ = aws.Bool(true)
 			requiresModifyDbInstance = true
@@ -1806,6 +1852,10 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 			input.MultiAZ = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("multi_tenant"); ok {
+			input.MultiTenant = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("nchar_character_set_name"); ok {
 			input.NcharCharacterSetName = aws.String(v.(string))
 		}
@@ -1936,6 +1986,25 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	// Restores and read replicas can't request the multi-tenant configuration at creation.
+	if d.Get("multi_tenant").(bool) {
+		instance, err := findDBInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", identifier, err)
+		}
+
+		if !aws.ToBool(instance.MultiTenant) {
+			if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (%s): converting to multi-tenant configuration: %s", identifier, err)
+			}
+		}
+	}
+
+	if v, ok := d.GetOk("warning_event_categories"); ok {
+		diags = append(diags, surfaceEvents(ctx, conn, identifier, types.SourceTypeDbInstance, createStart,
+			flex.ExpandStringValueSet(v.(*schema.Set)))...)
+	}
+
 	return append(diags, resourceInstanceRead(ctx, d, meta)...)
 }
 
@@ -1985,7 +2054,13 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	d.Set("custom_iam_instance_profile", v.CustomIamInstanceProfile)
 	d.Set("customer_owned_ip_enabled", v.CustomerOwnedIpEnabled)
 	d.Set("database_insights_mode", v.DatabaseInsightsMode)
-	d.Set("db_name", v.DBName)
+	// For RDS for Oracle CDB instances in the multi-tenant configuration, the API doesn't return
+	// DBName or MasterUsername; they belong to the tenant databases. Keep the values already in
+	// state rather than forcing replacement of the instance.
+	multiTenant := aws.ToBool(v.MultiTenant)
+	if v.DBName != nil || !multiTenant {
+		d.Set("db_name", v.DBName)
+	}
 	if v.DBSubnetGroup != nil {
 		d.Set("db_subnet_group_name", v.DBSubnetGroup.DBSubnetGroupName)
 	}
@@ -2046,6 +2121,7 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	d.Set("monitoring_interval", v.MonitoringInterval)
 	d.Set("monitoring_role_arn", v.MonitoringRoleArn)
 	d.Set("multi_az", v.MultiAZ)
+	d.Set("multi_tenant", multiTenant)
 	d.Set("nchar_character_set_name", v.NcharCharacterSetName)
 	d.Set("network_type", v.NetworkType)
 	if len(v.OptionGroupMemberships) > 0 {
@@ -2078,6 +2154,11 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 		}
 	}
 	d.Set("replicate_source_db", sourceDBIdentifier)
+	// Only refresh a cluster source that is already in state (set on create or import). Populating it
+	// for replicas imported before this argument existed would plan its removal, which promotes the replica.
+	if d.Get("replicate_source_db_cluster").(string) != "" {
+		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	}
 
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
@@ -2086,7 +2167,9 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 	d.Set(names.AttrStorageType, v.StorageType)
 	d.Set("timezone", v.Timezone)
 	d.Set("upgrade_rollout_order", v.UpgradeRolloutOrder)
-	d.Set(names.AttrUsername, v.MasterUsername)
+	if v.MasterUsername != nil || !multiTenant {
+		d.Set(names.AttrUsername, v.MasterUsername)
+	}
 	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(v.VpcSecurityGroups, func(v types.VpcSecurityGroupMembership) string {
 		return aws.ToString(v.VpcSecurityGroupId)
 	}))
@@ -2120,9 +2203,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 	deadline := inttypes.NewDeadline(d.Timeout(schema.TimeoutUpdate))
 
+	// RDS applies the conversion, and any pending modifications, immediately. Require explicit
+	// consent before making any changes. This is checked here rather than in CustomizeDiff, which
+	// can't tell whether the instance is being replaced (Create needs no conversion).
+	if d.HasChange("multi_tenant") && d.Get("multi_tenant").(bool) && !d.Get(names.AttrApplyImmediately).(bool) {
+		return sdkdiag.AppendErrorf(diags, `updating RDS DB Instance (%s): "apply_immediately" must be true to convert to the multi-tenant configuration`, d.Get(names.AttrIdentifier).(string))
+	}
+
 	// Separate request to promote a database.
-	if d.HasChange("replicate_source_db") {
-		if d.Get("replicate_source_db").(string) == "" {
+	if d.HasChanges("replicate_source_db", "replicate_source_db_cluster") {
+		if d.Get("replicate_source_db").(string) == "" && d.Get("replicate_source_db_cluster").(string) == "" {
 			input := &rds.PromoteReadReplicaInput{
 				BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
 				DBInstanceIdentifier:  aws.String(d.Get(names.AttrIdentifier).(string)),
@@ -2153,7 +2243,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		"blue_green_update",
 		"delete_automated_backups",
 		names.AttrFinalSnapshotIdentifier,
+		"multi_tenant",
 		"replicate_source_db",
+		"replicate_source_db_cluster",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
 	) {
@@ -2162,7 +2254,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			"blue_green_update",
 			"delete_automated_backups",
 			names.AttrFinalSnapshotIdentifier,
+			"multi_tenant",
 			"replicate_source_db",
+			"replicate_source_db_cluster",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
 			names.AttrDeletionProtection,
@@ -2232,8 +2326,20 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): creating Blue/Green Deployment: waiting for Green environment: %s", d.Get(names.AttrIdentifier).(string), err)
 			}
 
+			modifyStart := time.Now().UTC()
+
 			if err := handler.modifyTarget(ctx, targetARN.Identifier, d, deadline.Remaining(), fmt.Sprintf("Updating RDS DB Instance (%s)", d.Get(names.AttrIdentifier).(string))); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
+			}
+
+			// Surface opted-in events reported on the green target during the
+			// modify. dbInstanceModify waits on blue (d.Id()), so settle the
+			// green instance explicitly before querying its events.
+			if v, ok := d.GetOk("warning_event_categories"); ok {
+				if _, err := waitDBInstanceAvailable(ctx, conn, targetARN.Identifier, deadline.Remaining()); err == nil {
+					diags = append(diags, surfaceEvents(ctx, conn, targetARN.Identifier, types.SourceTypeDbInstance, modifyStart,
+						flex.ExpandStringValueSet(v.(*schema.Set)))...)
+				}
 			}
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get(names.AttrIdentifier).(string))
@@ -2343,6 +2449,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				input.DBParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 			}
 
+			modifyStart := time.Now().UTC()
+
 			err := dbInstanceModify(ctx, conn, d.Id(), input, deadline.Remaining())
 
 			if err != nil {
@@ -2354,6 +2462,23 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 				}
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get(names.AttrIdentifier).(string), err)
 			}
+
+			// Key on the identifier, not d.Id() (the DbiResourceId), which
+			// DescribeEvents rejects as a db-instance SourceIdentifier.
+			if v, ok := d.GetOk("warning_event_categories"); ok {
+				diags = append(diags, surfaceEvents(ctx, conn, d.Get(names.AttrIdentifier).(string), types.SourceTypeDbInstance, modifyStart,
+					flex.ExpandStringValueSet(v.(*schema.Set)))...)
+			}
+		}
+	}
+
+	// Convert from the single-tenant to the multi-tenant configuration in a dedicated request.
+	// The conversion can't be combined with some other modifications (e.g. engine version
+	// upgrades or ManageMasterUserPassword) and always requires ApplyImmediately.
+	// A change from true to false forces replacement (see CustomizeDiff).
+	if d.HasChange("multi_tenant") && d.Get("multi_tenant").(bool) {
+		if err := dbInstanceConvertToMultiTenant(ctx, conn, d.Id(), deadline.Remaining()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): converting to multi-tenant configuration: %s", d.Get(names.AttrIdentifier).(string), err)
 		}
 	}
 
@@ -2446,6 +2571,12 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta an
 	// that final_snapshot_identifier is not required.
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
+
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+	if v, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil && v.ReadReplicaSourceDBClusterIdentifier != nil {
+		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	}
+
 	return []*schema.ResourceData{d}, nil
 }
 
@@ -2761,6 +2892,34 @@ func dbInstanceModify(ctx context.Context, conn *rds.Client, resourceID string, 
 	return nil
 }
 
+func dbInstanceConvertToMultiTenant(ctx context.Context, conn *rds.Client, resourceID string, timeout time.Duration) error {
+	_, err := tfresource.RetryWhenIsA[*rds.ModifyDBInstanceOutput, *types.InvalidDBInstanceStateFault](ctx, timeout, func(ctx context.Context) (*rds.ModifyDBInstanceOutput, error) {
+		// Look up the current identifier; a rename in the same apply may not have taken effect yet.
+		instance, err := findDBInstanceByID(ctx, conn, resourceID)
+		if err != nil {
+			return nil, err
+		}
+
+		input := rds.ModifyDBInstanceInput{
+			ApplyImmediately:     aws.Bool(true),
+			DBInstanceIdentifier: instance.DBInstanceIdentifier,
+			MultiTenant:          aws.Bool(true),
+		}
+
+		return conn.ModifyDBInstance(ctx, &input)
+	})
+
+	if err != nil {
+		return err
+	}
+
+	if err := waitDBInstanceMultiTenant(ctx, conn, resourceID, timeout); err != nil {
+		return fmt.Errorf("waiting for completion: %w", err)
+	}
+
+	return nil
+}
+
 // See https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Storage.html#gp3-storage.
 func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool {
 	if storageType := d.Get(names.AttrStorageType).(string); storageType != storageTypeGP3 {
@@ -2905,6 +3064,30 @@ func statusDBInstance(conn *rds.Client, id string, optFns ...func(*rds.Options))
 
 		return output, aws.ToString(output.DBInstanceStatus), nil
 	}
+}
+
+// Conversion to the multi-tenant configuration may pass through statuses that waitDBInstanceAvailable
+// doesn't expect, so only known terminal statuses are treated as errors here.
+func waitDBInstanceMultiTenant(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	return tfresource.WaitUntil(ctx, timeout, func(ctx context.Context) (bool, error) {
+		output, err := findDBInstanceByID(ctx, conn, id)
+		if err != nil {
+			return false, err
+		}
+
+		switch status := aws.ToString(output.DBInstanceStatus); status {
+		case instanceStatusAvailable:
+			return aws.ToBool(output.MultiTenant), nil
+		case instanceStatusFailed, instanceStatusIncompatibleOptionGroup, instanceStatusIncompatibleParameters, instanceStatusStopped:
+			return false, fmt.Errorf("unexpected status: %s", status)
+		default:
+			return false, nil
+		}
+	}, tfresource.WaitOpts{
+		ContinuousTargetOccurence: 3,
+		Delay:                     1 * time.Minute,
+		PollInterval:              10 * time.Second,
+	})
 }
 
 func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*types.DBInstance, error) {
@@ -3274,4 +3457,39 @@ func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.Resourc
 		}
 	}
 	return false
+}
+
+// surfaceEvents emits one Warning diagnostic per RDS event reported for
+// sourceID/st in the given categories since the operation began, relaying the
+// RDS message verbatim without interpreting it. Best-effort: empty categories
+// or a DescribeEvents error yield no diagnostics and never an error, so
+// surfacing cannot fail an otherwise-successful apply. Always Warning, because
+// the operation itself succeeded.
+func surfaceEvents(ctx context.Context, conn *rds.Client, sourceID string, st types.SourceType, since time.Time, categories []string) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	if len(categories) == 0 {
+		return diags
+	}
+
+	events, err := findEvents(ctx, conn, &rds.DescribeEventsInput{
+		SourceIdentifier: aws.String(sourceID),
+		SourceType:       st,
+		EventCategories:  categories,
+		StartTime:        aws.Time(since),
+	})
+	if err != nil {
+		log.Printf("[WARN] describing RDS events for %s: %s", sourceID, err)
+		return diags
+	}
+
+	for _, e := range events {
+		diags = append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  fmt.Sprintf("RDS reported an event during this operation [%s]", strings.Join(e.EventCategories, ", ")),
+			Detail:   aws.ToString(e.Message),
+		})
+	}
+
+	return diags
 }

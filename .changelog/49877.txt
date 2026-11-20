@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrock_model_invocation_job
+```
+
+```release-note:new-list-resource
+aws_bedrock_model_invocation_job
+```
