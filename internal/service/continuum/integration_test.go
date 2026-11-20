@@ -46,7 +46,7 @@ func testAccIntegration_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"s3.0.external_id"},
+				ImportStateVerifyIgnore: []string{"provider_configuration.0.s3.0.external_id"},
 			},
 		},
 	})
@@ -135,7 +135,7 @@ func testAccIntegration_updateExternalID(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("s3").AtSliceIndex(0).AtMapKey(names.AttrExternalID), knownvalue.StringExact(rName+"-2")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("provider_configuration").AtSliceIndex(0).AtMapKey("s3").AtSliceIndex(0).AtMapKey(names.AttrExternalID), knownvalue.StringExact(rName+"-2")),
 				},
 			},
 		},
@@ -224,7 +224,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringEquals"
       variable = "sts:ExternalId"
-      values   = [%[1]q, "%[1]s-2"]
+      values   = ["%[1]s", "%[1]s-2"]
     }
   }
 }
@@ -287,10 +287,12 @@ func testAccIntegrationConfig_s3(rName, role, externalID string) string {
 resource "aws_continuum_integration" "test" {
   name = %[1]q
 
-  s3 {
-    bucket      = aws_s3_bucket.test.id
-    role_arn    = aws_iam_role.%[2]s.arn
-    external_id = %[3]q
+  provider_configuration {
+    s3 {
+      bucket      = aws_s3_bucket.test.id
+      role_arn    = aws_iam_role.%[2]s.arn
+      external_id = %[3]q
+    }
   }
 
   depends_on = [aws_iam_role_policy.test, aws_iam_role_policy.test2, aws_s3_object.code]
