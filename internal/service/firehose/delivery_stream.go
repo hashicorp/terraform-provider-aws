@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -373,9 +374,10 @@ func resourceDeliveryStream() *schema.Resource {
 
 			return map[string]*schema.Schema{
 				names.AttrARN: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: sdkv2.WarnShouldBeComputedOnly,
 				},
 				names.AttrDestination: {
 					Type:     schema.TypeString,

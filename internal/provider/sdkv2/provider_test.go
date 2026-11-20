@@ -856,3 +856,76 @@ func TestTagsSchemas(t *testing.T) {
 		})
 	}
 }
+
+func TestWarnShouldBeComputedOnly(t *testing.T) {
+	t.Parallel()
+
+	p, err := NewProvider(t.Context())
+	if err != nil {
+		t.Fatalf("Initializing SDKv2 provider: %s", err)
+	}
+
+	testCases := map[string]struct {
+		typeName   string
+		dataSource bool
+		config     map[string]any
+	}{
+		"aws_kinesis_firehose_delivery_stream arn": {
+			typeName: "aws_kinesis_firehose_delivery_stream",
+			config:   map[string]any{names.AttrName: "n", names.AttrDestination: "extended_s3", names.AttrARN: "a"},
+		},
+		"aws_kinesis_stream arn": {
+			typeName: "aws_kinesis_stream",
+			config:   map[string]any{names.AttrName: "n", names.AttrARN: "a"},
+		},
+		"aws_location_geofence_collection kms_key_id": {
+			typeName:   "aws_location_geofence_collection",
+			dataSource: true,
+			config:     map[string]any{"collection_name": "n", names.AttrKMSKeyID: "k"},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			r := p.ResourcesMap[tc.typeName]
+			if tc.dataSource {
+				r = p.DataSourcesMap[tc.typeName]
+			}
+			var warnings int
+			for _, d := range r.Validate(terraform.NewResourceConfigRaw(tc.config)) {
+				if d.Severity == diag.Warning && d.Summary == "Argument is computed" {
+					warnings++
+				}
+			}
+			if warnings != 1 {
+				t.Errorf("got %d computed-argument warnings, want 1", warnings)
+			}
+		})
+	}
+
+	t.Run("aws_rds_cluster cluster_members", func(t *testing.T) {
+		t.Parallel()
+
+		r := p.ResourcesMap["aws_rds_cluster"]
+		vals := make(map[string]cty.Value)
+		for k, ty := range r.CoreConfigSchema().ImpliedType().AttributeTypes() {
+			vals[k] = cty.NullVal(ty)
+		}
+		for _, members := range []cty.Value{cty.NullVal(cty.Set(cty.String)), cty.SetVal([]cty.Value{cty.StringVal("m")})} {
+			vals["cluster_members"] = members
+			var resp schema.ValidateResourceConfigFuncResponse
+			for _, f := range r.ValidateRawResourceConfigFuncs {
+				f(t.Context(), schema.ValidateResourceConfigFuncRequest{RawConfig: cty.ObjectVal(vals)}, &resp)
+			}
+			want := 0
+			if !members.IsNull() {
+				want = 1
+			}
+			if got := len(resp.Diagnostics); got != want {
+				t.Errorf("cluster_members %#v: got %d diagnostics, want %d", members, got, want)
+			}
+		}
+	})
+}

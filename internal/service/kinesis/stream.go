@@ -135,9 +135,10 @@ func resourceStream() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: sdkv2.WarnShouldBeComputedOnly,
 				},
 				"encryption_type": {
 					Type:             schema.TypeString,
