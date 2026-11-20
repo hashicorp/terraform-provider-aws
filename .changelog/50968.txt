@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_daemon_task_definition: Add `volume.log_driver_volume_configuration` configuration block
+```
