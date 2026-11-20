@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudfront_distribution_tenant: Fix `Provider produced inconsistent result after apply` error when using `managed_certificate_request` without an explicit `customizations` block
+```
