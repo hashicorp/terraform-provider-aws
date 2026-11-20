@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_notifications_managed_notification_account_contact_association: Add `sensitive_events_subscribed` argument
+```
+
+```release-note:enhancement
+resource/aws_notifications_managed_notification_additional_channel_association: Add `sensitive_events_subscribed` argument
+```

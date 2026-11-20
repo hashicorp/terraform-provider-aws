@@ -27,6 +27,10 @@ The following arguments are required:
 * `contact_identifier` - (Required) A unique value of an Account Contact Type to associate with the ManagedNotificationConfiguration. Valid values: `ACCOUNT_PRIMARY`, `ACCOUNT_ALTERNATE_BILLING`, `ACCOUNT_ALTERNATE_OPERATIONS`, `ACCOUNT_ALTERNATE_SECURITY`.
 * `managed_notification_configuration_arn` - (Required) ARN of the managed notification configuration to associate the account contact with.
 
+The following arguments are optional:
+
+* `sensitive_events_subscribed` - (Optional) Whether to subscribe to sensitive events. Defaults to `false`.
+
 ## Attribute Reference
 
 This resource exports no additional attributes.
