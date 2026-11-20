@@ -75,6 +75,20 @@ func resourceFunction() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
+				"accelerator_config": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accelerator_memory_size": {
+								Type:         schema.TypeInt,
+								Required:     true,
+								ValidateFunc: validation.IntInSlice([]int{3, 6, 12, 16, 24, 48}),
+							},
+						},
+					},
+				},
 				"architectures": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -596,6 +610,15 @@ func resourceFunction() *schema.Resource {
 				newLen := len(new.([]any))
 				return (oldLen == 0 && newLen > 0) || (oldLen > 0 && newLen == 0)
 			}),
+			customdiff.ForceNewIfChange("accelerator_config", func(_ context.Context, old, new, meta any) bool {
+				// The accelerator/non-accelerator designation of a function is immutable:
+				// force new when accelerator_config is added (empty to non-empty) or removed
+				// (non-empty to empty). Changes to accelerator_memory_size on an existing
+				// accelerator function are updated in place via UpdateFunctionConfiguration.
+				oldLen := len(old.([]any))
+				newLen := len(new.([]any))
+				return (oldLen == 0 && newLen > 0) || (oldLen > 0 && newLen == 0)
+			}),
 		),
 	}
 }
@@ -616,6 +639,12 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 		Role:         aws.String(d.Get(names.AttrRole).(string)),
 		Tags:         getTagsIn(ctx),
 		Timeout:      aws.Int32(int32(d.Get(names.AttrTimeout).(int))),
+	}
+
+	if v, ok := d.GetOk("accelerator_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.AcceleratorConfig = &awstypes.AcceleratorConfig{
+			AcceleratorMemorySize: awstypes.AcceleratorMemoryGB(v.([]any)[0].(map[string]any)["accelerator_memory_size"].(int)),
+		}
 	}
 
 	if v, ok := d.GetOk("capacity_provider_config"); ok {
@@ -740,7 +769,7 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	createTimeout := d.Timeout(schema.TimeoutCreate)
-	propagationTimeout := lambdaPropagationTimeout
+	propagationTimeout := functionPropagationTimeout
 	if d.Get("use_resource_timeout_for_propagation").(bool) {
 		propagationTimeout = createTimeout
 	}
@@ -826,7 +855,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	}()
 
 	updateTimeout := d.Timeout(schema.TimeoutUpdate)
-	propagationTimeout := lambdaPropagationTimeout
+	propagationTimeout := functionPropagationTimeout
 	if d.Get("use_resource_timeout_for_propagation").(bool) {
 		propagationTimeout = updateTimeout
 	}
@@ -860,6 +889,18 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	if configUpdate {
 		input := lambda.UpdateFunctionConfigurationInput{
 			FunctionName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("accelerator_config") {
+			// Adding or removing accelerator_config forces a new resource (see CustomizeDiff),
+			// so a change reaching Update is always an in-place accelerator_memory_size update
+			// on an existing accelerator function. Omitting AcceleratorConfig would preserve
+			// the existing value unchanged, so only send it when present.
+			if v, ok := d.GetOk("accelerator_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.AcceleratorConfig = &awstypes.AcceleratorConfig{
+					AcceleratorMemorySize: awstypes.AcceleratorMemoryGB(v.([]any)[0].(map[string]any)["accelerator_memory_size"].(int)),
+				}
+			}
 		}
 
 		if d.HasChange("capacity_provider_config") {
@@ -1096,9 +1137,9 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			input.PublishTo = awstypes.FunctionVersionLatestPublished(v.(string))
 		}
 
-		outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ResourceConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceConflictException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
 			return conn.PublishVersion(ctx, &input)
-		}, "in progress")
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "publishing Lambda Function (%s) version: %s", d.Id(), err)
@@ -1411,7 +1452,7 @@ func replaceSecurityGroupsOnDestroy(ctx context.Context, d *schema.ResourceData,
 	}
 
 	deleteTimeout := d.Timeout(schema.TimeoutDelete)
-	propagationTimeout := lambdaPropagationTimeout
+	propagationTimeout := functionPropagationTimeout
 	if d.Get("use_resource_timeout_for_propagation").(bool) {
 		propagationTimeout = deleteTimeout
 	}
@@ -1673,7 +1714,8 @@ func hasChangeForLoggingConfigLogLevel(d sdkv2.ResourceDiffer, key string, logFo
 }
 
 func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
-	return d.HasChange(names.AttrDescription) ||
+	return d.HasChange("accelerator_config") ||
+		d.HasChange(names.AttrDescription) ||
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
 		d.HasChange("image_config") ||
@@ -1973,6 +2015,18 @@ func suppressLoggingConfigUnspecifiedLogLevelsPrimitive(_, old, new string, logF
 	return false
 }
 
+func flattenAcceleratorConfig(apiObject *awstypes.AcceleratorConfig) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"accelerator_memory_size": int(apiObject.AcceleratorMemorySize),
+	}
+
+	return []any{tfMap}
+}
+
 func flattenEphemeralStorage(apiObject *awstypes.EphemeralStorage) []any {
 	if apiObject == nil {
 		return nil
@@ -2045,6 +2099,10 @@ func resourceFunctionFlatten(ctx context.Context, awsClient *conns.AWSClient, d 
 
 	function := output.Configuration
 	functionCode := output.Code
+	if err := d.Set("accelerator_config", flattenAcceleratorConfig(function.AcceleratorConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting accelerator_config: %s", err)
+	}
+
 	d.Set("architectures", function.Architectures)
 	functionARN := aws.ToString(function.FunctionArn)
 	d.Set(names.AttrARN, functionARN)

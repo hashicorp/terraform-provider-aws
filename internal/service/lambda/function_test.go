@@ -33,10 +33,10 @@ import (
 var (
 	// expectedSourceCodeHash is a lookup of expected hash values for each test fixture
 	expectedSourceCodeHash = map[string]string{
-		"lambda_func.js":          "8k4rLrkGteQRbNk8b1suO+fzwOMbF1/4jUoNm7LlWYM=",
-		"lambda_func_modified.js": "iuqvZS4PYKsiYL2YMow4YuB6ZdPzjDTiH5QhuQfLmdQ=",
-		"lambda_func.py":          "DhHL9LXWkDreFoZIv0PWn6wQx9ycpZSnt65JhKkkyRA=",
-		"lambda_func_modified.py": "9DEXvbwU6j4yE7XFZtj1MBTrhyHjwhdvOyuA8AhhhNE=",
+		"lambda_func.js":          "GE6Qb8Bc6vOrLX2zdQDa85S9hE5tLaROqDT1AYi5aNo=",
+		"lambda_func_modified.js": "VoHtznyW+n0Jl5nPJQ+iCDfxEc9ds08gXE0zZyjqnNw=",
+		"lambda_func.py":          "HhC4MioZePknwM5kl+H7LYI93B0jcpIjSuWcGYUk8Hg=",
+		"lambda_func_modified.py": "72Luil+w4xkC/VKGmTray6dpJhK6kmfqMO0G2JCRYPo=",
 	}
 )
 
@@ -79,6 +79,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "code_sha256"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
@@ -961,27 +962,12 @@ func TestAccLambdaFunction_s3FileSystem(t *testing.T) {
 
 func TestAccLambdaFunction_image(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
-	imageLatestID := os.Getenv(key)
-	if imageLatestID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V1_ID"
-	imageV1ID := os.Getenv(key)
-	if imageV1ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V2_ID"
-	imageV2ID := os.Getenv(key)
-	if imageV2ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageLatestID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageV1ID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_V1_ID")
+	imageV2ID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_V2_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1033,15 +1019,10 @@ func TestAccLambdaFunction_image(t *testing.T) {
 
 func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
-	imageLatestID := os.Getenv(key)
-	if imageLatestID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1051,13 +1032,13 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccFunctionConfig_imageConfigNull(rName, imageLatestID),
+				Config: testAccFunctionConfig_imageConfigNull(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
-					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1068,13 +1049,13 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_image(rName, imageLatestID),
+				Config: testAccFunctionConfig_image(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
-					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
@@ -1488,44 +1469,6 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config.0.mode", "PassThrough"),
 				),
-			},
-		},
-	})
-}
-
-// This test is to verify the existing behavior in the Lambda API where the KMS Key ARN
-// is not returned if environment variables are not in use. If the API begins saving this
-// value and the kms_key_arn check begins failing, the documentation should be updated.
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6366
-func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var function1 lambda.GetFunctionOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambda_function.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, t, resourceName, &function1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 		},
 	})
@@ -2555,6 +2498,9 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		// EOL runtimes.
 		// https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy.
 		switch runtime {
+		// InvalidParameterValueException: RuntimeConfig is required when Runtime is 'custom'.
+		case awstypes.RuntimeCustom:
+			fallthrough
 		case awstypes.RuntimeDotnetcore21:
 			fallthrough
 		case awstypes.RuntimePython27:
@@ -3052,6 +2998,144 @@ func TestAccLambdaFunction_capacityProvider(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"filename", "publish", "publish_to"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_acceleratorConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_acceleratorConfig(rName, imageURI, 6),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "6"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "publish_to"},
+			},
+			{
+				// accelerator_memory_size is updated in place via UpdateFunctionConfiguration
+				// (not a replacement): only adding or removing the block forces a new resource.
+				Config: testAccFunctionConfig_acceleratorConfig(rName, imageURI, 3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_acceleratorConfigAdd(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// A non-accelerator function on a CPU capacity provider.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "0"),
+				),
+			},
+			{
+				// Adding accelerator_config (switching to an accelerator capacity
+				// provider) is an immutable designation change and forces replacement.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_acceleratorConfigRemove(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// An accelerator function on an accelerator capacity provider.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "6"),
+				),
+			},
+			{
+				// Removing accelerator_config (switching to a CPU capacity
+				// provider) is an immutable designation change and forces replacement.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "0"),
+				),
 			},
 		},
 	})
@@ -4591,45 +4675,6 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  kms_key_arn   = aws_kms_key.test.arn
-  role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs24.x"
-}
-`, rName))
-}
-
 func testAccFunctionConfig_layers(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
@@ -5254,6 +5299,145 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFunctionConfig_acceleratorConfig(rName, imageURI string, acceleratorMemorySize int) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[3]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.test.arn
+    }
+  }
+
+  accelerator_config {
+    accelerator_memory_size = %[2]d
+  }
+}
+
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  instance_requirements {
+    architectures          = ["x86_64"]
+    allowed_instance_types = ["g4dn.xlarge", "g4dn.2xlarge"]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName, acceleratorMemorySize, imageURI))
+}
+
+func testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI string, accelerator bool) string {
+	functionConfig := fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[2]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.cpu.arn
+    }
+  }
+}
+`, rName, imageURI)
+
+	if accelerator {
+		functionConfig = fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[2]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.gpu.arn
+    }
+  }
+
+  accelerator_config {
+    accelerator_memory_size = 6
+  }
+}
+`, rName, imageURI)
+	}
+
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "cpu" {
+  name = "%[1]s-cpu"
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+
+resource "aws_lambda_capacity_provider" "gpu" {
+  name = "%[1]s-gpu"
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  instance_requirements {
+    architectures          = ["x86_64"]
+    allowed_instance_types = ["g4dn.xlarge", "g4dn.2xlarge"]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName),
+		functionConfig)
 }
 
 func testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, zipFileS3, zipFileLambda string) string {
