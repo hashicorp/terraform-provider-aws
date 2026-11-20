@@ -321,7 +321,10 @@ func TestAccLogsMetricFilter_systemFields(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@aws.account"]`), //lintignore:AWSAT003
+				Config: testAccMetricFilterConfig_systemFields(rName,
+					`@aws.region = \"us-east-1\"`, //lintignore:AWSAT003
+					`["@aws.account"]`,
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "1"),
@@ -344,7 +347,10 @@ func TestAccLogsMetricFilter_systemFields(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-west-2\"`, `["@aws.account", "@aws.region"]`), //lintignore:AWSAT003
+				Config: testAccMetricFilterConfig_systemFields(rName,
+					`@aws.region = \"us-west-2\"`, //lintignore:AWSAT003
+					`["@aws.account", "@aws.region"]`,
+				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricFilterExists(ctx, t, resourceName, &mf),
 					resource.TestCheckResourceAttr(resourceName, "emit_system_field_dimensions.#", "2"),
@@ -392,7 +398,10 @@ func TestAccLogsMetricFilter_systemFieldsInvalid(t *testing.T) {
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccMetricFilterConfig_systemFields(rName, `@aws.region = \"us-east-1\"`, `["@source.log"]`), //lintignore:AWSAT003
+				Config: testAccMetricFilterConfig_systemFields(rName,
+					`@aws.region = \"us-east-1\"`, //lintignore:AWSAT003
+					`["@source.log"]`,
+				),
 				ExpectError: regexache.MustCompile(`expected emit_system_field_dimensions.\d+ to be one of`),
 			},
 			{
