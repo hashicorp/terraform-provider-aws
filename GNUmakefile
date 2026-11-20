@@ -906,6 +906,15 @@ semgrep-service-naming: semgrep-validate ## [CI] Semgrep Checks / Service Name S
 		--config .ci/.semgrep-service-name2.yml \
 		--config .ci/.semgrep-service-name3.yml
 
+semgrep-security: ## [CI] Semgrep Security Check
+	@echo "make: Semgrep Security Check..."
+	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config 'p/golang' \
+		--config 'p/gosec' \
+		--exclude-rule go.lang.security.audit.unsafe-reflect-by-name.unsafe-reflect-by-name
+
 semgrep-validate: ## Validate Semgrep configuration files
 	@echo "make: Validating Semgrep configuration files..."
 	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
@@ -1415,6 +1424,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep-fix-core \
 	semgrep-naming \
 	semgrep-naming-cae \
+	semgrep-security \
 	semgrep-service-naming \
 	semgrep-test \
 	semgrep-validate \
