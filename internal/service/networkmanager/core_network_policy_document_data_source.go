@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -103,6 +104,42 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 								Type:     schema.TypeBool,
 								Default:  false,
 								Optional: true,
+							},
+							"multipath_resilience": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"edge_sets": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"edge_locations": {
+														Type:     schema.TypeSet,
+														Required: true,
+														MinItems: 2,
+														MaxItems: 2,
+														Elem: &schema.Schema{
+															Type: schema.TypeString,
+															// Not all regions support multipath resilience but we will not maintain a hardcoded list
+															ValidateFunc: verify.ValidRegionName,
+														},
+													},
+												},
+											},
+										},
+										names.AttrMode: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.StringInSlice([]string{
+												"best-effort",
+												"disabled",
+											}, false),
+										},
+									},
+								},
 							},
 						},
 					},
@@ -1281,6 +1318,45 @@ func expandCoreNetworkPolicyCoreNetworkConfiguration(tfList []any) (*coreNetwork
 
 	if v, ok := tfMap["security_group_referencing_support"].(bool); ok {
 		apiObject.SecurityGroupReferencingSupport = v
+	}
+
+	if v, ok := tfMap["multipath_resilience"].([]any); ok && len(v) > 0 && v[0] != nil {
+		mr, err := expandCoreNetworkPolicyMultipathResilience(v[0].(map[string]any), el)
+		if err != nil {
+			return nil, err
+		}
+		apiObject.MultipathResilience = mr
+	}
+
+	return apiObject, nil
+}
+
+func expandCoreNetworkPolicyMultipathResilience(tfMap map[string]any, edgeLocations []*coreNetworkPolicyCoreNetworkEdgeLocation) (*coreNetworkPolicyMultipathResilience, error) {
+	apiObject := &coreNetworkPolicyMultipathResilience{
+		Mode: tfMap[names.AttrMode].(string),
+	}
+
+	for _, tfMapRaw := range tfMap["edge_sets"].([]any) {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		// Sorted so that the rendered JSON doesn't depend on set ordering. The pair is bidirectional.
+		locations := flex.ExpandStringValueSet(tfMap["edge_locations"].(*schema.Set))
+		slices.Sort(locations)
+
+		for _, location := range locations {
+			if !slices.ContainsFunc(edgeLocations, func(v *coreNetworkPolicyCoreNetworkEdgeLocation) bool {
+				return v.Location == location
+			}) {
+				return nil, fmt.Errorf("multipath_resilience edge_sets location (%s) is not defined in core_network_configuration edge_locations", location)
+			}
+		}
+
+		apiObject.EdgeSets = append(apiObject.EdgeSets, &coreNetworkPolicyMultipathResilienceEdgeSet{
+			EdgeLocations: locations,
+		})
 	}
 
 	return apiObject, nil
