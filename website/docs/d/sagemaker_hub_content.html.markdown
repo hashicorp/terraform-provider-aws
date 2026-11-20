@@ -58,7 +58,7 @@ This data source exports the following attributes in addition to the arguments a
 * `failure_reason` - Failure reason if importing the hub content failed.
 * `hub_arn` - ARN of the hub that contains the content.
 * `hub_content_arn` - ARN of the hub content, without the version suffix.
-* `hub_content_dependency` - List of hub content dependencies. See [`hub_content_dependency`](#hub_content_dependency).
+* `hub_content_dependency` - List of hub content dependencies. See [`hub_content_dependency`](#hub_content_dependency-block).
 * `hub_content_description` - Description of the hub content.
 * `hub_content_display_name` - Display name of the hub content.
 * `hub_content_document` - JSON hub content document, including details such as the hosting image and artifact URIs.
@@ -71,7 +71,7 @@ This data source exports the following attributes in addition to the arguments a
 * `support_status` - Support status of the hub content.
 * `versioned_hub_content_arn` - ARN of the hub content, including the version suffix.
 
-### `hub_content_dependency`
+### `hub_content_dependency` Block
 
 * `dependency_copy_path` - Hub content dependency copy path.
 * `dependency_origin_path` - Hub content dependency origin path.

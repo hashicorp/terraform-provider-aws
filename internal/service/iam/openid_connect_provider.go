@@ -52,7 +52,7 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"thumbprint_list": {
 					Type:     schema.TypeList,
 					Optional: true,

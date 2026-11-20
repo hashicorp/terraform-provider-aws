@@ -32,7 +32,7 @@ func dataSourceFoo() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 		},
 	}
 }

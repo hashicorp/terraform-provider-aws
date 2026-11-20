@@ -77,7 +77,7 @@ func resourceAnomalyMonitor() *schema.Resource {
 						lazyvalidation.StringMatch(`[\\S\\s]*`, "Must be a valid Anomaly Monitor Name matching expression: [\\S\\s]*")),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

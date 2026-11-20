@@ -85,7 +85,7 @@ func resourceRoute() *schema.Resource {
 				},
 				"spec":            resourceRouteSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"virtual_router_name": {
 					Type:         schema.TypeString,
 					Required:     true,

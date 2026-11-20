@@ -54,7 +54,7 @@ func ResourceContainer() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 		DeprecationMessage: "aws_media_store_container is deprecated. Use S3, AWS MediaPackage, or other storage solution instead.",

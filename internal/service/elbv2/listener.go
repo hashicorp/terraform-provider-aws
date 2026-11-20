@@ -576,7 +576,7 @@ func resourceListener() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tcp_idle_timeout_seconds": {
 					Type:         schema.TypeInt,
 					Optional:     true,

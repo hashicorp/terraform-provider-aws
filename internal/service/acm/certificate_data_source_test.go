@@ -70,7 +70,7 @@ func TestAccACMCertificateDataSource_byDomainMultiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_byDomainMultiple(domain, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
-				ExpectError: regexache.MustCompile(`2 matching ACM Certificates found`),
+				ExpectError: regexache.MustCompile(`reading ACM Certificates: too many results: wanted 1, got \d+`),
 			},
 		},
 	})
@@ -276,7 +276,7 @@ func TestAccACMCertificateDataSource_byTagsNoMatch(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_byTagsNoMatch(rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)),
-				ExpectError: regexache.MustCompile(`no matching ACM Certificate found`),
+				ExpectError: regexache.MustCompile(`reading ACM Certificates: empty result`),
 			},
 		},
 	})

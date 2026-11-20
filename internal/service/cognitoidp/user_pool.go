@@ -579,7 +579,7 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_attribute_update_settings": {
 					Type:     schema.TypeList,
 					Optional: true,

@@ -141,7 +141,7 @@ func ResourceFeature() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"value_type": {
 					Type:     schema.TypeString,
 					Computed: true,

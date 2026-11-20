@@ -256,7 +256,7 @@ func resourceContainerRecipe() *schema.Resource {
 					ValidateFunc: validation.StringInSlice([]string{"Linux", "Windows"}, false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_repository": {
 					Type:     schema.TypeList,
 					Required: true,

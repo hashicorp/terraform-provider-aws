@@ -132,7 +132,7 @@ func resourceDevEndpoint() *schema.Resource {
 					RequiredWith: []string{names.AttrSecurityGroupIDs},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"private_address": {
 					Type:     schema.TypeString,
 					Computed: true,

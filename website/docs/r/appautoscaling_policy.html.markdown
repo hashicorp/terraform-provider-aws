@@ -425,8 +425,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `alarm_arns` - List of CloudWatch alarm ARNs associated with the scaling policy.
 * `arn` - ARN assigned by AWS to the scaling policy.
-* `name` - Scaling policy's name.
-* `policy_type` - Scaling policy's type.
 
 ## Import
 

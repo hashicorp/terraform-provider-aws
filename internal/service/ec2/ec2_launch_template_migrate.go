@@ -874,7 +874,7 @@ func launchTemplateSchemaV0() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"update_default_version": {
 					Type:     schema.TypeBool,
 					Optional: true,

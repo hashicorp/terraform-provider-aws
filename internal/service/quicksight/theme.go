@@ -88,7 +88,7 @@ func resourceTheme() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"version_description": {
 					Type:         schema.TypeString,
 					Optional:     true,

@@ -128,7 +128,7 @@ func resourceCatalogDatabase() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_database": {
 					Type:     schema.TypeList,
 					Optional: true,

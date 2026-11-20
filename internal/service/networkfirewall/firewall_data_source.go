@@ -220,7 +220,7 @@ func dataSourceFirewall() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTransitGatewayID: {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -214,7 +214,7 @@ func resourceEntityRecognizer() *schema.Resource {
 					ValidateFunc: validModelName,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"version_name": {
 					Type:          schema.TypeString,
 					Optional:      true,

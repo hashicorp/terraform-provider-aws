@@ -6,10 +6,8 @@ package tags
 import (
 	"sync"
 
-	// https://github.com/hashicorp/terraform-provider-aws/pull/50497.
-	// "github.com/hashicorp/go-cty/cty"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
 
 // TagsSchema returns the schema to use for configurable resource tags.
@@ -21,32 +19,28 @@ var TagsSchema = sync.OnceValue(func() *schema.Schema {
 	}
 })
 
-// TagsSchemaComputed returns the schema to use for resource `tags_all` and other resource tags
-// that the provider computes. Validation warns when it's configured; it stays Optional for now so
-// that existing configurations keep working.
-var TagsSchemaComputed = sync.OnceValue(func() *schema.Schema {
+// TagsSchemaOptionalComputedWarnShouldBeComputedOnly returns the schema for existing tags that should be
+// Computed only but were made Optional+Computed by mistake: resource `tags_all`, and data source `tags`
+// that Read doesn't use. The old helper's name, TagsSchemaComputed, suggested Computed only.
+// Validation warns when the value is configured. It stays Optional so existing configurations keep
+// working until a future version makes these Computed only
+// (https://github.com/hashicorp/terraform-provider-aws/issues/50581).
+//
+// Don't use it in new code. Use TagsSchemaComputedOnly, or TagsSchemaOptionalComputed for a data
+// source that filters on tags.
+var TagsSchemaOptionalComputedWarnShouldBeComputedOnly = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeMap,
-		Optional: true,
-		Computed: true,
-		Elem:     &schema.Schema{Type: schema.TypeString},
-		// https://github.com/hashicorp/terraform-provider-aws/pull/50497.
-		// ValidateDiagFunc: warnComputedTagsConfigured,
+		Type:             schema.TypeMap,
+		Optional:         true,
+		Computed:         true,
+		Elem:             &schema.Schema{Type: schema.TypeString},
+		ValidateDiagFunc: sdkv2.WarnShouldBeComputedOnly,
 	}
 })
 
-// https://github.com/hashicorp/terraform-provider-aws/pull/50497.
-// func warnComputedTagsConfigured(any, cty.Path) diag.Diagnostics {
-// 	return diag.Diagnostics{{
-// 		Severity: diag.Warning,
-// 		Summary:  "Argument is computed",
-// 		Detail:   "This attribute is meant to be set only by the provider. The provider accepted a configured value by mistake, and configuring it isn't supported. Remove it from your configuration. A future version of the provider will reject it.",
-// 	}}
-// }
-
-// TagsSchemaComputedOnly returns the schema to use for data source tags that are attributes only
-// or for newly-added resource `tags_all`.
-// Users can't set it in configuration.
+// TagsSchemaComputedOnly returns the schema for tags that only the provider sets: new resource
+// `tags_all`, new data source `tags` that Read doesn't use, and tags nested in blocks users can't
+// configure. Users can't set it in configuration.
 var TagsSchemaComputedOnly = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeMap,

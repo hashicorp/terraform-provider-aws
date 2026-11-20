@@ -60,5 +60,4 @@ This ephemeral resource exports the following attributes in addition to the argu
 * `created_date` - Created date of the secret in UTC.
 * `secret_binary` - Decrypted part of the protected secret information that was originally provided as a binary.
 * `secret_string` - Decrypted part of the protected secret information that was originally provided as a string.
-* `version_id` - Unique identifier of this version of the secret.
 * `version_stages` - List of staging labels attached to this version of the secret.

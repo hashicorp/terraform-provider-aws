@@ -286,7 +286,7 @@ func resourceTaskDefinition() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"task_role_arn": {
 					Type:         schema.TypeString,
 					Optional:     true,

@@ -17,7 +17,6 @@ All end user documentation is found in the `/website` folder of the repository.
 │   ├── index.html.markdown    # Home page and all provider level documentation, including provider configuration
 │   ├── list-resources/        # Documentation for list resources
 │   └── r/                     # Documentation for resources
-└── examples/                  # Large example configurations
 ```
 
 ## Guidelines
@@ -31,9 +30,9 @@ CI checks documentation with [`swissshepherd`](https://github.com/YakDriver/swis
 Each resource must include at least one example Terraform configuration.
 
 - Examples must be functional.
-- Examples that includes several resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained; if a user run `terraform plan` on the example, no errors should be returned.
+- Examples that include several resource definitions, such as cross-account configurations, should be added as an additional `###` subsection under Example Usage on the primary resource's documentation page. Related resource pages can link to that subsection instead of duplicating it.
 - Terraform configuration should use `terraform` code fences. Do not use `hcl` code fences.
-- Examples should not define `terraform` or `provider` blocks.
+- Examples should not define `terraform` or `provider` blocks. The exception is multi-account examples, which can define aliased `provider` blocks with comments in place of credentials.
 - Examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
 - Generally the resource instance name should simply be `example`, e.g. `resource "aws_instance" "example"`.
 - All name arguments within the example configuration should use simple example values that match the resource being defined. Where attribute validation allows, prefer values prefixed with `example-`, e.g. `name = "example-instance"`. Avoid overly complex naming.

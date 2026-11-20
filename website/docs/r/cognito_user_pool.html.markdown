@@ -22,6 +22,8 @@ resource "aws_cognito_user_pool" "pool" {
 
 ### Enabling SMS and Software Token Multi-Factor Authentication
 
+The IAM role in `sns_caller_arn` must trust Amazon Cognito, with an `sts:ExternalId` condition matching `external_id`, and allow `sns:Publish`.
+
 ```terraform
 resource "aws_cognito_user_pool" "example" {
   # ... other configuration ...
@@ -38,6 +40,43 @@ resource "aws_cognito_user_pool" "example" {
   software_token_mfa_configuration {
     enabled = true
   }
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["cognito-idp.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "sts:ExternalId"
+      values   = ["example"]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name               = "example-cognito-sms"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "sns_publish" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  name   = "sns-publish"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.sns_publish.json
 }
 ```
 
@@ -58,6 +97,34 @@ resource "aws_cognito_user_pool" "test" {
       priority = 2
     }
   }
+}
+```
+
+### Lambda Triggers
+
+Each Lambda function used as a trigger must grant Amazon Cognito permission to invoke it. Access token customization with `pre_token_generation_config` `lambda_version` `V2_0` or `V3_0` requires the `ESSENTIALS` or `PLUS` `user_pool_tier`.
+
+```terraform
+resource "aws_cognito_user_pool" "example" {
+  name           = "example"
+  user_pool_tier = "ESSENTIALS"
+
+  lambda_config {
+    pre_sign_up       = aws_lambda_function.example.arn
+    post_confirmation = aws_lambda_function.example.arn
+
+    pre_token_generation_config {
+      lambda_arn     = aws_lambda_function.example.arn
+      lambda_version = "V2_0"
+    }
+  }
+}
+
+resource "aws_lambda_permission" "example" {
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.example.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = aws_cognito_user_pool.example.arn
 }
 ```
 

@@ -366,7 +366,7 @@ func resourceExperimentTemplate() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchemaForceNew(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

@@ -132,7 +132,7 @@ func resourceTransitGateway() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_cidr_blocks": {
 					Type:     schema.TypeSet,
 					Optional: true,

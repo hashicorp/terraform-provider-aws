@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: write       # required to push commits
+  issues: read          # required to find related open issues
   pull-requests: write  # required to create or update the automation pull request
 
 concurrency:
@@ -24,10 +25,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.sha }}
 
       - name: Setup Go
-        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
 
@@ -62,18 +63,91 @@ jobs:
           go mod edit -json > "$RUNNER_TEMP/go-mod-updated.json"
           table=$(jq -nr \
             --slurpfile before "$RUNNER_TEMP/go-mod.json" \
-            --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" '
-            ($before[0].Require | INDEX(.Path)) as $old
-            | ($after[0].Require | INDEX(.Path)) as $new
-            | "| Module | Old version | New version |",
-              "| --- | --- | --- |",
-              (($old + $new | keys[]) as $path
-                | select($old[$path].Version != $new[$path].Version)
-                | "| `\($path)` | `\($old[$path].Version // "-")` | `\($new[$path].Version // "-")` |")
-          ')
+            --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
+            -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-module-changes.jq)
           {
             echo 'table<<EOF'
             printf '%s\n' "$table"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Identify SDK releases
+        id: sdk_releases
+        shell: bash
+        run: |
+          jq -n \
+            --slurpfile before "$RUNNER_TEMP/go-mod.json" \
+            --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
+            -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-module-tags.jq > "$RUNNER_TEMP/sdk-module-tags.json"
+          jq -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-previous-module-tags.jq \
+            "$RUNNER_TEMP/go-mod.json" > "$RUNNER_TEMP/sdk-previous-module-tags.json"
+          module_tags=$(jq -sr 'add | unique[]' "$RUNNER_TEMP/sdk-module-tags.json" "$RUNNER_TEMP/sdk-previous-module-tags.json")
+          patterns=('refs/tags/release-*')
+          while IFS= read -r tag; do
+            [[ -n "$tag" ]] || continue
+            patterns+=("refs/tags/$tag" "refs/tags/$tag^{}")
+          done <<< "$module_tags"
+          if ! git ls-remote https://github.com/aws/aws-sdk-go-v2.git "${patterns[@]}" > "$RUNNER_TEMP/sdk-tags"; then
+            echo "::warning::Unable to look up AWS SDK for Go v2 tags"
+            : > "$RUNNER_TEMP/sdk-tags"
+          fi
+          jq -Rs -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-tag-index.jq \
+            "$RUNNER_TEMP/sdk-tags" > "$RUNNER_TEMP/sdk-tag-index.json"
+          jq --slurpfile modules "$RUNNER_TEMP/sdk-module-tags.json" \
+            -f .ci/scripts/workflows/update-aws-sdk-go/aws-sdk-go-release-matches.jq \
+            "$RUNNER_TEMP/sdk-tag-index.json" > "$RUNNER_TEMP/sdk-release-matches.json"
+          title="deps: update AWS SDK for Go v2"
+          target=$(jq -r '.releases[0] // empty' "$RUNNER_TEMP/sdk-release-matches.json")
+          unmatched=$(jq -r '.unmatched' "$RUNNER_TEMP/sdk-release-matches.json")
+          {
+            echo "Module versions are matched to release tags sharing the same commit; the target is the newest matching release, not an exact SDK-wide snapshot."
+            echo
+            # Only label the target when every changed SDK module has an exact tag-to-commit match.
+            if [[ -n "$target" && "$unmatched" == 0 ]]; then
+              title+=" to $target"
+              printf 'Target release: [%s](https://github.com/aws/aws-sdk-go-v2/releases/tag/%s).\n\n' "$target" "$target"
+            fi
+            if [[ -n "$target" ]]; then
+              echo "Published releases containing the updated SDK module versions (intermediate releases are not listed):"
+              echo
+              jq -r '.releases[] | "- [\(.)](https://github.com/aws/aws-sdk-go-v2/releases/tag/\(.))"' "$RUNNER_TEMP/sdk-release-matches.json"
+            else
+              echo "No corresponding SDK release tag could be determined."
+            fi
+            if [[ "$unmatched" != 0 ]]; then
+              echo
+              echo "Some updated SDK module tags could not be matched to a release tag on the same commit; the PR title is left unversioned."
+            fi
+            echo
+            echo "[All AWS SDK for Go v2 release notes](https://github.com/aws/aws-sdk-go-v2/releases)"
+          } > "$RUNNER_TEMP/sdk-release-notes"
+          if [[ "$unmatched" != 0 ]]; then
+            echo "::warning::$unmatched updated SDK module versions could not be matched to release tags on the same commit"
+          fi
+          {
+            printf 'title=%s\n' "$title"
+            echo 'notes<<EOF'
+            cat "$RUNNER_TEMP/sdk-release-notes"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Identify related issues
+        id: related_issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          gh api "repos/$GH_REPO/issues?state=open&per_page=100" --paginate \
+            --jq '.[] | select(.pull_request == null) | {number, title, body, state}' > "$RUNNER_TEMP/sdk-issues.json"
+          relations=$(jq -sr \
+            --slurpfile before "$RUNNER_TEMP/go-mod.json" \
+            --slurpfile after "$RUNNER_TEMP/go-mod-updated.json" \
+            --slurpfile tags "$RUNNER_TEMP/sdk-tag-index.json" \
+            -f .ci/scripts/workflows/update-aws-sdk-go/related-sdk-issues.jq "$RUNNER_TEMP/sdk-issues.json")
+          {
+            echo 'relations<<EOF'
+            printf '%s\n' "$relations"
             echo 'EOF'
           } >> "$GITHUB_OUTPUT"
 
@@ -87,7 +161,7 @@ jobs:
           private_key: ${{ secrets.APP_PEM }}
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1 # v8.1.3
         with:
           token: ${{ steps.generate_token.outputs.token }}
           branch: automation/update-aws-sdk-go-v2
@@ -96,7 +170,7 @@ jobs:
             go.mod
             go.sum
           commit-message: "deps: update AWS SDK for Go v2"
-          title: "deps: update AWS SDK for Go v2"
+          title: ${{ steps.sdk_releases.outputs.title }}
           body: |
             <!-- Copyright IBM Corp. 2014, 2026 -->
             <!-- SPDX-License-Identifier: MPL-2.0 -->
@@ -125,6 +199,10 @@ jobs:
             Updates all AWS SDK for Go v2 modules required by the root Go module in one batch.
             Generated by the Update AWS SDK for Go v2 workflow. Maintainers should review the changes and understand their end-user impact.
 
+            #### SDK releases
+
+            ${{ steps.sdk_releases.outputs.notes }}
+
             #### Module changes
 
             Includes direct and indirect dependencies. A `-` indicates a module was added or removed.
@@ -142,7 +220,7 @@ jobs:
             Closes #0000
             --->
 
-            No linked issue.
+            ${{ steps.related_issues.outputs.relations }}
 
             ### References
             <!---
