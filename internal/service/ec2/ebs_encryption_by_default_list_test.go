@@ -54,7 +54,7 @@ func testAccEC2EBSEncryptionByDefault_List_basic(t *testing.T) {
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ebs_encryption_by_default.test", identity.Checks()),
 					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(
-						fmt.Sprintf("EBS Encryption By Default (%s, enabled)", acctest.Region()))),
+						fmt.Sprintf("%s-enabled", acctest.Region()))),
 					tfquerycheck.ExpectNoResourceObject("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
 				},
 			},
@@ -94,7 +94,7 @@ func testAccEC2EBSEncryptionByDefault_List_includeResource(t *testing.T) {
 				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/list_include_resource/"),
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ebs_encryption_by_default.test", identity.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(fmt.Sprintf("EBS Encryption By Default (%s, enabled)", acctest.Region()))),
+					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(fmt.Sprintf("%s-enabled", acctest.Region()))),
 					querycheck.ExpectResourceKnownValues("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), []querycheck.KnownValueCheck{
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrEnabled), knownvalue.Bool(true)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
@@ -145,7 +145,7 @@ func testAccEC2EBSEncryptionByDefault_List_regionOverride(t *testing.T) {
 				},
 				QueryResultChecks: []querycheck.QueryResultCheck{
 					tfquerycheck.ExpectIdentityFunc("aws_ebs_encryption_by_default.test", identity.Checks()),
-					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(fmt.Sprintf("EBS Encryption By Default (%s, enabled)", acctest.AlternateRegion()))),
+					querycheck.ExpectResourceDisplayName("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks()), knownvalue.StringExact(fmt.Sprintf("%s-enabled", acctest.AlternateRegion()))),
 					tfquerycheck.ExpectNoResourceObject("aws_ebs_encryption_by_default.test", tfqueryfilter.ByResourceIdentityFunc(identity.Checks())),
 				},
 			},
