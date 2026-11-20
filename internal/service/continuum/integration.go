@@ -5,8 +5,9 @@ package continuum
 
 import (
 	"context"
-	"errors"
+	"reflect"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/continuum"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/continuum/types"
@@ -26,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -38,7 +40,7 @@ import (
 // @Testing(preCheck="testAccPreCheck")
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
-// @Testing(importIgnore="s3.0.external_id")
+// @Testing(importIgnore="provider_configuration.0.s3.0.external_id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/continuum;continuum.GetIntegrationOutput")
 func newIntegrationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &integrationResource{}, nil
@@ -50,13 +52,11 @@ type integrationResource struct {
 }
 
 func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaRequest, response *resource.SchemaResponse) {
-	oneOf := func() validator.List {
-		return listvalidator.ExactlyOneOf(
-			path.MatchRoot("github"),
-			path.MatchRoot("gitlab"),
-			path.MatchRoot("s3"),
-		)
-	}
+	exactlyOneProvider := listvalidator.ExactlyOneOf(
+		path.MatchRelative().AtParent().AtName("github"),
+		path.MatchRelative().AtParent().AtName("gitlab"),
+		path.MatchRelative().AtParent().AtName("s3"),
+	)
 
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -91,136 +91,167 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"github": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[githubIntegrationModel](ctx),
+			"provider_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[providerConfigurationModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
-					oneOf(),
-				},
-				PlanModifiers: []planmodifier.List{
-					requiresReplaceIfAddedOrRemoved(),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"organization_name": schema.StringAttribute{
-							Optional:    true,
-							Computed:    true,
-							Description: "GitHub organization that the integration installs into. Omit for a personal account.",
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
 					Blocks: map[string]schema.Block{
-						"authorization": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[githubAuthorizationModel](ctx),
+						"github": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[githubConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.IsRequired(),
+								exactlyOneProvider,
+							},
+							PlanModifiers: []planmodifier.List{
+								requiresReplaceIfAddedOrRemoved(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"authorization_code": schema.StringAttribute{
-										Required:    true,
-										Sensitive:   true,
-										Description: "Single-use OAuth authorization code returned by GitHub. Obtain it with `StartIntegrationAuthorization`.",
+									"organization_name": schema.StringAttribute{
+										Optional: true,
+										Computed: true,
 										PlanModifiers: []planmodifier.String{
-											requiresReplaceUnlessImported(),
+											stringplanmodifier.UseStateForUnknown(),
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 39),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-]*[0-9A-Za-z])?$`), ""),
 										},
 									},
-									"redirect_url": schema.StringAttribute{
-										Required: true,
-										PlanModifiers: []planmodifier.String{
-											requiresReplaceUnlessImported(),
+								},
+								Blocks: map[string]schema.Block{
+									"authorization": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[githubAuthorizationConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.IsRequired(),
+											listvalidator.SizeAtMost(1),
 										},
-									},
-									names.AttrState: schema.StringAttribute{
-										Required: true,
-										PlanModifiers: []planmodifier.String{
-											requiresReplaceUnlessImported(),
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"authorization_code": schema.StringAttribute{
+													Required:  true,
+													Sensitive: true,
+													PlanModifiers: []planmodifier.String{
+														requiresReplaceUnlessImported(),
+													},
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 512),
+													},
+												},
+												"redirect_url": schema.StringAttribute{
+													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														requiresReplaceUnlessImported(),
+													},
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(9, 2083),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^https://`), "must start with https://"),
+													},
+												},
+												names.AttrState: schema.StringAttribute{
+													Required: true,
+													PlanModifiers: []planmodifier.String{
+														requiresReplaceUnlessImported(),
+													},
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 1024),
+													},
+												},
+											},
 										},
 									},
 								},
 							},
 						},
-					},
-				},
-			},
-			"gitlab": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[gitlabIntegrationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-					oneOf(),
-				},
-				PlanModifiers: []planmodifier.List{
-					requiresReplaceIfAddedOrRemoved(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"access_token": schema.StringAttribute{
-							Required:  true,
-							Sensitive: true,
-							PlanModifiers: []planmodifier.String{
-								requiresReplaceUnlessImported(),
+						"gitlab": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[gitlabConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								exactlyOneProvider,
+							},
+							PlanModifiers: []planmodifier.List{
+								requiresReplaceIfAddedOrRemoved(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"access_token": schema.StringAttribute{
+										Required:  true,
+										Sensitive: true,
+										PlanModifiers: []planmodifier.String{
+											requiresReplaceUnlessImported(),
+										},
+									},
+									"expires_at": schema.StringAttribute{
+										CustomType: timetypes.RFC3339Type{},
+										Computed:   true,
+									},
+									"instance_url": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"target_path": schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"target_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.GitLabTargetType](),
+										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+									},
+									"token_rotation": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.GitLabTokenRotation](),
+										Computed:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.UseStateForUnknown(),
+										},
+									},
+								},
 							},
 						},
-						"expires_at": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						"instance_url": schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
+						"s3": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								exactlyOneProvider,
 							},
-						},
-						"target_path": schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
+							PlanModifiers: []planmodifier.List{
+								requiresReplaceIfAddedOrRemoved(),
 							},
-						},
-						"target_type": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.GitLabTargetType](),
-							Required:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									names.AttrBucket: schema.StringAttribute{
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(3, 63),
+										},
+									},
+									names.AttrExternalID: schema.StringAttribute{
+										Required:  true,
+										Sensitive: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(2, 1224),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^[\w+=,.@:/-]+$`), ""),
+										},
+									},
+									names.AttrRoleARN: schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
 							},
-						},
-						"token_rotation": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.GitLabTokenRotation](),
-							Computed:   true,
-						},
-					},
-				},
-			},
-			"s3": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[s3IntegrationModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-					oneOf(),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrBucket: schema.StringAttribute{
-							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-						names.AttrExternalID: schema.StringAttribute{
-							Optional:    true,
-							Sensitive:   true,
-							Description: "External ID that Continuum presents when assuming `role_arn`. The service does not return this value.",
-							PlanModifiers: []planmodifier.String{
-								requiresReplaceIfRemoved(),
-							},
-						},
-						names.AttrRoleARN: schema.StringAttribute{
-							CustomType:  fwtypes.ARNType,
-							Required:    true,
-							Description: "ARN of the IAM role that Continuum assumes to read the bucket.",
 						},
 					},
 				},
@@ -238,16 +269,11 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	conn := r.Meta().ContinuumClient(ctx)
 
-	providerConfig, diags := plan.expandProviderConfiguration(ctx)
-	smerr.AddEnrich(ctx, &response.Diagnostics, diags)
+	name := plan.Name.ValueString()
+	var input continuum.CreateIntegrationInput
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input))
 	if response.Diagnostics.HasError() {
 		return
-	}
-
-	name := plan.Name.ValueString()
-	input := continuum.CreateIntegrationInput{
-		Name:                  aws.String(name),
-		ProviderConfiguration: providerConfig,
 	}
 
 	output, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
@@ -260,10 +286,6 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 	)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, name)
-		return
-	}
-	if output == nil {
-		smerr.AddError(ctx, &response.Diagnostics, errors.New("empty output"), smerr.ID, name)
 		return
 	}
 
@@ -291,14 +313,15 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().ContinuumClient(ctx)
 
-	output, err := findIntegrationByID(ctx, conn, state.ID.ValueString())
+	id := state.ID.ValueString()
+	output, err := findIntegrationByID(ctx, conn, id)
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
@@ -320,39 +343,40 @@ func (r *integrationResource) Update(ctx context.Context, request resource.Updat
 
 	conn := r.Meta().ContinuumClient(ctx)
 
-	// Only the S3 role and external ID can change in place; every other change forces replacement.
-	if !plan.S3.Equal(state.S3) {
-		s3, d := plan.S3.ToPtr(ctx)
+	id := plan.ID.ValueString()
+
+	// Only the S3 role and external ID can change in place. Every other change forces replacement,
+	// except filling in GitHub or GitLab secrets after import, which needs no API call.
+	if !plan.ProviderConfiguration.Equal(state.ProviderConfiguration) {
+		providerConfiguration, d := plan.ProviderConfiguration.ToPtr(ctx)
 		smerr.AddEnrich(ctx, &response.Diagnostics, d)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		input := continuum.UpdateIntegrationInput{
-			IntegrationId: plan.ID.ValueStringPointer(),
-			ProviderConfiguration: &awstypes.UpdateProviderConfigurationMemberS3{
-				Value: awstypes.UpdateS3Configuration{
-					RoleArn:    s3.RoleARN.ValueStringPointer(),
-					ExternalId: s3.ExternalID.ValueStringPointer(),
-				},
-			},
-		}
+		if !providerConfiguration.S3.IsNull() {
+			var input continuum.UpdateIntegrationInput
+			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Integration")))
+			if response.Diagnostics.HasError() {
+				return
+			}
 
-		_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-			func(ctx context.Context) (*continuum.UpdateIntegrationOutput, error) {
-				return conn.UpdateIntegration(ctx, &input)
-			},
-			isRoleNotAssumable,
-		)
-		if err != nil {
-			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ID.ValueString())
-			return
+			_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+				func(ctx context.Context) (*continuum.UpdateIntegrationOutput, error) {
+					return conn.UpdateIntegration(ctx, &input)
+				},
+				isRoleNotAssumable,
+			)
+			if err != nil {
+				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
+				return
+			}
 		}
 	}
 
-	output, err := findIntegrationByID(ctx, conn, plan.ID.ValueString())
+	output, err := findIntegrationByID(ctx, conn, id)
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, plan.ID.ValueString())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
@@ -373,15 +397,16 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().ContinuumClient(ctx)
 
+	id := state.ID.ValueString()
 	input := continuum.DeleteIntegrationInput{
-		IntegrationId: state.ID.ValueStringPointer(),
+		IntegrationId: aws.String(id),
 	}
 	_, err := conn.DeleteIntegration(ctx, &input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
@@ -413,29 +438,205 @@ func findIntegration(ctx context.Context, conn *continuum.Client, input *continu
 
 type integrationResourceModel struct {
 	framework.WithRegionModel
-	ARN             types.String                                            `tfsdk:"arn"`
-	CreatedAt       timetypes.RFC3339                                       `tfsdk:"created_at"`
-	GitHub          fwtypes.ListNestedObjectValueOf[githubIntegrationModel] `tfsdk:"github"`
-	GitLab          fwtypes.ListNestedObjectValueOf[gitlabIntegrationModel] `tfsdk:"gitlab"`
-	ID              types.String                                            `tfsdk:"id"`
-	IntegrationType fwtypes.StringEnum[awstypes.IntegrationType]            `tfsdk:"integration_type"`
-	Name            types.String                                            `tfsdk:"name"`
-	S3              fwtypes.ListNestedObjectValueOf[s3IntegrationModel]     `tfsdk:"s3"`
-	UpdatedAt       timetypes.RFC3339                                       `tfsdk:"updated_at"`
+	ARN                   types.String                                                `tfsdk:"arn"`
+	CreatedAt             timetypes.RFC3339                                           `tfsdk:"created_at"`
+	ID                    types.String                                                `tfsdk:"id"`
+	IntegrationType       fwtypes.StringEnum[awstypes.IntegrationType]                `tfsdk:"integration_type"`
+	Name                  types.String                                                `tfsdk:"name"`
+	ProviderConfiguration fwtypes.ListNestedObjectValueOf[providerConfigurationModel] `tfsdk:"provider_configuration"`
+	UpdatedAt             timetypes.RFC3339                                           `tfsdk:"updated_at"`
 }
 
-type githubIntegrationModel struct {
-	Authorization    fwtypes.ListNestedObjectValueOf[githubAuthorizationModel] `tfsdk:"authorization"`
-	OrganizationName types.String                                              `tfsdk:"organization_name"`
+// flatten updates the model from GetIntegration. The service returns provider details in place of the
+// provider configuration and never returns secrets, so the prior secret values are kept.
+func (m *integrationResourceModel) flatten(ctx context.Context, output *continuum.GetIntegrationOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	prior, d := m.ProviderConfiguration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(fwflex.Flatten(ctx, output, m, fwflex.WithFieldNamePrefix("Integration"))...)
+	if diags.HasError() {
+		return diags
+	}
+
+	diags.Append(fwflex.Flatten(ctx, output.ProviderDetails, &m.ProviderConfiguration)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	if prior == nil {
+		return diags
+	}
+
+	current, d := m.ProviderConfiguration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || current == nil {
+		return diags
+	}
+
+	diags.Append(keepPrior(ctx, &current.GitHub, prior.GitHub, func(current, prior *githubConfigurationModel) {
+		current.Authorization = prior.Authorization
+	})...)
+	diags.Append(keepPrior(ctx, &current.GitLab, prior.GitLab, func(current, prior *gitlabConfigurationModel) {
+		current.AccessToken = prior.AccessToken
+	})...)
+	diags.Append(keepPrior(ctx, &current.S3, prior.S3, func(current, prior *s3ConfigurationModel) {
+		current.ExternalID = prior.ExternalID
+	})...)
+	if diags.HasError() {
+		return diags
+	}
+
+	m.ProviderConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, current)
+
+	return diags
 }
 
-type githubAuthorizationModel struct {
+// keepPrior copies values that the service does not return from the prior nested object into the current one.
+func keepPrior[T any](ctx context.Context, current *fwtypes.ListNestedObjectValueOf[T], prior fwtypes.ListNestedObjectValueOf[T], keep func(current, prior *T)) diag.Diagnostics {
+	c, diags := current.ToPtr(ctx)
+	if diags.HasError() || c == nil {
+		return diags
+	}
+
+	p, d := prior.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || p == nil {
+		return diags
+	}
+
+	keep(c, p)
+	*current = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, c)
+
+	return diags
+}
+
+type providerConfigurationModel struct {
+	GitHub fwtypes.ListNestedObjectValueOf[githubConfigurationModel] `tfsdk:"github"`
+	GitLab fwtypes.ListNestedObjectValueOf[gitlabConfigurationModel] `tfsdk:"gitlab"`
+	S3     fwtypes.ListNestedObjectValueOf[s3ConfigurationModel]     `tfsdk:"s3"`
+}
+
+var (
+	_ fwflex.TypedExpander = providerConfigurationModel{}
+	_ fwflex.Flattener     = &providerConfigurationModel{}
+)
+
+func (m providerConfigurationModel) ExpandTo(ctx context.Context, targetType reflect.Type) (any, diag.Diagnostics) {
+	switch targetType {
+	case reflect.TypeFor[awstypes.ProviderConfiguration]():
+		return m.expandToProviderConfiguration(ctx)
+
+	case reflect.TypeFor[awstypes.UpdateProviderConfiguration]():
+		return m.expandToUpdateProviderConfiguration(ctx)
+	}
+
+	return nil, nil
+}
+
+func (m providerConfigurationModel) expandToProviderConfiguration(ctx context.Context) (awstypes.ProviderConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	switch {
+	case !m.GitHub.IsNull():
+		var result awstypes.ProviderConfigurationMemberGithub
+		diags.Append(fwflex.Expand(ctx, m.GitHub, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.GitLab.IsNull():
+		var result awstypes.ProviderConfigurationMemberGitlab
+		diags.Append(fwflex.Expand(ctx, m.GitLab, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.S3.IsNull():
+		var result awstypes.ProviderConfigurationMemberS3
+		diags.Append(fwflex.Expand(ctx, m.S3, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
+	return nil, diags
+}
+
+// expandToUpdateProviderConfiguration expands the S3 configuration, the only provider that can be updated.
+func (m providerConfigurationModel) expandToUpdateProviderConfiguration(ctx context.Context) (awstypes.UpdateProviderConfiguration, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if !m.S3.IsNull() {
+		var result awstypes.UpdateProviderConfigurationMemberS3
+		diags.Append(fwflex.Expand(ctx, m.S3, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
+	return nil, diags
+}
+
+// Flatten flattens the provider details. Values that the service does not return, such as secrets, are null.
+func (m *providerConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.ProviderDetailsMemberGithub:
+		var model githubConfigurationModel
+		diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &model)...)
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.GitHub = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.ProviderDetailsMemberGitlab:
+		var model gitlabConfigurationModel
+		diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &model)...)
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.GitLab = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	case awstypes.ProviderDetailsMemberS3:
+		var model s3ConfigurationModel
+		diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &model)...)
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+	default:
+		diags.AddError("Unexpected integration provider details", reflect.TypeOf(v).String())
+	}
+
+	return diags
+}
+
+type githubConfigurationModel struct {
+	Authorization    fwtypes.ListNestedObjectValueOf[githubAuthorizationConfigurationModel] `tfsdk:"authorization"`
+	OrganizationName types.String                                                           `tfsdk:"organization_name"`
+}
+
+type githubAuthorizationConfigurationModel struct {
 	AuthorizationCode types.String `tfsdk:"authorization_code"`
 	RedirectURL       types.String `tfsdk:"redirect_url"`
 	State             types.String `tfsdk:"state"`
 }
 
-type gitlabIntegrationModel struct {
+type gitlabConfigurationModel struct {
 	AccessToken   types.String                                     `tfsdk:"access_token"`
 	ExpiresAt     timetypes.RFC3339                                `tfsdk:"expires_at"`
 	InstanceURL   types.String                                     `tfsdk:"instance_url"`
@@ -444,146 +645,10 @@ type gitlabIntegrationModel struct {
 	TokenRotation fwtypes.StringEnum[awstypes.GitLabTokenRotation] `tfsdk:"token_rotation"`
 }
 
-type s3IntegrationModel struct {
+type s3ConfigurationModel struct {
 	Bucket     types.String `tfsdk:"bucket"`
 	ExternalID types.String `tfsdk:"external_id"`
 	RoleARN    fwtypes.ARN  `tfsdk:"role_arn"`
-}
-
-func (m *integrationResourceModel) expandProviderConfiguration(ctx context.Context) (awstypes.ProviderConfiguration, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	switch {
-	case !m.S3.IsNull():
-		s3, d := m.S3.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &awstypes.ProviderConfigurationMemberS3{
-			Value: awstypes.S3Configuration{
-				Bucket:     s3.Bucket.ValueStringPointer(),
-				ExternalId: s3.ExternalID.ValueStringPointer(),
-				RoleArn:    s3.RoleARN.ValueStringPointer(),
-			},
-		}, diags
-
-	case !m.GitLab.IsNull():
-		gl, d := m.GitLab.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &awstypes.ProviderConfigurationMemberGitlab{
-			Value: awstypes.GitLabConfiguration{
-				AccessToken: gl.AccessToken.ValueStringPointer(),
-				InstanceUrl: gl.InstanceURL.ValueStringPointer(),
-				TargetPath:  gl.TargetPath.ValueStringPointer(),
-				TargetType:  gl.TargetType.ValueEnum(),
-			},
-		}, diags
-
-	case !m.GitHub.IsNull():
-		gh, d := m.GitHub.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		auth, d := gh.Authorization.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		return &awstypes.ProviderConfigurationMemberGithub{
-			Value: awstypes.GitHubConfiguration{
-				OrganizationName: gh.OrganizationName.ValueStringPointer(),
-				Authorization: &awstypes.GitHubAuthorizationConfiguration{
-					AuthorizationCode: auth.AuthorizationCode.ValueStringPointer(),
-					RedirectUrl:       auth.RedirectURL.ValueStringPointer(),
-					State:             auth.State.ValueStringPointer(),
-				},
-			},
-		}, diags
-	}
-
-	diags.AddError("Missing provider configuration", "exactly one of github, gitlab or s3 must be configured")
-	return nil, diags
-}
-
-// flatten updates the model from the API response. Secret values (external IDs, tokens,
-// authorization codes) are never returned by the service, so the prior values are kept.
-func (m *integrationResourceModel) flatten(ctx context.Context, output *continuum.GetIntegrationOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	m.ARN = types.StringPointerValue(output.IntegrationArn)
-	m.CreatedAt = timetypes.NewRFC3339TimePointerValue(output.CreatedAt)
-	m.ID = types.StringPointerValue(output.IntegrationId)
-	m.IntegrationType = fwtypes.StringEnumValue(output.IntegrationType)
-	m.Name = types.StringPointerValue(output.Name)
-	m.UpdatedAt = timetypes.NewRFC3339TimePointerValue(output.UpdatedAt)
-
-	switch v := output.ProviderDetails.(type) {
-	case *awstypes.ProviderDetailsMemberS3:
-		var s3 s3IntegrationModel
-		if !m.S3.IsNull() && !m.S3.IsUnknown() {
-			prior, d := m.S3.ToPtr(ctx)
-			diags.Append(d...)
-			if prior != nil {
-				s3 = *prior
-			}
-		}
-		s3.Bucket = types.StringPointerValue(v.Value.Bucket)
-		s3.RoleARN = fwtypes.ARNValue(aws.ToString(v.Value.RoleArn))
-		if s3.ExternalID.IsUnknown() {
-			s3.ExternalID = types.StringNull()
-		}
-		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3)
-		m.GitHub = fwtypes.NewListNestedObjectValueOfNull[githubIntegrationModel](ctx)
-		m.GitLab = fwtypes.NewListNestedObjectValueOfNull[gitlabIntegrationModel](ctx)
-
-	case *awstypes.ProviderDetailsMemberGitlab:
-		var gl gitlabIntegrationModel
-		if !m.GitLab.IsNull() && !m.GitLab.IsUnknown() {
-			prior, d := m.GitLab.ToPtr(ctx)
-			diags.Append(d...)
-			if prior != nil {
-				gl = *prior
-			}
-		}
-		gl.ExpiresAt = timetypes.NewRFC3339TimePointerValue(v.Value.ExpiresAt)
-		gl.InstanceURL = types.StringPointerValue(v.Value.InstanceUrl)
-		gl.TargetPath = types.StringPointerValue(v.Value.TargetPath)
-		gl.TargetType = fwtypes.StringEnumValue(v.Value.TargetType)
-		gl.TokenRotation = fwtypes.StringEnumValue(v.Value.TokenRotation)
-		if gl.AccessToken.IsUnknown() {
-			gl.AccessToken = types.StringNull()
-		}
-		m.GitLab = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &gl)
-		m.GitHub = fwtypes.NewListNestedObjectValueOfNull[githubIntegrationModel](ctx)
-		m.S3 = fwtypes.NewListNestedObjectValueOfNull[s3IntegrationModel](ctx)
-
-	case *awstypes.ProviderDetailsMemberGithub:
-		var gh githubIntegrationModel
-		if !m.GitHub.IsNull() && !m.GitHub.IsUnknown() {
-			prior, d := m.GitHub.ToPtr(ctx)
-			diags.Append(d...)
-			if prior != nil {
-				gh = *prior
-			}
-		}
-		gh.OrganizationName = types.StringPointerValue(v.Value.OrganizationName)
-		if gh.Authorization.IsUnknown() {
-			gh.Authorization = fwtypes.NewListNestedObjectValueOfNull[githubAuthorizationModel](ctx)
-		}
-		m.GitHub = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &gh)
-		m.GitLab = fwtypes.NewListNestedObjectValueOfNull[gitlabIntegrationModel](ctx)
-		m.S3 = fwtypes.NewListNestedObjectValueOfNull[s3IntegrationModel](ctx)
-
-	default:
-		diags.AddError("Unexpected integration provider", string(output.IntegrationType))
-	}
-
-	return diags
 }
 
 // isRoleNotAssumable reports whether Continuum could not yet assume, or use, a freshly created IAM role.
@@ -619,17 +684,5 @@ func requiresReplaceUnlessImported() planmodifier.String {
 		},
 		"Requires replacement when the value changes, unless there is no prior value.",
 		"Requires replacement when the value changes, unless there is no prior value.",
-	)
-}
-
-// requiresReplaceIfRemoved replaces the integration when the external ID is removed.
-// UpdateIntegration keeps the existing external ID when none is supplied, so it cannot be cleared in place.
-func requiresReplaceIfRemoved() planmodifier.String {
-	return stringplanmodifier.RequiresReplaceIf(
-		func(_ context.Context, request planmodifier.StringRequest, response *stringplanmodifier.RequiresReplaceIfFuncResponse) {
-			response.RequiresReplace = !request.StateValue.IsNull() && request.PlanValue.IsNull()
-		},
-		"Requires replacement when the value is removed.",
-		"Requires replacement when the value is removed.",
 	)
 }
