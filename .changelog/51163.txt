@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_connection_group: Add `viewer_fallback` argument
+```
+
+```release-note:enhancement
+data-source/aws_cloudfront_connection_group: Add `viewer_fallback` attribute
+```
