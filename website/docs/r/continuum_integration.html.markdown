@@ -22,10 +22,31 @@ Manages an AWS Continuum integration. An integration connects Continuum to a cod
 resource "aws_continuum_integration" "example" {
   name = "example"
 
-  s3 {
-    bucket      = aws_s3_bucket.example.id
-    role_arn    = aws_iam_role.continuum_integration.arn
-    external_id = "example-external-id"
+  provider_configuration {
+    s3 {
+      bucket      = aws_s3_bucket.example.id
+      role_arn    = aws_iam_role.continuum_integration.arn
+      external_id = "example-external-id"
+    }
+  }
+}
+```
+
+### GitHub
+
+```terraform
+resource "aws_continuum_integration" "example" {
+  name = "example-github"
+
+  provider_configuration {
+    github {
+      organization_name = "example-org"
+
+      authorization {
+        authorization_code = var.github_authorization_code
+        state              = var.github_authorization_state
+      }
+    }
   }
 }
 ```
@@ -36,48 +57,59 @@ resource "aws_continuum_integration" "example" {
 resource "aws_continuum_integration" "example" {
   name = "example-gitlab"
 
-  gitlab {
-    access_token = var.gitlab_access_token
-    instance_url = "https://gitlab.example.com"
-    target_path  = "example-group/example-project"
-    target_type  = "PROJECT"
+  provider_configuration {
+    gitlab {
+      access_token = var.gitlab_access_token
+      instance_url = "https://gitlab.example.com"
+      target_path  = "example-group/example-project"
+      target_type  = "PROJECT"
+    }
   }
 }
 ```
 
 ## Argument Reference
 
-This resource supports the following arguments:
+The following arguments are required:
 
-* `github` - (Optional, Forces new resource) GitHub provider configuration. See [`github`](#github-block) below. Exactly one of `github`, `gitlab` or `s3` is required.
-* `gitlab` - (Optional, Forces new resource) GitLab provider configuration. See [`gitlab`](#gitlab-block) below.
-* `name` - (Required, Forces new resource) Name of the integration.
+* `name` - (Required, Forces new resource) Name of the integration. Must be between 1 and 255 characters.
+* `provider_configuration` - (Required) Code source configuration. See [`provider_configuration`](#provider_configuration-block) below.
+
+The following arguments are optional:
+
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `s3` - (Optional) Amazon S3 provider configuration. See [`s3`](#s3-block) below.
+
+### `provider_configuration` Block
+
+Exactly one of the following blocks is required. Changing which block is set forces a new resource.
+
+* `github` - (Optional) GitHub configuration. See [`github`](#github-block) below.
+* `gitlab` - (Optional) GitLab configuration. See [`gitlab`](#gitlab-block) below.
+* `s3` - (Optional) Amazon S3 configuration. See [`s3`](#s3-block) below.
 
 ### `github` Block
 
-* `authorization` - (Required) Single-use OAuth authorization. See [`authorization`](#authorization-block) below.
+* `authorization` - (Required) OAuth authorization used to create the integration. See [`authorization`](#authorization-block) below.
 * `organization_name` - (Optional, Forces new resource) GitHub organization to install into. Omit for a personal account.
 
 ### `authorization` Block
 
-* `authorization_code` - (Required, Sensitive) Single-use OAuth authorization code returned by GitHub.
-* `redirect_url` - (Required) Redirect URL used for the authorization.
-* `state` - (Required) State value from `StartIntegrationAuthorization`.
+* `authorization_code` - (Required, Sensitive, Forces new resource) Single-use OAuth authorization code returned by GitHub.
+* `redirect_url` - (Optional, Forces new resource) Redirect URL used to obtain the authorization code. Must start with `https://`. Defaults to the GitHub App's default redirect URL.
+* `state` - (Required, Forces new resource) State returned by GitHub in the OAuth callback. Must be the state returned by `StartIntegrationAuthorization`.
 
 ### `gitlab` Block
 
-* `access_token` - (Required, Sensitive) GitLab access token.
-* `instance_url` - (Required) URL of the GitLab instance.
-* `target_path` - (Required) Path of the GitLab project or group.
-* `target_type` - (Required) Type of the target. Valid values are `GROUP` and `PROJECT`.
+* `access_token` - (Required, Sensitive, Forces new resource) GitLab personal, group or project access token.
+* `instance_url` - (Required, Forces new resource) HTTPS base URL of the GitLab instance.
+* `target_path` - (Required, Forces new resource) Path of the GitLab group or project.
+* `target_type` - (Required, Forces new resource) Type of the target. Valid values are `GROUP` and `PROJECT`.
 
 ### `s3` Block
 
 * `bucket` - (Required, Forces new resource) Name of the bucket that holds the code.
-* `external_id` - (Optional, Sensitive) External ID that Continuum presents when assuming the role. Can be updated in place. Removing it forces a new resource, because Continuum keeps the existing external ID when none is supplied.
-* `role_arn` - (Required) ARN of the IAM role that Continuum assumes to read the bucket. Can be updated in place.
+* `external_id` - (Required, Sensitive) External ID that Continuum presents when assuming the role.
+* `role_arn` - (Required) ARN of the IAM role that Continuum assumes to read the bucket.
 
 ## Attribute Reference
 
@@ -93,8 +125,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 In addition to the arguments above, the `gitlab` block exports the following attributes:
 
-* `expires_at` - Time the GitLab access token expires.
-* `token_rotation` - Token rotation mode of the GitLab integration.
+* `expires_at` - Time the GitLab access token expires. Not set when `token_rotation` is `AUTOMATIC`.
+* `token_rotation` - How the access token is rotated. `AUTOMATIC` when the token has the self-rotate scope, in which case Continuum manages the token; otherwise `NONE`.
 
 ## Import
 
