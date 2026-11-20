@@ -4,8 +4,11 @@
 package sdkv2
 
 import (
+	"context"
 	"sync"
 
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -57,6 +60,38 @@ func ComputedOnlyFromResource(r *schema.Resource) *schema.Resource {
 	}
 
 	return cs
+}
+
+// WarnShouldBeComputedOnly is a ValidateDiagFunc for an Optional+Computed attribute that should be
+// Computed only: the provider sets it and ignores a configured value. It warns when the attribute is
+// configured. The attribute stays Optional so existing configurations keep working until a future
+// version makes it Computed only (https://github.com/hashicorp/terraform-provider-aws/issues/50581).
+//
+// SDKv2 doesn't allow a ValidateDiagFunc on lists or sets. For those, use
+// WarnShouldBeComputedOnlyRawConfig.
+func WarnShouldBeComputedOnly(_ any, path cty.Path) diag.Diagnostics {
+	return diag.Diagnostics{shouldBeComputedOnlyWarning(path)}
+}
+
+// WarnShouldBeComputedOnlyRawConfig returns a ValidateRawResourceConfigFunc that does what
+// WarnShouldBeComputedOnly does, for the top-level attribute name of any type. SDKv2 runs it for
+// resources only.
+func WarnShouldBeComputedOnlyRawConfig(name string) schema.ValidateRawResourceConfigFunc {
+	return func(_ context.Context, req schema.ValidateResourceConfigFuncRequest, resp *schema.ValidateResourceConfigFuncResponse) {
+		if req.RawConfig.IsNull() || !req.RawConfig.IsKnown() || req.RawConfig.GetAttr(name).IsNull() {
+			return
+		}
+		resp.Diagnostics = append(resp.Diagnostics, shouldBeComputedOnlyWarning(cty.GetAttrPath(name)))
+	}
+}
+
+func shouldBeComputedOnlyWarning(path cty.Path) diag.Diagnostic {
+	return diag.Diagnostic{
+		Severity:      diag.Warning,
+		Summary:       "Argument is computed",
+		Detail:        "This attribute is meant to be set only by the provider. The provider accepted a configured value by mistake, and configuring it isn't supported. Remove it from your configuration. A future version of the provider will reject it.",
+		AttributePath: path,
+	}
 }
 
 func ComputedOnlyFromResourceSchema(rs map[string]*schema.Schema) map[string]*schema.Schema {
