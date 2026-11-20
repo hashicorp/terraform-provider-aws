@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_flow_log: Add `core_network_id`, `core_network_edge_id`, and `core_network_attachment_id` arguments to support AWS Cloud WAN flow logs
+resource/aws_flow_log: Add `core_network_id`, `core_network_edge_id`, and `core_network_attachment_id` arguments to support AWS Cloud WAN flow logs. Creation waits until the core network or attachment is `AVAILABLE` again
 ```
 
 ```release-note:bug

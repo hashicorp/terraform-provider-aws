@@ -448,6 +448,28 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.Client, id
 	return nil, err
 }
 
+// waitCoreNetworkStable waits for a core network to settle in AVAILABLE.
+// A change made through another service, such as the first EC2 flow log on the core network,
+// moves it to UPDATING a few seconds after the call returns, so a single AVAILABLE reading isn't enough.
+func waitCoreNetworkStable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.CoreNetwork, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.CoreNetworkStateUpdating),
+		Target:                    enum.Slice(awstypes.CoreNetworkStateAvailable),
+		Timeout:                   timeout,
+		PollInterval:              5 * time.Second,
+		ContinuousTargetOccurence: 3,
+		Refresh:                   statusCoreNetworkState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.CoreNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitCoreNetworkDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.CoreNetwork, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(awstypes.CoreNetworkStateDeleting),
