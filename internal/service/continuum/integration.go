@@ -485,15 +485,15 @@ func (m *integrationResourceModel) flatten(ctx context.Context, output *continuu
 		return diags
 	}
 
-	diags.Append(keepPrior(ctx, &current.GitHub, prior.GitHub, func(current, prior *githubConfigurationModel) {
+	smerr.AddEnrich(ctx, &diags, keepPrior(ctx, &current.GitHub, prior.GitHub, func(current, prior *githubConfigurationModel) {
 		current.Authorization = prior.Authorization
-	})...)
-	diags.Append(keepPrior(ctx, &current.GitLab, prior.GitLab, func(current, prior *gitlabConfigurationModel) {
+	}))
+	smerr.AddEnrich(ctx, &diags, keepPrior(ctx, &current.GitLab, prior.GitLab, func(current, prior *gitlabConfigurationModel) {
 		current.AccessToken = prior.AccessToken
-	})...)
-	diags.Append(keepPrior(ctx, &current.S3, prior.S3, func(current, prior *s3ConfigurationModel) {
+	}))
+	smerr.AddEnrich(ctx, &diags, keepPrior(ctx, &current.S3, prior.S3, func(current, prior *s3ConfigurationModel) {
 		current.ExternalID = prior.ExternalID
-	})...)
+	}))
 	if diags.HasError() {
 		return diags
 	}
@@ -505,7 +505,10 @@ func (m *integrationResourceModel) flatten(ctx context.Context, output *continuu
 
 // keepPrior copies values that the service does not return from the prior nested object into the current one.
 func keepPrior[T any](ctx context.Context, current *fwtypes.ListNestedObjectValueOf[T], prior fwtypes.ListNestedObjectValueOf[T], keep func(current, prior *T)) diag.Diagnostics {
-	c, diags := current.ToPtr(ctx)
+	var diags diag.Diagnostics
+
+	c, d := current.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() || c == nil {
 		return diags
 	}
