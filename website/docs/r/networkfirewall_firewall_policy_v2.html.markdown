@@ -162,8 +162,13 @@ The following arguments are optional:
 
 Specify exactly one of `inline_rule_group` or `resource_arn`.
 
+The following arguments are required:
+
+* `priority` - (Required) Priority of the entry, between `1` and `65535`. Network Firewall evaluates entries in order of increasing priority. Each entry must have a unique priority.
+
+The following arguments are optional:
+
 * `inline_rule_group` - (Optional) Rule group defined inline in the policy. See [`firewall_rule_group_entry.inline_rule_group` Block](#firewall_rule_group_entryinline_rule_group-block) below.
-* `priority` - (Optional) Priority of the entry, between `1` and `65535`. Network Firewall evaluates entries in order of increasing priority. Each entry must have a unique priority.
 * `resource_arn` - (Optional) ARN of an existing firewall rule group to reference. Use this to apply a domain list, because inline rule groups can't use domain lists.
 
 ### `firewall_rule_group_entry.inline_rule_group` Block

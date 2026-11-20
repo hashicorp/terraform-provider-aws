@@ -6,11 +6,13 @@ package networkfirewall
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -33,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -181,9 +184,15 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 						"firewall_rule_group_entry": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[firewallRuleGroupEntryModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("inline_rule_group"),
+										path.MatchRelative().AtName(names.AttrResourceARN),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									names.AttrPriority: schema.Int32Attribute{
-										Optional: true,
+										Required: true,
 										Validators: []validator.Int32{
 											int32validator.Between(1, 65535),
 										},
@@ -209,6 +218,12 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 														listvalidator.SizeAtMost(1),
 													},
 													NestedObject: schema.NestedBlockObject{
+														Validators: []validator.Object{
+															tfobjectvalidator.ExactlyOneOfChildren(
+																path.MatchRelative().AtName("firewall_rule"),
+																path.MatchRelative().AtName("rules_string"),
+															),
+														},
 														Attributes: map[string]schema.Attribute{
 															"rules_string": schema.StringAttribute{
 																Optional: true,
@@ -228,6 +243,12 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 						"ips_rule_group_entry": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[ipsRuleGroupEntryModel](ctx),
 							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("inline_rule_group"),
+										path.MatchRelative().AtName(names.AttrResourceARN),
+									),
+								},
 								Attributes: map[string]schema.Attribute{
 									names.AttrResourceARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
@@ -473,6 +494,44 @@ func variableKeyValidators() []validator.String {
 	}
 }
 
+func (r *firewallPolicyV2Resource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config firewallPolicyV2ResourceModel
+	smerr.AddEnrich(ctx, &resp.Diagnostics, req.Config.Get(ctx, &config))
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	policy, d := config.FirewallPolicyV2.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() || policy == nil {
+		return
+	}
+
+	entries, d := policy.FirewallRuleGroupEntries.ToSlice(ctx)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// The API requires each firewall section entry to have a unique priority.
+	seen := make(map[int32]bool, len(entries))
+	for i, entry := range entries {
+		if entry.Priority.IsNull() || entry.Priority.IsUnknown() {
+			continue
+		}
+
+		priority := entry.Priority.ValueInt32()
+		if seen[priority] {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("firewall_policy").AtListIndex(0).AtName("firewall_rule_group_entry").AtListIndex(i).AtName(names.AttrPriority),
+				"Duplicate Priority",
+				fmt.Sprintf("Each firewall_rule_group_entry must have a unique priority; %d is used more than once.", priority),
+			)
+		}
+		seen[priority] = true
+	}
+}
+
 func (r *firewallPolicyV2Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
@@ -639,7 +698,13 @@ func (r *firewallPolicyV2Resource) Delete(ctx context.Context, req resource.Dele
 func (r *firewallPolicyV2Resource) flatten(ctx context.Context, out *networkfirewall.DescribeFirewallPolicyV2Output, data *firewallPolicyV2ResourceModel) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	priorEncryptionConfiguration := data.EncryptionConfiguration
 	diags.Append(fwflex.Flatten(ctx, out.FirewallPolicyV2Response, data, fwflex.WithFieldNamePrefix("FirewallPolicyV2"))...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.EncryptionConfiguration, diags = keepConfiguredKMSKeyID(ctx, priorEncryptionConfiguration, data.EncryptionConfiguration, diags)
 	if diags.HasError() {
 		return diags
 	}
@@ -656,6 +721,34 @@ func (r *firewallPolicyV2Resource) flatten(ctx context.Context, out *networkfire
 	data.UpdateToken = fwflex.StringToFramework(ctx, out.UpdateToken)
 
 	return diags
+}
+
+// keepConfiguredKMSKeyID keeps a customer managed key configured by key ID.
+// The API returns the key ARN even when the key was specified by its ID.
+func keepConfiguredKMSKeyID(ctx context.Context, prior, current fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel], diags diag.Diagnostics) (fwtypes.ListNestedObjectValueOf[encryptionConfigurationModel], diag.Diagnostics) {
+	priorConfig, d := prior.ToPtr(ctx)
+	diags.Append(d...)
+	currentConfig, d := current.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || priorConfig == nil || currentConfig == nil {
+		return current, diags
+	}
+
+	keyID := priorConfig.KeyID.ValueString()
+	if keyID == "" || arn.IsARN(keyID) {
+		return current, diags
+	}
+
+	keyARN, err := arn.Parse(currentConfig.KeyID.ValueString())
+	if err != nil || keyARN.Resource != "key/"+keyID {
+		return current, diags
+	}
+
+	currentConfig.KeyID = priorConfig.KeyID
+	v, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, currentConfig)
+	diags.Append(d...)
+
+	return v, diags
 }
 
 func waitFirewallPolicyV2Created(ctx context.Context, conn *networkfirewall.Client, arn string, timeout time.Duration) (*networkfirewall.DescribeFirewallPolicyV2Output, error) {
