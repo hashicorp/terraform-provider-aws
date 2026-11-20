@@ -433,7 +433,10 @@ func (r *bucketLifecycleConfigurationResource) Create(ctx context.Context, reque
 		return
 	}
 
-	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	data.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
 	data.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
@@ -485,7 +488,7 @@ func (r *bucketLifecycleConfigurationResource) Read(ctx context.Context, request
 		return
 	}
 
-	flattenBucketLifecycleConfigurationResource(ctx, output, &data, &response.Diagnostics)
+	response.Diagnostics.Append(r.flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -546,7 +549,10 @@ func (r *bucketLifecycleConfigurationResource) Update(ctx context.Context, reque
 		return
 	}
 
-	flattenBucketLifecycleConfigurationResource(ctx, output, &new, &response.Diagnostics)
+	response.Diagnostics.Append(r.flatten(ctx, output, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	new.ID = types.StringValue(createResourceID(bucket, expectedBucketOwner))
 	new.ExpectedBucketOwner = types.StringValue(expectedBucketOwner)
@@ -613,7 +619,13 @@ func (r *bucketLifecycleConfigurationResource) ImportState(ctx context.Context, 
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), types.StringValue(createResourceID(bucket, expectedBucketOwner)))...)
 }
 
-func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel, diags *diag.Diagnostics) {
+func (r *bucketLifecycleConfigurationResource) flatten(ctx context.Context, output *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel) diag.Diagnostics {
+	return flattenBucketLifecycleConfigurationResource(ctx, output, data)
+}
+
+func flattenBucketLifecycleConfigurationResource(ctx context.Context, output *s3.GetBucketLifecycleConfigurationOutput, data *bucketLifecycleConfigurationResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	// Preserve the planned/prior transition_default_minimum_object_size when the
 	// backend omits it. AWS S3 always returns the
 	// x-amz-transition-default-minimum-object-size field, but it is optional and
@@ -624,13 +636,18 @@ func flattenBucketLifecycleConfigurationResource(ctx context.Context, bucket *s3
 	// Read; capture it before flattening so it can be restored if the backend
 	// returns nothing. On AWS the flattened value is never empty, so this is a
 	// no-op there.
-	transitionMinSize := data.TransitionDefaultMinimumObjectSize
+	transitionMinSize := data.TransitionDefaultMinimumObjectSize.ValueEnum()
 
-	diags.Append(fwflex.Flatten(ctx, bucket, data)...)
-
-	if data.TransitionDefaultMinimumObjectSize.ValueString() == "" {
-		data.TransitionDefaultMinimumObjectSize = transitionMinSize
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	if diags.HasError() {
+		return diags
 	}
+
+	if fwflex.StringValueFromFramework(ctx, data.TransitionDefaultMinimumObjectSize) == "" {
+		data.TransitionDefaultMinimumObjectSize = fwtypes.StringEnumValue(transitionMinSize)
+	}
+
+	return diags
 }
 
 func (r *bucketLifecycleConfigurationResource) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
