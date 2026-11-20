@@ -1431,6 +1431,23 @@ func statusTransitGatewayPeeringAttachment(conn *ec2.Client, id string) retry.St
 	}
 }
 
+func statusTransitGatewayPeeringAttachmentMultipathResilience(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTransitGatewayPeeringAttachmentByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		// Options is omitted once neither side allows multipath resilience.
+		return output, string(transitGatewayPeeringAttachmentOptionsWithDefaults(output.Options).MultipathResilienceStatus), nil
+	}
+}
+
 func statusTransitGatewayPrefixListReference(conn *ec2.Client, transitGatewayRouteTableID string, prefixListID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)

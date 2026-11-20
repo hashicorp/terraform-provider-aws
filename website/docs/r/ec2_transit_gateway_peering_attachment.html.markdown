@@ -56,6 +56,29 @@ resource "aws_ec2_transit_gateway_peering_attachment" "example" {
 }
 ```
 
+Cross-Region usage with multipath resilience:
+
+```terraform
+resource "aws_ec2_transit_gateway_peering_attachment" "example" {
+  provider = aws.local
+
+  peer_region             = data.aws_region.peer.region
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.local.id
+
+  options {
+    allow_multipath_resilience = true
+  }
+}
+
+# Accepting the attachment also allows multipath resilience for the accepter.
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
+  provider = aws.peer
+
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.example.id
+}
+```
+
 The peering attachment must be accepted in the account and Region of the peer Transit Gateway, even when both Transit Gateways are in the same account. For an example of how to request a peering attachment from one AWS account and accept it in a second AWS account, see the [`aws_ec2_transit_gateway_peering_attachment_accepter` resource](/docs/providers/aws/r/ec2_transit_gateway_peering_attachment_accepter.html#cross-account-usage).
 
 ## Argument Reference
@@ -66,7 +89,7 @@ This resource supports the following arguments:
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peer_transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway to peer with.
-* `options` - (Optional) Block describing whether dynamic routing is enabled or disabled for the transit gateway peering request. If not configured, the value is populated from the API. See [options](#options) below for more details!
+* `options` - (Optional) Block describing the dynamic routing and multipath resilience options for the transit gateway peering request. If not configured, the value is populated from the API. See [options](#options) below for more details!
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 
@@ -74,7 +97,9 @@ This resource supports the following arguments:
 
 The `options` block supports the following:
 
-* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled. Supports `enable` and `disable`. If not configured, the value is populated from the API.
+* `allow_multipath_resilience` - (Optional) Whether to allow [multipath resilience](https://docs.aws.amazon.com/vpc/latest/tgw/enable-multipath-resilience-tgw.html) for the requester's side of a cross-Region attachment. Multipath resilience takes effect only when both sides allow it, and additional charges apply. If not set, the current setting is left unchanged. Can be changed only once the attachment is available.
+* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled. Supports `enable` and `disable`. Defaults to `disable`.
+* `multipath_resilience_mode` - (Optional) Multipath resilience mode. Valid values: `always-on`. Can only be set when `allow_multipath_resilience` is `true`. Defaults to `always-on` when multipath resilience is allowed.
 
 ## Attribute Reference
 
@@ -82,6 +107,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the attachment.
 * `id` - EC2 Transit Gateway Attachment identifier.
+* `multipath_resilience_status` - Multipath resilience status of the attachment. Values are `enabled` (both sides allow multipath resilience), `pending` (only one side allows it, or it is being enabled) and `disabled` (neither side allows it).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

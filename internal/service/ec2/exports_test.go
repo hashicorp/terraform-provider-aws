@@ -293,6 +293,7 @@ var (
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
+	FlattenTransitGatewayPeeringAttachmentAccepterOptions       = flattenTransitGatewayPeeringAttachmentAccepterOptions
 	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions
 	FlowLogStateUpgradeV0                                       = flowLogStateUpgradeV0
 	IPAMServicePrincipal                                        = ipamServicePrincipal
@@ -324,6 +325,7 @@ var (
 	StopEBSVolumeAttachmentInstance                             = stopVolumeAttachmentInstance
 	StopInstance                                                = stopInstance
 	SubnetMigrateState                                          = subnetMigrateState
+	TransitGatewayPeeringAttachmentOptionsWithDefaults          = transitGatewayPeeringAttachmentOptionsWithDefaults
 	UnsuccessfulItemError                                       = unsuccessfulItemError
 	UnsuccessfulItemsError                                      = unsuccessfulItemsError
 	UpdateTags                                                  = updateTags
