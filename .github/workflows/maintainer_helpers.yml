@@ -88,7 +88,11 @@ jobs:
         run: gh $GH_CLI_SUBCOMMAND edit $ISSUE_URL --add-label prioritized
 
       - name: Add Auto-Labeled Items
-        if: steps.label_prioritized.outcome == 'success'
+        if: |
+          steps.label_prioritized.outcome == 'success'
+          || (github.event.action == 'labeled'
+            && contains(fromJSON('["crash", "regression"]'), github.event.label.name)
+            && env.ITEM_STATE == 'open')
         uses: ./.github/actions/team_working_board
         with:
           github_token: ${{ steps.token.outputs.token }}
