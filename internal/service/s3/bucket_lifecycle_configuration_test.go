@@ -12,7 +12,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -40,7 +42,10 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketLifecycleConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 				),
@@ -83,6 +88,10 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/BucketLifecycleConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -103,7 +112,10 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/BucketLifecycleConfiguration/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfs3.ResourceBucketLifecycleConfiguration, resourceName),
@@ -111,10 +123,10 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_s3_bucket_lifecycle_configuration.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_s3_bucket_lifecycle_configuration.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
 				},
 			},
@@ -4139,6 +4151,63 @@ func TestAccS3BucketLifecycleConfiguration_expectedBucketOwner(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/25939.
+func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
+	minIOAccessKey := acctest.SkipIfEnvVarNotSet(t, "MINIO_ACCESS_KEY")
+	minIOSecretKey := acctest.SkipIfEnvVarNotSet(t, "MINIO_SECRET_KEY")
+	minIOEndpoint := acctest.SkipIfEnvVarNotSet(t, "MINIO_ENDPOINT")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.S3ServiceID),
+		// Test validation error: TestStep 1/1 validation error: Providers must only be specified either at the TestCase or TestStep level.
+		// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: testAccCheckBucketLifecycleConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/BucketLifecycleConfiguration/minio.basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:  config.StringVariable(rName),
+					"minioRegion":    config.StringVariable(endpoints.UsEast1RegionID),
+					"minioAccessKey": config.StringVariable(minIOAccessKey),
+					"minioSecretKey": config.StringVariable(minIOSecretKey),
+					"minioEndpoint":  config.StringVariable(minIOEndpoint),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, t, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrExpectedBucketOwner), knownvalue.StringExact("")),
+					tfstatecheck.ExpectAttributeFormat(resourceName, tfjsonpath.New(names.AttrID), "{bucket}"),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRule), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"abort_incomplete_multipart_upload": checkAbortIncompleteMultipartUpload_None(),
+							"expiration":                        checkExpiration_Days(365),
+							names.AttrFilter:                    checkFilter_Prefix("prefix/"),
+							names.AttrID:                        knownvalue.StringExact(rName),
+							"noncurrent_version_expiration":     checkNoncurrentVersionExpiration_None(),
+							"noncurrent_version_transition":     checkNoncurrentVersionTransitions(),
+							names.AttrPrefix:                    knownvalue.StringExact(""),
+							names.AttrStatus:                    knownvalue.StringExact(tfs3.LifecycleRuleStatusEnabled),
+							"transition":                        checkTransitions(),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("transition_default_minimum_object_size"), knownvalue.StringExact("all_storage_classes_128K")),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
