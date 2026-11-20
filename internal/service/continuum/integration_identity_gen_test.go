@@ -82,7 +82,7 @@ func testAccContinuumIntegration_Identity_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"s3.0.external_id",
+					"provider_configuration.0.s3.0.external_id",
 				},
 			},
 
@@ -176,7 +176,7 @@ func testAccContinuumIntegration_Identity_regionOverride(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"s3.0.external_id",
+					"provider_configuration.0.s3.0.external_id",
 				},
 			},
 

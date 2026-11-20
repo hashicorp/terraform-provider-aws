@@ -4,10 +4,12 @@
 resource "aws_continuum_integration" "test" {
   name = var.rName
 
-  s3 {
-    bucket      = aws_s3_bucket.test.id
-    role_arn    = aws_iam_role.test.arn
-    external_id = var.rName
+  provider_configuration {
+    s3 {
+      bucket      = aws_s3_bucket.test.id
+      role_arn    = aws_iam_role.test.arn
+      external_id = var.rName
+    }
   }
 
   depends_on = [aws_iam_role_policy.test, aws_s3_object.code]
