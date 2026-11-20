@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -70,8 +71,9 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 		},
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"ip_set":   keyedDefinitionSetBlock[ipSetV2Model](ctx),
-				"port_set": keyedDefinitionSetBlock[portSetV2Model](ctx),
+				"context_set": keyedDefinitionSetBlock[contextSetV2Model](ctx, listvalidator.SizeBetween(1, 1000), listvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 64))),
+				"ip_set":      keyedDefinitionSetBlock[ipSetV2Model](ctx),
+				"port_set":    keyedDefinitionSetBlock[portSetV2Model](ctx),
 			},
 		},
 	}
@@ -87,7 +89,8 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 					NestedObject: schema.NestedBlockObject{
 						Attributes: map[string]schema.Attribute{
 							names.AttrKey: schema.StringAttribute{
-								Required: true,
+								Required:   true,
+								Validators: variableKeyValidators(),
 							},
 							"reference_arn": schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
@@ -101,6 +104,9 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 	}
 	addressBlock := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[addressV2Model](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(100),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"address_definition": schema.StringAttribute{
@@ -178,6 +184,9 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 								Attributes: map[string]schema.Attribute{
 									names.AttrPriority: schema.Int32Attribute{
 										Optional: true,
+										Validators: []validator.Int32{
+											int32validator.Between(1, 65535),
+										},
 									},
 									names.AttrResourceARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
@@ -192,7 +201,6 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 										},
 										NestedObject: schema.NestedBlockObject{
 											Blocks: map[string]schema.Block{
-												"reference_sets": referenceSetsBlock,
 												"rule_variables": ruleVariablesBlock,
 												"rules_source": schema.ListNestedBlock{
 													CustomType: fwtypes.NewListNestedObjectTypeOf[firewallRulesSourceModel](ctx),
@@ -298,6 +306,9 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 									},
 									"dns_firewall_rule_group_id": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											stringvalidator.RegexMatches(regexache.MustCompile(`^rslvr-frg-[0-9a-f]+$`), "must be a Route 53 Resolver DNS Firewall rule group ID"),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -430,23 +441,35 @@ func firewallRuleBlock(ctx context.Context) schema.ListNestedBlock {
 	}
 }
 
-// keyedDefinitionSetBlock returns the schema for a map of name to list-of-definitions,
-// e.g. IP set or port set variables.
-func keyedDefinitionSetBlock[T any](ctx context.Context) schema.SetNestedBlock {
+// keyedDefinitionSetBlock returns the schema for a map of variable name to list of definitions,
+// e.g. IP set, port set, or context set variables.
+func keyedDefinitionSetBlock[T any](ctx context.Context, definitionValidators ...validator.List) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
 		CustomType: fwtypes.NewSetNestedObjectTypeOf[T](ctx),
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(100),
+		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"definition": schema.ListAttribute{
 					CustomType:  fwtypes.ListOfStringType,
 					ElementType: types.StringType,
 					Required:    true,
+					Validators:  definitionValidators,
 				},
 				names.AttrKey: schema.StringAttribute{
-					Required: true,
+					Required:   true,
+					Validators: variableKeyValidators(),
 				},
 			},
 		},
+	}
+}
+
+func variableKeyValidators() []validator.String {
+	return []validator.String{
+		stringvalidator.LengthBetween(1, 32),
+		stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_]*$`), "must start with a letter and contain only alphanumeric characters and underscores"),
 	}
 }
 
@@ -762,7 +785,6 @@ type firewallRuleGroupEntryModel struct {
 }
 
 type firewallRuleGroupV2Model struct {
-	ReferenceSets fwtypes.ListNestedObjectValueOf[referenceSetsV2Model]     `tfsdk:"reference_sets"`
 	RuleVariables fwtypes.ListNestedObjectValueOf[ruleVariablesV2Model]     `tfsdk:"rule_variables"`
 	RulesSource   fwtypes.ListNestedObjectValueOf[firewallRulesSourceModel] `tfsdk:"rules_source"`
 }
@@ -828,8 +850,14 @@ type ipSetReferenceV2Model struct {
 }
 
 type ruleVariablesV2Model struct {
-	IPSets   fwtypes.SetNestedObjectValueOf[ipSetV2Model]   `tfsdk:"ip_set"`
-	PortSets fwtypes.SetNestedObjectValueOf[portSetV2Model] `tfsdk:"port_set"`
+	ContextSets fwtypes.SetNestedObjectValueOf[contextSetV2Model] `tfsdk:"context_set"`
+	IPSets      fwtypes.SetNestedObjectValueOf[ipSetV2Model]      `tfsdk:"ip_set"`
+	PortSets    fwtypes.SetNestedObjectValueOf[portSetV2Model]    `tfsdk:"port_set"`
+}
+
+type contextSetV2Model struct {
+	Definition  fwtypes.ListOfString `tfsdk:"definition"`
+	MapBlockKey types.String         `tfsdk:"key"`
 }
 
 type ipSetV2Model struct {

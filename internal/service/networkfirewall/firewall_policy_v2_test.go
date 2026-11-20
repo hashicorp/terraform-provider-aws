@@ -284,7 +284,15 @@ func TestAccNetworkFirewallFirewallPolicyV2_full(t *testing.T) {
 							"definition":  knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("10.0.0.0/16")}),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, policyPath.AtMapKey("firewall_rule_group_entry").AtSliceIndex(0).AtMapKey("inline_rule_group").AtSliceIndex(0).AtMapKey("rule_variables").AtSliceIndex(0).AtMapKey("context_set"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrKey: knownvalue.StringExact("MY_VPCS"),
+							"definition":  knownvalue.ListExact([]knownvalue.Check{knownvalue.StringExact("vpc-0123456789abcdef0")}),
+						}),
+					})),
 					statecheck.ExpectKnownValue(resourceName, policyPath.AtMapKey("ips_rule_group_entry"), knownvalue.ListSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, policyPath.AtMapKey("ips_rule_group_entry").AtSliceIndex(0).AtMapKey("inline_rule_group").AtSliceIndex(0).AtMapKey("rule_variables").AtSliceIndex(0).AtMapKey("context_set"), knownvalue.SetSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, policyPath.AtMapKey("ips_rule_group_entry").AtSliceIndex(0).AtMapKey("inline_rule_group").AtSliceIndex(0).AtMapKey("reference_sets").AtSliceIndex(0).AtMapKey("ip_set_reference").AtSliceIndex(0).AtMapKey("reference_arn"), "aws_ec2_managed_prefix_list.test", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.ExpectKnownValue(resourceName, policyPath.AtMapKey("ips_rule_group_entry").AtSliceIndex(1).AtMapKey("override").AtSliceIndex(0).AtMapKey(names.AttrAction), tfknownvalue.StringExact(awstypes.OverrideActionDropToAlert)),
 					statecheck.ExpectKnownValue(resourceName, policyPath.AtMapKey("policy_variables").AtSliceIndex(0).AtMapKey("rule_variable"), knownvalue.SetSizeExact(1)),
 					statecheck.ExpectKnownValue(resourceName, policyPath.AtMapKey("stateful_engine_options").AtSliceIndex(0).AtMapKey("flow_timeouts").AtSliceIndex(0).AtMapKey("tcp_idle_timeout_seconds"), knownvalue.Int32Exact(350)),
@@ -473,6 +481,16 @@ func testAccFirewallPolicyV2Config_full(rName string) string {
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 1
+
+  entry {
+    cidr = "10.0.0.0/16"
+  }
+}
+
 resource "aws_networkfirewall_firewall_policy_v2" "test" {
   name = %[1]q
 
@@ -516,6 +534,10 @@ resource "aws_networkfirewall_firewall_policy_v2" "test" {
             key        = "WEB_PORTS"
             definition = ["80", "443"]
           }
+          context_set {
+            key        = "MY_VPCS"
+            definition = ["vpc-0123456789abcdef0"]
+          }
         }
       }
     }
@@ -534,6 +556,20 @@ resource "aws_networkfirewall_firewall_policy_v2" "test" {
       inline_rule_group {
         rules_source {
           rules_string = "alert tcp any any -> any 22 (msg:\"ssh\"; sid:2000001; rev:1;)"
+        }
+
+        reference_sets {
+          ip_set_reference {
+            key           = "TRUSTED_NET"
+            reference_arn = aws_ec2_managed_prefix_list.test.arn
+          }
+        }
+
+        rule_variables {
+          context_set {
+            key        = "IPS_VPCS"
+            definition = ["vpc-0123456789abcdef0", "vpc-0123456789abcdef1"]
+          }
         }
       }
     }
@@ -569,6 +605,17 @@ func testAccFirewallPolicyV2Config_fullUpdated(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
+
+# Retained so that it isn't deleted while the previous policy version still references it.
+resource "aws_ec2_managed_prefix_list" "test" {
+  name           = %[1]q
+  address_family = "IPv4"
+  max_entries    = 1
+
+  entry {
+    cidr = "10.0.0.0/16"
+  }
+}
 
 resource "aws_networkfirewall_firewall_policy_v2" "test" {
   name = %[1]q

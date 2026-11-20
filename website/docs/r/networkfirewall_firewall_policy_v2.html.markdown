@@ -10,6 +10,10 @@ description: |-
 
 Manages an AWS Network Firewall Next Generation (V2) Firewall Policy. For more information, see [Next Generation policies in AWS Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/firewall-policies-v2.html).
 
+~> **NOTE:** A policy that is associated with a firewall can't be deleted. Associate the firewall with a different policy first.
+
+~> **NOTE:** Changing `firewall_default_action` or `policy_mode` restarts stateful inspection on firewalls that use the policy.
+
 ## Example Usage
 
 ### Basic Usage
@@ -146,8 +150,8 @@ The following arguments are optional:
 ### `firewall_policy` Block
 
 * `firewall_default_action` - (Optional) Action to take on traffic that doesn't match any rule. Valid values: `ACCEPT`, `ALERT`, `DROP`, `REJECT`.
-* `firewall_rule_group_entry` - (Optional) Firewall rule group entries. See [`firewall_rule_group_entry` Block](#firewall_rule_group_entry-block) below.
-* `ips_rule_group_entry` - (Optional) IPS rule group entries. See [`ips_rule_group_entry` Block](#ips_rule_group_entry-block) below.
+* `firewall_rule_group_entry` - (Optional) Firewall rule group entries. A policy can have at most 20 entries, counting referenced and inline rule groups. See [`firewall_rule_group_entry` Block](#firewall_rule_group_entry-block) below.
+* `ips_rule_group_entry` - (Optional) IPS rule group entries. A policy can have at most 20 entries. The IPS engine evaluates all rules in default action order regardless of entry order. See [`ips_rule_group_entry` Block](#ips_rule_group_entry-block) below.
 * `policy_mode` - (Optional) Whether the policy enforces its rules or only monitors traffic. Valid values: `ENFORCE`, `MONITOR`.
 * `policy_variables` - (Optional) Variables that override the IP set variables of the rule groups in the policy. See [`policy_variables` Block](#policy_variables-block) below.
 * `route53_resolved_ip_validation` - (Optional) Validates destination IPs against Route 53 Resolver DNS responses. See [`route53_resolved_ip_validation` Block](#route53_resolved_ip_validation-block) below.
@@ -159,13 +163,12 @@ The following arguments are optional:
 Specify exactly one of `inline_rule_group` or `resource_arn`.
 
 * `inline_rule_group` - (Optional) Rule group defined inline in the policy. See [`firewall_rule_group_entry.inline_rule_group` Block](#firewall_rule_group_entryinline_rule_group-block) below.
-* `priority` - (Optional) Priority of the entry. Network Firewall evaluates entries in order of increasing priority. Each entry must have a unique priority.
-* `resource_arn` - (Optional) ARN of an existing firewall rule group to reference.
+* `priority` - (Optional) Priority of the entry, between `1` and `65535`. Network Firewall evaluates entries in order of increasing priority. Each entry must have a unique priority.
+* `resource_arn` - (Optional) ARN of an existing firewall rule group to reference. Use this to apply a domain list, because inline rule groups can't use domain lists.
 
 ### `firewall_rule_group_entry.inline_rule_group` Block
 
-* `reference_sets` - (Optional) IP set references. See [`reference_sets` Block](#reference_sets-block) below.
-* `rule_variables` - (Optional) IP set and port set variables. See [`rule_variables` Block](#rule_variables-block) below.
+* `rule_variables` - (Optional) Context set, IP set and port set variables. See [`rule_variables` Block](#rule_variables-block) below.
 * `rules_source` - (Required) Rules for the rule group. Specify exactly one of `firewall_rule` or `rules_string`. See [`firewall_rule_group_entry.inline_rule_group.rules_source` Block](#firewall_rule_group_entryinline_rule_grouprules_source-block) below.
 
 ### `firewall_rule_group_entry.inline_rule_group.rules_source` Block
@@ -204,13 +207,13 @@ Specify exactly one of `inline_rule_group` or `resource_arn`.
 Specify exactly one of `inline_rule_group` or `resource_arn`.
 
 * `inline_rule_group` - (Optional) Rule group defined inline in the policy. See [`ips_rule_group_entry.inline_rule_group` Block](#ips_rule_group_entryinline_rule_group-block) below.
-* `override` - (Optional) Overrides the actions of a referenced rule group. Only valid with `resource_arn`. See [`override` Block](#override-block) below.
-* `resource_arn` - (Optional) ARN of an existing IPS rule group to reference, such as an AWS managed IPS rule group.
+* `override` - (Optional) Overrides the actions of an AWS managed rule group referenced by `resource_arn`. Not valid with `inline_rule_group`. See [`override` Block](#override-block) below.
+* `resource_arn` - (Optional) ARN of an existing IPS rule group to reference, such as an AWS managed IPS rule group (`arn:aws:network-firewall:<region>:aws-managed:ips-rulegroup/<name>`).
 
 ### `ips_rule_group_entry.inline_rule_group` Block
 
 * `reference_sets` - (Optional) IP set references. See [`reference_sets` Block](#reference_sets-block) below.
-* `rule_variables` - (Optional) IP set and port set variables. See [`rule_variables` Block](#rule_variables-block) below.
+* `rule_variables` - (Optional) Context set, IP set and port set variables. See [`rule_variables` Block](#rule_variables-block) below.
 * `rules_source` - (Required) Rules for the rule group. See [`ips_rule_group_entry.inline_rule_group.rules_source` Block](#ips_rule_group_entryinline_rule_grouprules_source-block) below.
 
 ### `ips_rule_group_entry.inline_rule_group.rules_source` Block
@@ -227,40 +230,46 @@ Specify exactly one of `inline_rule_group` or `resource_arn`.
 
 ### `ip_set_reference` Block
 
-* `key` - (Required) Name of the variable used in rules.
+* `key` - (Required) Name of the variable used in rules. Must be 1-32 characters, start with a letter, and contain only letters, digits and underscores.
 * `reference_arn` - (Required) ARN of the referenced resource, such as a VPC managed prefix list.
 
 ### `rule_variables` Block
 
-* `ip_set` - (Optional) Set of IP set variables. See [`ip_set` Block](#ip_set-block) below.
-* `port_set` - (Optional) Set of port set variables. See [`port_set` Block](#port_set-block) below.
+* `context_set` - (Optional) Set of context set variables, which let stateful rules reference AWS resource IDs from the context store associated with the firewall. At most 100. See [`context_set` Block](#context_set-block) below.
+* `ip_set` - (Optional) Set of IP set variables. At most 100. See [`ip_set` Block](#ip_set-block) below.
+* `port_set` - (Optional) Set of port set variables. At most 100. See [`port_set` Block](#port_set-block) below.
+
+### `context_set` Block
+
+* `definition` - (Required) List of 1-1000 AWS resource IDs, for example VPC, subnet, security group or transit gateway attachment IDs.
+* `key` - (Required) Name of the variable. Must be 1-32 characters, start with a letter, and contain only letters, digits and underscores.
 
 ### `ip_set` Block
 
 * `definition` - (Required) List of IP addresses and CIDR blocks.
-* `key` - (Required) Name of the variable.
+* `key` - (Required) Name of the variable. Must be 1-32 characters, start with a letter, and contain only letters, digits and underscores.
 
 ### `port_set` Block
 
 * `definition` - (Required) List of ports and port ranges.
-* `key` - (Required) Name of the variable.
+* `key` - (Required) Name of the variable. Must be 1-32 characters, start with a letter, and contain only letters, digits and underscores.
 
 ### `policy_variables` Block
 
-* `rule_variable` - (Optional) Set of IP set variables. See [`rule_variable` Block](#rule_variable-block) below.
+* `rule_variable` - (Optional) Set of IP set variables. At most 100. If you don't override `HOME_NET`, Network Firewall uses the CIDR of the inspection VPC. See [`rule_variable` Block](#rule_variable-block) below.
 
 ### `rule_variable` Block
 
 * `definition` - (Required) List of IP addresses and CIDR blocks.
-* `key` - (Required) Name of the variable, for example `HOME_NET`.
+* `key` - (Required) Name of the variable, for example `HOME_NET`. Must be 1-32 characters, start with a letter, and contain only letters, digits and underscores.
 
 ### `route53_resolved_ip_validation` Block
 
 * `action` - (Required) Action to take on traffic whose destination IP wasn't resolved by Route 53 Resolver. Valid values: `ALERT`, `DROP`, `REJECT`.
-* `bypass_destination_validation_ip_range` - (Optional) Destination ranges that skip validation. See [`bypass_destination_validation_ip_range` Block](#bypass_destination_validation_ip_range-block) below.
+* `bypass_destination_validation_ip_range` - (Optional) Destination ranges that skip validation. At most 100. See [`bypass_destination_validation_ip_range` Block](#bypass_destination_validation_ip_range-block) below.
 * `dns_expiry_exception_policy` - (Required) Action to take on traffic to an IP whose DNS record has expired. Valid values: `CONTINUE`, `DROP`, `REJECT`.
-* `dns_firewall_rule_group_id` - (Required) ID of the Route 53 Resolver DNS Firewall rule group.
-* `source_ip_range` - (Optional) Source ranges to validate. See [`source_ip_range` Block](#source_ip_range-block) below.
+* `dns_firewall_rule_group_id` - (Required) ID of the Route 53 Resolver DNS Firewall rule group, for example `rslvr-frg-0123456789abcdef`. Network Firewall changes the rule group association asynchronously, and rejects further changes to this value while a change is in progress. Changing it may restart the stateful engine.
+* `source_ip_range` - (Optional) Source ranges to validate. At most 100. If omitted, validation applies to the CIDR ranges of the firewall's VPC and of any additional VPCs attached to the firewall. See [`source_ip_range` Block](#source_ip_range-block) below.
 
 ### `bypass_destination_validation_ip_range` Block
 
