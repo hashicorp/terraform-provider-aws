@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -20,12 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -518,12 +521,35 @@ func findFilterByARN(ctx context.Context, conn *inspector2.Client, arn string) (
 	input := inspector2.ListFiltersInput{
 		Arns: []string{arn},
 	}
+	output, err := findFilter(ctx, conn, &input, tfslices.PredicateTrue[*awstypes.Filter]())
 
-	return findFilter(ctx, conn, &input)
+	if !retry.NotFound(err) {
+		return output, err
+	}
+
+	// Filters owned by the organization (created by the delegated administrator)
+	// are not returned when listing by ARN, only when listing by action,
+	// and ListFilters rejects a request that specifies both.
+	for _, action := range enum.EnumValues[awstypes.FilterAction]() {
+		input := inspector2.ListFiltersInput{
+			Action: action,
+		}
+		output, err := findFilter(ctx, conn, &input, func(v *awstypes.Filter) bool {
+			return aws.ToString(v.Arn) == arn
+		})
+
+		if retry.NotFound(err) {
+			continue
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
-func findFilter(ctx context.Context, conn *inspector2.Client, input *inspector2.ListFiltersInput) (*awstypes.Filter, error) {
-	output, err := findFilters(ctx, conn, input)
+func findFilter(ctx context.Context, conn *inspector2.Client, input *inspector2.ListFiltersInput, filter tfslices.Predicate[*awstypes.Filter]) (*awstypes.Filter, error) {
+	output, err := findFilters(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
@@ -532,7 +558,7 @@ func findFilter(ctx context.Context, conn *inspector2.Client, input *inspector2.
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findFilters(ctx context.Context, conn *inspector2.Client, input *inspector2.ListFiltersInput) ([]awstypes.Filter, error) {
+func findFilters(ctx context.Context, conn *inspector2.Client, input *inspector2.ListFiltersInput, filter tfslices.Predicate[*awstypes.Filter]) ([]awstypes.Filter, error) {
 	var output []awstypes.Filter
 
 	pages := inspector2.NewListFiltersPaginator(conn, input)
@@ -543,7 +569,11 @@ func findFilters(ctx context.Context, conn *inspector2.Client, input *inspector2
 			return nil, err
 		}
 
-		output = append(output, page.Filters...)
+		for _, v := range page.Filters {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
