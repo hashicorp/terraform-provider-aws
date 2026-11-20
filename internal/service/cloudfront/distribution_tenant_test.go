@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -59,6 +60,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrDomain: knownvalue.StringExact(domain),
+							"serve_on":       tfknownvalue.StringExact(awstypes.ServeOnAny),
 							names.AttrStatus: tfknownvalue.StringExact(awstypes.DomainStatusActive),
 						}),
 					})),
@@ -67,6 +69,7 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("managed_certificate_request"), knownvalue.ListExact([]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("on_domain_takeover"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrParameter), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrName:  knownvalue.StringExact("origin_domain"),
@@ -87,6 +90,141 @@ func TestAccCloudFrontDistributionTenant_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"wait_for_deployment",
 					names.AttrStatus,
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistributionTenant_onDomainTakeover(t *testing.T) {
+	ctx := acctest.Context(t)
+	var source, target awstypes.DistributionTenant
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	sourceResourceName := "aws_cloudfront_distribution_tenant.source"
+	targetResourceName := "aws_cloudfront_distribution_tenant.target"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionTenantConfig_onDomainTakeoverSource(rName, rootDomain, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionTenantExists(ctx, t, sourceResourceName, &source),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(sourceResourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDomain: knownvalue.StringExact(domain),
+							"serve_on":       tfknownvalue.StringExact(awstypes.ServeOnAny),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.DomainStatusActive),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccDistributionTenantConfig_onDomainTakeoverTarget(rName, rootDomain, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionTenantExists(ctx, t, targetResourceName, &target),
+					testAccCheckDistributionTenantExists(ctx, t, sourceResourceName, &source),
+					testAccCheckDistributionTenantHasNoDomains(&source),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(sourceResourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(targetResourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(targetResourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDomain: knownvalue.StringExact(domain),
+							"serve_on":       tfknownvalue.StringExact(awstypes.ServeOnAny),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.DomainStatusActive),
+						}),
+					})),
+					statecheck.ExpectKnownValue(targetResourceName, tfjsonpath.New("on_domain_takeover"), tfknownvalue.StringExact(awstypes.OnDomainTakeoverAllow)),
+				},
+			},
+			{
+				ResourceName:      targetResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"on_domain_takeover",
+					"wait_for_deployment",
+					names.AttrStatus,
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistributionTenant_serveOnAnycastIPListOnly(t *testing.T) {
+	acctest.Skip(t, "Amazon CloudFront Anycast static IP lists cost $3000 per list per month")
+
+	ctx := acctest.Context(t)
+	var tenant awstypes.DistributionTenant
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := "*." + acctest.ACMCertificateRandomSubDomain(rootDomain)
+	resourceName := "aws_cloudfront_distribution_tenant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionTenantConfig_serveOn(rName, rootDomain, domain, string(awstypes.ServeOnAnycastIpListOnly)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDomain: knownvalue.StringExact(domain),
+							"serve_on":       tfknownvalue.StringExact(awstypes.ServeOnAnycastIpListOnly),
+							names.AttrStatus: knownvalue.NotNull(),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_deployment",
+					names.AttrStatus,
+				},
+			},
+			{
+				Config: testAccDistributionTenantConfig_serveOn(rName, rootDomain, domain, string(awstypes.ServeOnAny)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDomain: knownvalue.StringExact(domain),
+							"serve_on":       tfknownvalue.StringExact(awstypes.ServeOnAny),
+							names.AttrStatus: knownvalue.NotNull(),
+						}),
+					})),
 				},
 			},
 		},
@@ -347,6 +485,16 @@ func testAccCheckDistributionTenantDestroy(ctx context.Context, t *testing.T) re
 			}
 
 			return fmt.Errorf("CloudFront Distribution Tenant (%s) still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckDistributionTenantHasNoDomains(v *awstypes.DistributionTenant) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if n := len(v.Domains); n != 0 {
+			return fmt.Errorf("CloudFront Distribution Tenant (%s) still has %d domain(s) after the takeover", aws.ToString(v.Id), n)
 		}
 
 		return nil
@@ -809,4 +957,146 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   }
 }
 `, rName, tenantDomain, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDistributionTenantConfig_baseMultitenantDistribution(rootDomain, tenantDomain string) string {
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), `
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = true
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "www.example.com"
+    id          = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    acm_certificate_arn = data.aws_acm_certificate.test.arn
+    ssl_support_method  = "sni-only"
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`)
+}
+
+func testAccDistributionTenantConfig_onDomainTakeoverSource(rName, rootDomain, tenantDomain string) string {
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseMultitenantDistribution(rootDomain, tenantDomain), fmt.Sprintf(`
+resource "aws_cloudfront_distribution_tenant" "source" {
+  distribution_id = aws_cloudfront_multitenant_distribution.test.id
+  domain {
+    domain = %[2]q
+  }
+  name = "%[1]s-source"
+
+  parameter {
+    name  = "origin_domain"
+    value = "www.example.com"
+  }
+
+  # The target tenant takes this domain over, so the source no longer has it.
+  lifecycle {
+    ignore_changes = [domain]
+  }
+}
+`, rName, tenantDomain))
+}
+
+func testAccDistributionTenantConfig_onDomainTakeoverTarget(rName, rootDomain, tenantDomain string) string {
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_onDomainTakeoverSource(rName, rootDomain, tenantDomain), fmt.Sprintf(`
+data "aws_cloudfront_connection_group" "test" {
+  id = aws_cloudfront_distribution_tenant.source.connection_group_id
+}
+
+# Proves control of the domain and points it at the target tenant's connection group.
+resource "aws_route53_record" "takeover" {
+  name    = %[2]q
+  records = [data.aws_cloudfront_connection_group.test.routing_endpoint]
+  ttl     = 60
+  type    = "CNAME"
+  zone_id = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_cloudfront_distribution_tenant" "target" {
+  distribution_id    = aws_cloudfront_multitenant_distribution.test.id
+  name               = "%[1]s-target"
+  on_domain_takeover = "allow"
+
+  domain {
+    domain   = %[2]q
+    serve_on = "any"
+  }
+
+  parameter {
+    name  = "origin_domain"
+    value = "www.example.com"
+  }
+
+  depends_on = [aws_route53_record.takeover]
+}
+`, rName, tenantDomain))
+}
+
+func testAccDistributionTenantConfig_serveOn(rName, rootDomain, tenantDomain, serveOn string) string {
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseMultitenantDistribution(rootDomain, tenantDomain), fmt.Sprintf(`
+resource "aws_cloudfront_anycast_ip_list" "test" {
+  name     = %[1]q
+  ip_count = 3
+}
+
+resource "aws_cloudfront_connection_group" "test" {
+  name               = %[1]q
+  anycast_ip_list_id = aws_cloudfront_anycast_ip_list.test.id
+}
+
+resource "aws_cloudfront_distribution_tenant" "test" {
+  connection_group_id = aws_cloudfront_connection_group.test.id
+  distribution_id     = aws_cloudfront_multitenant_distribution.test.id
+  name                = %[1]q
+
+  domain {
+    domain   = %[2]q
+    serve_on = %[3]q
+  }
+
+  parameter {
+    name  = "origin_domain"
+    value = "www.example.com"
+  }
+}
+`, rName, tenantDomain, serveOn))
 }
