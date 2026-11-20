@@ -48,8 +48,6 @@ resource "aws_ebs_encryption_by_default" "example" {
 
 ### Identity Schema
 
-#### Required
-
 #### Optional
 
 * `account_id` (String) AWS Account where this resource is managed.
