@@ -40,7 +40,7 @@ jobs:
               - 'internal/service/**/*.go'
               - '!internal/service/**/*_test.go'
             changie_fragments:
-              - added:'${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
+              - added: '${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
 
       - name: Warn of Missing Change Fragment(s)
         if: |
@@ -89,7 +89,7 @@ jobs:
           predicate-quantifier: 'every'
           filters: |
             go_changelog_fragments:
-              - added:'.changelog/*.txt'
+              - added: '.changelog/*.txt'
 
       - name: Warn of go-changelog Fragment(s)
         if: steps.filter.outputs.go_changelog_fragments == 'true'
