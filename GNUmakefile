@@ -1180,6 +1180,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install golang.org/x/vuln/cmd/govulncheck
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+	cd .ci/tools && $(GO_VER) install github.com/miniscruff/changie
 
 ts: testacc-short ## Alias to testacc-short
 
