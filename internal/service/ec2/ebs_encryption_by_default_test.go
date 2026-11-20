@@ -158,7 +158,7 @@ func testAccEBSEncryptionByDefault_importUpgrade(t *testing.T, useGeneratedID bo
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "= 6.72.0",
+						VersionConstraint: "= 6.73.0",
 					},
 				},
 				Config: testAccEBSEncryptionByDefaultConfig_importUpgrade(region, true),
@@ -267,7 +267,7 @@ func testAccEBSEncryptionByDefault_importUpgrade_defaultRegionOverride(t *testin
 func testAccEBSEncryptionByDefaultConfig_importUpgrade(region string, preChange bool) string {
 	versionConstraint := ""
 	if preChange {
-		versionConstraint = `version = "6.72.0"`
+		versionConstraint = `version = "6.73.0"`
 	}
 
 	return fmt.Sprintf(`
