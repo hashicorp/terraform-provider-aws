@@ -117,11 +117,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 
 	resourceOwnerID := aws.ToString(local.OwnerId)
 	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, resourceOwnerID, d.Id()))
-	if v := transitGatewayPeeringAttachment.Options; v != nil {
-		d.Set("multipath_resilience_status", v.MultipathResilienceStatus)
-	} else {
-		d.Set("multipath_resilience_status", nil)
-	}
+	d.Set("multipath_resilience_status", transitGatewayPeeringAttachmentOptionsWithDefaults(transitGatewayPeeringAttachment.Options).MultipathResilienceStatus)
 	d.Set("peer_account_id", peer.OwnerId)
 	d.Set("peer_region", peer.Region)
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)

@@ -2589,6 +2589,24 @@ func waitTransitGatewayPeeringAttachmentMultipathResilienceEnabled(ctx context.C
 	return nil, err
 }
 
+// waitTransitGatewayPeeringAttachmentMultipathResilienceDisabled waits for multipath resilience to be removed once neither side allows it.
+func waitTransitGatewayPeeringAttachmentMultipathResilienceDisabled(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPeeringAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusPending, awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled),
+		Target:  enum.Slice(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled),
+		Timeout: transitGatewayPeeringAttachmentUpdatedTimeout,
+		Refresh: statusTransitGatewayPeeringAttachmentMultipathResilience(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayPeeringAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTransitGatewayPeeringAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPeeringAttachment, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(

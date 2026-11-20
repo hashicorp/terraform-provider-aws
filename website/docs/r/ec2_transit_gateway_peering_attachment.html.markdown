@@ -98,7 +98,7 @@ This resource supports the following arguments:
 The `options` block supports the following:
 
 * `allow_multipath_resilience` - (Optional) Whether to allow [multipath resilience](https://docs.aws.amazon.com/vpc/latest/tgw/enable-multipath-resilience-tgw.html) for the requester's side of a cross-Region attachment. Multipath resilience takes effect only when both sides allow it, and additional charges apply. If not set, the current setting is left unchanged. Can be changed only once the attachment is available.
-* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled. Supports `enable` and `disable`. If not configured, the value is populated from the API.
+* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled. Supports `enable` and `disable`. Defaults to `disable`.
 * `multipath_resilience_mode` - (Optional) Multipath resilience mode. Valid values: `always-on`. Can only be set when `allow_multipath_resilience` is `true`. Defaults to `always-on` when multipath resilience is allowed.
 
 ## Attribute Reference
