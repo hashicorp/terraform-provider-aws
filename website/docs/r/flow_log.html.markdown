@@ -316,35 +316,6 @@ resource "aws_kinesis_firehose_delivery_stream" "dst" {
 }
 ```
 
-### AWS Cloud WAN
-
-Cloud WAN flow logs can be enabled for a whole core network (`core_network_id`), a single core network edge (`core_network_edge_id`), or a single attachment (`core_network_attachment_id`).
-
-```terraform
-resource "aws_flow_log" "core_network" {
-  core_network_id          = aws_networkmanager_core_network.example.id
-  log_destination          = aws_s3_bucket.example.arn
-  log_destination_type     = "s3"
-  max_aggregation_interval = 60
-}
-
-resource "aws_flow_log" "core_network_edge" {
-  core_network_edge_id     = "${aws_networkmanager_core_network.example.id}/eu-west-1"
-  log_destination          = aws_s3_bucket.example.arn
-  log_destination_type     = "s3"
-  max_aggregation_interval = 60
-}
-
-resource "aws_flow_log" "core_network_attachment" {
-  core_network_attachment_id = aws_networkmanager_vpc_attachment.example.id
-  log_destination            = aws_s3_bucket.example.arn
-  log_destination_type       = "s3"
-  max_aggregation_interval   = 60
-}
-```
-
-~> **NOTE:** Cloud WAN flow logs can only be created in the Cloud WAN home Region (`us-west-2`) by the core network owner. Tunnel-less Connect attachments and route table attachments aren't supported.
-
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -372,6 +343,8 @@ This resource supports the following arguments:
 
 ~> **NOTE:** One of `core_network_attachment_id`, `core_network_edge_id`, `core_network_id`, `eni_id`, `regional_nat_gateway_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
 
+~> **NOTE:** Cloud WAN flow logs (`core_network_attachment_id`, `core_network_edge_id`, or `core_network_id`) can only be created in the Cloud WAN home Region (`us-west-2`) by the core network owner. Creating the first flow log on a core network or core network edge moves the core network to `UPDATING`, and creating a flow log on an attachment moves that attachment to `UPDATING`. Terraform waits until it's `AVAILABLE` again, which requires the `networkmanager:GetCoreNetwork` and `networkmanager:ListAttachments` permissions. Use `depends_on` to create other Cloud WAN resources, such as new attachments, after the flow log.
+
 ### `destination_options` Block
 
 Destination options for a flow log.
@@ -394,6 +367,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Flow Log.
 * `id` - Flow Log ID.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
 
 ## Import
 
