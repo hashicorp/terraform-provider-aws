@@ -78,6 +78,9 @@ This data source exports the following attributes in addition to the arguments a
 * `kubernetes_network_config` - Nested list containing Kubernetes Network Configuration.
     * `elastic_load_balancing` - Contains Elastic Load Balancing configuration for EKS Auto Mode enabled cluster.
         * `enabled` - Indicates if the load balancing capability is enabled for EKS Auto Mode enabled cluster.
+        * `gateway_api` - Contains Kubernetes Gateway API configuration.
+            * `crds` - Contains Gateway API custom resource definition (CRD) management configuration.
+                * `managed` - Indicates whether Amazon EKS manages the Gateway API CRDs.
     * `ip_family` - `ipv4` or `ipv6`.
     * `service_ipv4_cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv4` was specified when the cluster was created.
     * `service_ipv6_cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
