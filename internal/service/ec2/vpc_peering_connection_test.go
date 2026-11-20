@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -386,6 +387,63 @@ func TestAccVPCPeeringConnection_optionsNoAutoAccept(t *testing.T) {
 	})
 }
 
+func TestAccVPCPeeringConnection_multipathResilience(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VpcPeeringConnection
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpc_peering_connection.test"              // Requester
+	resourceNamePeer := "aws_vpc_peering_connection_accepter.peer" // Accepter
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               testAccErrorCheckSkipVPCPeeringConnectionMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckVPCPeeringConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCPeeringConnectionExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_multipath_resilience", acctest.CtTrue),
+					// Accepting the connection also allows multipath resilience for the accepter.
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceNamePeer, "accepter.0.multipath_resilience_mode", string(awstypes.MultipathResilienceModeAlwaysOn)),
+					resource.TestCheckResourceAttr(resourceNamePeer, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				// Refresh the requester's status now that the connection has been accepted.
+				Config: testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckNoResourceAttr(resourceName, "accepter.0.allow_multipath_resilience"),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "requester.0.multipath_resilience_mode", string(awstypes.MultipathResilienceModeAlwaysOn)),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"auto_accept",
+				},
+			},
+			{
+				Config: testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtFalse, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "requester.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusPending)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckVPCPeeringConnectionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
@@ -700,4 +758,66 @@ resource "aws_vpc_peering_connection" "test" {
   }
 }
 `, rName)
+}
+
+// testAccErrorCheckSkipVPCPeeringConnectionMultipathResilience skips the test when the Region pair doesn't support multipath resilience.
+func testAccErrorCheckSkipVPCPeeringConnectionMultipathResilience(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSequence(
+		acctest.ErrorCheck(t, names.EC2ServiceID),
+		acctest.ErrorCheckSkipMessagesContaining(t, "AllowMultipathResilience is not supported for this VPC peering connection"),
+	)
+}
+
+// requesterAllow and accepterAllow are HCL values: "true", "false" or "null".
+func testAccVPCPeeringConnectionConfig_multipathResilience(rName, requesterAllow, accepterAllow string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "peer" {
+  provider = "awsalternate"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# Requester's side of the connection.
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.peer.id
+  peer_region = %[2]q
+
+  requester {
+    allow_multipath_resilience = %[3]s
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+# Accepter's side of the connection.
+resource "aws_vpc_peering_connection_accepter" "peer" {
+  provider = "awsalternate"
+
+  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+  auto_accept               = true
+
+  accepter {
+    allow_multipath_resilience = %[4]s
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.AlternateRegion(), requesterAllow, accepterAllow))
 }

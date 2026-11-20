@@ -81,6 +81,10 @@ func dataSourceVPCPeeringConnection() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"multipath_resilience_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"peer_cidr_block": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -200,7 +204,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 
 	d.SetId(aws.ToString(vpcPeeringConnection.VpcPeeringConnectionId))
 	if accepterVPCInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", flattenVPCPeeringConnectionOptionsDescription(accepterVPCInfo.PeeringOptions)); err != nil {
+		if err := d.Set("accepter", flattenVPCPeeringConnectionOptionsDescriptionBools(accepterVPCInfo.PeeringOptions)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting accepter: %s", err)
 		}
 	}
@@ -235,12 +239,13 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	})); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting peer_ipv6_cidr_block_set: %s", err)
 	}
+	d.Set("multipath_resilience_status", vpcPeeringConnection.MultipathResilienceStatus)
 	d.Set("peer_owner_id", accepterVPCInfo.OwnerId)
 	d.Set("peer_region", accepterVPCInfo.Region)
 	d.Set("peer_vpc_id", accepterVPCInfo.VpcId)
 	d.Set(names.AttrRegion, requesterVPCInfo.Region)
 	if requesterVPCInfo.PeeringOptions != nil {
-		if err := d.Set("requester", flattenVPCPeeringConnectionOptionsDescription(requesterVPCInfo.PeeringOptions)); err != nil {
+		if err := d.Set("requester", flattenVPCPeeringConnectionOptionsDescriptionBools(requesterVPCInfo.PeeringOptions)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting requester: %s", err)
 		}
 	}
@@ -251,4 +256,13 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 	setTagsOut(ctx, vpcPeeringConnection.Tags)
 
 	return diags
+}
+
+// flattenVPCPeeringConnectionOptionsDescriptionBools flattens the options into
+// the data source's map of booleans, dropping the (string) multipath resilience mode.
+func flattenVPCPeeringConnectionOptionsDescriptionBools(apiObject *awstypes.VpcPeeringConnectionOptionsDescription) map[string]any {
+	tfMap := flattenVPCPeeringConnectionOptionsDescription(apiObject, true)
+	delete(tfMap, "multipath_resilience_mode")
+
+	return tfMap
 }

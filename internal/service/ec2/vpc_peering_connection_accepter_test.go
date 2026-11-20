@@ -234,6 +234,57 @@ func TestAccVPCPeeringConnectionAccepter_differentRegionSameAccountWithRegionOve
 	})
 }
 
+func TestAccVPCPeeringConnectionAccepter_multipathResilience(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.VpcPeeringConnection
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpc_peering_connection_accepter.peer"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               testAccErrorCheckSkipVPCPeeringConnectionMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, "null"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCPeeringConnectionExistsWithProvider(ctx, resourceName, &v, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckNoResourceAttr(resourceName, "requester.0.allow_multipath_resilience"),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				Config:                  testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, "null"),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"auto_accept"},
+			},
+			{
+				Config: testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, acctest.CtFalse),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusPending)),
+				),
+			},
+			{
+				Config: testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "accepter.0.multipath_resilience_mode", string(awstypes.MultipathResilienceModeAlwaysOn)),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusEnabled)),
+				),
+			},
+		},
+	})
+}
+
 func testAccVPCPeeringConnectionAccepterImportStateIDFunc(n, region string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
