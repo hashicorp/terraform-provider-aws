@@ -251,12 +251,17 @@ jobs:
           steps.fragment-filter.outputs.service_files == 'true' &&
           steps.fragment-filter.outputs.changie_fragments != 'true' &&
           !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed')
+        env:
+          SERVICE_FILES_JSON: ${{ steps.fragment-filter.outputs.service_files_files }}
         shell: bash
         run: |
-          FORMATTED=$(echo '${{ steps.fragment-filter.outputs.service_files_files }}' | jq -r '.[] | "• `\(.)`"')
-          echo "formatted<<EOF" >> $GITHUB_OUTPUT
-          echo "$FORMATTED" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          FORMATTED=$(jq -r '.[] | "• `\(.)`"' <<< "$SERVICE_FILES_JSON")
+          DELIMITER="EOF_$(openssl rand -hex 16)"
+          {
+            echo "formatted<<${DELIMITER}"
+            echo "$FORMATTED"
+            echo "${DELIMITER}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Notify Maintainers of Missing CHANGELOG Entry
         if: steps.format-files.outcome != 'skipped'
