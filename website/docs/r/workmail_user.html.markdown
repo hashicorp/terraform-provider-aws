@@ -55,9 +55,9 @@ The following arguments are optional:
 * `office` - (Optional) Office where the user is located.
 * `password` - (Optional, Sensitive) Password to set for the user.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `user_role` - (Optional) Role assigned to the user. Valid values are `USER`, `REMOTE_USER`, `RESOURCE`, and `SYSTEM_USER`.
 * `street` - (Optional) Street address of the user.
 * `telephone` - (Optional) Telephone number of the user.
+* `user_role` - (Optional) Role assigned to the user. Valid values are `USER`, `REMOTE_USER`, `RESOURCE`, and `SYSTEM_USER`.
 * `zip_code` - (Optional) ZIP or postal code of the user.
 
 ## Attribute Reference
