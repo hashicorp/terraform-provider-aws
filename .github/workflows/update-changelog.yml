@@ -8,7 +8,8 @@ on:
     types:
       - closed
     paths:
-      - '.changes/*.x/unreleased/**'
+      - '.changes/**'
+      - '.changelog/*.txt'
     branches:
       - 'main'
 
@@ -50,16 +51,28 @@ jobs:
         with:
           ref: ${{ env.TARGET_BRANCH }}
           fetch-depth: 0
+          # version/VERSION is a Changie replacement target; `changie merge` fails
+          # if it is missing. .changelog/ holds legacy fragments to convert.
           sparse-checkout: |
             .changie.yaml
             .changes/
+            .changelog/
             .ci/scripts/
             CHANGELOG.md
+            version/
 
       - name: Get changesDir from Changie Config
         id: changes
         shell: bash
         run: echo "dir=$(yq eval '.changesDir' .changie.yaml)" >> "$GITHUB_OUTPUT"
+
+      # Installs Changie and adds it to PATH. Must run before go-changelog
+      # conversion, which calls `changie new`.
+      - name: Install Changie and Get Next Minor Version
+        id: changie
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.1.0
+        with:
+          args: next minor
 
       # `go-changelog` auto-conversion
       # ------------------------------------------------------------------------------
@@ -73,9 +86,9 @@ jobs:
           list-files: json
           filters: |
             go_changelog_fragments:
-              - added:'.changelog/*.txt'
+              - added: '.changelog/*.txt'
             changie_fragments:
-              - added:'${{ steps.changes.outputs.dir }}/unreleased/*.yaml'
+              - added: '${{ steps.changes.outputs.dir }}/unreleased/*.yaml'
 
       - name: Validate and Convert go-changelog Fragments
         id: convert
@@ -162,12 +175,6 @@ jobs:
             fi
           done < <(echo "$FILES_JSON" | jq -r '.[]')
 
-      - name: Install Changie and Get Next Minor Version
-        id: changie
-        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.1.0
-        with:
-          args: next minor
-
       - name: Regenerate CHANGELOG
         shell: bash
         env:
@@ -184,7 +191,8 @@ jobs:
         run: |
           git config --local user.email "changelogbot@hashicorp.com"
           git config --local user.name "changelogbot"
-          git add -A CHANGELOG.md .changes/
+          # .changelog/ stages deletions of converted legacy fragments.
+          git add -A CHANGELOG.md .changes/ .changelog/
           if ! git diff --cached --quiet; then
             git commit -m "Update CHANGELOG for v${NEXT_MINOR} (Unreleased)"
             git push origin "HEAD:${TARGET_BRANCH}"
