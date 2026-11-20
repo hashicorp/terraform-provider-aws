@@ -5,10 +5,12 @@ package continuum
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/continuum"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/continuum/types"
@@ -321,7 +323,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 	id := state.ID.ValueString()
 	output, err := findIntegrationByID(ctx, conn, id)
 	if retry.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &response.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
@@ -427,15 +429,15 @@ func findIntegrationByID(ctx context.Context, conn *continuum.Client, id string)
 func findIntegration(ctx context.Context, conn *continuum.Client, input *continuum.GetIntegrationInput) (*continuum.GetIntegrationOutput, error) {
 	output, err := conn.GetIntegration(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
+		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
-		}
+		})
 	}
 	if err != nil {
-		return nil, err
+		return nil, smarterr.NewError(err)
 	}
 	if output == nil {
-		return nil, tfresource.NewEmptyResultError()
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
 	}
 
 	return output, nil
@@ -458,17 +460,17 @@ func (m *integrationResourceModel) flatten(ctx context.Context, output *continuu
 	var diags diag.Diagnostics
 
 	prior, d := m.ProviderConfiguration.ToPtr(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() {
 		return diags
 	}
 
-	diags.Append(fwflex.Flatten(ctx, output, m, fwflex.WithFieldNamePrefix("Integration"))...)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output, m, fwflex.WithFieldNamePrefix("Integration")))
 	if diags.HasError() {
 		return diags
 	}
 
-	diags.Append(fwflex.Flatten(ctx, output.ProviderDetails, &m.ProviderConfiguration)...)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output.ProviderDetails, &m.ProviderConfiguration))
 	if diags.HasError() {
 		return diags
 	}
@@ -478,7 +480,7 @@ func (m *integrationResourceModel) flatten(ctx context.Context, output *continuu
 	}
 
 	current, d := m.ProviderConfiguration.ToPtr(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() || current == nil {
 		return diags
 	}
@@ -509,7 +511,7 @@ func keepPrior[T any](ctx context.Context, current *fwtypes.ListNestedObjectValu
 	}
 
 	p, d := prior.ToPtr(ctx)
-	diags.Append(d...)
+	smerr.AddEnrich(ctx, &diags, d)
 	if diags.HasError() || p == nil {
 		return diags
 	}
@@ -549,7 +551,7 @@ func (m providerConfigurationModel) expandToProviderConfiguration(ctx context.Co
 	switch {
 	case !m.GitHub.IsNull():
 		var result awstypes.ProviderConfigurationMemberGithub
-		diags.Append(fwflex.Expand(ctx, m.GitHub, &result.Value)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.GitHub, &result.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -557,7 +559,7 @@ func (m providerConfigurationModel) expandToProviderConfiguration(ctx context.Co
 
 	case !m.GitLab.IsNull():
 		var result awstypes.ProviderConfigurationMemberGitlab
-		diags.Append(fwflex.Expand(ctx, m.GitLab, &result.Value)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.GitLab, &result.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -565,7 +567,7 @@ func (m providerConfigurationModel) expandToProviderConfiguration(ctx context.Co
 
 	case !m.S3.IsNull():
 		var result awstypes.ProviderConfigurationMemberS3
-		diags.Append(fwflex.Expand(ctx, m.S3, &result.Value)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.S3, &result.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -581,7 +583,7 @@ func (m providerConfigurationModel) expandToUpdateProviderConfiguration(ctx cont
 
 	if !m.S3.IsNull() {
 		var result awstypes.UpdateProviderConfigurationMemberS3
-		diags.Append(fwflex.Expand(ctx, m.S3, &result.Value)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, m.S3, &result.Value))
 		if diags.HasError() {
 			return nil, diags
 		}
@@ -597,16 +599,16 @@ func (m *providerConfigurationModel) Flatten(ctx context.Context, v any) diag.Di
 
 	switch t := v.(type) {
 	case awstypes.ProviderDetailsMemberGithub:
-		diags.Append(fwflex.Flatten(ctx, &t.Value, &m.GitHub)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, &t.Value, &m.GitHub))
 
 	case awstypes.ProviderDetailsMemberGitlab:
-		diags.Append(fwflex.Flatten(ctx, &t.Value, &m.GitLab)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, &t.Value, &m.GitLab))
 
 	case awstypes.ProviderDetailsMemberS3:
-		diags.Append(fwflex.Flatten(ctx, &t.Value, &m.S3)...)
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, &t.Value, &m.S3))
 
 	default:
-		diags.AddError("Unexpected integration provider details", reflect.TypeOf(v).String())
+		smerr.AddError(ctx, &diags, fmt.Errorf("unexpected integration provider details type: %T", v))
 	}
 
 	return diags
