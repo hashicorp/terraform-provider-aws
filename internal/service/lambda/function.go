@@ -511,7 +511,7 @@ func resourceFunction() *schema.Resource {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Default:      3,
-					ValidateFunc: validation.IntBetween(1, 900),
+					ValidateFunc: validation.IntBetween(1, 5400),
 				},
 				"tracing_config": {
 					Type:     schema.TypeList,
