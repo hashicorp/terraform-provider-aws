@@ -47,3 +47,6 @@ This data source exports the following attributes in addition to the arguments a
     `E2QWRUHAPOMQZL`.
 
 * `name` - name of the connection group.
+
+* `viewer_fallback` - Viewer fallback configuration for viewer requests that arrive on the connection group's Anycast static IPs without SNI.
+    * `distribution_id` - ID of the distribution whose certificate CloudFront uses for those requests.

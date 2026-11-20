@@ -22,6 +22,19 @@ resource "aws_cloudfront_connection_group" "example" {
 }
 ```
 
+### Viewer Fallback for Clients Without SNI
+
+```terraform
+resource "aws_cloudfront_connection_group" "example" {
+  name               = "example"
+  anycast_ip_list_id = aws_cloudfront_anycast_ip_list.example.id
+
+  viewer_fallback {
+    distribution_id = aws_cloudfront_multitenant_distribution.example.id
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -30,7 +43,12 @@ This resource supports the following arguments:
 * `enabled` (Optional) - Whether the connection group is enabled. Default is `true`.
 * `ipv6_enabled` (Optional) - Whether IPv6 is enabled for the connection group. Default is `false`.
 * `name` (Required) - Name of the connection group.
+* `viewer_fallback` (Optional) - [Viewer fallback](#viewer_fallback) configuration for viewer requests that arrive on the connection group's Anycast static IPs without Server Name Indication (SNI). Requires `anycast_ip_list_id`. See below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### viewer_fallback
+
+* `distribution_id` (Required) - ID of the distribution whose certificate CloudFront uses to establish TLS connections for viewer requests that don't include SNI. CloudFront then uses the `Host` header of each request to serve the right content.
 
 ## Attribute Reference
 
