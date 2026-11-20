@@ -319,7 +319,10 @@ func resourceCoreNetworkDelete(ctx context.Context, d *schema.ResourceData, meta
 	input := networkmanager.DeleteCoreNetworkInput{
 		CoreNetworkId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteCoreNetwork(ctx, &input)
+	// A just-deleted EC2 flow log on the core network, an edge or an attachment is released asynchronously.
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, d.Timeout(schema.TimeoutDelete), func(ctx context.Context) (any, error) {
+		return conn.DeleteCoreNetwork(ctx, &input)
+	}, "existing resource associations of type ec2:vpc-flow-log")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
@@ -434,6 +437,28 @@ func waitCoreNetworkUpdated(ctx context.Context, conn *networkmanager.Client, id
 		Target:  enum.Slice(awstypes.CoreNetworkStateAvailable),
 		Timeout: timeout,
 		Refresh: statusCoreNetworkState(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.CoreNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// waitCoreNetworkStable waits for a core network to settle in AVAILABLE.
+// A change made through another service, such as the first EC2 flow log on the core network,
+// moves it to UPDATING a few seconds after the call returns, so a single AVAILABLE reading isn't enough.
+func waitCoreNetworkStable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.CoreNetwork, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.CoreNetworkStateUpdating),
+		Target:                    enum.Slice(awstypes.CoreNetworkStateAvailable),
+		Timeout:                   timeout,
+		PollInterval:              5 * time.Second,
+		ContinuousTargetOccurence: 3,
+		Refresh:                   statusCoreNetworkState(conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

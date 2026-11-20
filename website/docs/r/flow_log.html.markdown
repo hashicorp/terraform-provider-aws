@@ -3,13 +3,18 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_flow_log"
 description: |-
-  Provides a VPC/Subnet/ENI Flow Log
+  Manages a flow log for a VPC, subnet, network interface, regional NAT gateway, transit gateway, or Cloud WAN core network.
 ---
 
 # Resource: aws_flow_log
 
-Provides a VPC/Subnet/ENI/Transit Gateway/Transit Gateway Attachment Flow Log to capture IP traffic for a specific network
-interface, subnet, or VPC. Logs are sent to a CloudWatch Log Group, a S3 Bucket, or Amazon Data Firehose
+Manages a flow log to capture IP traffic for one of the following resources:
+
+* A VPC, subnet, network interface, or regional NAT gateway.
+* A transit gateway or transit gateway attachment.
+* An AWS Cloud WAN core network, core network edge, or core network attachment.
+
+Logs are delivered to Amazon CloudWatch Logs, Amazon S3, or Amazon Data Firehose.
 
 ## Example Usage
 
@@ -315,6 +320,9 @@ resource "aws_kinesis_firehose_delivery_stream" "dst" {
 
 This resource supports the following arguments:
 
+* `core_network_attachment_id` - (Optional) Cloud WAN core network attachment ID to attach to.
+* `core_network_edge_id` - (Optional) Cloud WAN core network edge to attach to, in the format `<core-network-id>/<region>`, for example `core-network-0123456789abcdef0/eu-west-1`.
+* `core_network_id` - (Optional) Cloud WAN core network ID to attach to.
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role in the destination account used for cross-account delivery of flow logs.
 * `destination_options` - (Optional) Destination options for a flow log. More details below.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.
@@ -322,18 +330,20 @@ This resource supports the following arguments:
 * `log_destination` - (Optional) ARN of the logging destination.
 * `log_destination_type` - (Optional) Logging destination type. Valid values: `cloud-watch-logs`, `s3`, `kinesis-data-firehose`. Default: `cloud-watch-logs`.
 * `log_format` - (Optional) Fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
-* `max_aggregation_interval` - (Optional) Maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`. When `transit_gateway_id` or `transit_gateway_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
+* `max_aggregation_interval` - (Optional) Maximum interval of time during which a flow of packets is captured and aggregated into a flow log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10 minutes). Default: `600`. When `transit_gateway_id`, `transit_gateway_attachment_id`, `core_network_id`, `core_network_edge_id`, or `core_network_attachment_id` is specified, `max_aggregation_interval` *must* be 60 seconds (1 minute).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `regional_nat_gateway_id` - (Optional) Regional NAT Gateway ID to attach to.
 * `subnet_id` - (Optional) Subnet ID to attach to.
 * `tag_field_specification` - (Optional) Tag configuration for the Flow Logs Amazon EC2 Tags feature fields (e.g., `$${instance-tag}`) used in `log_format`. More details below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `traffic_type` - (Optional) Type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified.
+* `traffic_type` - (Optional) Type of traffic to capture. Valid values: `ACCEPT`,`REJECT`, `ALL`. Required if `eni_id`, `regional_nat_gateway_id`, `subnet_id`, or `vpc_id` is specified. Not supported for Transit Gateway or Cloud WAN flow logs.
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to.
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to.
 * `vpc_id` - (Optional) VPC ID to attach to.
 
-~> **NOTE:** One of `eni_id`, `regional_nat_gateway_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
+~> **NOTE:** One of `core_network_attachment_id`, `core_network_edge_id`, `core_network_id`, `eni_id`, `regional_nat_gateway_id`, `subnet_id`, `transit_gateway_id`, `transit_gateway_attachment_id`, or `vpc_id` must be specified.
+
+~> **NOTE:** Cloud WAN flow logs (`core_network_attachment_id`, `core_network_edge_id`, or `core_network_id`) can only be created in the Cloud WAN home Region (`us-west-2`) by the core network owner. Creating the first flow log on a core network or core network edge moves the core network to `UPDATING`, and creating a flow log on an attachment moves that attachment to `UPDATING`. Terraform waits until it's `AVAILABLE` again, which requires the `networkmanager:GetCoreNetwork` and `networkmanager:ListAttachments` permissions. Use `depends_on` to create other Cloud WAN resources, such as new attachments, after the flow log.
 
 ### `destination_options` Block
 
@@ -357,6 +367,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Flow Log.
 * `id` - Flow Log ID.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
 
 ## Import
 
