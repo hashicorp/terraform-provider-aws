@@ -27,7 +27,7 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 				tflog.Debug(ctx, "Injecting original region for S3-compatible endpoint", map[string]any{
 					"original_region": originalRegion,
 				})
-				s3.WithSigV4ASigningRegions([]string{originalRegion})(o)
+				s3.WithSigV4SigningRegion(originalRegion)(o)
 			}
 		},
 		func(o *s3.Options) {
