@@ -165,11 +165,7 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 
 	resourceOwnerID := aws.ToString(transitGatewayPeeringAttachment.RequesterTgwInfo.OwnerId)
 	d.Set(names.AttrARN, transitGatewayAttachmentARN(ctx, c, resourceOwnerID, d.Id()))
-	if v := transitGatewayPeeringAttachment.Options; v != nil {
-		d.Set("multipath_resilience_status", v.MultipathResilienceStatus)
-	} else {
-		d.Set("multipath_resilience_status", nil)
-	}
+	d.Set("multipath_resilience_status", transitGatewayPeeringAttachmentOptionsWithDefaults(transitGatewayPeeringAttachment.Options).MultipathResilienceStatus)
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
@@ -242,18 +238,25 @@ func modifyTransitGatewayPeeringAttachmentOptions(ctx context.Context, conn *ec2
 		return fmt.Errorf("modifying EC2 Transit Gateway Peering Attachment (%s): %w", d.Id(), err)
 	}
 
-	return waitTransitGatewayPeeringAttachmentMultipathResilienceEnabledIfAllowed(ctx, conn, d.Id(), output.TransitGatewayPeeringAttachment.Options)
+	return waitTransitGatewayPeeringAttachmentMultipathResilienceUpdated(ctx, conn, d.Id(), output.TransitGatewayPeeringAttachment.Options)
 }
 
-// waitTransitGatewayPeeringAttachmentMultipathResilienceEnabledIfAllowed waits for multipath resilience to be enabled when both sides allow it.
-// Disallowing takes effect immediately; enabling takes effect asynchronously once both sides allow it.
-func waitTransitGatewayPeeringAttachmentMultipathResilienceEnabledIfAllowed(ctx context.Context, conn *ec2.Client, id string, options *awstypes.TransitGatewayPeeringAttachmentOptions) error {
-	if options == nil || !aws.ToBool(options.AccepterAllowMultipathResilience) || !aws.ToBool(options.RequesterAllowMultipathResilience) {
-		return nil
-	}
+// waitTransitGatewayPeeringAttachmentMultipathResilienceUpdated waits for a change to the multipath resilience settings to take effect.
+// Once both sides allow multipath resilience, the status goes from pending to enabled; once neither does, from pending to disabled.
+// While only one side allows it, the status stays pending.
+func waitTransitGatewayPeeringAttachmentMultipathResilienceUpdated(ctx context.Context, conn *ec2.Client, id string, options *awstypes.TransitGatewayPeeringAttachmentOptions) error {
+	options = transitGatewayPeeringAttachmentOptionsWithDefaults(options)
+	accepterAllowed, requesterAllowed := aws.ToBool(options.AccepterAllowMultipathResilience), aws.ToBool(options.RequesterAllowMultipathResilience)
 
-	if _, err := waitTransitGatewayPeeringAttachmentMultipathResilienceEnabled(ctx, conn, id); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) multipath resilience enable: %w", id, err)
+	switch {
+	case accepterAllowed && requesterAllowed:
+		if _, err := waitTransitGatewayPeeringAttachmentMultipathResilienceEnabled(ctx, conn, id); err != nil {
+			return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) multipath resilience enable: %w", id, err)
+		}
+	case !accepterAllowed && !requesterAllowed:
+		if _, err := waitTransitGatewayPeeringAttachmentMultipathResilienceDisabled(ctx, conn, id); err != nil {
+			return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) multipath resilience disable: %w", id, err)
+		}
 	}
 
 	return nil
@@ -325,21 +328,42 @@ func expandModifyTransitGatewayPeeringAttachmentRequestOptions(d *schema.Resourc
 	return apiObject
 }
 
-// flattenTransitGatewayPeeringAttachmentOptions flattens the options of the requester's side of the attachment.
-func flattenTransitGatewayPeeringAttachmentOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []any {
-	// Treat a nil or empty Options object as "no options block".
-	// The API may return an empty Options struct (for example when a field is present in the wire response but not yet modeled in the SDK).
-	// Without this guard the provider would flatten that into a block containing an empty "dynamic_routing", diverging from a configuration with no options block.
-	if apiObject == nil || (apiObject.DynamicRouting == "" && apiObject.RequesterAllowMultipathResilience == nil && apiObject.RequesterMultipathResilienceMode == "") {
-		return nil
+// transitGatewayPeeringAttachmentOptionsWithDefaults returns a copy of the attachment's options with the
+// fields the API omits set to their defaults.
+// DescribeTransitGatewayPeeringAttachments omits Options entirely while neither side allows multipath resilience
+// and dynamic routing is disabled, returns DynamicRouting only when it's enabled, and returns a side's
+// multipath resilience mode only when that side allows multipath resilience. Filling in the defaults makes
+// an omitted, partial or complete Options object flatten to the same state.
+func transitGatewayPeeringAttachmentOptionsWithDefaults(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) *awstypes.TransitGatewayPeeringAttachmentOptions {
+	var options awstypes.TransitGatewayPeeringAttachmentOptions
+	if apiObject != nil {
+		options = *apiObject
 	}
+
+	if options.DynamicRouting == "" {
+		options.DynamicRouting = awstypes.DynamicRoutingValueDisable
+	}
+	if options.AccepterAllowMultipathResilience == nil {
+		options.AccepterAllowMultipathResilience = aws.Bool(false)
+	}
+	if options.RequesterAllowMultipathResilience == nil {
+		options.RequesterAllowMultipathResilience = aws.Bool(false)
+	}
+	if options.MultipathResilienceStatus == "" {
+		options.MultipathResilienceStatus = awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled
+	}
+
+	return &options
+}
+
+// flattenTransitGatewayPeeringAttachmentOptions flattens the options of the requester's side of the attachment.
+// It always returns a block, so that the state doesn't depend on whether the API returned the Options object.
+func flattenTransitGatewayPeeringAttachmentOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []any {
+	apiObject = transitGatewayPeeringAttachmentOptionsWithDefaults(apiObject)
 
 	tfMap := map[string]any{
-		"dynamic_routing": apiObject.DynamicRouting,
-	}
-
-	if v := apiObject.RequesterAllowMultipathResilience; v != nil {
-		tfMap["allow_multipath_resilience"] = aws.ToBool(v)
+		"allow_multipath_resilience": aws.ToBool(apiObject.RequesterAllowMultipathResilience),
+		"dynamic_routing":            apiObject.DynamicRouting,
 	}
 
 	if v := apiObject.RequesterMultipathResilienceMode; v != "" {

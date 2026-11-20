@@ -1443,11 +1443,8 @@ func statusTransitGatewayPeeringAttachmentMultipathResilience(conn *ec2.Client, 
 			return nil, "", err
 		}
 
-		if output.Options == nil {
-			return output, "", nil
-		}
-
-		return output, string(output.Options.MultipathResilienceStatus), nil
+		// Options is omitted once neither side allows multipath resilience.
+		return output, string(transitGatewayPeeringAttachmentOptionsWithDefaults(output.Options).MultipathResilienceStatus), nil
 	}
 }
 

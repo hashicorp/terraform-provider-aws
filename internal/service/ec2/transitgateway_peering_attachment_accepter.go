@@ -121,7 +121,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, 
 		if err := modifyTransitGatewayPeeringAttachmentOptions(ctx, conn, d); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-	} else if err := waitTransitGatewayPeeringAttachmentMultipathResilienceEnabledIfAllowed(ctx, conn, d.Id(), transitGatewayPeeringAttachment.Options); err != nil {
+	} else if err := waitTransitGatewayPeeringAttachmentMultipathResilienceUpdated(ctx, conn, d.Id(), transitGatewayPeeringAttachment.Options); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -155,11 +155,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(ctx context.Context, d 
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
-	if v := transitGatewayPeeringAttachment.Options; v != nil {
-		d.Set("multipath_resilience_status", v.MultipathResilienceStatus)
-	} else {
-		d.Set("multipath_resilience_status", nil)
-	}
+	d.Set("multipath_resilience_status", transitGatewayPeeringAttachmentOptionsWithDefaults(transitGatewayPeeringAttachment.Options).MultipathResilienceStatus)
 	if err := d.Set("options", flattenTransitGatewayPeeringAttachmentAccepterOptions(transitGatewayPeeringAttachment.Options)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 	}
@@ -220,9 +216,7 @@ func transitGatewayPeeringAttachmentAccepterOptionsChanged(d *schema.ResourceDat
 		return false
 	}
 
-	if apiObject == nil {
-		return true
-	}
+	apiObject = transitGatewayPeeringAttachmentOptionsWithDefaults(apiObject)
 
 	if aws.ToBool(options.AllowMultipathResilience) != aws.ToBool(apiObject.AccepterAllowMultipathResilience) {
 		return true
@@ -232,15 +226,12 @@ func transitGatewayPeeringAttachmentAccepterOptionsChanged(d *schema.ResourceDat
 }
 
 // flattenTransitGatewayPeeringAttachmentAccepterOptions flattens the options of the accepter's side of the attachment.
+// It always returns a block, so that the state doesn't depend on whether the API returned the Options object.
 func flattenTransitGatewayPeeringAttachmentAccepterOptions(apiObject *awstypes.TransitGatewayPeeringAttachmentOptions) []any {
-	if apiObject == nil || (apiObject.AccepterAllowMultipathResilience == nil && apiObject.AccepterMultipathResilienceMode == "") {
-		return nil
-	}
+	apiObject = transitGatewayPeeringAttachmentOptionsWithDefaults(apiObject)
 
-	tfMap := map[string]any{}
-
-	if v := apiObject.AccepterAllowMultipathResilience; v != nil {
-		tfMap["allow_multipath_resilience"] = aws.ToBool(v)
+	tfMap := map[string]any{
+		"allow_multipath_resilience": aws.ToBool(apiObject.AccepterAllowMultipathResilience),
 	}
 
 	if v := apiObject.AccepterMultipathResilienceMode; v != "" {
