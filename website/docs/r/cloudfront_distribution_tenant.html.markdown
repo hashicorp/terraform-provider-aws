@@ -69,20 +69,63 @@ resource "aws_cloudfront_distribution_tenant" "example" {
 }
 ```
 
+### Move a Domain from Another Distribution Tenant
+
+`on_domain_takeover = "allow"` moves a domain that is already associated with another standard distribution or distribution tenant to this distribution tenant in the same request. A DNS record must prove that you control the domain and point it at this distribution tenant, for example a CNAME record to the routing endpoint of its connection group.
+
+```terraform
+data "aws_cloudfront_connection_group" "default" {
+  id = aws_cloudfront_distribution_tenant.existing.connection_group_id
+}
+
+resource "aws_route53_record" "tenant" {
+  zone_id = data.aws_route53_zone.example.zone_id
+  name    = "tenant.example.com"
+  type    = "CNAME"
+  ttl     = 300
+  records = [data.aws_cloudfront_connection_group.default.routing_endpoint]
+}
+
+resource "aws_cloudfront_distribution_tenant" "example" {
+  name               = "example-tenant"
+  distribution_id    = aws_cloudfront_multitenant_distribution.example.id
+  on_domain_takeover = "allow"
+
+  domain {
+    domain = "tenant.example.com"
+  }
+
+  parameter {
+    name  = "origin_domain"
+    value = "origin.example.com"
+  }
+
+  depends_on = [aws_route53_record.tenant]
+}
+```
+
+~> **NOTE:** CloudFront removes a moved domain from its source. If Terraform also manages the source distribution or distribution tenant, remove the domain from its configuration too, or Terraform plans to add it back.
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `name` (Required) - Name of the distribution tenant.
 * `distribution_id` (Required) - ID of the multi-tenant distribution.
-* `domain` (Required) - Set of domains associated with the distribution tenant.
+* `domain` (Required) - Set of [domains](#domain-arguments) associated with the distribution tenant.
 * `enabled` (Optional) - Whether the distribution tenant is enabled to serve traffic. Defaults to `true`.
 * `connection_group_id` (Optional) - ID of the connection group for the distribution tenant. If not specified, CloudFront uses the default connection group.
 * `customizations` (Optional) - [Customizations](#customizations-arguments) for the distribution tenant (maximum one).
+* `on_domain_takeover` (Optional) - Whether CloudFront moves domains in `domain` that are already associated with another standard distribution or distribution tenant to this distribution tenant when it creates or updates it. Valid values: `allow`, `reject`. CloudFront defaults to `reject`, which fails the request with `CNAMEAlreadyExists`. CloudFront does not return this value, so Terraform does not detect drift for it.
 * `managed_certificate_request` (Optional) - [Managed certificate request](#managed-certificate-request-arguments) for CloudFront managed ACM certificate (maximum one).
 * `parameter` (Optional) - Set of [parameter](#parameter-arguments) values for the distribution tenant.
 * `wait_for_deployment` (Optional) - If enabled, the resource will wait for the distribution tenant status to change from `InProgress` to `Deployed`. Setting this to `false` will skip the process. Default: `true`.
 * `tags` (Optional) - Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+#### Domain Arguments
+
+* `domain` (Required) - Domain name.
+* `serve_on` (Optional) - Which requests for this domain CloudFront routes to the distribution tenant. Valid values: `any` (requests that arrive on any IP address), `anycast-ip-list-only` (only requests that arrive on the Anycast static IPs of the tenant's connection group; the domain must be a lowercase wildcard domain such as `*.example.com`). If not set, CloudFront uses `any`.
 
 #### Customizations Arguments
 

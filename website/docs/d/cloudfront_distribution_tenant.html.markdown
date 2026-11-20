@@ -30,6 +30,9 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `domains` - List of domains for the distribution tenant.
+    * `domain` - Domain name.
+    * `serve_on` - Which requests for this domain CloudFront routes to the distribution tenant: `any` or `anycast-ip-list-only`.
+    * `status` - Status of the domain: `active` or `inactive`.
 * `arn` - ARN for the distribution tenant.
 * `status` - Current status of the distribution tenant. `Deployed` if the
     distribution tenant's information is fully propagated throughout the Amazon

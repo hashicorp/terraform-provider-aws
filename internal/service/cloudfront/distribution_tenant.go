@@ -83,6 +83,10 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
+			"on_domain_takeover": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.OnDomainTakeover](),
+				Optional:   true,
+			},
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
@@ -163,6 +167,11 @@ func (r *distributionTenantResource) Schema(ctx context.Context, req resource.Sc
 						names.AttrDomain: schema.StringAttribute{
 							Required: true,
 						},
+						"serve_on": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.ServeOn](),
+							Optional:   true,
+							Computed:   true,
+						},
 						names.AttrStatus: schema.StringAttribute{
 							Computed: true,
 						},
@@ -223,6 +232,7 @@ type distributionTenantResourceModel struct {
 	ID                        types.String                                                    `tfsdk:"id"`
 	ManagedCertificateRequest fwtypes.ListNestedObjectValueOf[managedCertificateRequestModel] `tfsdk:"managed_certificate_request"`
 	Name                      types.String                                                    `tfsdk:"name"`
+	OnDomainTakeover          fwtypes.StringEnum[awstypes.OnDomainTakeover]                   `tfsdk:"on_domain_takeover"`
 	Parameters                fwtypes.SetNestedObjectValueOf[parameterModel]                  `tfsdk:"parameter"`
 	Status                    types.String                                                    `tfsdk:"status"`
 	Tags                      tftags.Map                                                      `tfsdk:"tags"`
@@ -240,8 +250,9 @@ type customizationsModel struct {
 // Remove manual flattener interfaces - let AutoFlex handle everything
 
 type domainResultModel struct {
-	Domain types.String `tfsdk:"domain"`
-	Status types.String `tfsdk:"status"`
+	Domain  types.String                         `tfsdk:"domain"`
+	ServeOn fwtypes.StringEnum[awstypes.ServeOn] `tfsdk:"serve_on"`
+	Status  types.String                         `tfsdk:"status"`
 }
 
 type geoRestrictionCustomizationModel struct {
@@ -854,7 +865,8 @@ func convertDomainResultsToDomainItems(domainResults []awstypes.DomainResult) []
 	domainItems := make([]awstypes.DomainItem, len(domainResults))
 	for i, domainResult := range domainResults {
 		domainItems[i] = awstypes.DomainItem{
-			Domain: domainResult.Domain,
+			Domain:  domainResult.Domain,
+			ServeOn: domainResult.ServeOn,
 		}
 	}
 
