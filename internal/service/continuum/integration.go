@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -111,7 +111,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 								exactlyOneProvider,
 							},
 							PlanModifiers: []planmodifier.List{
-								requiresReplaceIfAddedOrRemoved(),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -179,7 +179,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 								exactlyOneProvider,
 							},
 							PlanModifiers: []planmodifier.List{
-								requiresReplaceIfAddedOrRemoved(),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -230,7 +230,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 								exactlyOneProvider,
 							},
 							PlanModifiers: []planmodifier.List{
-								requiresReplaceIfAddedOrRemoved(),
+								tflistplanmodifier.RequiresReplaceIfEmptied,
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -597,31 +597,13 @@ func (m *providerConfigurationModel) Flatten(ctx context.Context, v any) diag.Di
 
 	switch t := v.(type) {
 	case awstypes.ProviderDetailsMemberGithub:
-		var model githubConfigurationModel
-		diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &model)...)
-		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
-		if diags.HasError() {
-			return diags
-		}
-		m.GitHub = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		diags.Append(fwflex.Flatten(ctx, &t.Value, &m.GitHub)...)
 
 	case awstypes.ProviderDetailsMemberGitlab:
-		var model gitlabConfigurationModel
-		diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &model)...)
-		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
-		if diags.HasError() {
-			return diags
-		}
-		m.GitLab = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		diags.Append(fwflex.Flatten(ctx, &t.Value, &m.GitLab)...)
 
 	case awstypes.ProviderDetailsMemberS3:
-		var model s3ConfigurationModel
-		diags.Append(fwtypes.NullOutObjectPtrFields(ctx, &model)...)
-		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
-		if diags.HasError() {
-			return diags
-		}
-		m.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+		diags.Append(fwflex.Flatten(ctx, &t.Value, &m.S3)...)
 
 	default:
 		diags.AddError("Unexpected integration provider details", reflect.TypeOf(v).String())
@@ -666,18 +648,6 @@ func isRoleNotAssumable(err error) (bool, error) {
 	}
 
 	return false, err
-}
-
-// requiresReplaceIfAddedOrRemoved replaces the integration when a provider block is added or removed.
-// Changes within the block are handled by attribute-level plan modifiers.
-func requiresReplaceIfAddedOrRemoved() planmodifier.List {
-	return listplanmodifier.RequiresReplaceIf(
-		func(_ context.Context, request planmodifier.ListRequest, response *listplanmodifier.RequiresReplaceIfFuncResponse) {
-			response.RequiresReplace = request.StateValue.IsNull() != request.PlanValue.IsNull()
-		},
-		"Requires replacement when the block is added or removed.",
-		"Requires replacement when the block is added or removed.",
-	)
 }
 
 // requiresReplaceUnlessImported replaces the integration when a secret changes. The service never returns
