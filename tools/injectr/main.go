@@ -5,22 +5,24 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 )
 
 func main() {
 	serviceDataDir := flag.String("out", "service-data", "directory to write service reference files to")
 	serviceIndexFile := flag.String("index", "service-urls-cache.json", "file to write the service name to URL index to")
+	sdkMapFile := flag.String("sdkmap", "../../sdkmap.json", "sdkmap output to read")
+	permissionsMapFile := flag.String("permissions-map", "../../permissions_map.json", "file to write the sdkmap output with IAM permissions to")
+	skipSync := flag.Bool("skip-sync", false, "use the existing service reference files without checking for updates")
 	flag.Parse()
 
-	if err := SyncServiceRefs(*serviceDataDir, *serviceIndexFile); err != nil {
-		log.Fatal(err)
+	if !*skipSync {
+		if err := SyncServiceRefs(*serviceDataDir, *serviceIndexFile); err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	refs, err := LoadServiceRefs(*serviceDataDir)
-	if err != nil {
+	if err := GeneratePermissionsMap(*serviceDataDir, *sdkMapFile, *permissionsMapFile); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("#### Parsed %d service references\n", len(refs))
 }
