@@ -10,8 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/xray"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/xray/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,6 +30,7 @@ func TestAccXRayTraceSegmentDestination_serial(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic: testAccTraceSegmentDestination_basic,
 		"update":        testAccTraceSegmentDestination_update,
+		"kmsKey":        testAccTraceSegmentDestination_kmsKey,
 		"Identity":      testAccXRayTraceSegmentDestination_identitySerial,
 	}
 
@@ -110,6 +113,46 @@ func testAccTraceSegmentDestination_update(t *testing.T) {
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDestination), tfknownvalue.StringExact(awstypes.TraceSegmentDestinationXRay)),
 				},
+			},
+		},
+	})
+}
+
+func testAccTraceSegmentDestination_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v xray.GetTraceSegmentDestinationOutput
+	resourceName := "aws_xray_trace_segment_destination.test"
+	keyResourceName := "aws_kms_key.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/TraceSegmentDestination/kms_key/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTraceSegmentDestinationExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDestination), tfknownvalue.StringExact(awstypes.TraceSegmentDestinationCloudWatchLogs)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_logs_configuration"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("cloudwatch_logs_configuration").AtSliceIndex(0).AtMapKey("spans_log_group_kms_key_id"), keyResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				// The key is not returned by the API, so it can't be verified on import.
+				ConfigDirectory:         config.StaticDirectory("testdata/TraceSegmentDestination/kms_key/"),
+				ConfigVariables:         config.Variables{acctest.CtRName: config.StringVariable(rName)},
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cloudwatch_logs_configuration"},
 			},
 		},
 	})
