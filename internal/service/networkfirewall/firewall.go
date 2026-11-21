@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -32,6 +33,10 @@ import (
 
 // @SDKResource("aws_networkfirewall_firewall", name="Firewall")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @CustomImport
+// @Testing(preIdentityVersion="v6.72.0")
+// @Testing(importIgnore="delete_associated_nat_gateways;update_token")
 func resourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallCreate,
@@ -40,7 +45,15 @@ func resourceFirewall() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
+					return nil, err
+				}
+
+				rd.Set("delete_associated_nat_gateways", false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{

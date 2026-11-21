@@ -231,6 +231,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_networkfirewall_firewall.example
+  identity = {
+    "arn" = "arn:aws:network-firewall:us-west-1:123456789012:firewall/example"
+  }
+}
+
+resource "aws_networkfirewall_firewall" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+- `arn` (String) ARN of the Network Firewall firewall.
+
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Firewalls using their `arn`. For example:
 
 ```terraform
