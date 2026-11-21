@@ -867,6 +867,39 @@ func findLaunchTemplateVersions(ctx context.Context, conn *ec2.Client, input *ec
 	return output, nil
 }
 
+// findLaunchTemplateVersionNumbers keeps only version numbers so that templates with many versions do not hold all their data in memory.
+func findLaunchTemplateVersionNumbers(ctx context.Context, conn *ec2.Client, id string) ([]int64, int64, error) {
+	input := ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: aws.String(id),
+	}
+	var versions []int64
+	var defaultVersion int64
+
+	pages := ec2.NewDescribeLaunchTemplateVersionsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidLaunchTemplateIdNotFound, errCodeInvalidLaunchTemplateNameNotFoundException, errCodeInvalidLaunchTemplateIdVersionNotFound) {
+			return nil, 0, &retry.NotFoundError{
+				LastError: err,
+			}
+		}
+
+		if err != nil {
+			return nil, 0, err
+		}
+
+		for _, v := range page.LaunchTemplateVersions {
+			versions = append(versions, aws.ToInt64(v.VersionNumber))
+			if aws.ToBool(v.DefaultVersion) {
+				defaultVersion = aws.ToInt64(v.VersionNumber)
+			}
+		}
+	}
+
+	return versions, defaultVersion, nil
+}
+
 func findLaunchTemplateVersionByTwoPartKey(ctx context.Context, conn *ec2.Client, launchTemplateID, version string) (*awstypes.LaunchTemplateVersion, error) {
 	input := ec2.DescribeLaunchTemplateVersionsInput{
 		LaunchTemplateId: aws.String(launchTemplateID),

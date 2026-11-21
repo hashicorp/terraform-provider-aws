@@ -5,13 +5,19 @@ package ec2_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -22,6 +28,7 @@ import (
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -3593,6 +3600,312 @@ func TestAccEC2LaunchTemplate_updateDefaultVersion(t *testing.T) {
 	})
 }
 
+func TestAccEC2LaunchTemplate_maxVersions(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.micro", 4),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_versions", "4"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1),
+				),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.small", 4),
+				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.medium", 4),
+				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2, 3),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.large", 4),
+				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2, 3, 4),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.xlarge", 4),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "5"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "5"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 2, 3, 4, 5),
+				),
+			},
+			// Lowering max_versions alone prunes without creating a version.
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.xlarge", 3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("latest_version"), knownvalue.Int64Exact(5)),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "5"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 3, 4, 5),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"max_versions",
+					"update_default_version",
+				},
+			},
+			// Without max_versions nothing is deleted.
+			{
+				Config: testAccLaunchTemplateConfig_noMaxVersions(rName, "t3.2xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "max_versions", "0"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 3, 4, 5, 6),
+				),
+			},
+		},
+	})
+}
+
+// The default version counts toward max_versions and is never deleted.
+func TestAccEC2LaunchTemplate_maxVersionsKeepsDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.micro", 3, 1),
+				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.small", 3, 1),
+				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.medium", 3, 1),
+				Check:  testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 2, 3),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.large", 3, 1),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "4"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 1, 3, 4),
+				),
+			},
+			// A new version and a new default in one apply: the old default becomes deletable.
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, "t3.xlarge", 3, 4),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "default_version", "4"),
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "5"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 3, 4, 5),
+				),
+			},
+		},
+	})
+}
+
+// An Auto Scaling group pinned to latest_version always references an existing version.
+func TestAccEC2LaunchTemplate_maxVersionsAutoScalingGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	asgResourceName := "aws_autoscaling_group.test"
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsASG(rName, "t3.micro", "one"),
+				Check:  resource.TestCheckResourceAttr(asgResourceName, "launch_template.0.version", "1"),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsASG(rName, "t3.small", "one"),
+				Check:  resource.TestCheckResourceAttr(asgResourceName, "launch_template.0.version", "2"),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsASG(rName, "t3.medium", "one"),
+				Check:  resource.TestCheckResourceAttr(asgResourceName, "launch_template.0.version", "3"),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsASG(rName, "t3.large", "one"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(asgResourceName, "launch_template.0.version", "4"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 2, 3, 4),
+				),
+			},
+			// A description-only change creates a version, so dependents must see latest_version change in the plan.
+			{
+				Config: testAccLaunchTemplateConfig_maxVersionsASG(rName, "t3.large", "two"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("latest_version")),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("default_version")),
+						plancheck.ExpectResourceAction(asgResourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "latest_version", "5"),
+					resource.TestCheckResourceAttr(asgResourceName, "launch_template.0.version", "5"),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, 3, 4, 5),
+				),
+			},
+		},
+	})
+}
+
+// More than one DeleteLaunchTemplateVersions call (200 versions each) is needed.
+func TestAccEC2LaunchTemplate_maxVersionsManyVersions(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	const extraVersions = 250
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLaunchTemplateDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.micro", 3),
+				Check:  testAccCheckLaunchTemplateCreateVersions(ctx, t, resourceName, extraVersions),
+			},
+			{
+				Config: testAccLaunchTemplateConfig_maxVersions(rName, "t3.small", 3),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "latest_version", strconv.Itoa(extraVersions+2)),
+					testAccCheckLaunchTemplateVersions(ctx, t, resourceName, extraVersions, extraVersions+1, extraVersions+2),
+				),
+			},
+		},
+	})
+}
+
+func TestLaunchTemplateVersionsToDelete(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		versions  []int64
+		keep      int
+		protected []int64
+		want      []string
+	}{
+		"fewer than keep": {
+			versions:  []int64{1, 2},
+			keep:      5,
+			protected: []int64{2},
+		},
+		"exactly keep": {
+			versions:  []int64{1, 2, 3},
+			keep:      3,
+			protected: []int64{3},
+		},
+		"default is latest": {
+			versions:  []int64{1, 2, 3, 4, 5},
+			keep:      3,
+			protected: []int64{5, 4, 5},
+			want:      []string{"2", "1"},
+		},
+		"old default counts toward keep": {
+			versions:  []int64{1, 2, 3, 4, 5, 6},
+			keep:      3,
+			protected: []int64{6, 5, 1},
+			want:      []string{"4", "3", "2"},
+		},
+		"protected outside the newest": {
+			versions:  []int64{1, 2, 3, 4, 5, 6},
+			keep:      4,
+			protected: []int64{6, 2},
+			want:      []string{"3", "1"},
+		},
+		"unsorted with gaps": {
+			versions:  []int64{12, 1, 9, 7, 11},
+			keep:      3,
+			protected: []int64{12},
+			want:      []string{"7", "1"},
+		},
+		"protected not listed": {
+			versions:  []int64{3, 2, 1},
+			keep:      2,
+			protected: []int64{4, 3},
+			want:      []string{"1"},
+		},
+		"more protected than keep": {
+			versions:  []int64{1, 2, 3, 4},
+			keep:      2,
+			protected: []int64{4, 3, 1},
+			want:      []string{"2"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfec2.LaunchTemplateVersionsToDelete(testCase.versions, testCase.keep, testCase.protected...)
+			if !slices.Equal(got, testCase.want) {
+				t.Errorf("got %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestLaunchTemplateVersionsPruneWarning(t *testing.T) {
+	t.Parallel()
+
+	d := schema.TestResourceDataRaw(t, tfec2.ResourceLaunchTemplate().SchemaMap(), map[string]any{
+		"max_versions": 5,
+	})
+	d.SetId("lt-12345678")
+
+	diags := tfec2.LaunchTemplateVersionsPruneWarning(nil, d, errors.New("UnauthorizedOperation"))
+
+	if diags.HasError() || len(diags) != 1 {
+		t.Fatalf("want one warning, got %v", diags)
+	}
+	if got := d.Get("max_versions").(int); got != 0 {
+		t.Errorf("max_versions: got %d, want 0 so that the next plan retries", got)
+	}
+}
+
+func TestLaunchTemplateVersionsDeleteErrors(t *testing.T) {
+	t.Parallel()
+
+	got := tfec2.LaunchTemplateVersionsDeleteErrors([]awstypes.DeleteLaunchTemplateVersionsResponseErrorItem{
+		{VersionNumber: aws.Int64(1), ResponseError: &awstypes.ResponseError{Code: awstypes.LaunchTemplateErrorCodeLaunchTemplateVersionDoesNotExist}},
+		{VersionNumber: aws.Int64(2)},
+		{VersionNumber: aws.Int64(3), ResponseError: &awstypes.ResponseError{Code: awstypes.LaunchTemplateErrorCodeUnexpectedError, Message: aws.String("boom")}},
+	})
+
+	want := []string{"version 2: not deleted", "version 3: unexpectedError: boom"}
+	if len(got) != len(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+	for i := range want {
+		if got[i].Error() != want[i] {
+			t.Errorf("error %d: got %q, want %q", i, got[i], want[i])
+		}
+	}
+}
+
 func TestAccEC2LaunchTemplate_upgradeFromV5(t *testing.T) {
 	ctx := acctest.Context(t)
 	var template awstypes.LaunchTemplate
@@ -3730,6 +4043,66 @@ func testAccCheckLaunchTemplateExists(ctx context.Context, t *testing.T, n strin
 		}
 
 		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckLaunchTemplateVersions(ctx context.Context, t *testing.T, n string, want ...int64) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+		slices.Sort(want)
+
+		// Deleted versions can still be listed for a short time.
+		_, err := tfresource.RetryUntilEqual(ctx, 2*time.Minute, fmt.Sprint(want), func(ctx context.Context) (string, error) {
+			input := ec2.DescribeLaunchTemplateVersionsInput{
+				LaunchTemplateId: aws.String(rs.Primary.ID),
+			}
+			output, err := tfec2.FindLaunchTemplateVersions(ctx, conn, &input)
+			if err != nil {
+				return "", err
+			}
+
+			got := make([]int64, 0, len(output))
+			for _, v := range output {
+				got = append(got, aws.ToInt64(v.VersionNumber))
+			}
+			slices.Sort(got)
+
+			return fmt.Sprint(got), nil
+		})
+		if err != nil {
+			return fmt.Errorf("EC2 Launch Template %s versions: %w", rs.Primary.ID, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckLaunchTemplateCreateVersions(ctx context.Context, t *testing.T, n string, count int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
+
+		for range count {
+			input := ec2.CreateLaunchTemplateVersionInput{
+				LaunchTemplateData: &awstypes.RequestLaunchTemplateData{},
+				LaunchTemplateId:   aws.String(rs.Primary.ID),
+				SourceVersion:      aws.String("1"),
+			}
+			if _, err := conn.CreateLaunchTemplateVersion(ctx, &input); err != nil {
+				return err
+			}
+		}
 
 		return nil
 	}
@@ -4980,6 +5353,67 @@ resource "aws_launch_template" "test" {
   default_version = %[3]d
 }
 `, rName, description, version)
+}
+
+func testAccLaunchTemplateConfig_maxVersions(rName, instanceType string, maxVersions int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name                   = %[1]q
+  instance_type          = %[2]q
+  max_versions           = %[3]d
+  update_default_version = true
+}
+`, rName, instanceType, maxVersions)
+}
+
+func testAccLaunchTemplateConfig_noMaxVersions(rName, instanceType string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name                   = %[1]q
+  instance_type          = %[2]q
+  update_default_version = true
+}
+`, rName, instanceType)
+}
+
+func testAccLaunchTemplateConfig_maxVersionsDefaultVersion(rName, instanceType string, maxVersions, defaultVersion int) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name            = %[1]q
+  instance_type   = %[2]q
+  max_versions    = %[3]d
+  default_version = %[4]d
+}
+`, rName, instanceType, maxVersions, defaultVersion)
+}
+
+func testAccLaunchTemplateConfig_maxVersionsASG(rName, instanceType, description string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		acctest.ConfigAvailableAZsNoOptIn(),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name                   = %[1]q
+  description            = %[3]q
+  image_id               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type          = %[2]q
+  max_versions           = 3
+  update_default_version = true
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones = [data.aws_availability_zones.available.names[0]]
+  desired_capacity   = 0
+  max_size           = 0
+  min_size           = 0
+  name               = %[1]q
+
+  launch_template {
+    id      = aws_launch_template.test.id
+    version = aws_launch_template.test.latest_version
+  }
+}
+`, rName, instanceType, description))
 }
 
 func testAccLaunchTemplateConfig_configDescriptionUpdateDefaultVersion(rName, description string, update bool) string {
