@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -102,9 +103,13 @@ func resourceCluster() *schema.Resource {
 								Computed:         true,
 								ValidateDiagFunc: enum.Validate[types.AuthenticationMode](),
 							},
+							// Can only be set at creation and isn't returned by DescribeCluster.
+							// Computed so that omitting it from configuration keeps the prior value
+							// instead of planning a replacement.
 							"bootstrap_cluster_creator_admin_permissions": {
 								Type:     schema.TypeBool,
 								Optional: true,
+								Computed: true,
 								ForceNew: true,
 							},
 						},
@@ -716,7 +721,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	if v, ok := d.GetOk("access_config"); ok {
-		input.AccessConfig = expandCreateAccessConfigRequest(v.([]any))
+		input.AccessConfig = expandCreateAccessConfigRequest(v.([]any), d.GetRawConfig())
 	}
 
 	if v, ok := d.GetOk("control_plane_scaling_config"); ok {
@@ -797,6 +802,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta any
 	}
 
 	d.SetId(aws.ToString(output.Cluster.Name))
+
+	// bootstrap_cluster_creator_admin_permissions isn't returned by DescribeCluster, so record the EKS default.
+	if input.AccessConfig != nil && input.AccessConfig.BootstrapClusterCreatorAdminPermissions == nil {
+		if err := d.Set("access_config", flattenAccessConfigResponse(&types.AccessConfigResponse{AuthenticationMode: input.AccessConfig.AuthenticationMode}, aws.Bool(true))); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
+		}
+	}
 
 	if _, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) create: %s", d.Id(), err)
@@ -1151,7 +1163,7 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *sche
 	if cluster.AccessConfig != nil {
 		var bootstrapClusterCreatorAdminPermissions *bool
 		if v, ok := d.GetOk("access_config"); ok {
-			if apiObject := expandCreateAccessConfigRequest(v.([]any)); apiObject != nil {
+			if apiObject := expandCreateAccessConfigRequest(v.([]any), cty.NilVal); apiObject != nil {
 				bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
 			}
 		}
@@ -1421,7 +1433,9 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 	return nil, err
 }
 
-func expandCreateAccessConfigRequest(tfList []any) *types.CreateAccessConfigRequest {
+// expandCreateAccessConfigRequest leaves BootstrapClusterCreatorAdminPermissions unset, so that EKS applies its default (true),
+// when rawConfig shows that the argument is omitted from configuration. Pass cty.NilVal to use the values in tfList as-is.
+func expandCreateAccessConfigRequest(tfList []any, rawConfig cty.Value) *types.CreateAccessConfigRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1438,7 +1452,10 @@ func expandCreateAccessConfigRequest(tfList []any) *types.CreateAccessConfigRequ
 	}
 
 	if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
-		apiObject.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
+		// An omitted argument reads as false.
+		if raw, err := cty.GetAttrPath("access_config").IndexInt(0).GetAttr("bootstrap_cluster_creator_admin_permissions").Apply(rawConfig); err != nil || !raw.IsNull() {
+			apiObject.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
+		}
 	}
 
 	return apiObject
