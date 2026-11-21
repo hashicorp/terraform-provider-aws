@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_wafv2_web_acl: Fix `Invalid address to set` error on Read when `association_config.request_body` has an `AGENTCORE_GATEWAY` entry
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `association_config.request_body.agentcore_gateway` argument
+```
