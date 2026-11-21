@@ -90,8 +90,13 @@ This resource supports the following arguments:
 
 ### Rule
 
+* `delete_replication` - (Optional) Delete replication settings for the rule. See [Delete Replication](#delete-replication).
 * `destination` - (Required) the details of a replication destination. A maximum of 25 are allowed per `rule`. See [Destination](#destination).
 * `repository_filter` - (Optional) filters for a replication rule. See [Repository Filter](#repository-filter).
+
+### Delete Replication
+
+* `enabled` - (Required) Whether image deletions and image tag removals in the source registry, including those made by lifecycle policies, are replicated to the rule's destinations. If `delete_replication` is omitted, deletions are not replicated.
 
 ### Destination
 
