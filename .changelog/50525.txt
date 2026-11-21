@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dms_s3_endpoint: Fix `InvalidParameterCombinationException: GlueCatalogGeneration feature is not available for S3 source endpoint` errors when updating a target endpoint with `glue_catalog_generation` set to `true`
+```
