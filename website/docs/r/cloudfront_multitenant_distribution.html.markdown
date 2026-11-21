@@ -176,6 +176,7 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 * `http_port` - (Required) HTTP port the custom origin listens on.
 * `https_port` - (Required) HTTPS port the custom origin listens on.
 * `ip_address_type` - (Optional) Type of IP addresses used by your origins. Valid values are `ipv4` and `dualstack`.
+* `origin_http_version` - (Optional) HTTP version CloudFront uses for requests to the custom origin. Valid values: `http1.1`, `http2`. With `http2`, CloudFront offers HTTP/2 to the origin through ALPN over TLS 1.2 or later, and uses HTTP/1.1 if the origin does not negotiate HTTP/2. If not set, CloudFront uses HTTP/1.1.
 * `origin_keepalive_timeout` - (Optional) Custom keep-alive timeout, in seconds. Default: 5.
 * `origin_mtls_config` - (Optional) Origin mTLS configuration for mutual TLS authentication between CloudFront and your origin. See [Origin mTLS Config](#origin-mtls-config) below.
 * `origin_read_timeout` - (Optional) Custom read timeout, in seconds. Default: 30.
@@ -226,6 +227,7 @@ Cache behavior supports all the same arguments as [Default Cache Behavior](#defa
 
 ### VPC Origin Config
 
+* `origin_http_version` - (Optional) HTTP version CloudFront uses for requests to the VPC origin. Valid values: `http1.1`, `http2`. With `http2`, CloudFront offers HTTP/2 to the origin through ALPN over TLS 1.2 or later, and uses HTTP/1.1 if the origin does not negotiate HTTP/2. If not set, CloudFront uses HTTP/1.1.
 * `origin_keepalive_timeout` - (Optional) Custom keep-alive timeout, in seconds. By default, CloudFront uses a default timeout. Default: 5.
 * `origin_read_timeout` - (Optional) Custom read timeout, in seconds. By default, CloudFront uses a default timeout. Default: 30.
 * `vpc_origin_id` - (Required) ID of the VPC origin that you want CloudFront to route requests to.

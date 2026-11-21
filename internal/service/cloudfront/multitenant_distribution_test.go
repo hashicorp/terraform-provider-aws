@@ -91,6 +91,7 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 									"http_port":                knownvalue.Int32Exact(80),
 									"https_port":               knownvalue.Int32Exact(443),
 									names.AttrIPAddressType:    knownvalue.Null(),
+									"origin_http_version":      knownvalue.Null(),
 									"origin_keepalive_timeout": knownvalue.Int32Exact(tfcloudfront.DefaultOriginKeepaliveTimeout),
 									"origin_mtls_config":       knownvalue.ListSizeExact(0),
 									"origin_read_timeout":      knownvalue.Int32Exact(tfcloudfront.DefaultOriginReadTimeout),
@@ -253,6 +254,7 @@ func TestAccCloudFrontMultiTenantDistribution_CustomOrigin_basic(t *testing.T) {
 									"http_port":                knownvalue.Int32Exact(80),
 									"https_port":               knownvalue.Int32Exact(443),
 									names.AttrIPAddressType:    knownvalue.Null(),
+									"origin_http_version":      knownvalue.Null(),
 									"origin_keepalive_timeout": knownvalue.Int32Exact(tfcloudfront.DefaultOriginKeepaliveTimeout),
 									"origin_mtls_config":       knownvalue.ListSizeExact(0),
 									"origin_read_timeout":      knownvalue.Int32Exact(tfcloudfront.DefaultOriginReadTimeout),
@@ -901,6 +903,151 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssoci
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_CustomOrigin_originHTTPVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_CustomOrigin_originHTTPVersion(string(awstypes.OriginHttpVersionHttp2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"custom_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"origin_http_version": tfknownvalue.StringExact(awstypes.OriginHttpVersionHttp2),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_CustomOrigin_originHTTPVersion(string(awstypes.OriginHttpVersionHttp11)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"custom_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"origin_http_version": tfknownvalue.StringExact(awstypes.OriginHttpVersionHttp11),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_CustomOrigin_basic(),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"custom_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"origin_http_version": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontMultiTenantDistribution_VPCOrigin_originHTTPVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_VPCOrigin_originHTTPVersion(rName, string(awstypes.OriginHttpVersionHttp2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"custom_origin_config": knownvalue.ListSizeExact(0),
+							"vpc_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"origin_http_version":      tfknownvalue.StringExact(awstypes.OriginHttpVersionHttp2),
+									"origin_keepalive_timeout": knownvalue.Int32Exact(tfcloudfront.DefaultOriginKeepaliveTimeout),
+									"origin_read_timeout":      knownvalue.Int32Exact(tfcloudfront.DefaultOriginReadTimeout),
+									"vpc_origin_id":            knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_VPCOrigin_originHTTPVersion(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("origin"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							"vpc_origin_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectPartial(map[string]knownvalue.Check{
+									"origin_http_version": knownvalue.Null(),
+								}),
+							}),
+						}),
+					})),
 				},
 			},
 		},
@@ -2203,4 +2350,123 @@ resource "aws_iam_role" "lambda" {
 
 data "aws_partition" "current" {}
 `, rName, comment)
+}
+
+func testAccMultiTenantDistributionConfig_CustomOrigin_originHTTPVersion(originHTTPVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_http_version    = %[1]q
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+`, originHTTPVersion)
+}
+
+func testAccMultiTenantDistributionConfig_VPCOrigin_originHTTPVersion(rName, originHTTPVersion string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), fmt.Sprintf(`
+locals {
+  origin_http_version = %[1]q
+}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = aws_lb.test.dns_name
+    id          = "test"
+
+    vpc_origin_config {
+      vpc_origin_id       = aws_cloudfront_vpc_origin.test.id
+      origin_http_version = local.origin_http_version != "" ? local.origin_http_version : null
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "test"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = data.aws_cloudfront_cache_policy.caching_disabled.id
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+
+data "aws_cloudfront_cache_policy" "caching_disabled" {
+  name = "Managed-CachingDisabled"
+}
+`, originHTTPVersion))
 }

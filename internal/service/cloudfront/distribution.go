@@ -690,6 +690,11 @@ func resourceDistribution() *schema.Resource {
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.IpAddressType](),
 										},
+										"origin_http_version": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.OriginHttpVersion](),
+										},
 										"origin_keepalive_timeout": {
 											Type:         schema.TypeInt,
 											Optional:     true,
@@ -794,6 +799,11 @@ func resourceDistribution() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"origin_http_version": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.OriginHttpVersion](),
+										},
 										"origin_keepalive_timeout": {
 											Type:         schema.TypeInt,
 											Optional:     true,
@@ -2608,6 +2618,10 @@ func expandCustomOriginConfig(tfMap map[string]any) *awstypes.CustomOriginConfig
 		apiObject.IpAddressType = awstypes.IpAddressType(v.(string))
 	}
 
+	if v, ok := tfMap["origin_http_version"].(string); ok && v != "" {
+		apiObject.OriginHttpVersion = awstypes.OriginHttpVersion(v)
+	}
+
 	if v, ok := tfMap["origin_mtls_config"]; ok {
 		if v := v.([]any); len(v) > 0 {
 			apiObject.OriginMtlsConfig = expandOriginMtlsConfig(v[0].(map[string]any))
@@ -2633,6 +2647,10 @@ func flattenCustomOriginConfig(apiObject *awstypes.CustomOriginConfig) map[strin
 
 	if apiObject.IpAddressType != "" {
 		tfMap[names.AttrIPAddressType] = apiObject.IpAddressType
+	}
+
+	if apiObject.OriginHttpVersion != "" {
+		tfMap["origin_http_version"] = apiObject.OriginHttpVersion
 	}
 
 	if apiObject.OriginMtlsConfig != nil {
@@ -2709,6 +2727,10 @@ func expandVPCOriginConfig(tfMap map[string]any) *awstypes.VpcOriginConfig {
 		VpcOriginId:            aws.String(tfMap["vpc_origin_id"].(string)),
 	}
 
+	if v, ok := tfMap["origin_http_version"].(string); ok && v != "" {
+		apiObject.OriginHttpVersion = awstypes.OriginHttpVersion(v)
+	}
+
 	if v, ok := tfMap[names.AttrOwnerAccountID].(string); ok && v != "" {
 		apiObject.OwnerAccountId = aws.String(v)
 	}
@@ -2746,6 +2768,10 @@ func flattenVPCOriginConfig(apiObject *awstypes.VpcOriginConfig) map[string]any 
 		"origin_keepalive_timeout": aws.ToInt32(apiObject.OriginKeepaliveTimeout),
 		"origin_read_timeout":      aws.ToInt32(apiObject.OriginReadTimeout),
 		"vpc_origin_id":            aws.ToString(apiObject.VpcOriginId),
+	}
+
+	if apiObject.OriginHttpVersion != "" {
+		tfMap["origin_http_version"] = apiObject.OriginHttpVersion
 	}
 
 	if v := aws.ToString(apiObject.OwnerAccountId); v != "" {
