@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Detect changes made outside Terraform to rules configured with `rule_json`
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Detect changes made outside Terraform to rules configured with `rules_json`
+```

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -2764,6 +2765,83 @@ func testAccPreCheckScopeRegional(ctx context.Context, t *testing.T) {
 	}
 }
 
+func TestAccWAFV2RuleGroup_rulesJSONNoDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_rulesJSONStatements(ruleGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccWAFV2RuleGroup_rulesJSONDrift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.RuleGroup
+	ruleGroupName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_rulesJSONStatements(ruleGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					testAccCheckRuleGroupRemoveLastRule(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccRuleGroupConfig_rulesJSONStatements(ruleGroupName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &v),
+					func(*terraform.State) error {
+						if got, want := len(v.Rules), 12; got != want {
+							return fmt.Errorf("%d rules, want %d", got, want)
+						}
+						return nil
+					},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckRuleGroupDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -2808,6 +2886,35 @@ func testAccCheckRuleGroupExists(ctx context.Context, t *testing.T, n string, v 
 		*v = *output.RuleGroup
 
 		return nil
+	}
+}
+
+func testAccCheckRuleGroupRemoveLastRule(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
+
+		output, err := tfwafv2.FindRuleGroupByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
+		if err != nil {
+			return err
+		}
+
+		ruleGroup := output.RuleGroup
+		input := wafv2.UpdateRuleGroupInput{
+			Id:               ruleGroup.Id,
+			LockToken:        output.LockToken,
+			Name:             ruleGroup.Name,
+			Rules:            ruleGroup.Rules[:len(ruleGroup.Rules)-1],
+			Scope:            awstypes.Scope(rs.Primary.Attributes[names.AttrScope]),
+			VisibilityConfig: ruleGroup.VisibilityConfig,
+		}
+		_, err = conn.UpdateRuleGroup(ctx, &input)
+
+		return err
 	}
 }
 
@@ -5995,4 +6102,78 @@ resource "aws_wafv2_rule_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccRuleGroupConfig_rulesJSONStatements(rName string) string {
+	textTransformations := `TextTransformations = [{ Priority = 0, Type = "NONE" }]`
+	rules := []string{
+		testAccWebACLRuleJSONObject("byte-match", 1, `Action = { Block = {} }`, `ByteMatchStatement = {
+  SearchString         = "BadBot"
+  PositionalConstraint = "CONTAINS"
+  FieldToMatch         = { SingleHeader = { Name = "User-Agent" } }
+  TextTransformations  = [{ Priority = 1, Type = "LOWERCASE" }, { Priority = 0, Type = "URL_DECODE" }]
+}`),
+		testAccWebACLRuleJSONObject("query-argument", 2, `Action = { Block = {} }`, `ByteMatchStatement = {
+  SearchString         = "a"
+  PositionalConstraint = "CONTAINS"
+  FieldToMatch         = { SingleQueryArgument = { Name = "UserId" } }
+  `+textTransformations+`
+}`),
+		testAccWebACLRuleJSONObject("json-body", 3, `Action = { Block = {} }`, `ByteMatchStatement = {
+  SearchString         = "a"
+  PositionalConstraint = "CONTAINS"
+  FieldToMatch         = { JsonBody = { MatchPattern = { All = {} }, MatchScope = "ALL" } }
+  `+textTransformations+`
+}`),
+		testAccWebACLRuleJSONObject("regex-match", 4, `Action = { Block = {} }`, `RegexMatchStatement = {
+  RegexString  = "^/admin"
+  FieldToMatch = { UriPath = {} }
+  `+textTransformations+`
+}`),
+		testAccWebACLRuleJSONObject("sqli-match", 5, `Action = { Block = {} }`, `SqliMatchStatement = {
+  FieldToMatch = { Body = {} }
+  `+textTransformations+`
+}`),
+		testAccWebACLRuleJSONObject("xss-match", 6, `Action = { Block = {} }`, `XssMatchStatement = {
+  FieldToMatch = { UriFragment = {} }
+  `+textTransformations+`
+}`),
+		testAccWebACLRuleJSONObject("size-constraint", 7, `Action = { Block = {} }`, `SizeConstraintStatement = {
+  ComparisonOperator = "GT"
+  Size               = 8192
+  FieldToMatch       = { Body = {} }
+  `+textTransformations+`
+}`),
+		testAccWebACLRuleJSONObject("geo-match", 8, `Action = { Captcha = {} }
+CaptchaConfig = { ImmunityTimeProperty = { ImmunityTime = 120 } }`, `GeoMatchStatement = { CountryCodes = ["US", "NL", "CA"] }`),
+		testAccWebACLRuleJSONObject("label-match", 9, `Action = { Count = {} }
+RuleLabels = [{ Name = "test:z" }, { Name = "test:y" }]`, `LabelMatchStatement = { Scope = "LABEL", Key = "test:a" }`),
+		testAccWebACLRuleJSONObject("rate-based", 10, `Action = { Block = {} }`, `RateBasedStatement = {
+  Limit            = 500
+  AggregateKeyType = "CUSTOM_KEYS"
+  CustomKeys = [
+    { Header = { Name = "X-Api-Key", `+textTransformations+` } },
+    { QueryArgument = { Name = "Token", `+textTransformations+` } },
+    { IP = {} },
+  ]
+}`),
+		testAccWebACLRuleJSONObject("nesting-depth-5", 11, `Action = { Block = {} }`, testAccRuleJSONDeepStatement),
+		testAccWebACLRuleJSONObject("asn-match", 12, `Action = { Block = {} }`, `AsnMatchStatement = { AsnList = [64512, 64496] }`),
+	}
+
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 1500
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rules_json = jsonencode([%[2]s])
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, strings.Join(rules, ",\n"))
 }
