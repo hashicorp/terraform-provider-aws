@@ -1,0 +1,5 @@
+```release-note:bug
+resource/aws_dms_endpoint
+postgres_settings.heartbeat_frequency Fix the provider to
+apply a value of 5 minutes as the AWS default.
+```
