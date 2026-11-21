@@ -1463,7 +1463,7 @@ func flattenLineSeriesAxisDisplayOptions(apiObject *awstypes.LineSeriesAxisDispl
 		tfMap["axis_options"] = flattenAxisDisplayOptions(apiObject.AxisOptions)
 	}
 	if apiObject.MissingDataConfigurations != nil {
-		tfMap["missing_data_configurations"] = flattenMissingDataConfiguration(apiObject.MissingDataConfigurations)
+		tfMap["missing_data_configuration"] = flattenMissingDataConfiguration(apiObject.MissingDataConfigurations)
 	}
 
 	return []any{tfMap}
