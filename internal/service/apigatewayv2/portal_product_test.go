@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
@@ -80,6 +81,11 @@ func TestAccAPIGatewayV2PortalProduct_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfapigatewayv2.ResourcePortalProduct, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -131,8 +137,12 @@ func TestAccAPIGatewayV2PortalProduct_description(t *testing.T) {
 			// Removing the argument is a documented no-op: description is Optional+Computed,
 			// so the prior value is retained and the plan stays empty.
 			{
-				Config:   testAccPortalProductConfig_basic(rName),
-				PlanOnly: true,
+				Config: testAccPortalProductConfig_basic(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})

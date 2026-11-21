@@ -93,7 +93,8 @@ func TestPortalProductAutoFlexFlatten(t *testing.T) {
 		t.Errorf("Description = %q, want %q", got, want)
 	}
 	// PortalProductARN/ID bind to PortalProductArn/Id via case-insensitive matching.
-	if want, got := "arn:aws:apigateway:us-west-2:123456789012:/portalproducts/abcdef1234", got.PortalProductARN.ValueString(); got != want { //lintignore:AWSAT003,AWSAT005
+	const wantARN = "arn:aws:apigateway:us-west-2:123456789012:/portalproducts/abcdef1234" //lintignore:AWSAT003,AWSAT005
+	if want, got := wantARN, got.PortalProductARN.ValueString(); got != want {
 		t.Errorf("PortalProductARN = %q, want %q", got, want)
 	}
 	if want, got := "abcdef1234", got.PortalProductID.ValueString(); got != want {
