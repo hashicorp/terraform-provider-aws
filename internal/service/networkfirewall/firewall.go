@@ -6,13 +6,17 @@
 package networkfirewall
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -27,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -110,14 +115,7 @@ func resourceFirewall() *schema.Resource {
 
 				o, n := diff.GetChange("nat_gateway_create_mapping")
 				ol, nl := o.([]any), n.([]any)
-				switch {
-				// An imported NAT/Proxy firewall has no mappings in state, as DescribeFirewall doesn't return them.
-				case len(ol) == 0 && len(nl) > 0:
-					if o, _ := diff.GetChange("proxy_settings"); len(o.([]any)) > 0 {
-						return nil
-					}
-					return diff.ForceNew("nat_gateway_create_mapping")
-				case len(ol) > 0 && len(nl) == 0:
+				if (len(ol) == 0) != (len(nl) == 0) {
 					return diff.ForceNew("nat_gateway_create_mapping")
 				}
 
@@ -496,10 +494,10 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
-	return resourceFirewallFlatten(ctx, d, output)
+	return resourceFirewallFlatten(ctx, d, meta.(*conns.AWSClient).EC2Client(ctx), output)
 }
 
-func resourceFirewallFlatten(ctx context.Context, d *schema.ResourceData, output *networkfirewall.DescribeFirewallOutput) diag.Diagnostics {
+func resourceFirewallFlatten(ctx context.Context, d *schema.ResourceData, ec2Conn *ec2.Client, output *networkfirewall.DescribeFirewallOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	firewall := output.Firewall
@@ -518,11 +516,16 @@ func resourceFirewallFlatten(ctx context.Context, d *schema.ResourceData, output
 		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
 	d.Set(names.AttrName, firewall.FirewallName)
-	// DescribeFirewall doesn't return the mappings, so keep the configured ones.
+	// DescribeFirewall doesn't return the mappings, so rebuild them from the NAT gateways attached to the firewall.
 	natGatewayCreateMappings := firewall.NatGatewayCreateMappings
 	if natGatewayCreateMappings == nil {
-		natGatewayCreateMappings = expandNatGatewayCreateMappings(d.Get("nat_gateway_create_mapping").([]any))
+		var err error
+		natGatewayCreateMappings, err = findNATGatewayCreateMappings(ctx, ec2Conn, output.FirewallStatus)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s) NAT gateways: %s", d.Id(), err)
+		}
 	}
+	natGatewayCreateMappings = orderNATGatewayCreateMappings(natGatewayCreateMappings, d.Get("nat_gateway_create_mapping").([]any))
 	if err := d.Set("nat_gateway_create_mapping", flattenNatGatewayCreateMappings(natGatewayCreateMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting nat_gateway_create_mapping: %s", err)
 	}
@@ -561,9 +564,9 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 	updateToken := d.Get("update_token").(string)
 
-	// Mappings added to an imported firewall, which has none in state, already exist.
 	var natGatewayMappingsToAdd []awstypes.NatGatewayCreateMapping
-	if o, n := d.GetChange("nat_gateway_create_mapping"); d.HasChange("nat_gateway_create_mapping") && len(o.([]any)) > 0 {
+	if d.HasChange("nat_gateway_create_mapping") {
+		o, n := d.GetChange("nat_gateway_create_mapping")
 		natGatewayMappingsToAdd = expandNatGatewayCreateMappings(natGatewayCreateMappingsSet(n).Difference(natGatewayCreateMappingsSet(o)).List())
 	}
 
@@ -875,6 +878,101 @@ func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn st
 	}
 
 	return findFirewall(ctx, conn, &input)
+}
+
+// findNATGatewayCreateMappings describes the NAT gateways that are attached to a NAT/Proxy firewall.
+// NAT gateways detached from removed Availability Zones aren't in the firewall status, so they're left out.
+func findNATGatewayCreateMappings(ctx context.Context, conn *ec2.Client, status *awstypes.FirewallStatus) ([]awstypes.NatGatewayCreateMapping, error) {
+	if status == nil {
+		return nil, nil
+	}
+
+	var natGatewayIDs []string
+	for _, syncState := range status.SyncStates {
+		for _, v := range syncState.NatGatewayAttachments {
+			natGatewayIDs = append(natGatewayIDs, aws.ToString(v.NatGatewayId))
+		}
+	}
+
+	if len(natGatewayIDs) == 0 {
+		return nil, nil
+	}
+
+	input := ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: natGatewayIDs,
+	}
+	natGateways, err := tfec2.FindNATGateways(ctx, conn, &input)
+
+	if retry.NotFound(err) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	apiObjects := make([]awstypes.NatGatewayCreateMapping, 0, len(natGateways))
+	for _, natGateway := range natGateways {
+		apiObject := awstypes.NatGatewayCreateMapping{
+			SubnetId: natGateway.SubnetId,
+		}
+
+		// The primary address comes first.
+		addresses := slices.Clone(natGateway.NatGatewayAddresses)
+		slices.SortStableFunc(addresses, func(a, b ec2types.NatGatewayAddress) int {
+			switch ap, bp := aws.ToBool(a.IsPrimary), aws.ToBool(b.IsPrimary); {
+			case ap == bp:
+				return 0
+			case ap:
+				return -1
+			default:
+				return 1
+			}
+		})
+		for _, v := range addresses {
+			switch v.Status {
+			case ec2types.NatGatewayAddressStatusFailed, ec2types.NatGatewayAddressStatusDisassociating, ec2types.NatGatewayAddressStatusUnassigning:
+				continue
+			}
+
+			if v.AllocationId != nil {
+				apiObject.AllocationIds = append(apiObject.AllocationIds, aws.ToString(v.AllocationId))
+			}
+			apiObject.PrivateIps = append(apiObject.PrivateIps, aws.ToString(v.PrivateIp))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+// orderNATGatewayCreateMappings orders mappings as in tfList, by subnet ID, so that a list read back from
+// the NAT gateways doesn't differ from configuration only in order. Other mappings follow by subnet ID.
+func orderNATGatewayCreateMappings(apiObjects []awstypes.NatGatewayCreateMapping, tfList []any) []awstypes.NatGatewayCreateMapping {
+	index := make(map[string]int)
+	for i, v := range tfList {
+		if tfMap, ok := v.(map[string]any); ok {
+			index[tfMap[names.AttrSubnetID].(string)] = i
+		}
+	}
+
+	key := func(apiObject awstypes.NatGatewayCreateMapping) (int, string) {
+		subnetID := aws.ToString(apiObject.SubnetId)
+		if i, ok := index[subnetID]; ok {
+			return i, subnetID
+		}
+		return len(tfList), subnetID
+	}
+
+	apiObjects = slices.Clone(apiObjects)
+	slices.SortStableFunc(apiObjects, func(a, b awstypes.NatGatewayCreateMapping) int {
+		ai, as := key(a)
+		bi, bs := key(b)
+		return cmp.Or(cmp.Compare(ai, bi), cmp.Compare(as, bs))
+	})
+
+	return apiObjects
 }
 
 func statusFirewall(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {

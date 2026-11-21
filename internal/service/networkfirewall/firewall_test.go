@@ -671,10 +671,10 @@ func testAccFirewall_NATProxy_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways", "nat_gateway_create_mapping"},
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
 			},
-			// DescribeFirewall doesn't return the NAT gateway mappings, so an imported firewall adopts them from configuration
-			// with an in-place update instead of being replaced.
+			// An imported firewall reads its NAT gateway mappings from the NAT gateways, so it isn't replaced.
+			// delete_associated_nat_gateways isn't imported, which leaves an in-place update.
 			{
 				ResourceName:       resourceName,
 				ImportState:        true,
@@ -730,7 +730,7 @@ func testAccFirewall_NATProxy_privateNATGateway(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways", "nat_gateway_create_mapping"},
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
 			},
 			{
 				Config: testAccFirewallConfig_natProxyPrivateNATGateway(rName, 11),
@@ -777,7 +777,7 @@ func testAccFirewall_NATProxy_listenerProperties(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways", "nat_gateway_create_mapping"},
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
 			},
 			{
 				Config: testAccFirewallConfig_natProxyListenerProperties2(rName, 8081, string(awstypes.ListenerPropertyTypeHttp), 8444, string(awstypes.ListenerPropertyTypeHttps)),
@@ -831,7 +831,7 @@ func testAccFirewall_NATProxy_customDomain(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways", "nat_gateway_create_mapping"},
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
 			},
 			// UpdateProxySettings must repeat the custom hostname and certificate.
 			{

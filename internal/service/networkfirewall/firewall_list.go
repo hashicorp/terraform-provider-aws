@@ -63,7 +63,7 @@ func (l *firewallListResource) List(ctx context.Context, request list.ListReques
 					continue
 				}
 
-				if diags := resourceFirewallFlatten(ctx, rd, output); diags.HasError() {
+				if diags := resourceFirewallFlatten(ctx, rd, l.Meta().EC2Client(ctx), output); diags.HasError() {
 					tflog.Error(ctx, "Reading NetworkFirewall Firewall", map[string]any{
 						"error": sdkdiag.DiagnosticsString(diags),
 					})
