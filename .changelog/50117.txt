@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_datazone_environment_blueprint_configuration: Add `environment_role_permission_boundary` argument
+```
