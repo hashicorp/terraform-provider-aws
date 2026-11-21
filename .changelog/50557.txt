@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Route major engine version upgrades through `ModifyGlobalCluster` when cluster is a global database member
+```
