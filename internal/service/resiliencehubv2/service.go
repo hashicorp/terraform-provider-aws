@@ -10,10 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehubv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -48,6 +50,61 @@ type serviceResource struct {
 	framework.WithImportByIdentity
 }
 
+// ModifyPlan marks the computed-only dev_ops_agent_status block as unknown whenever it may
+// change on apply: on create, and on update when the writable dev_ops_agent_configuration
+// changes (connect/reconnect/disconnect). The DevOps Agent connection status is resolved by
+// the service (CONNECTING synchronously, then CONNECTED/FAILED out-of-band, DISCONNECTED on
+// opt-out), so a stale planned value would otherwise trigger "inconsistent result after apply".
+// When the configuration is unchanged, the prior value is retained to keep plans quiet.
+func (r *serviceResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	// No plan on destroy.
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	// Create: no prior state. Status is resolved by the service, so mark it unknown.
+	if req.State.Raw.IsNull() {
+		setDevOpsAgentStatusUnknown(ctx, resp)
+		return
+	}
+
+	var plan, state serviceResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Update: if the writable configuration changes, the status will be recomputed on apply, so
+	// mark it unknown. Otherwise pin the status attributes to their prior state values (like
+	// UseStateForUnknown) so an unrelated update (e.g. tags-only) does not leave them unknown —
+	// Update only re-flattens when the diff has changes, so unresolved unknowns would otherwise
+	// persist into state. Only the DevOps Agent status attributes are touched here; everything
+	// else (including the framework-managed region) is left as planned.
+	if !plan.DevOpsAgentConfiguration.Equal(state.DevOpsAgentConfiguration) {
+		setDevOpsAgentStatusUnknown(ctx, resp)
+	} else {
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_status"), state.DevOpsAgentStatus)...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_space_id"), state.DevOpsAgentSpaceID)...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_region"), state.DevOpsAgentRegion)...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_operator_app_url"), state.DevOpsAgentOperatorAppURL)...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_connected_at"), state.DevOpsAgentConnectedAt)...)
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_status_reason"), state.DevOpsAgentStatusReason)...)
+	}
+}
+
+// setDevOpsAgentStatusUnknown marks every computed DevOps Agent status attribute unknown so the
+// value resolved on apply (which the service controls) does not conflict with the plan. It sets
+// only those attributes, leaving the rest of the plan intact.
+func setDevOpsAgentStatusUnknown(ctx context.Context, resp *resource.ModifyPlanResponse) {
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_status"), fwtypes.StringEnumUnknown[awstypes.DevOpsAgentConnectionStatus]())...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_space_id"), types.StringUnknown())...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_region"), types.StringUnknown())...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_operator_app_url"), types.StringUnknown())...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_connected_at"), timetypes.NewRFC3339Unknown())...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("dev_ops_agent_status_reason"), types.StringUnknown())...)
+}
+
 func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = fwschema.Schema{
 		Attributes: map[string]fwschema.Attribute{
@@ -65,6 +122,32 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 615),
 				},
+			},
+			// Computed-only, read-side view of the DevOps Agent connection. The provider is
+			// served over Terraform protocol v5 (via the SDKv2 mux), which does not support
+			// nested attributes, and blocks cannot be marked unknown at plan time. These are
+			// therefore flattened to top-level computed scalar attributes, which ModifyPlan can
+			// mark unknown when the connection may change (status transitions out-of-band:
+			// CONNECTING -> CONNECTED/FAILED, and on disconnect -> DISCONNECTED).
+			"dev_ops_agent_status": fwschema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DevOpsAgentConnectionStatus](),
+				Computed:   true,
+			},
+			"dev_ops_agent_space_id": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"dev_ops_agent_region": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"dev_ops_agent_operator_app_url": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"dev_ops_agent_connected_at": fwschema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"dev_ops_agent_status_reason": fwschema.StringAttribute{
+				Computed: true,
 			},
 			names.AttrKMSKeyID: fwschema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -98,6 +181,20 @@ func (r *serviceResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]fwschema.Block{
+			"dev_ops_agent_configuration": fwschema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[devOpsAgentConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: fwschema.NestedBlockObject{
+					Attributes: map[string]fwschema.Attribute{
+						"agent_space_arn": fwschema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+						},
+					},
+				},
+			},
 			"associated_system": fwschema.SetNestedBlock{
 				CustomType: fwtypes.NewSetNestedObjectTypeOf[associatedSystemModel](ctx),
 				Validators: []validator.Set{
@@ -177,9 +274,9 @@ func (r *serviceResource) Create(ctx context.Context, req resource.CreateRequest
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	output, err := tfresource.RetryWhenIsAErrorMessageContains[*resiliencehubv2.CreateServiceOutput, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (*resiliencehubv2.CreateServiceOutput, error) {
+	output, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*resiliencehubv2.CreateServiceOutput, error) {
 		return conn.CreateService(ctx, &input)
-	}, "Ensure the role exists and its trust policy allows access")
+	}, isServiceRoleNotReady)
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.Name, name)
 		return
@@ -254,11 +351,26 @@ func (r *serviceResource) Update(ctx context.Context, req resource.UpdateRequest
 			input.AssociatedSystems = []awstypes.AssociatedSystem{}
 		}
 
-		_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.ValidationException](ctx, propagationTimeout, func(ctx context.Context) (any, error) {
+		// UpdateService treats an omitted DevOpsAgentConfiguration as "no change". To
+		// disconnect, the API expects the block present but without an agentSpaceArn.
+		// So when the plan removes dev_ops_agent_configuration that previously existed,
+		// send an explicit empty configuration to clear the linkage.
+		if input.DevOpsAgentConfiguration == nil && state.DevOpsAgentConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 {
+			input.DevOpsAgentConfiguration = &awstypes.DevOpsAgentConfiguration{}
+		}
+
+		output, err := tfresource.RetryWhen(ctx, propagationTimeout, func(ctx context.Context) (*resiliencehubv2.UpdateServiceOutput, error) {
 			return conn.UpdateService(ctx, &input)
-		}, "Ensure the role exists and its trust policy allows access")
+		}, isServiceRoleNotReady)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, arn)
+			return
+		}
+
+		// Re-flatten the updated service so computed values (e.g. dev_ops_agent_status)
+		// reflect the server's post-update state rather than the prior plan.
+		smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output.Service, &plan))
+		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
@@ -306,9 +418,64 @@ func (r *serviceResource) flatten(ctx context.Context, svc *awstypes.Service, da
 		}
 	}
 
+	// The DevOps Agent integration surfaces as the writable dev_ops_agent_configuration
+	// block (agent_space_arn only) plus the computed-only, flattened dev_ops_agent_* status
+	// attributes. Both are derived from the single read-side view (svc.DevOpsAgentConfiguration).
+	//
+	// The service returns the view whenever the service has ever been linked: while
+	// CONNECTING/CONNECTED the view carries an agent_space_arn, and after a disconnect the view
+	// is still returned with status=DISCONNECTED but a nil agent_space_arn. The view is omitted
+	// entirely only for a service that was never linked. So key the writable
+	// dev_ops_agent_configuration on a non-nil agent_space_arn (null once disconnected, keeping
+	// it in sync with a config that no longer sets it), and populate the status attributes
+	// whenever the view is present (so a disconnected service still reports DISCONNECTED).
+	data.DevOpsAgentConfiguration = fwtypes.NewListNestedObjectValueOfNull[devOpsAgentConfigurationModel](ctx)
+	data.DevOpsAgentStatus = fwtypes.StringEnumNull[awstypes.DevOpsAgentConnectionStatus]()
+	data.DevOpsAgentSpaceID = types.StringNull()
+	data.DevOpsAgentRegion = types.StringNull()
+	data.DevOpsAgentOperatorAppURL = types.StringNull()
+	data.DevOpsAgentConnectedAt = timetypes.NewRFC3339Null()
+	data.DevOpsAgentStatusReason = types.StringNull()
+	if v := svc.DevOpsAgentConfiguration; v != nil {
+		if v.AgentSpaceArn != nil {
+			data.DevOpsAgentConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &devOpsAgentConfigurationModel{
+				AgentSpaceARN: fwtypes.ARNValue(aws.ToString(v.AgentSpaceArn)),
+			})
+		}
+		if v.Status != "" {
+			data.DevOpsAgentStatus = fwtypes.StringEnumValue(v.Status)
+		}
+		data.DevOpsAgentSpaceID = fwflex.StringToFramework(ctx, v.AgentSpaceId)
+		data.DevOpsAgentRegion = fwflex.StringToFramework(ctx, v.Region)
+		data.DevOpsAgentOperatorAppURL = fwflex.StringToFramework(ctx, v.OperatorAppUrl)
+		data.DevOpsAgentStatusReason = fwflex.StringToFramework(ctx, v.StatusReason)
+		if v.ConnectedAt != nil {
+			data.DevOpsAgentConnectedAt = timetypes.NewRFC3339TimeValue(aws.ToTime(v.ConnectedAt))
+		}
+	}
+
 	setTagsOut(ctx, svc.Tags)
 
 	return diags
+}
+
+// isServiceRoleNotReady marks the IAM-propagation races that CreateService/UpdateService can hit
+// as retryable. The invoker role (and, when linking a DevOps Agent Agent Space, its aidevops
+// permissions) may have just been created, so Resilience Hub's cross-account assume/validation
+// can transiently fail until IAM propagates.
+func isServiceRoleNotReady(err error) (bool, error) {
+	if err == nil {
+		return false, nil
+	}
+	// Invoker role / trust policy not yet usable.
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "Ensure the role exists and its trust policy allows access") {
+		return true, err
+	}
+	// Role lacks (freshly granted) DevOps Agent permissions.
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "not authorized to call DevOps Agent") {
+		return true, err
+	}
+	return false, err
 }
 
 func findServiceByARN(ctx context.Context, conn *resiliencehubv2.Client, arn string) (*awstypes.Service, error) {
@@ -341,17 +508,28 @@ func findService(ctx context.Context, conn *resiliencehubv2.Client, input *resil
 
 type serviceResourceModel struct {
 	framework.WithRegionModel
-	AssociatedSystems   fwtypes.SetNestedObjectValueOf[associatedSystemModel] `tfsdk:"associated_system"`
-	DependencyDiscovery fwtypes.StringEnum[awstypes.DependencyDiscoveryInput] `tfsdk:"dependency_discovery" autoflex:",noflatten"`
-	Description         types.String                                          `tfsdk:"description"`
-	KMSKeyID            fwtypes.ARN                                           `tfsdk:"kms_key_id"`
-	Name                types.String                                          `tfsdk:"name"`
-	PermissionModel     fwtypes.ListNestedObjectValueOf[permissionModelModel] `tfsdk:"permission_model"`
-	PolicyARN           fwtypes.ARN                                           `tfsdk:"policy_arn"`
-	Regions             fwtypes.SetOfString                                   `tfsdk:"regions"`
-	ServiceARN          types.String                                          `tfsdk:"arn"`
-	Tags                tftags.Map                                            `tfsdk:"tags"`
-	TagsAll             tftags.Map                                            `tfsdk:"tags_all"`
+	AssociatedSystems         fwtypes.SetNestedObjectValueOf[associatedSystemModel]          `tfsdk:"associated_system"`
+	DependencyDiscovery       fwtypes.StringEnum[awstypes.DependencyDiscoveryInput]          `tfsdk:"dependency_discovery" autoflex:",noflatten"`
+	Description               types.String                                                   `tfsdk:"description"`
+	DevOpsAgentConfiguration  fwtypes.ListNestedObjectValueOf[devOpsAgentConfigurationModel] `tfsdk:"dev_ops_agent_configuration" autoflex:",noflatten"`
+	DevOpsAgentConnectedAt    timetypes.RFC3339                                              `tfsdk:"dev_ops_agent_connected_at" autoflex:"-"`
+	DevOpsAgentOperatorAppURL types.String                                                   `tfsdk:"dev_ops_agent_operator_app_url" autoflex:"-"`
+	DevOpsAgentRegion         types.String                                                   `tfsdk:"dev_ops_agent_region" autoflex:"-"`
+	DevOpsAgentSpaceID        types.String                                                   `tfsdk:"dev_ops_agent_space_id" autoflex:"-"`
+	DevOpsAgentStatus         fwtypes.StringEnum[awstypes.DevOpsAgentConnectionStatus]       `tfsdk:"dev_ops_agent_status" autoflex:"-"`
+	DevOpsAgentStatusReason   types.String                                                   `tfsdk:"dev_ops_agent_status_reason" autoflex:"-"`
+	KMSKeyID                  fwtypes.ARN                                                    `tfsdk:"kms_key_id"`
+	Name                      types.String                                                   `tfsdk:"name"`
+	PermissionModel           fwtypes.ListNestedObjectValueOf[permissionModelModel]          `tfsdk:"permission_model"`
+	PolicyARN                 fwtypes.ARN                                                    `tfsdk:"policy_arn"`
+	Regions                   fwtypes.SetOfString                                            `tfsdk:"regions"`
+	ServiceARN                types.String                                                   `tfsdk:"arn"`
+	Tags                      tftags.Map                                                     `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                     `tfsdk:"tags_all"`
+}
+
+type devOpsAgentConfigurationModel struct {
+	AgentSpaceARN fwtypes.ARN `tfsdk:"agent_space_arn"`
 }
 
 type associatedSystemModel struct {

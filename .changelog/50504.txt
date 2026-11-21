@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_resiliencehubv2_service: Add `dev_ops_agent_configuration` configuration block and `dev_ops_agent_status`, `dev_ops_agent_space_id`, `dev_ops_agent_region`, `dev_ops_agent_operator_app_url`, `dev_ops_agent_connected_at`, and `dev_ops_agent_status_reason` attributes to support linking a service to an AWS DevOps Agent Agent Space
+```
+
+```release-note:enhancement
+data-source/aws_resiliencehubv2_service: Add `dev_ops_agent_space_arn`, `dev_ops_agent_space_id`, `dev_ops_agent_region`, `dev_ops_agent_operator_app_url`, `dev_ops_agent_connected_at`, `dev_ops_agent_status`, and `dev_ops_agent_status_reason` attributes
+```
