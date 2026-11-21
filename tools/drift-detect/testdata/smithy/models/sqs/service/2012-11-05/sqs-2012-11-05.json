@@ -1,0 +1,140 @@
+{
+  "smithy": "2.0",
+  "shapes": {
+    "com.amazonaws.sqs#CreateQueueRequest": {
+      "type": "structure",
+      "members": {
+        "QueueName": {
+          "target": "smithy.api#String"
+        },
+        "Attributes": {
+          "target": "com.amazonaws.sqs#QueueAttributeMap"
+        }
+      }
+    },
+    "com.amazonaws.sqs#QueueAttributeMap": {
+      "type": "map",
+      "key": {
+        "target": "smithy.api#String"
+      },
+      "value": {
+        "target": "smithy.api#String"
+      }
+    },
+    "com.amazonaws.sqs#QueueAttributeName": {
+      "type": "enum",
+      "members": {
+        "DelaySeconds": {
+          "traits": {
+            "smithy.api#enumValue": "DelaySeconds"
+          }
+        },
+        "VisibilityTimeout": {
+          "traits": {
+            "smithy.api#enumValue": "VisibilityTimeout"
+          }
+        },
+        "MaximumMessageSize": {
+          "traits": {
+            "smithy.api#enumValue": "MaximumMessageSize"
+          }
+        },
+        "MessageRetentionPeriod": {
+          "traits": {
+            "smithy.api#enumValue": "MessageRetentionPeriod"
+          }
+        },
+        "ReceiveMessageWaitTimeSeconds": {
+          "traits": {
+            "smithy.api#enumValue": "ReceiveMessageWaitTimeSeconds"
+          }
+        },
+        "RedrivePolicy": {
+          "traits": {
+            "smithy.api#enumValue": "RedrivePolicy"
+          }
+        },
+        "FifoQueue": {
+          "traits": {
+            "smithy.api#enumValue": "FifoQueue"
+          }
+        },
+        "ContentBasedDeduplication": {
+          "traits": {
+            "smithy.api#enumValue": "ContentBasedDeduplication"
+          }
+        },
+        "KmsMasterKeyId": {
+          "traits": {
+            "smithy.api#enumValue": "KmsMasterKeyId"
+          }
+        },
+        "KmsDataKeyReusePeriodSeconds": {
+          "traits": {
+            "smithy.api#enumValue": "KmsDataKeyReusePeriodSeconds"
+          }
+        },
+        "SqsManagedSseEnabled": {
+          "traits": {
+            "smithy.api#enumValue": "SqsManagedSseEnabled"
+          }
+        },
+        "DeduplicationScope": {
+          "traits": {
+            "smithy.api#enumValue": "DeduplicationScope"
+          }
+        },
+        "FifoThroughputLimit": {
+          "traits": {
+            "smithy.api#enumValue": "FifoThroughputLimit"
+          }
+        },
+        "RedriveAllowPolicy": {
+          "traits": {
+            "smithy.api#enumValue": "RedriveAllowPolicy"
+          }
+        },
+        "QueueArn": {
+          "traits": {
+            "smithy.api#enumValue": "QueueArn"
+          }
+        },
+        "Policy": {
+          "traits": {
+            "smithy.api#enumValue": "Policy"
+          }
+        },
+        "All": {
+          "traits": {
+            "smithy.api#enumValue": "All"
+          }
+        },
+        "ApproximateNumberOfMessages": {
+          "traits": {
+            "smithy.api#enumValue": "ApproximateNumberOfMessages"
+          }
+        },
+        "ApproximateNumberOfMessagesNotVisible": {
+          "traits": {
+            "smithy.api#enumValue": "ApproximateNumberOfMessagesNotVisible"
+          }
+        },
+        "ApproximateNumberOfMessagesDelayed": {
+          "traits": {
+            "smithy.api#enumValue": "ApproximateNumberOfMessagesDelayed"
+          }
+        },
+        "CreatedTimestamp": {
+          "traits": {
+            "smithy.api#enumValue": "CreatedTimestamp"
+          }
+        },
+        "LastModifiedTimestamp": {
+          "traits": {
+            "smithy.api#enumValue": "LastModifiedTimestamp"
+          }
+        }
+      }
+    }
+  }
+}
