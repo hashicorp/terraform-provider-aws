@@ -19,6 +19,29 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) Actions(ctx context.Context) []*inttypes.ServicePackageAction {
+	return []*inttypes.ServicePackageAction{
+		{
+			Factory:  newRebootDBNodeAction,
+			TypeName: "aws_odb_reboot_db_node",
+			Name:     "Reboot DB Node",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newStartDBNodeAction,
+			TypeName: "aws_odb_start_db_node",
+			Name:     "Start DB Node",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newStopDBNodeAction,
+			TypeName: "aws_odb_stop_db_node",
+			Name:     "Stop DB Node",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
