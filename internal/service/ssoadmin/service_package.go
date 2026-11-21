@@ -23,6 +23,10 @@ func (p *servicePackage) withExtraOptions(ctx context.Context, config map[string
 		func(o *ssoadmin.Options) {
 			retryables := []retry.IsErrorRetryable{
 				retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
+					if errs.IsAErrorMessageContains[*types.ConflictException](err, "PermissionSet with name ") &&
+						errs.IsAErrorMessageContains[*types.ConflictException](err, " already exists") {
+						return aws.FalseTernary
+					}
 					if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.ThrottlingException](err) {
 						return aws.TrueTernary
 					}
