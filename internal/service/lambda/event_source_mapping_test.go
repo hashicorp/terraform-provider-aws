@@ -1281,6 +1281,82 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 	})
 }
 
+func TestAccLambdaEventSourceMapping_selfManagedKafkaConsumptionMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaConsumptionMode(rName, "Queue"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", rName+"-group-id"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumption_mode", "Queue"),
+					resource.TestCheckResourceAttr(resourceName, "starting_position", ""),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaConsumptionMode(rName, "Stream"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumption_mode", "Stream"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_selfManagedKafkaConsumptionModeQueueConflicts(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccEventSourceMappingConfig_selfManagedKafkaConsumptionModeQueueConflict(rName, `starting_position = "TRIM_HORIZON"`),
+				ExpectError: regexache.MustCompile(`starting_position cannot be set when\s+self_managed_kafka_event_source_config.0.consumption_mode is "Queue"`),
+			},
+			{
+				Config:      testAccEventSourceMappingConfig_selfManagedKafkaConsumptionModeQueueConflict(rName, `starting_position_timestamp = "2026-11-02T00:00:00Z"`),
+				ExpectError: regexache.MustCompile(`starting_position_timestamp cannot be set when`),
+			},
+			{
+				Config:      testAccEventSourceMappingConfig_selfManagedKafkaConsumptionModeQueueConflict(rName, `maximum_batching_window_in_seconds = 0`),
+				ExpectError: regexache.MustCompile(`maximum_batching_window_in_seconds cannot be set when`),
+			},
+		},
+	})
+}
+
 func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfigSchemaRegistry(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v lambda.GetEventSourceMappingOutput
@@ -3166,6 +3242,83 @@ resource "aws_lambda_event_source_mapping" "test" {
   }
 }
 `, rName, batchSize, kafkaBootstrapServers))
+}
+
+func testAccEventSourceMappingConfig_selfManagedKafkaConsumptionMode(rName, consumptionMode string) string {
+	// Stream mode needs a starting position; Queue mode rejects one.
+	startingPosition := "null"
+	if consumptionMode == string(awstypes.KafkaEventSourceMappingConsumptionModeStream) {
+		startingPosition = `"TRIM_HORIZON"`
+	}
+
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled           = false
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = %[3]s
+
+  self_managed_kafka_event_source_config {
+    consumer_group_id = "%[1]s-group-id"
+    consumption_mode  = %[2]q
+  }
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "test1:9092,test2:9092"
+    }
+  }
+
+  dynamic "source_access_configuration" {
+    for_each = aws_subnet.test[*].id
+    content {
+      type = "VPC_SUBNET"
+      uri  = "subnet:${source_access_configuration.value}"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = aws_security_group.test.id
+  }
+}
+`, rName, consumptionMode, startingPosition))
+}
+
+func testAccEventSourceMappingConfig_selfManagedKafkaConsumptionModeQueueConflict(rName, conflictingArgument string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  enabled       = false
+  function_name = aws_lambda_function.test.arn
+  topics        = ["test"]
+
+  %[2]s
+
+  self_managed_kafka_event_source_config {
+    consumer_group_id = "%[1]s-group-id"
+    consumption_mode  = "Queue"
+  }
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = "test1:9092,test2:9092"
+    }
+  }
+
+  dynamic "source_access_configuration" {
+    for_each = aws_subnet.test[*].id
+    content {
+      type = "VPC_SUBNET"
+      uri  = "subnet:${source_access_configuration.value}"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = aws_security_group.test.id
+  }
+}
+`, rName, conflictingArgument))
 }
 
 func testAccEventSourceMappingConfig_selfManagedKafkaWithEventSourceConfigSchemaRegistryByConfluent(rName string) string {
