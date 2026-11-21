@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sesv2_tenant: Add `reputation_entity_policy` argument
+```

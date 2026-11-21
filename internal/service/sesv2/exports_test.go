@@ -29,6 +29,7 @@ var (
 	FindEmailIdentityByID                            = findEmailIdentityByID
 	FindEmailIdentityPolicyByTwoPartKey              = findEmailIdentityPolicyByTwoPartKey
 	FindMultiRegionEndpointByName                    = findMultiRegionEndpointByName
+	FindReputationEntityPolicyByReference            = findReputationEntityPolicyByReference
 	FindTenantByName                                 = findTenantByName
 	FindTenantResourceAssociationByID                = findTenantResourceAssociationByTwoPartKey
 )
