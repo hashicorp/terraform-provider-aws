@@ -147,6 +147,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 	}
 }
 
+func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageSDKListResource] {
+	return slices.Values([]*inttypes.ServicePackageSDKListResource{
+		{
+			Factory:  newFirewallResourceAsListResource,
+			TypeName: "aws_networkfirewall_firewall",
+			Name:     "Firewall",
+			Region:   inttypes.ResourceRegionDefault(),
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Identity: inttypes.RegionalARNIdentity(),
+		},
+	})
+}
+
 func (p *servicePackage) ServicePackageName() string {
 	return names.NetworkFirewall
 }
