@@ -225,6 +225,7 @@ An `action` block supports the following arguments:
 * `version` - (Required) A string that identifies the action type.
 * `commands` - (Optional) A list of shell commands to run with the compute action.
 * `configuration` - (Optional) A map of the action declaration's configuration. Configurations options for action types and providers can be found in the [Pipeline Structure Reference](http://docs.aws.amazon.com/codepipeline/latest/userguide/reference-pipeline-structure.html#action-requirements) and [Action Structure Reference](https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference.html) documentation. Note: The `DetectChanges` parameter (optional, default value is true) in the `configuration` section causes CodePipeline to automatically start your pipeline upon new commits. Please refer to AWS Documentation for more details: https://docs.aws.amazon.com/codepipeline/latest/userguide/action-reference-CodestarConnectionSource.html#action-reference-CodestarConnectionSource-config.
+* `environment_variable` - (Optional) Environment variables for the action. Maximum of 10. See [`environment_variable` Block](#environment_variable-block) below.
 * `input_artifacts` - (Optional) A list of artifact names to be worked on.
 * `output_artifacts` - (Optional) A list of artifact names to output. Output artifact names must be unique within a pipeline. If the action is `Compute`, this argument is ignored.
 * `output_artifacts_for_compute_action` - (Optional) A block of output artifacts for the compute action. If the action is not `Compute`, this argument is ignored.
@@ -235,6 +236,14 @@ An `action` block supports the following arguments:
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
+
+#### `environment_variable` Block
+
+An `environment_variable` block supports the following arguments:
+
+* `name` - (Required) Name of the environment variable.
+* `value` - (Required) Value of the environment variable. If `type` is `SECRETS_MANAGER`, the name or ARN of the Secrets Manager secret.
+* `type` - (Optional) Type of the environment variable. Valid values are `PLAINTEXT` and `SECRETS_MANAGER`. Default value: `PLAINTEXT`.
 
 #### `before_entry`
 
