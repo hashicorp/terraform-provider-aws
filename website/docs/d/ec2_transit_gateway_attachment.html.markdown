@@ -46,6 +46,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the attachment.
 * `association_state` - The state of the association (see [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_TransitGatewayAttachmentAssociation.html) for valid values).
 * `association_transit_gateway_route_table_id` - The ID of the route table for the transit gateway.
+* `nat_gateway_support` - State of 1:1 NAT gateway support on the attachment, such as `enabled` or `disabled`. Only returned to the transit gateway owner. See [1:1 NAT in AWS Transit Gateway](https://docs.aws.amazon.com/vpc/latest/tgw/tgw-nat.html).
 * `resource_id` - ID of the resource.
 * `resource_owner_id` - ID of the AWS account that owns the resource.
 * `resource_type` - Resource type.

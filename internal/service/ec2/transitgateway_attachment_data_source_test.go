@@ -34,6 +34,7 @@ func testAccTransitGatewayAttachmentDataSource_Filter(t *testing.T, semaphore tf
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "nat_gateway_support", "disabled"),
 					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "resource_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
@@ -70,6 +71,7 @@ func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T, semaphore tfsync
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, dataSourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceID, resourceName, names.AttrVPCID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "nat_gateway_support", "disabled"),
 					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "resource_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrResourceType, "vpc"),
 					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
@@ -79,6 +81,32 @@ func testAccTransitGatewayAttachmentDataSource_ID(t *testing.T, semaphore tfsync
 					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "transit_gateway_owner_id"),
 					resource.TestCheckResourceAttr(dataSourceName, "association_state", "associated"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "association_transit_gateway_route_table_id"),
+				),
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayAttachmentDataSource_natGatewaySupport(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ec2_transit_gateway_attachment.test"
+	resourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayAttachmentDataSourceConfig_natGatewaySupport(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "nat_gateway_support", names.AttrEnabled),
 				),
 			},
 		},
@@ -146,4 +174,14 @@ data "aws_ec2_transit_gateway_attachment" "test" {
   transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
 }
 `, rName))
+}
+
+func testAccTransitGatewayAttachmentDataSourceConfig_natGatewaySupport(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayAttachmentNATConfigurationConfig_basic(rName), `
+data "aws_ec2_transit_gateway_attachment" "test" {
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_vpc_attachment.test.id
+
+  depends_on = [aws_ec2_transit_gateway_attachment_nat_configuration.test]
+}
+`)
 }
