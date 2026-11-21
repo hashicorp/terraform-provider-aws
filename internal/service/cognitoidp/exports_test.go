@@ -5,31 +5,33 @@ package cognitoidp
 
 // Exports for use in tests only.
 var (
-	ResourceIdentityProvider         = resourceIdentityProvider
-	ResourceLogDeliveryConfiguration = newLogDeliveryConfigurationResource
-	ResourceManagedLoginBranding     = newManagedLoginBrandingResource
-	ResourceManagedUserPoolClient    = newManagedUserPoolClientResource
-	ResourceResourceServer           = resourceResourceServer
-	ResourceRiskConfiguration        = resourceRiskConfiguration
-	ResourceUser                     = resourceUser
-	ResourceUserGroup                = resourceUserGroup
-	ResourceUserInGroup              = resourceUserInGroup
-	ResourceUserPool                 = resourceUserPool
-	ResourceUserPoolClient           = newUserPoolClientResource
-	ResourceUserPoolDomain           = resourceUserPoolDomain
-	ResourceUserPoolUICustomization  = resourceUserPoolUICustomization
+	ResourceIdentityProvider             = resourceIdentityProvider
+	ResourceLogDeliveryConfiguration     = newLogDeliveryConfigurationResource
+	ResourceManagedLoginBranding         = newManagedLoginBrandingResource
+	ResourceManagedUserPoolClient        = newManagedUserPoolClientResource
+	ResourceResourceServer               = resourceResourceServer
+	ResourceRiskConfiguration            = resourceRiskConfiguration
+	ResourceUser                         = resourceUser
+	ResourceUserGroup                    = resourceUserGroup
+	ResourceUserInGroup                  = resourceUserInGroup
+	ResourceUserPool                     = resourceUserPool
+	ResourceUserPoolClient               = newUserPoolClientResource
+	ResourceUserPoolDomain               = resourceUserPoolDomain
+	ResourceUserPoolSessionConfiguration = newUserPoolSessionConfigurationResource
+	ResourceUserPoolUICustomization      = resourceUserPoolUICustomization
 
-	FindGroupByTwoPartKey                    = findGroupByTwoPartKey
-	FindGroupUserByThreePartKey              = findGroupUserByThreePartKey
-	FindIdentityProviderByTwoPartKey         = findIdentityProviderByTwoPartKey
-	FindLogDeliveryConfigurationByUserPoolID = findLogDeliveryConfigurationByUserPoolID
-	FindManagedLoginBrandingByThreePartKey   = findManagedLoginBrandingByThreePartKey
-	FindResourceServerByTwoPartKey           = findResourceServerByTwoPartKey
-	FindRiskConfigurationByTwoPartKey        = findRiskConfigurationByTwoPartKey
-	FindUserByTwoPartKey                     = findUserByTwoPartKey
-	FindUserPoolByID                         = findUserPoolByID
-	FindUserPoolClientByName                 = findUserPoolClientByName
-	FindUserPoolClientByTwoPartKey           = findUserPoolClientByTwoPartKey
-	FindUserPoolDomain                       = findUserPoolDomain
-	FindUserPoolUICustomizationByTwoPartKey  = findUserPoolUICustomizationByTwoPartKey
+	FindGroupByTwoPartKey                        = findGroupByTwoPartKey
+	FindGroupUserByThreePartKey                  = findGroupUserByThreePartKey
+	FindIdentityProviderByTwoPartKey             = findIdentityProviderByTwoPartKey
+	FindLogDeliveryConfigurationByUserPoolID     = findLogDeliveryConfigurationByUserPoolID
+	FindManagedLoginBrandingByThreePartKey       = findManagedLoginBrandingByThreePartKey
+	FindResourceServerByTwoPartKey               = findResourceServerByTwoPartKey
+	FindRiskConfigurationByTwoPartKey            = findRiskConfigurationByTwoPartKey
+	FindUserByTwoPartKey                         = findUserByTwoPartKey
+	FindUserPoolByID                             = findUserPoolByID
+	FindUserPoolClientByName                     = findUserPoolClientByName
+	FindUserPoolClientByTwoPartKey               = findUserPoolClientByTwoPartKey
+	FindUserPoolDomain                           = findUserPoolDomain
+	FindUserPoolSessionConfigurationByUserPoolID = findUserPoolSessionConfigurationByUserPoolID
+	FindUserPoolUICustomizationByTwoPartKey      = findUserPoolUICustomizationByTwoPartKey
 )

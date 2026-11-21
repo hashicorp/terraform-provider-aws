@@ -72,6 +72,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "User Pool Client",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newUserPoolSessionConfigurationResource,
+			TypeName: "aws_cognito_user_pool_session_configuration",
+			Name:     "User Pool Session Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrUserPoolID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
 }
 
