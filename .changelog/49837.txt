@@ -1,0 +1,4 @@
+```release-note:bug
+provider: Do not retry on Cognito Identity Provider `LimitExceededException`, which always indicates a non-retryable service quota (e.g. groups per user pool, user pool clients per user pool). Affects `aws_cognito_user_group`, `aws_cognito_user_pool_client`, `aws_cognito_identity_provider`, `aws_cognito_resource_server`, `aws_cognito_user_pool`, `aws_cognito_user_pool_domain`, and `aws_cognito_managed_login_branding`.
+```
+
