@@ -6,6 +6,7 @@ package wafv2
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -2084,19 +2085,26 @@ type webACLRuleImmunityTimeModel struct {
 	ImmunityTimeProperty fwtypes.ListNestedObjectValueOf[webACLRuleImmunityTimePropertyModel] `tfsdk:"immunity_time_property"`
 }
 
-func (m webACLRuleImmunityTimeModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	cfg := &awstypes.CaptchaConfig{}
+func (m webACLRuleImmunityTimeModel) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
+	var itp *awstypes.ImmunityTimeProperty
 	if !m.ImmunityTimeProperty.IsNull() {
 		itpData, d := m.ImmunityTimeProperty.ToPtr(ctx)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
 		}
-		cfg.ImmunityTimeProperty = &awstypes.ImmunityTimeProperty{
+		itp = &awstypes.ImmunityTimeProperty{
 			ImmunityTime: itpData.ImmunityTime.ValueInt64Pointer(),
 		}
 	}
-	return cfg, diags
+
+	switch targetType {
+	case reflect.TypeFor[awstypes.CaptchaConfig](), reflect.TypeFor[*awstypes.CaptchaConfig]():
+		return &awstypes.CaptchaConfig{ImmunityTimeProperty: itp}, diags
+	case reflect.TypeFor[awstypes.ChallengeConfig](), reflect.TypeFor[*awstypes.ChallengeConfig]():
+		return &awstypes.ChallengeConfig{ImmunityTimeProperty: itp}, diags
+	}
+	return nil, diags
 }
 
 func (m *webACLRuleImmunityTimeModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
@@ -2104,10 +2112,14 @@ func (m *webACLRuleImmunityTimeModel) Flatten(ctx context.Context, v any) (diags
 
 	var itp *awstypes.ImmunityTimeProperty
 	switch cfg := v.(type) {
+	case awstypes.CaptchaConfig:
+		itp = cfg.ImmunityTimeProperty
 	case *awstypes.CaptchaConfig:
 		if cfg != nil {
 			itp = cfg.ImmunityTimeProperty
 		}
+	case awstypes.ChallengeConfig:
+		itp = cfg.ImmunityTimeProperty
 	case *awstypes.ChallengeConfig:
 		if cfg != nil {
 			itp = cfg.ImmunityTimeProperty
