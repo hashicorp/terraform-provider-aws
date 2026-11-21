@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssmquicksetup_configuration_manager: Fix `Provider produced inconsistent result after apply` error caused by AWS returning an unexpected `QSForceUpdateParam` key in `configuration_definition.parameters`
+```
