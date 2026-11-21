@@ -261,7 +261,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.SetId(aws.ToString(outputRaw.(*sqs.CreateQueueOutput).QueueUrl))
 
-	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining()); err != nil {
+	if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, deadline.Remaining(), queueContinuousTargetOccurrence(meta.(*conns.AWSClient).AssumeNoPropagationDelay(), queueAttributesPropagatedContinuousTargetOccurrence)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes create: %s", d.Id(), err)
 	}
 
@@ -353,7 +353,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			return sdkdiag.AppendErrorf(diags, "updating SQS Queue (%s) attributes: %s", d.Id(), err)
 		}
 
-		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := waitQueueAttributesPropagated(ctx, conn, d.Id(), attributes, d.Timeout(schema.TimeoutUpdate), queueContinuousTargetOccurrence(meta.(*conns.AWSClient).AssumeNoPropagationDelay(), queueAttributesPropagatedContinuousTargetOccurrence)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) attributes update: %s", d.Id(), err)
 		}
 	}
@@ -378,7 +378,7 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 		return sdkdiag.AppendErrorf(diags, "deleting SQS Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := waitQueueDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitQueueDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete), queueContinuousTargetOccurrence(meta.(*conns.AWSClient).AssumeNoPropagationDelay(), queueDeletedContinuousTargetOccurrence)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SQS Queue (%s) delete: %s", d.Id(), err)
 	}
 
@@ -610,15 +610,42 @@ func statusQueueAttributeState(conn *sqs.Client, url string, expected map[types.
 	}
 }
 
-func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration) error {
+const (
+	// Consecutive successful checks required for queue waiters, tuned to absorb
+	// AWS eventual consistency across regions and partitions - avoid lowering.
+	queueAttributesPropagatedContinuousTargetOccurrence = 6
+	queueDeletedContinuousTargetOccurrence              = 15
+)
+
+// queueContinuousTargetOccurrence resolves how many consecutive successful state
+// checks a queue waiter should require. It collapses to a single check when the
+// operator has asserted (via TF_AWS_ASSUME_NO_PROPAGATION_DELAY) that the
+// environment has no cross-service propagation delay, such as an in-process
+// emulator like LocalStack; otherwise it returns the conservative default tuned
+// for real AWS.
+func queueContinuousTargetOccurrence(assumeNoPropagationDelay bool, defaultOccurrence int) int {
+	if assumeNoPropagationDelay {
+		return 1
+	}
+
+	return defaultOccurrence
+}
+
+func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url string, expected map[types.QueueAttributeName]string, timeout time.Duration, continuousTargetOccurrence int) error {
+	minTimeout := 5 * time.Second // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+	if continuousTargetOccurrence <= 1 {
+		// No consecutive confirmations to space out, so don't idle between checks.
+		minTimeout = 1 * time.Second
+	}
+
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueAttributeStateNotEqual},
 		Target:                    []string{queueAttributeStateEqual},
 		Refresh:                   statusQueueAttributeState(conn, url, expected),
 		Timeout:                   timeout,
-		ContinuousTargetOccurence: 6,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
-		MinTimeout:                5 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
-		NotFoundChecks:            10,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		ContinuousTargetOccurence: continuousTargetOccurrence,
+		MinTimeout:                minTimeout,
+		NotFoundChecks:            10, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
@@ -626,15 +653,21 @@ func waitQueueAttributesPropagated(ctx context.Context, conn *sqs.Client, url st
 	return err
 }
 
-func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration) error {
+func waitQueueDeleted(ctx context.Context, conn *sqs.Client, url string, timeout time.Duration, continuousTargetOccurrence int) error {
+	minTimeout := 3 * time.Second // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+	if continuousTargetOccurrence <= 1 {
+		// No consecutive confirmations to space out, so don't idle between checks.
+		minTimeout = 1 * time.Second
+	}
+
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{queueStateExists},
 		Target:                    []string{},
 		Refresh:                   statusQueueState(conn, url),
 		Timeout:                   timeout,
-		ContinuousTargetOccurence: 15,              // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
-		MinTimeout:                3 * time.Second, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
-		NotFoundChecks:            5,               // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
+		ContinuousTargetOccurence: continuousTargetOccurrence,
+		MinTimeout:                minTimeout,
+		NotFoundChecks:            5, // set to accommodate GovCloud, commercial, China, etc. - avoid lowering
 	}
 
 	_, err := stateConf.WaitForStateContext(ctx)
