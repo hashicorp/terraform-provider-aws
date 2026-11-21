@@ -34,9 +34,17 @@ resource "aws_vpc_ipam_scope" "example" {
 This resource supports the following arguments:
 
 * `description` - (Optional) Description for the scope you're creating.
+* `external_authority_configuration` - (Optional) Configuration for linking the scope to an external IPAM authority. See [`external_authority_configuration` Block](#external_authority_configuration-block) below.
 * `ipam_id` - (Required) ID of the IPAM for which you're creating this scope.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `external_authority_configuration` Block
+
+The `external_authority_configuration` block supports:
+
+* `external_resource_identifier` - (Required) Identifier of the external resource managing this scope. For Infoblox, use the Infoblox resource identifier in the format `<version>.identity.account.<entity_realm>.<entity_id>`. See [Integrate VPC IPAM with Infoblox infrastructure](https://docs.aws.amazon.com/vpc/latest/ipam/integrate-infoblox-ipam.html) for details.
+* `type` - (Required) Type of external authority managing this scope. Valid value is `infoblox`.
 
 ## Attribute Reference
 
