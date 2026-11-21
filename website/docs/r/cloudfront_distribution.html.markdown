@@ -591,6 +591,7 @@ argument should not be specified.
 * `ip_address_type` (Optional) - IP protocol CloudFront uses when connecting to your origin. Valid values: `ipv4`, `ipv6`, `dualstack`.
 * `origin_protocol_policy` (Required) - Origin protocol policy to apply to your origin. One of `http-only`, `https-only`, or `match-viewer`.
 * `origin_ssl_protocols` (Required) - List of SSL/TLS protocols that CloudFront can use when connecting to your origin over HTTPS. Valid values: `SSLv3`, `TLSv1`, `TLSv1.1`, `TLSv1.2`. For more information, see [Minimum Origin SSL Protocol](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols) in the Amazon CloudFront Developer Guide.
+* `origin_http_version` - (Optional) HTTP version CloudFront uses for requests to the custom origin. Valid values: `http1.1`, `http2`. With `http2`, CloudFront offers HTTP/2 to the origin through ALPN over TLS 1.2 or later, and uses HTTP/1.1 if the origin does not negotiate HTTP/2. If not set, CloudFront uses HTTP/1.1.
 * `origin_keepalive_timeout` - (Optional) The Custom KeepAlive timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `5`.
 * `origin_mtls_config` - (Optional) The [origin mTLS configuration](#origin-mtls-config-arguments) for mutual TLS authentication between CloudFront and your origin.
 * `origin_read_timeout` - (Optional) The Custom Read timeout, in seconds. By default, AWS enforces an upper limit of `60`. But you can request an [increase](http://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/RequestAndResponseBehaviorCustomOrigin.html#request-custom-request-timeout). Defaults to `30`.
@@ -610,6 +611,7 @@ argument should not be specified.
 
 #### VPC Origin Config Arguments
 
+* `origin_http_version` - (Optional) HTTP version CloudFront uses for requests to the VPC origin. Valid values: `http1.1`, `http2`. With `http2`, CloudFront offers HTTP/2 to the origin through ALPN over TLS 1.2 or later, and uses HTTP/1.1 if the origin does not negotiate HTTP/2. If not set, CloudFront uses HTTP/1.1.
 * `origin_keepalive_timeout` - (Optional) Specifies how long, in seconds, CloudFront persists its connection to the origin. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `5`.
 * `origin_read_timeout` - (Optional) Specifies how long, in seconds, CloudFront waits for a response from the origin. This is also known as the _origin response timeout_. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `30`.
 * `owner_account_id` - (Optional) The AWS account ID that owns the VPC origin. Required when referencing a VPC origin from a different AWS account for cross-account VPC origin access.
