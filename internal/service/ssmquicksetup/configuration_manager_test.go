@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -97,6 +99,50 @@ func TestAccSSMQuickSetupConfigurationManager_disappears(t *testing.T) {
 						plancheck.ExpectResourceAction("aws_ssmquicksetup_configuration_manager.test", plancheck.ResourceActionCreate),
 					},
 				},
+			},
+		},
+	})
+}
+
+func TestAccSSMQuickSetupConfigurationManager_createTimeoutTaints(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssmquicksetup_configuration_manager.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SSMQuickSetupEndpointID)
+			testAccConfigurationManagerPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMQuickSetupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationManagerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccConfigurationManagerConfig_createTimeout(rName),
+				ExpectError: regexache.MustCompile(`waiting for SSM Quick Setup Configuration Manager \(.+\) create`),
+			},
+			{
+				// Let the deployment finish so that the tainted resource can be destroyed.
+				PreConfig: func() {
+					conn := acctest.ProviderMeta(ctx, t).SSMQuickSetupClient(ctx)
+					arn := testAccFindConfigurationManagerARNByName(ctx, t, conn, rName)
+					if _, err := tfssmquicksetup.WaitConfigurationManagerCreated(ctx, conn, arn, 20*time.Minute); err != nil {
+						t.Fatalf("waiting for SSM Quick Setup Configuration Manager (%s) create: %s", arn, err)
+					}
+				},
+				RefreshState: true,
+				RefreshPlanChecks: resource.RefreshPlanChecks{
+					PostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -313,6 +359,28 @@ func testAccCheckConfigurationManagerDestroy(ctx context.Context, t *testing.T) 
 	}
 }
 
+func testAccFindConfigurationManagerARNByName(ctx context.Context, t *testing.T, conn *ssmquicksetup.Client, name string) string {
+	t.Helper()
+
+	pages := ssmquicksetup.NewListConfigurationManagersPaginator(conn, &ssmquicksetup.ListConfigurationManagersInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			t.Fatalf("listing SSM Quick Setup Configuration Managers: %s", err)
+		}
+
+		for _, v := range page.ConfigurationManagersList {
+			if aws.ToString(v.Name) == name {
+				return aws.ToString(v.ManagerArn)
+			}
+		}
+	}
+
+	t.Fatalf("SSM Quick Setup Configuration Manager (%s) not found", name)
+
+	return ""
+}
+
 func testAccCheckConfigurationManagerExists(ctx context.Context, t *testing.T, n string, v *ssmquicksetup.GetConfigurationManagerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -393,6 +461,43 @@ resource "aws_ssmquicksetup_configuration_manager" "test" {
       "TargetRegions" : data.aws_region.current.region,
       "TargetType" : "*"
     }
+  }
+}
+`, rName))
+}
+
+func testAccConfigurationManagerConfig_createTimeout(rName string) string {
+	return acctest.ConfigCompose(
+		testAccConfigurationManagerConfigBase_patchPolicy(rName),
+		fmt.Sprintf(`
+resource "aws_ssmquicksetup_configuration_manager" "test" {
+  name = %[1]q
+
+  configuration_definition {
+    local_deployment_administration_role_arn = local.local_deployment_administration_role_arn
+    local_deployment_execution_role_name     = local.local_deployment_execution_role_name
+    type                                     = "AWSQuickSetupType-PatchPolicy"
+
+    parameters = {
+      "ConfigurationOptionsPatchOperation" : "Scan",
+      "ConfigurationOptionsScanValue" : "cron(0 1 * * ? *)",
+      "ConfigurationOptionsScanNextInterval" : "false",
+      "PatchBaselineRegion" : data.aws_region.current.region,
+      "PatchBaselineUseDefault" : "default",
+      "PatchPolicyName" : local.patch_policy_name,
+      "SelectedPatchBaselines" : local.selected_patch_baselines,
+      "OutputLogEnableS3" : "false",
+      "RateControlConcurrency" : "10%%",
+      "RateControlErrorThreshold" : "2%%",
+      "IsPolicyAttachAllowed" : "false",
+      "TargetAccounts" : data.aws_caller_identity.current.account_id,
+      "TargetRegions" : data.aws_region.current.region,
+      "TargetType" : "*"
+    }
+  }
+
+  timeouts {
+    create = "5s"
   }
 }
 `, rName))
