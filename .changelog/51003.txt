@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_kinesisanalyticsv2_snapshot
+```
+
+```release-note:new-resource
+aws_kinesisanalyticsv2_snapshot_import
+```
+
+```release-note:enhancement
+resource/aws_kinesisanalyticsv2_application: Add `application_configuration.application_snapshot_configuration.snapshot_mode` and `application_configuration.run_configuration.application_restore_configuration.snapshot_arn` arguments to support enhanced snapshots
+```

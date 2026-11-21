@@ -251,6 +251,41 @@ resource "aws_kinesisanalyticsv2_application" "example" {
 }
 ```
 
+### Enhanced Snapshots
+
+An enhanced snapshot is a standalone resource with its own ARN. Any application in enhanced snapshot mode in the same account and Region can restore it, and it can be imported from Amazon S3. Manage enhanced snapshots with [`aws_kinesisanalyticsv2_snapshot`](/docs/providers/aws/r/kinesisanalyticsv2_snapshot.html) and [`aws_kinesisanalyticsv2_snapshot_import`](/docs/providers/aws/r/kinesisanalyticsv2_snapshot_import.html). After an application opts in, [`aws_kinesisanalyticsv2_application_snapshot`](/docs/providers/aws/r/kinesisanalyticsv2_application_snapshot.html) can no longer create snapshots of it, and its existing application snapshots can no longer be restored.
+
+~> **NOTE:** Changing `snapshot_mode` from `APPLICATION_SNAPSHOTS_LEGACY` to `ENHANCED_SNAPSHOTS` is one-way. Terraform rejects a change back. The only reversal is an [`aws kinesisanalyticsv2 rollback-application`](https://docs.aws.amazon.com/cli/latest/reference/kinesisanalyticsv2/rollback-application.html) to the version before opt-in, which works only while the opt-in is the most recent update. Record `version_id` before opting in.
+
+To opt in an existing application without losing state:
+
+* Opt in while the application is running (`start_application = true`), with `snapshots_enabled = true`. Managed Service for Apache Flink then takes a final application snapshot and restarts the application in enhanced snapshot mode from it. If the application is not running, or `snapshots_enabled` is `false`, no such snapshot is taken and its current state is not carried over. Terraform reports this as a warning during apply, after the opt-in has been made, so check `status` before planning the change.
+* Create an `aws_kinesisanalyticsv2_snapshot` of the application in the same change. Until an enhanced snapshot exists, a restart with `RESTORE_FROM_LATEST_SNAPSHOT` starts the application without state.
+
+```terraform
+resource "aws_kinesisanalyticsv2_application" "example" {
+  # ... other configuration ...
+
+  application_configuration {
+    # ... other configuration ...
+
+    application_snapshot_configuration {
+      snapshots_enabled = true
+      snapshot_mode     = "ENHANCED_SNAPSHOTS"
+    }
+  }
+
+  start_application = true
+}
+
+resource "aws_kinesisanalyticsv2_snapshot" "example" {
+  application_name = aws_kinesisanalyticsv2_application.example.name
+  name             = "example-after-opt-in"
+}
+```
+
+In enhanced snapshot mode, the Terraform caller needs `kinesisanalytics:CreateSystemSnapshot` on the application ARN to start the application and, while it is running, to stop or update it.
+
 ## Argument Reference
 
 The following arguments are required:
@@ -316,7 +351,8 @@ The `application_encryption_configuration` configuration block supports the foll
 
 The `application_snapshot_configuration` configuration block supports the following arguments:
 
-* `snapshots_enabled` - (Required) Whether snapshots are enabled for a Flink-based application.
+* `snapshot_mode` - (Optional) Snapshot type the application uses. Valid values: `APPLICATION_SNAPSHOTS_LEGACY`, `ENHANCED_SNAPSHOTS`. Defaults to `APPLICATION_SNAPSHOTS_LEGACY`. `ENHANCED_SNAPSHOTS` requires `runtime_environment` `FLINK-1_20` or later. Changing from `APPLICATION_SNAPSHOTS_LEGACY` to `ENHANCED_SNAPSHOTS` is one-way. See [Enhanced Snapshots](#enhanced-snapshots) above.
+* `snapshots_enabled` - (Required) Whether system snapshots are enabled for a Flink-based application. In enhanced snapshot mode, [`aws_kinesisanalyticsv2_snapshot`](/docs/providers/aws/r/kinesisanalyticsv2_snapshot.html) works even when this is `false`.
 
 ### `environment_properties` Block
 
@@ -376,8 +412,11 @@ The `run_configuration` configuration block supports the following arguments:
 
 The `application_restore_configuration` configuration block supports the following arguments:
 
-* `application_restore_type` - (Optional) How the application should be restored. Valid values: `RESTORE_FROM_CUSTOM_SNAPSHOT`, `RESTORE_FROM_LATEST_SNAPSHOT`, `SKIP_RESTORE_FROM_SNAPSHOT`.
-* `snapshot_name` - (Optional) Identifier of an existing snapshot of application state to use to restart an application. The application uses this value if `RESTORE_FROM_CUSTOM_SNAPSHOT` is specified for `application_restore_type`.
+* `application_restore_type` - (Optional) How the application should be restored. Valid values: `RESTORE_FROM_CUSTOM_SNAPSHOT`, `RESTORE_FROM_LATEST_SNAPSHOT`, `SKIP_RESTORE_FROM_SNAPSHOT`. In enhanced snapshot mode, `RESTORE_FROM_LATEST_SNAPSHOT` restores the newest `READY` enhanced snapshot of the application and does not fall back to an application snapshot; with no enhanced snapshot, the application starts without state and no error is returned.
+* `snapshot_arn` - (Optional) ARN of an enhanced snapshot to restore, such as the `arn` of an [`aws_kinesisanalyticsv2_snapshot`](/docs/providers/aws/r/kinesisanalyticsv2_snapshot.html) or [`aws_kinesisanalyticsv2_snapshot_import`](/docs/providers/aws/r/kinesisanalyticsv2_snapshot_import.html). Requires `snapshot_mode = "ENHANCED_SNAPSHOTS"`. The snapshot can come from any application in the same account and Region. The application uses this value if `RESTORE_FROM_CUSTOM_SNAPSHOT` is specified for `application_restore_type`. Conflicts with `snapshot_name`.
+* `snapshot_name` - (Optional) Name of an existing application snapshot to restore. Applies to application snapshots (legacy) only. The application uses this value if `RESTORE_FROM_CUSTOM_SNAPSHOT` is specified for `application_restore_type`. Conflicts with `snapshot_arn`.
+
+~> **NOTE:** Restoring an enhanced snapshot requires the caller to have `kinesisanalytics:RestoreFromSnapshot` on the snapshot ARN, even for a snapshot created by the same application. Application-level permissions do not grant it.
 
 ### `flink_run_configuration` Block
 
