@@ -103,6 +103,10 @@ resource "aws_arcregionswitch_plan" "complex" {
 
         lambda {
           arn = aws_lambda_function.example.arn
+          payload = jsonencode({
+            customParam1 = "customValue1"
+            customParam2 = "customValue2"
+          })
         }
       }
     }
@@ -254,6 +258,7 @@ The following arguments are optional:
 * `arn` - (Required) ARN of the Lambda function.
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
 * `external_id` - (Optional) External ID for cross-account role assumption.
+* `payload` - (Optional) JSON payload to send to the Lambda function invocation. If omitted, Region switch invokes the function with only the execution metadata. If a JSON object is provided, Region switch merges the execution metadata keys (`InvokedBy`, `PlanArn`, `ExecutionId`, `StepName`) into its top level, with keys in the payload taking precedence. Any other JSON type is forwarded to the function unchanged.
 
 ### `workflow.step.custom_action_lambda_config.ungraceful` Block
 
