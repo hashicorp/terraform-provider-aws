@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-21T11:57:25.127232-05:00
+custom:
+    Body: Fix `Provider produced inconsistent result after apply` error when `captcha_config.immunity_time_property` is set
+    Impact: resource/aws_wafv2_web_acl_rule
+    PullRequest: "51217"
