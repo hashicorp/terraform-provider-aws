@@ -39,6 +39,7 @@ This resource supports the following arguments:
 
 * `async_inference_config` - (Optional) How an endpoint performs asynchronous inference.
 * `data_capture_config` - (Optional) Parameters to capture input/output of SageMaker AI models endpoints. Fields are documented below.
+* `enable_network_isolation` - (Optional) Sets whether all model containers deployed to the endpoint are isolated. If they are, no inbound or outbound network calls can be made to or from the model containers. Can only be set when `model_name` is not specified in `production_variants` (Inference Components endpoint).
 * `execution_role_arn` - (Optional) ARN of an IAM role that SageMaker AI can assume to perform actions on your behalf. Required when `model_name` is not specified in `production_variants` to support Inference Components.
 * `kms_key_arn` - (Optional) ARN of a AWS KMS key that SageMaker AI uses to encrypt data on the storage volume attached to the ML compute instance that hosts the endpoint.
 * `name_prefix` - (Optional) Unique endpoint configuration name beginning with the specified prefix. Conflicts with `name`.
