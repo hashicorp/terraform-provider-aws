@@ -7,11 +7,17 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -33,11 +39,16 @@ func RegisterSweepers() {
 		F:    sweepClusters,
 		Dependencies: []string{
 			"aws_ecs_express_gateway_service",
+			"aws_ecs_gateway_cluster_association",
 			"aws_ecs_service",
 		},
 	})
 
 	awsv2.Register("aws_ecs_express_gateway_service", sweepExpressGatewayServices)
+
+	awsv2.Register("aws_ecs_gateway", sweepGateways, "aws_ecs_gateway_cluster_association")
+
+	awsv2.Register("aws_ecs_gateway_cluster_association", sweepGatewayClusterAssociations, "aws_ecs_service")
 
 	resource.AddTestSweepers("aws_ecs_service", &resource.Sweeper{
 		Name: "aws_ecs_service",
@@ -179,6 +190,119 @@ func sweepExpressGatewayServices(ctx context.Context, client *conns.AWSClient) (
 	}
 
 	return sweepResources, nil
+}
+
+func sweepGatewayClusterAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListGatewayClusterAssociationsInput
+	for page, err := range listGatewayClusterAssociationPages(ctx, conn, &input) {
+		if errs.IsA[*awstypes.UnsupportedFeatureException](err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayClusterAssociationResource, client,
+				framework.NewAttribute("cluster_arn", aws.ToString(v.ClusterArn)),
+				framework.NewAttribute("gateway_arn", aws.ToString(v.GatewayArn))))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepGateways(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECSClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	var input ecs.ListGatewaysInput
+	pages := ecs.NewListGatewaysPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if errs.IsA[*awstypes.UnsupportedFeatureException](err) {
+			return nil, nil
+		}
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range page.Gateways {
+			arn := aws.ToString(v.GatewayArn)
+
+			gateway, err := findGatewayByARN(ctx, conn, arn)
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				tflog.Warn(ctx, "Skipping resource", map[string]any{
+					"error":       err.Error(),
+					names.AttrARN: arn,
+				})
+				continue
+			}
+
+			if aws.ToBool(gateway.DeletionProtection) {
+				if err := disableGatewayDeletionProtection(ctx, conn, gateway); err != nil {
+					tflog.Warn(ctx, "Skipping resource", map[string]any{
+						"error":       err.Error(),
+						names.AttrARN: arn,
+					})
+					continue
+				}
+			}
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newGatewayResource, client,
+				framework.NewAttribute(names.AttrARN, arn)))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+// UpdateGateway rejects a request without the role or the configuration, so both are sent back as described.
+func disableGatewayDeletionProtection(ctx context.Context, conn *ecs.Client, gateway *awstypes.Gateway) error {
+	const (
+		timeout = 20 * time.Minute
+	)
+	arn := aws.ToString(gateway.GatewayArn)
+
+	input := ecs.UpdateGatewayInput{
+		DeletionProtection:    aws.Bool(false),
+		Gateway:               aws.String(arn),
+		InfrastructureRoleArn: gateway.InfrastructureRoleArn,
+		PropagateTags:         gateway.PropagateTags,
+	}
+	if v, ok := gateway.Configuration.(*awstypes.DescribeGatewayConfigurationMemberHostSharedAlb); ok {
+		alb := awstypes.UpdateGatewayAlbConfiguration{
+			AccessLogs:       v.Value.AccessLogs,
+			HttpDesync:       v.Value.HttpDesync,
+			MaxAlbCount:      v.Value.MaxAlbCount,
+			TestTrafficRules: v.Value.TestTrafficRules,
+			WebACLArn:        v.Value.WebACLArn,
+		}
+		if v := v.Value.NetworkConfiguration; v != nil {
+			alb.NetworkConfiguration = &awstypes.UpdateGatewayNetworkConfiguration{
+				InboundSecurityGroup: v.InboundSecurityGroup,
+			}
+		}
+		input.Configuration = &awstypes.UpdateGatewayConfigurationMemberHostSharedAlb{
+			Value: alb,
+		}
+	}
+
+	if _, err := conn.UpdateGateway(ctx, &input); err != nil {
+		return smarterr.NewError(err)
+	}
+
+	if _, err := waitGatewayStable(ctx, conn, arn, timeout); err != nil {
+		return smarterr.NewError(err)
+	}
+
+	return nil
 }
 
 func sweepServices(region string) error {

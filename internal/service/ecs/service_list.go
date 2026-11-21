@@ -109,6 +109,19 @@ func (l *listResourceService) List(ctx context.Context, request list.ListRequest
 				continue
 			}
 
+			if request.IncludeResource {
+				connectors, err := findServiceGatewayConnectorsIfAuthorized(ctx, conn, service)
+				if err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+
+				if err := rd.Set("gateway_connector", flattenGatewayConnectors(connectors)); err != nil {
+					yield(fwdiag.NewListResultErrorDiagnostic(err))
+					return
+				}
+			}
+
 			result.DisplayName = aws.ToString(service.ServiceName)
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
