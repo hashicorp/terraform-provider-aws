@@ -218,6 +218,37 @@ resource "aws_networkfirewall_tls_inspection_configuration" "example" {
 }
 ```
 
+### Proxy Mode Decryption
+
+Decrypt traffic to specific domains on a proxy mode firewall. See [`aws_networkfirewall_firewall`](networkfirewall_firewall.html) for how to create a proxy mode firewall.
+
+```terraform
+resource "aws_networkfirewall_tls_inspection_configuration" "example" {
+  name = "example"
+
+  tls_inspection_configuration {
+    server_certificate_configuration {
+      certificate_authority_arn   = aws_acm_certificate.example.arn
+      default_decryption_behavior = "BYPASS"
+
+      scope {
+        decryption_action = "DECRYPT"
+        deployment_mode   = "EXPLICIT_PROXY_ONLY"
+        protocols         = [6]
+
+        destination {
+          address_definition = "0.0.0.0/0"
+        }
+
+        domain_match {
+          domains = ["example.com", "*.example.com"]
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -246,6 +277,7 @@ The `server_certificate_configuration` block supports the following arguments:
 
 * `certificate_authority_arn` - (Optional) ARN of the imported certificate authority (CA) certificate within Certificate Manager (ACM) to use for outbound SSL/TLS inspection. See [Using SSL/TLS certificates with TLS inspection configurations](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html) for limitations on CA certificates.
 * `check_certificate_revocation_status` (Optional) - Check Certificate Revocation Status block. Detailed below.
+* `default_decryption_behavior` - (Optional) What the firewall does with SSL/TLS traffic that doesn't match any `scope`. Applies only to proxy mode firewalls. `DECRYPT` requires every `scope` to set `deployment_mode` to `EXPLICIT_PROXY_ONLY`. If not specified, the firewall uses `BYPASS`. Valid values: `BYPASS`, `DECRYPT`.
 * `scope` (Required) - Scope block. Detailed below.
 * `server_certificate` - (Optional) Server certificates to use for inbound SSL/TLS inspection. See [Using SSL/TLS certificates with TLS inspection configurations](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html).
 
@@ -262,8 +294,11 @@ The `check_certificate_revocation_status` block supports the following arguments
 
 The `scope` block supports the following arguments:
 
+* `decryption_action` - (Optional) Whether the firewall decrypts traffic that matches this scope. Valid values: `BYPASS`, `DECRYPT`.
+* `deployment_mode` - (Optional) Type of firewall that this scope applies to. If not specified, the scope applies to both transparent and proxy mode firewalls, the same as `ALL`. Valid values: `ALL`, `EXPLICIT_PROXY_ONLY`, `TRANSPARENT_FIREWALL_ONLY`.
 * `destination` - (Required) Set of configuration blocks describing the destination IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any destination address. See [Destination](#destination) below for details.
 * `destination_ports` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Ports](#destination-ports) below for details.
+* `domain_match` - (Optional) Configuration block describing the domains that this scope matches, based on the host name in the client's HTTP CONNECT request. Applies only to proxy mode firewalls, and requires `deployment_mode` to be `EXPLICIT_PROXY_ONLY`. If not specified, the scope matches traffic by its source, destination, ports, and protocols only. See [Domain Match](#domain-match) below for details.
 * `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned IP number (IANA). Network Firewall currently supports TCP only. Valid values: `6`
 * `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
 * `source_ports` - (Optional) Set of configuration blocks describing the source ports to inspect for. If not specified, this matches with any source port. See [Source Ports](#source-ports) below for details.
@@ -280,6 +315,12 @@ The `destination_ports` block supports the following arguments:
 
 * `from_ports` - (Required) The lower limit of the port range. This must be less than or equal to the `to_port`.
 * `to_ports` - (Optional) The upper limit of the port range. This must be greater than or equal to the `from_port`.
+
+### Domain Match
+
+The `domain_match` block supports the following argument:
+
+* `domains` - (Required) Set of 1 to 50 domains to match. Specify an exact domain, such as `example.com`, or a domain with a single leading wildcard label, such as `*.example.com`. Each domain can be up to 255 characters long.
 
 ### Source
 

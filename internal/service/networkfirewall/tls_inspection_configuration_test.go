@@ -327,6 +327,111 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 	})
 }
 
+func TestAccNetworkFirewallTLSInspectionConfiguration_proxyMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
+	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"tls": {
+			Source:            "hashicorp/tls",
+			VersionConstraint: "4.0.5",
+		},
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTLSInspectionConfigurationConfig_proxyMode(rName, commonName.String(), certificateDomainName, "BYPASS", "DECRYPT", `"example.com", "*.example.org"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.default_decryption_behavior", "BYPASS"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.decryption_action", "DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.deployment_mode", "EXPLICIT_PROXY_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.0.domains.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.0.domains.*", "example.com"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.0.domains.*", "*.example.org"),
+				),
+			},
+			{
+				Config: testAccTLSInspectionConfigurationConfig_proxyMode(rName, commonName.String(), certificateDomainName, "DECRYPT", "BYPASS", `"example.net"`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.default_decryption_behavior", "DECRYPT"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.decryption_action", "BYPASS"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.deployment_mode", "EXPLICIT_PROXY_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.0.domains.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.0.domains.*", "example.net"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"update_token"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallTLSInspectionConfiguration_deploymentMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v networkfirewall.DescribeTLSInspectionConfigurationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
+	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTLSInspectionConfigurationConfig_deploymentMode(rName, commonName.String(), certificateDomainName, "TRANSPARENT_FIREWALL_ONLY"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.deployment_mode", "TRANSPARENT_FIREWALL_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.domain_match.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"tls_inspection_configuration", "update_token"},
+			},
+			{
+				Config: testAccTLSInspectionConfigurationConfig_deploymentMode(rName, commonName.String(), certificateDomainName, "ALL"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.deployment_mode", "ALL"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).NetworkFirewallClient(ctx)
@@ -629,4 +734,56 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   }
 }
 `, rName, revokedStatusAction, unknownStatusAction))
+}
+
+func testAccTLSInspectionConfigurationConfig_proxyMode(rName, commonName, certificateDomainName, defaultDecryptionBehavior, decryptionAction, domains string) string {
+	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateCheckCertificateRevocationStatus(commonName, certificateDomainName), fmt.Sprintf(`
+resource "aws_networkfirewall_tls_inspection_configuration" "test" {
+  name = %[1]q
+
+  tls_inspection_configuration {
+    server_certificate_configuration {
+      certificate_authority_arn   = aws_acm_certificate.test.arn
+      default_decryption_behavior = %[2]q
+
+      scope {
+        decryption_action = %[3]q
+        deployment_mode   = "EXPLICIT_PROXY_ONLY"
+        protocols         = [6]
+
+        destination {
+          address_definition = "0.0.0.0/0"
+        }
+
+        domain_match {
+          domains = [%[4]s]
+        }
+      }
+    }
+  }
+}
+`, rName, defaultDecryptionBehavior, decryptionAction, domains))
+}
+
+func testAccTLSInspectionConfigurationConfig_deploymentMode(rName, commonName, certificateDomainName, deploymentMode string) string {
+	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName), fmt.Sprintf(`
+resource "aws_networkfirewall_tls_inspection_configuration" "test" {
+  name = %[1]q
+
+  tls_inspection_configuration {
+    server_certificate_configuration {
+      server_certificate {
+        resource_arn = aws_acm_certificate.test.arn
+      }
+      scope {
+        deployment_mode = %[2]q
+        protocols       = [6]
+        destination {
+          address_definition = "0.0.0.0/0"
+        }
+      }
+    }
+  }
+}
+`, rName, deploymentMode))
 }

@@ -154,6 +154,10 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 										CustomType: fwtypes.ARNType,
 										Optional:   true,
 									},
+									"default_decryption_behavior": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.DecryptionAction](),
+										Optional:   true,
+									},
 								},
 								Blocks: map[string]schema.Block{
 									"check_certificate_revocation_status": schema.ListNestedBlock{
@@ -181,6 +185,14 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
+												"decryption_action": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.DecryptionAction](),
+													Optional:   true,
+												},
+												"deployment_mode": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.TLSInspectionScopeDeploymentMode](),
+													Optional:   true,
+												},
 												"protocols": schema.SetAttribute{
 													CustomType:  fwtypes.NewSetTypeOf[types.Int64](ctx),
 													ElementType: types.Int64Type,
@@ -241,6 +253,25 @@ func (r *tlsInspectionConfigurationResource) Schema(ctx context.Context, request
 																Required: true,
 																Validators: []validator.Int64{
 																	int64validator.Between(0, 65535),
+																},
+															},
+														},
+													},
+												},
+												"domain_match": schema.ListNestedBlock{
+													CustomType: fwtypes.NewListNestedObjectTypeOf[domainMatchModel](ctx),
+													Validators: []validator.List{
+														listvalidator.SizeAtMost(1),
+													},
+													NestedObject: schema.NestedBlockObject{
+														Attributes: map[string]schema.Attribute{
+															"domains": schema.SetAttribute{
+																CustomType:  fwtypes.SetOfStringType,
+																ElementType: types.StringType,
+																Required:    true,
+																Validators: []validator.Set{
+																	setvalidator.SizeBetween(1, 50),
+																	setvalidator.ValueStringsAre(stringvalidator.LengthBetween(1, 255)),
 																},
 															},
 														},
@@ -636,6 +667,7 @@ type tlsInspectionConfigurationModel struct {
 type serverCertificateConfigurationModel struct {
 	CertificateAuthorityARN          fwtypes.ARN                                                                   `tfsdk:"certificate_authority_arn"`
 	CheckCertificateRevocationStatus fwtypes.ListNestedObjectValueOf[checkCertificateRevocationStatusActionsModel] `tfsdk:"check_certificate_revocation_status"`
+	DefaultDecryptionBehavior        fwtypes.StringEnum[awstypes.DecryptionAction]                                 `tfsdk:"default_decryption_behavior"`
 	Scopes                           fwtypes.ListNestedObjectValueOf[serverCertificateScopeModel]                  `tfsdk:"scope"`
 	ServerCertificates               fwtypes.ListNestedObjectValueOf[serverCertificateModel]                       `tfsdk:"server_certificate"`
 }
@@ -646,11 +678,18 @@ type checkCertificateRevocationStatusActionsModel struct {
 }
 
 type serverCertificateScopeModel struct {
-	DestinationPorts fwtypes.ListNestedObjectValueOf[portRangeModel] `tfsdk:"destination_ports"`
-	Destinations     fwtypes.ListNestedObjectValueOf[addressModel]   `tfsdk:"destination"`
-	SourcePorts      fwtypes.ListNestedObjectValueOf[portRangeModel] `tfsdk:"source_ports"`
-	Protocols        fwtypes.SetValueOf[types.Int64]                 `tfsdk:"protocols"`
-	Sources          fwtypes.ListNestedObjectValueOf[addressModel]   `tfsdk:"source"`
+	DecryptionAction fwtypes.StringEnum[awstypes.DecryptionAction]                 `tfsdk:"decryption_action"`
+	DeploymentMode   fwtypes.StringEnum[awstypes.TLSInspectionScopeDeploymentMode] `tfsdk:"deployment_mode"`
+	DestinationPorts fwtypes.ListNestedObjectValueOf[portRangeModel]               `tfsdk:"destination_ports"`
+	Destinations     fwtypes.ListNestedObjectValueOf[addressModel]                 `tfsdk:"destination"`
+	DomainMatch      fwtypes.ListNestedObjectValueOf[domainMatchModel]             `tfsdk:"domain_match"`
+	SourcePorts      fwtypes.ListNestedObjectValueOf[portRangeModel]               `tfsdk:"source_ports"`
+	Protocols        fwtypes.SetValueOf[types.Int64]                               `tfsdk:"protocols"`
+	Sources          fwtypes.ListNestedObjectValueOf[addressModel]                 `tfsdk:"source"`
+}
+
+type domainMatchModel struct {
+	Domains fwtypes.SetOfString `tfsdk:"domains"`
 }
 
 type portRangeModel struct {
