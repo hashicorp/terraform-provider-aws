@@ -47,6 +47,7 @@ var (
 	FindPolicyEngineByID                 = findPolicyEngineByID
 	FindWorkloadIdentityByName           = findWorkloadIdentityByName
 	NormalizeGatewayTargetOutputForState = normalizeGatewayTargetOutputForState
+	NamespaceKeyValidationNotEmpty       = namespaceKeyValidationNotEmpty{}
 )
 
 type (
@@ -62,6 +63,8 @@ type (
 	MemoryStrategyResourceModel            = memoryStrategyResourceModel
 	MessageBasedTriggerModel               = messageBasedTriggerModel
 	MetadataSchemaEntryModel               = metadataSchemaEntryModel
+	NamespaceKeyModel                      = namespaceKeyModel
+	NamespaceKeyValidationModel            = namespaceKeyValidationModel
 	NumberValidationModel                  = numberValidationModel
 	OverrideDetailsModel                   = overrideDetailsModel
 	PrivateEndpointModel                   = privateEndpointModel

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -46,6 +47,56 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// Namespace variable key validator. The API model pattern is
+// (?!memoryStrategyId$|actorId$|sessionId$)[a-z][a-z0-9]*, which already excludes the
+// built-in camelCase variables once the whole value has to match.
+var validNamespaceKey validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[a-z][0-9a-z]{0,31}$`),
+	`must start with a lowercase letter, contain only lowercase letters and digits, and be between 1 and 32 characters`,
+)
+
+// Namespace variable allowed value validator.
+var validNamespaceAllowedValue validator.String = stringvalidator.RegexMatches(
+	regexache.MustCompile(`^[0-9a-z][0-9a-z_-]{0,63}$`),
+	`must start with a lowercase letter or digit, contain only lowercase letters, digits, hyphens and underscores, and be between 1 and 64 characters`,
+)
+
+var _ validator.Object = namespaceKeyValidationNotEmpty{}
+
+// namespaceKeyValidationNotEmpty requires at least one of allowed_values or regex_pattern in a
+// namespace_key validation block. An empty block sets no rule, and the API may omit an empty
+// validation object from GetMemory, which would show as a perpetual diff.
+// It reads the object's own attributes instead of resolving path expressions, because
+// path expressions below a set element (namespace_key) do not resolve to the configured values.
+type namespaceKeyValidationNotEmpty struct{}
+
+func (v namespaceKeyValidationNotEmpty) Description(ctx context.Context) string {
+	return v.MarkdownDescription(ctx)
+}
+
+func (namespaceKeyValidationNotEmpty) MarkdownDescription(context.Context) string {
+	return "at least one of allowed_values or regex_pattern must be configured"
+}
+
+func (v namespaceKeyValidationNotEmpty) ValidateObject(ctx context.Context, request validator.ObjectRequest, response *validator.ObjectResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	attributes := request.ConfigValue.Attributes()
+	for _, name := range []string{"allowed_values", "regex_pattern"} {
+		if value, ok := attributes[name]; ok && !value.IsNull() {
+			return
+		}
+	}
+
+	response.Diagnostics.AddAttributeError(
+		request.Path,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("At least one of allowed_values or regex_pattern must be configured, got: %s", request.ConfigValue),
+	)
+}
 
 // @FrameworkResource("aws_bedrockagentcore_memory", name="Memory")
 // @Tags(identifierAttribute="arn")
@@ -129,6 +180,54 @@ func (r *memoryResource) Schema(ctx context.Context, request resource.SchemaRequ
 						names.AttrType: schema.StringAttribute{
 							CustomType: fwtypes.StringEnumType[awstypes.MetadataValueType](),
 							Required:   true,
+						},
+					},
+				},
+			},
+			"namespace_key": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[namespaceKeyModel](ctx),
+				Validators: []validator.Set{
+					setvalidator.SizeAtMost(5),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrKey: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								validNamespaceKey,
+							},
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"validation": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[namespaceKeyValidationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Validators: []validator.Object{
+									namespaceKeyValidationNotEmpty{},
+								},
+								Attributes: map[string]schema.Attribute{
+									"allowed_values": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringType,
+										ElementType: types.StringType,
+										Optional:    true,
+										Validators: []validator.Set{
+											setvalidator.SizeBetween(1, 10),
+											setvalidator.ValueStringsAre(
+												validNamespaceAllowedValue,
+											),
+										},
+									},
+									"regex_pattern": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 64),
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -221,6 +320,11 @@ func (r *memoryResource) Create(ctx context.Context, request resource.CreateRequ
 	// Additional fields.
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
+
+	// Omit namespaceKeys entirely when no namespace_key blocks are configured.
+	if len(input.NamespaceKeys) == 0 {
+		input.NamespaceKeys = nil
+	}
 
 	var (
 		out *bedrockagentcorecontrol.CreateMemoryOutput
@@ -328,6 +432,14 @@ func (r *memoryResource) Update(ctx context.Context, request resource.UpdateRequ
 		input.ClientToken = aws.String(create.UniqueId(ctx))
 		input.MemoryId = aws.String(memoryID)
 
+		// UpdateMemory replaces the full set of namespace keys, so only send them when they change,
+		// and send an empty list when the last namespace_key block is removed.
+		if namespaceKeysEqual(new.NamespaceKeys, old.NamespaceKeys) {
+			input.NamespaceKeys = nil
+		} else if input.NamespaceKeys == nil {
+			input.NamespaceKeys = []awstypes.NamespaceKeyEntry{}
+		}
+
 		if !new.IndexedKeys.Equal(old.IndexedKeys) {
 			// AddIndexedKeys is additive and does not map from the indexed_key model field, so send only
 			// the keys that are not already present. Removals force replacement (see the schema plan modifier).
@@ -409,6 +521,14 @@ func (r *memoryResource) Delete(ctx context.Context, request resource.DeleteRequ
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, memoryID)
 		return
 	}
+}
+
+func namespaceKeysEqual(new, old fwtypes.SetNestedObjectValueOf[namespaceKeyModel]) bool {
+	if new.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 && old.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+		return true
+	}
+
+	return new.Equal(old)
 }
 
 func memoryIDFromARN(memoryARN string) (string, error) {
@@ -526,6 +646,7 @@ type memoryResourceModel struct {
 	IndexedKeys             fwtypes.SetNestedObjectValueOf[indexedKeyModel]               `tfsdk:"indexed_key"`
 	MemoryExecutionRoleARN  fwtypes.ARN                                                   `tfsdk:"memory_execution_role_arn"`
 	Name                    types.String                                                  `tfsdk:"name"`
+	NamespaceKeys           fwtypes.SetNestedObjectValueOf[namespaceKeyModel]             `tfsdk:"namespace_key"`
 	StreamDeliveryResources fwtypes.ListNestedObjectValueOf[streamDeliveryResourcesModel] `tfsdk:"stream_delivery_resources"`
 	Tags                    tftags.Map                                                    `tfsdk:"tags"`
 	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
@@ -535,6 +656,16 @@ type memoryResourceModel struct {
 type indexedKeyModel struct {
 	Key  types.String                                   `tfsdk:"key"`
 	Type fwtypes.StringEnum[awstypes.MetadataValueType] `tfsdk:"type"`
+}
+
+type namespaceKeyModel struct {
+	Key        types.String                                                 `tfsdk:"key"`
+	Validation fwtypes.ListNestedObjectValueOf[namespaceKeyValidationModel] `tfsdk:"validation"`
+}
+
+type namespaceKeyValidationModel struct {
+	AllowedValues fwtypes.SetOfString `tfsdk:"allowed_values"`
+	RegexPattern  types.String        `tfsdk:"regex_pattern"`
 }
 
 type streamDeliveryResourcesModel struct {
