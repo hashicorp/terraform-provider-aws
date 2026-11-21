@@ -142,7 +142,10 @@ func (r *guardrailVersionResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	data.Description = fwflex.StringToFramework(ctx, output.Description)
+	// output.Description is the guardrail's description, not the version's
+	// description (which was the release note passed to CreateGuardrailVersion).
+	// Setting it here would overwrite the configured value and cause an
+	// "inconsistent result after apply" error.
 	data.GuardrailARN = fwtypes.ARNValue(aws.ToString(output.GuardrailArn))
 	data.Version = fwflex.StringToFramework(ctx, output.Version)
 
