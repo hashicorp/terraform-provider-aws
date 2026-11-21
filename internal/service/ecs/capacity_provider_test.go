@@ -11,6 +11,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +21,37 @@ import (
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestCapacityProviderInstanceLaunchTemplateSchema(t *testing.T) {
+	t.Parallel()
+
+	sm := tfecs.ResourceCapacityProvider().SchemaMap()["managed_instances_provider"].Elem.(*schema.Resource).SchemaMap()
+	sm = sm["instance_launch_template"].Elem.(*schema.Resource).SchemaMap()
+
+	testCases := map[string]struct {
+		forceNew bool
+	}{
+		"fips_enabled":                       {forceNew: true},
+		"instance_metadata_tags_propagation": {forceNew: false},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			v, ok := sm[name]
+			if !ok {
+				t.Fatalf("missing %s", name)
+			}
+			if !v.Optional || !v.Computed {
+				t.Errorf("%s: expected Optional and Computed", name)
+			}
+			if got, want := v.ForceNew, testCase.forceNew; got != want {
+				t.Errorf("%s: expected ForceNew %t, got %t", name, want, got)
+			}
+		})
+	}
+}
 
 func TestAccECSCapacityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -689,6 +722,160 @@ func TestAccECSCapacityProvider_ManagedInstancesProvider_monitoring(t *testing.T
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// FIPS-enabled Managed Instances AMIs are only available in AWS GovCloud (US) Regions.
+// Outside GovCloud this test sets fips_enabled = false, then checks that changing it
+// plans a replacement and that the API rejects true.
+func TestAccECSCapacityProvider_ManagedInstancesProvider_fipsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_fipsEnabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.fips_enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_fipsEnabled(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ExpectError: regexache.MustCompile(`does not support FIPS in this region`),
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_ManagedInstancesProvider_fipsEnabledGovCloud(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_fipsEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.fips_enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_ManagedInstancesProvider_instanceMetadataTagsPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_instanceMetadataTagsPropagation(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_metadata_tags_propagation", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_instanceMetadataTagsPropagation(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_metadata_tags_propagation", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_instanceMetadataTagsPropagation(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_metadata_tags_propagation", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// The argument is Optional and Computed: removing it from the configuration keeps the last value.
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_instanceMetadataTagsPropagationRemoved(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.instance_metadata_tags_propagation", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
 			},
@@ -1536,6 +1723,76 @@ resource "aws_ecs_capacity_provider" "test" {
   }
 }
 `, rName, monitoring))
+}
+
+func testAccCapacityProviderConfig_ManagedInstancesProvider_fipsEnabled(rName string, fipsEnabled bool) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+      fips_enabled             = %[2]t
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName, fipsEnabled))
+}
+
+func testAccCapacityProviderConfig_ManagedInstancesProvider_instanceMetadataTagsPropagation(rName string, propagation bool) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+    propagate_tags          = "NONE"
+
+    instance_launch_template {
+      ec2_instance_profile_arn           = aws_iam_instance_profile.test.arn
+      instance_metadata_tags_propagation = %[2]t
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName, propagation))
+}
+
+func testAccCapacityProviderConfig_ManagedInstancesProvider_instanceMetadataTagsPropagationRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+    propagate_tags          = "NONE"
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName))
 }
 
 func testAccCapacityProviderConfig_ManagedInstancesProvider_withLocalStorageConfiguration(rName string) string {
