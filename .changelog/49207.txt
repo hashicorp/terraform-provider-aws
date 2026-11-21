@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: Fix `InvalidParameterException` when `admin_create_user_config.invite_message_template` omits `email_message`, `email_subject`, or `sms_message`
+```
