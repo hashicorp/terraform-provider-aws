@@ -77,6 +77,14 @@ func resourceSiteToSiteVPNAttachment() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"nat_gateway_support": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"nat_system_route_support": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
 				names.AttrOwnerAccountID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -166,6 +174,8 @@ func resourceSiteToSiteVPNAttachmentRead(ctx context.Context, d *schema.Resource
 	coreNetworkID := aws.ToString(attachment.CoreNetworkId)
 	d.Set("core_network_id", coreNetworkID)
 	d.Set("edge_location", attachment.EdgeLocation)
+	d.Set("nat_gateway_support", attachment.NatGatewaySupport)
+	d.Set("nat_system_route_support", attachment.NatSystemRouteSupport)
 	d.Set(names.AttrOwnerAccountID, attachment.OwnerAccountId)
 	d.Set(names.AttrResourceARN, attachment.ResourceArn)
 	if routingPolicyLabel, err := findAttachmentRoutingPolicyAssociationLabelByTwoPartKey(ctx, conn, coreNetworkID, d.Id()); err != nil && !retry.NotFound(err) {
