@@ -117,8 +117,16 @@ func (r *registryResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	inputAuthorizerConfiguration, d := withCustomClaimMatchValuesWO(ctx, req.Config, plan.AuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	inputData := plan
+	inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 	var input bedrockagentcorecontrol.CreateRegistryInput
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, inputData, &input))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -148,7 +156,7 @@ func (r *registryResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, plan.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, plan.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -185,7 +193,7 @@ func (r *registryResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, state.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, state.AuthorizerConfiguration, priorAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 	if resp.Diagnostics.HasError() {
 		return
@@ -249,7 +257,13 @@ func (r *registryResource) Update(ctx context.Context, req resource.UpdateReques
 		}
 
 		if !plan.AuthorizerConfiguration.Equal(state.AuthorizerConfiguration) {
-			authorizerConfiguration, d := plan.AuthorizerConfiguration.ToPtr(ctx)
+			inputAuthorizerConfiguration, d := withCustomClaimMatchValuesWO(ctx, req.Config, plan.AuthorizerConfiguration)
+			smerr.AddEnrich(ctx, &resp.Diagnostics, d)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			authorizerConfiguration, d := inputAuthorizerConfiguration.ToPtr(ctx)
 			smerr.AddEnrich(ctx, &resp.Diagnostics, d)
 			if resp.Diagnostics.HasError() {
 				return

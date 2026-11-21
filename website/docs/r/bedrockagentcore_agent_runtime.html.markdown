@@ -10,6 +10,8 @@ description: |-
 
 Manages an AWS Bedrock AgentCore Agent Runtime. Agent Runtime provides a containerized execution environment for AI agents.
 
+-> **Note:** Write-Only argument `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo` is available to use in place of `match_value_string`. Write-Only arguments are supported in HashiCorp Terraform 1.11.0 and later. [Learn more](https://developer.hashicorp.com/terraform/language/resources/ephemeral#write-only-arguments).
+
 ## Example Usage
 
 ### Basic Usage
@@ -103,6 +105,52 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 
   protocol_configuration {
     server_protocol = "MCP"
+  }
+}
+```
+
+### Custom Claim Match Value From Secrets Manager
+
+This example reads the custom claim match value with an ephemeral resource and passes it to a write-only argument, so the value isn't stored in plan or state.
+
+```terraform
+ephemeral "aws_secretsmanager_secret_version" "claim" {
+  secret_id = aws_secretsmanager_secret.claim.id
+}
+
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example_agent_runtime"
+  role_arn           = aws_iam_role.example.arn
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "${aws_ecr_repository.example.repository_url}:v1.0"
+    }
+  }
+
+  authorizer_configuration {
+    custom_jwt_authorizer {
+      discovery_url   = "https://accounts.google.com/.well-known/openid-configuration"
+      allowed_clients = ["client-123"]
+
+      custom_claim_match_values_wo = {
+        tenant_id = ephemeral.aws_secretsmanager_secret_version.claim.secret_string
+      }
+      custom_claim_match_values_wo_version = 1
+
+      custom_claim {
+        inbound_token_claim_name       = "tenant_id"
+        inbound_token_claim_value_type = "STRING"
+        authorizing_claim_match_value {
+          claim_match_operator = "EQUALS"
+          claim_match_value {} # Value supplied by custom_claim_match_values_wo.
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
   }
 }
 ```
@@ -229,6 +277,8 @@ The `custom_jwt_authorizer` block supports the following:
 * `allowed_scopes` - (Optional) Set of scopes that are allowed to access the token.
 * `allowed_workload_configuration` - (Optional) Configuration restricting which workloads may use this authorizer. See [`allowed_workload_configuration`](#allowed_workload_configuration-block) below.
 * `custom_claim` - (Optional) Repeatable block to define a custom claim validation name, value, and operation. See [`custom_claim`](#custom_claim-block) below.
+* `custom_claim_match_values_wo` - (Optional, Write-Only) Map of custom claim match values that Terraform sends to AWS but doesn't store in plan or state. Each key is the `inbound_token_claim_name` of a `custom_claim`, and each value is used as that claim's `match_value_string`. A `custom_claim` with a key in this map must have an empty `claim_match_value` block. Values must be 1 to 255 characters long and contain only letters, numbers, and the characters `_`, `.`, `-`, and `:`. If set, requires `custom_claim_match_values_wo_version`.
+* `custom_claim_match_values_wo_version` - (Optional) Version of `custom_claim_match_values_wo`. Change this value to send new write-only values. Required when `custom_claim_match_values_wo` is set.
 * `discovery_url` - (Required) URL used to fetch OpenID Connect configuration or authorization server metadata. Must end with `.well-known/openid-configuration`.
 * `private_endpoint` - (Optional) Private endpoint used to reach the authorization server. See [`private_endpoint`](#private_endpoint-block) below.
 * `private_endpoint_overrides` - (Optional) Overrides for the private endpoints used to reach the authorization server. See [`private_endpoint_overrides`](#private_endpoint_overrides-block) below.
@@ -286,8 +336,8 @@ The `authorizing_claim_match_value` block supports the following:
 
 The `claim_match_value` block supports the following:
 
-* `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
-* `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+* `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string`, `match_value_string_list`, or a `custom_jwt_authorizer.custom_claim_match_values_wo` entry for the claim must be specified.
+* `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string`, `match_value_string_list`, or a `custom_jwt_authorizer.custom_claim_match_values_wo` entry for the claim must be specified.
 
 ### `filesystem_configuration` Block
 
