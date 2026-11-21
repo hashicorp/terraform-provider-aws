@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-21T14:24:16.746219-05:00
+custom:
+    Name: aws_apigatewayv2_portal
+    NewType: New Resource
+    PullRequest: "51228"
