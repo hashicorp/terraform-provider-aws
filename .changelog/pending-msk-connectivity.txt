@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_msk_cluster: Fix empty `connectivityInfo` body in `UpdateConnectivity` API call when updating `connectivity_info` sub-blocks with zero-value booleans
+```
