@@ -55,6 +55,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `use_client_certificate_ocsp_endpoint` - (Optional) Whether the trust store uses the CA certificate's OCSP endpoint to check the revocation status of the client certificate. Defaults to `false`.
 
 ### ca_certificates_bundle_source
 
