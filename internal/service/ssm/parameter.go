@@ -91,15 +91,10 @@ func resourceParameter() *schema.Resource {
 					Computed: true,
 				},
 				"data_type": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						"aws:ec2:image",
-						"aws:ssm:integration",
-						"text",
-					}, false),
-					ForceNew: true,
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(parameterDataType_Values(), false),
 				},
 				names.AttrDescription: {
 					Type:         schema.TypeString,
@@ -183,8 +178,20 @@ func resourceParameter() *schema.Resource {
 			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta any) bool {
 				return awstypes.ParameterTier(old.(string)) == awstypes.ParameterTierAdvanced && awstypes.ParameterTier(new.(string)) == awstypes.ParameterTierStandard
 			}),
+			// A parameter can change from one data type to another in place, except to or from
+			// aws:ec2:image and aws:ssm:integration.
+			customdiff.ForceNewIf("data_type", func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
+				if diff.Id() == "" || !diff.HasChange("data_type") {
+					return false
+				}
+				if !diff.NewValueKnown("data_type") {
+					return true
+				}
+				o, n := diff.GetChange("data_type")
+				return parameterDataTypeChangeRequiresReplace(o.(string), n.(string))
+			}),
 			customdiff.ComputedIf(names.AttrVersion, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue) || diff.HasChange(names.AttrDescription)
+				return diff.HasChange(names.AttrValue) || !diff.NewValueKnown(names.AttrValue) || diff.HasChange(names.AttrDescription) || diff.HasChange("data_type")
 			}),
 			customdiff.ComputedIf(names.AttrValue, func(_ context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChange("insecure_value")
@@ -294,7 +301,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta any
 			return findParameterByName(ctx, conn, d.Id(), true)
 		},
 		func(err error) (bool, error) {
-			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == "aws:ec2:image" {
+			if d.IsNewResource() && retry.NotFound(err) && d.Get("data_type").(string) == parameterDataTypeEC2Image {
 				return true, err
 			}
 
@@ -387,7 +394,8 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta a
 			value = v
 		}
 
-		if d.HasChanges("value_wo_version") {
+		// A data type change is validated against the value, so send the write-only value with it.
+		if d.HasChanges("value_wo_version", "data_type") {
 			valueWO, di := flex.GetWriteOnlyStringValue(d, cty.GetAttrPath("value_wo"))
 			diags = append(diags, di...)
 			if diags.HasError() {
@@ -526,6 +534,24 @@ func findParametersMetadata(ctx context.Context, conn *ssm.Client, input *ssm.De
 	}
 
 	return output, nil
+}
+
+// parameterDataTypeChangeRequiresReplace returns whether changing a parameter's data type
+// from oldDataType to newDataType requires a new parameter. Parameter Store can't change a parameter
+// to or from aws:ec2:image or aws:ssm:integration.
+func parameterDataTypeChangeRequiresReplace(oldDataType, newDataType string) bool {
+	if oldDataType == newDataType {
+		return false
+	}
+
+	for _, v := range []string{oldDataType, newDataType} {
+		switch v {
+		case parameterDataTypeEC2Image, parameterDataTypeIntegration:
+			return true
+		}
+	}
+
+	return false
 }
 
 func shouldUpdateParameter(d *schema.ResourceData) bool {

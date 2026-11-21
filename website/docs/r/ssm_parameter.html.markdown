@@ -57,6 +57,25 @@ resource "aws_ssm_parameter" "secret" {
 ~> **Note:** The unencrypted value of a SecureString will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
+### Parameter with a data type
+
+```terraform
+resource "aws_ssm_parameter" "port" {
+  name      = "/app/port"
+  type      = "String"
+  data_type = "integer"
+  value     = "443"
+}
+
+resource "aws_ssm_parameter" "settings" {
+  name      = "/app/settings"
+  type      = "String"
+  tier      = "Advanced"
+  data_type = "json"
+  value     = jsonencode({ retries = 3 })
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -68,7 +87,7 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `allowed_pattern` - (Optional) Regular expression used to validate the parameter value.
-* `data_type` - (Optional) Data type of the parameter. Valid values: `text`, `aws:ssm:integration` and `aws:ec2:image` for AMI format, see the [Native parameter support for AMI IDs](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html).
+* `data_type` - (Optional) Data type of the parameter. Parameter Store validates the value against the data type. Valid values: `text` (no validation), `aws:account:id`, `aws:ec2:image` for AMI format (see the [Native parameter support for AMI IDs](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)), `aws:region`, `aws:ssm:integration`, `binary`, `boolean`, `email`, `float`, `hostname`, `integer`, `ipv4-address`, `ipv6-address`, `json`, `jsonc` and `url`. `json`, `jsonc` and `url` require the `Advanced` tier. Not every data type supports every `type`; see [Parameter data types](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-data-types.html). Changing the data type updates the parameter in place, except a change to or from `aws:ec2:image` or `aws:ssm:integration`, which recreates the resource.
 * `description` - (Optional) Description of the parameter.
 * `insecure_value` - (Optional, exactly one of `value`, `value_wo`  or `insecure_value` is required) Value of the parameter. **Use caution:** This value is _never_ marked as sensitive in the Terraform plan output. This argument is not valid with a `type` of `SecureString`.
 * `key_id` - (Optional) KMS key ID or ARN for encrypting a SecureString.
