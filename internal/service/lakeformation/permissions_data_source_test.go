@@ -164,6 +164,44 @@ func testAccPermissionsDataSource_lfTag(t *testing.T) {
 	})
 }
 
+func testAccPermissionsDataSource_lfTagExpression(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	dataSourceName := "data.aws_lakeformation_permissions.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsDataSourceConfig_lfTagExpression(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrPrincipal, dataSourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.#", dataSourceName, "lf_tag_expression.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.0.catalog_id", dataSourceName, "lf_tag_expression.0.catalog_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_expression.0.name", dataSourceName, "lf_tag_expression.0.name"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions.#", dataSourceName, "permissions.#"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions.*", "ALTER"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions.*", "DESCRIBE"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions.*", "DROP"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions.*", "GRANT_WITH_LF_TAG_EXPRESSION"),
+					resource.TestCheckResourceAttrPair(resourceName, "permissions_with_grant_option.#", dataSourceName, "permissions_with_grant_option.#"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions_with_grant_option.*", "ALTER"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions_with_grant_option.*", "DESCRIBE"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions_with_grant_option.*", "DROP"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "permissions_with_grant_option.*", "GRANT_WITH_LF_TAG_EXPRESSION"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissionsDataSource_lfTagPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -626,6 +664,19 @@ data "aws_lakeformation_permissions" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPermissionsDataSourceConfig_lfTagExpression(rName string) string {
+	return acctest.ConfigCompose(testAccPermissionsConfig_lfTagExpression(rName), `
+data "aws_lakeformation_permissions" "test" {
+  principal = aws_lakeformation_permissions.test.principal
+
+  lf_tag_expression {
+    catalog_id = data.aws_caller_identity.current.account_id
+    name       = aws_lakeformation_lf_tag_expression.test.name
+  }
+}
+`)
 }
 
 func testAccPermissionsDataSourceConfig_lfTagPolicy(rName string) string {
