@@ -1210,28 +1210,30 @@ func flattenNatGatewayAttachments(apiObjects []awstypes.NatGatewayAttachment) []
 // empty element while its nested values are unknown during planning.
 func natGatewayCreateMappingResource() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"allocation_ids": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 8,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"private_ips": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 8,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.IsIPv4Address,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"allocation_ids": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 8,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-			},
-			names.AttrSubnetID: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+				"private_ips": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 8,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.IsIPv4Address,
+					},
+				},
+				names.AttrSubnetID: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }

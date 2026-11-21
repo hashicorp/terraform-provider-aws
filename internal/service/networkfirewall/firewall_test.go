@@ -21,9 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -602,7 +603,7 @@ func TestAccNetworkFirewallFirewall_NATProxy1_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":                          testAccFirewall_NATProxy_basic,
+		acctest.CtBasic:                  testAccFirewall_NATProxy_basic,
 		"listenerProperties":             testAccFirewall_NATProxy_listenerProperties,
 		"capabilityForcesReplacement":    testAccFirewall_NATProxy_capabilityForcesReplacement,
 		"allocationIDsWithoutPrivateIPs": testAccFirewall_NATProxy_allocationIDsWithoutPrivateIPs,
@@ -1069,22 +1070,22 @@ func testAccCheckFirewallDeleteDetachedNATGateway(ctx context.Context, t *testin
 					Values: []string{rs.Primary.ID},
 				},
 				{
-					Name:   aws.String("state"),
-					Values: []string{string(ec2types.NatGatewayStatePending), string(ec2types.NatGatewayStateAvailable)},
+					Name:   aws.String(names.AttrState),
+					Values: enum.Slice(ec2types.NatGatewayStatePending, ec2types.NatGatewayStateAvailable),
 				},
 			},
 		}
-		output, err := conn.DescribeNatGateways(ctx, &input)
+		natGateways, err := tfec2.FindNATGateways(ctx, conn, &input)
 
 		if err != nil {
 			return err
 		}
 
-		if len(output.NatGateways) == 0 {
+		if len(natGateways) == 0 {
 			return fmt.Errorf("no detached NAT gateway found in subnet (%s)", rs.Primary.ID)
 		}
 
-		for _, v := range output.NatGateways {
+		for _, v := range natGateways {
 			input := ec2.DeleteNatGatewayInput{
 				NatGatewayId: v.NatGatewayId,
 			}
@@ -1096,13 +1097,13 @@ func testAccCheckFirewallDeleteDetachedNATGateway(ctx context.Context, t *testin
 		const (
 			timeout = 10 * time.Minute
 		)
-		input = ec2.DescribeNatGatewaysInput{
-			NatGatewayIds: tfslices.ApplyToAll(output.NatGateways, func(v ec2types.NatGateway) string {
-				return aws.ToString(v.NatGatewayId)
-			}),
+		for _, v := range natGateways {
+			if _, err := tfec2.WaitNATGatewayDeleted(ctx, conn, aws.ToString(v.NatGatewayId), timeout); err != nil {
+				return err
+			}
 		}
 
-		return ec2.NewNatGatewayDeletedWaiter(conn).Wait(ctx, &input, timeout)
+		return nil
 	}
 }
 
