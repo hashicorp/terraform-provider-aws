@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_node_group: Stop sending an unchanged `scaling_config.desired_size` when `scaling_config.min_size` or `scaling_config.max_size` changes, which scaled a node group resized since the plan (e.g. by Cluster Autoscaler) back to the planned size
+```

@@ -610,6 +610,13 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta a
 		if d.HasChange("scaling_config") {
 			if v, ok := d.GetOk("scaling_config"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 				input.ScalingConfig = expandNodegroupScalingConfig(v.([]any)[0].(map[string]any))
+
+				// An unchanged desired_size is the size read at plan time (or one hidden by ignore_changes).
+				// An external autoscaler may have resized the node group since, and sending it along with a
+				// min_size or max_size change would scale the node group back to it.
+				if !d.HasChange("scaling_config.0.desired_size") {
+					input.ScalingConfig.DesiredSize = nil
+				}
 			}
 		}
 
