@@ -590,6 +590,268 @@ func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_NATProxy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxy(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delete_associated_nat_gateways", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"attachment.0.dns_name":                   regexache.MustCompile(`\.nfw\.`),
+						"attachment.0.endpoint_id":                regexache.MustCompile(`vpce-`),
+						"nat_gateway_attachment.0.nat_gateway_id": regexache.MustCompile(`nat-`),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "nat_gateway_create_mapping.*.subnet_id", "aws_subnet.nat.0", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "nat_gateway_create_mapping.*.allocation_ids.0", "aws_eip.test.0", "allocation_id"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.domain_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.listener_property.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "proxy_settings.0.listener_property.*", map[string]string{
+						names.AttrPort: "3128",
+						names.AttrType: string(awstypes.ListenerPropertyTypeHttp),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "proxy_settings.0.listener_property.*", map[string]string{
+						names.AttrPort: "8443",
+						names.AttrType: string(awstypes.ListenerPropertyTypeHttps),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", "aws_subnet.firewall.0", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "transparent_filtering_nat_scope", string(awstypes.TransparentFilteringNatScopeNatAll)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_NATProxy_privateNATGateway(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxyPrivateNATGateway(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "nat_gateway_create_mapping.*", map[string]string{
+						"allocation_ids.#": "0",
+						"private_ips.#":    "1",
+					}),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]*regexp.Regexp{
+						"nat_gateway_attachment.0.nat_gateway_id": regexache.MustCompile(`nat-`),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "transparent_filtering_nat_scope", string(awstypes.TransparentFilteringNatScopeNatNone)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_NATProxy_listenerProperties(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxyListenerProperties1(rName, 8080, string(awstypes.ListenerPropertyTypeHttp)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.listener_property.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "proxy_settings.0.listener_property.*", map[string]string{
+						names.AttrPort: "8080",
+						names.AttrType: string(awstypes.ListenerPropertyTypeHttp),
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
+			},
+			{
+				Config: testAccFirewallConfig_natProxyListenerProperties2(rName, 8081, string(awstypes.ListenerPropertyTypeHttp), 8444, string(awstypes.ListenerPropertyTypeHttps)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.listener_property.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "proxy_settings.0.listener_property.*", map[string]string{
+						names.AttrPort: "8081",
+						names.AttrType: string(awstypes.ListenerPropertyTypeHttp),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "proxy_settings.0.listener_property.*", map[string]string{
+						names.AttrPort: "8444",
+						names.AttrType: string(awstypes.ListenerPropertyTypeHttps),
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_NATProxy_customDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	commonName := acctest.RandomDomain(t)
+	domainName := commonName.RandomSubdomain(t).String()
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxyCustomDomain(rName, commonName.String(), domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "proxy_settings.0.certificate_arn", "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.domain_name", domainName),
+					resource.TestCheckTypeSetElemAttr(resourceName, "firewall_status.0.sync_states.*.attachment.0.dns_name", domainName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"delete_associated_nat_gateways"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_NATProxy_updateAvailabilityZones(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxy(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_natProxy(rName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "nat_gateway_create_mapping.*.subnet_id", "aws_subnet.nat.1", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", "aws_subnet.firewall.1", names.AttrID),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_natProxy(rName, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_NATProxy_capabilityForcesReplacement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxyRouted(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.#", "0"),
+				),
+			},
+			{
+				Config: testAccFirewallConfig_natProxy(rName, 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckFirewallDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -904,4 +1166,229 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 }
 `, rName, changeProtection, availabilityZoneStartIndex, availabilityZoneEndIndex))
+}
+
+func testAccFirewallConfig_baseNATProxy(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "firewall" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "nat" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 10)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  count = 2
+
+  domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_natProxy(rName string, azCount int) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseNATProxy(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                           = %[1]q
+  firewall_policy_arn            = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                         = aws_vpc.test.id
+  delete_associated_nat_gateways = true
+
+  dynamic "subnet_mapping" {
+    for_each = slice(aws_subnet.firewall, 0, %[2]d)
+
+    content {
+      subnet_id = subnet_mapping.value.id
+    }
+  }
+
+  dynamic "nat_gateway_create_mapping" {
+    for_each = range(%[2]d)
+
+    content {
+      subnet_id      = aws_subnet.nat[nat_gateway_create_mapping.value].id
+      allocation_ids = [aws_eip.test[nat_gateway_create_mapping.value].allocation_id]
+      private_ips    = [cidrhost(aws_subnet.nat[nat_gateway_create_mapping.value].cidr_block, 10)]
+    }
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName, azCount))
+}
+
+func testAccFirewallConfig_natProxyRouted(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseNATProxy(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_natProxyPrivateNATGateway(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseNATProxy(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                            = %[1]q
+  firewall_policy_arn             = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                          = aws_vpc.test.id
+  delete_associated_nat_gateways  = true
+  transparent_filtering_nat_scope = "NAT_NONE"
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id   = aws_subnet.nat[0].id
+    private_ips = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+}
+`, rName))
+}
+
+func testAccFirewallConfig_natProxyListenerProperties1(rName string, port int, listenerType string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseNATProxy(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                           = %[1]q
+  firewall_policy_arn            = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                         = aws_vpc.test.id
+  delete_associated_nat_gateways = true
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id      = aws_subnet.nat[0].id
+    allocation_ids = [aws_eip.test[0].allocation_id]
+    private_ips    = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+
+  proxy_settings {
+    listener_property {
+      port = %[2]d
+      type = %[3]q
+    }
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName, port, listenerType))
+}
+
+func testAccFirewallConfig_natProxyListenerProperties2(rName string, port1 int, listenerType1 string, port2 int, listenerType2 string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseNATProxy(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                           = %[1]q
+  firewall_policy_arn            = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                         = aws_vpc.test.id
+  delete_associated_nat_gateways = true
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id      = aws_subnet.nat[0].id
+    allocation_ids = [aws_eip.test[0].allocation_id]
+    private_ips    = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+
+  proxy_settings {
+    listener_property {
+      port = %[2]d
+      type = %[3]q
+    }
+
+    listener_property {
+      port = %[4]d
+      type = %[5]q
+    }
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName, port1, listenerType1, port2, listenerType2))
+}
+
+func testAccFirewallConfig_natProxyCustomDomain(rName, commonName, domainName string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallConfig_baseNATProxy(rName),
+		testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, domainName),
+		fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                           = %[1]q
+  firewall_policy_arn            = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                         = aws_vpc.test.id
+  delete_associated_nat_gateways = true
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id      = aws_subnet.nat[0].id
+    allocation_ids = [aws_eip.test[0].allocation_id]
+    private_ips    = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+
+  proxy_settings {
+    certificate_arn = aws_acm_certificate.test.arn
+    domain_name     = %[2]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+`, rName, domainName))
 }
