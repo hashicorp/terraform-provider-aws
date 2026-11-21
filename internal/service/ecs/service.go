@@ -1015,6 +1015,22 @@ func resourceService() *schema.Resource {
 									},
 								},
 							},
+							"container_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"log_level": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectContainerLogLevel](),
+										},
+									},
+								},
+							},
 							names.AttrEnabled: {
 								Type:     schema.TypeBool,
 								Required: true,
@@ -3103,6 +3119,9 @@ func expandServiceConnectConfiguration(tfList []any) *awstypes.ServiceConnectCon
 	if v, ok := tfMap["access_log_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.AccessLogConfiguration = expandServiceConnectAccessLogConfiguration(v)
 	}
+	if v, ok := tfMap["container_configuration"].([]any); ok && len(v) > 0 {
+		apiObject.ContainerConfigurations = expandServiceConnectContainerConfigurations(v)
+	}
 	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = v
 	}
@@ -3130,6 +3149,9 @@ func flattenServiceConnectConfiguration(apiObject *awstypes.ServiceConnectConfig
 
 	if v := apiObject.AccessLogConfiguration; v != nil {
 		tfMap["access_log_configuration"] = flattenServiceConnectAccessLogConfiguration(v)
+	}
+	if v := flattenServiceConnectContainerConfigurations(apiObject.ContainerConfigurations); len(v) > 0 {
+		tfMap["container_configuration"] = v
 	}
 	if v := apiObject.LogConfiguration; v != nil {
 		tfMap["log_configuration"] = []any{flattenLogConfiguration(*v)}
@@ -3171,6 +3193,43 @@ func flattenServiceConnectAccessLogConfiguration(config *awstypes.ServiceConnect
 	tfMap := map[string]any{
 		names.AttrFormat:           config.Format,
 		"include_query_parameters": config.IncludeQueryParameters,
+	}
+
+	return []any{tfMap}
+}
+
+// expandServiceConnectContainerConfigurations converts the single
+// container_configuration block into the API's list of union members.
+// Each attribute that is set becomes one list entry.
+func expandServiceConnectContainerConfigurations(tfList []any) []awstypes.ServiceConnectContainerConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+	var apiObjects []awstypes.ServiceConnectContainerConfiguration
+
+	if v, ok := tfMap["log_level"].(string); ok && v != "" {
+		apiObjects = append(apiObjects, &awstypes.ServiceConnectContainerConfigurationMemberLogLevel{
+			Value: awstypes.ServiceConnectContainerLogLevel(v),
+		})
+	}
+
+	return apiObjects
+}
+
+func flattenServiceConnectContainerConfigurations(apiObjects []awstypes.ServiceConnectContainerConfiguration) []any {
+	tfMap := map[string]any{}
+
+	for _, apiObject := range apiObjects {
+		switch v := apiObject.(type) {
+		case *awstypes.ServiceConnectContainerConfigurationMemberLogLevel:
+			tfMap["log_level"] = v.Value
+		}
+	}
+
+	if len(tfMap) == 0 {
+		return nil
 	}
 
 	return []any{tfMap}
