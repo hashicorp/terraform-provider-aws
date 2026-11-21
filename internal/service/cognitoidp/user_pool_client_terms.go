@@ -281,7 +281,9 @@ var _ inttypes.ImportIDParser = userPoolClientTermsImportID{}
 type userPoolClientTermsImportID struct{}
 
 func (userPoolClientTermsImportID) Parse(id string) (string, map[string]any, error) {
-	parts, err := intflex.ExpandResourceId(id, 2, false)
+	const partCount = 2
+
+	parts, err := intflex.ExpandResourceId(id, partCount, false)
 	if err != nil {
 		return "", nil, smarterr.Errorf("unexpected import ID %q: expected format <user_pool_id>,<terms_id>: %w", id, err)
 	}

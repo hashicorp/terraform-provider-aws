@@ -20,7 +20,7 @@ func TestUserPoolClientTermsModel(t *testing.T) {
 	t.Parallel()
 
 	const (
-		poolID    = "us-west-2_EXAMPLE"
+		poolID    = "example-region_EXAMPLE"
 		clientID  = "1example23456789"
 		termsID   = "a1b2c3d4-5678-4321-8765-abcdef123456"
 		termsName = "terms-of-use"
@@ -92,7 +92,7 @@ func TestUserPoolClientTermsImportID(t *testing.T) {
 	t.Parallel()
 
 	const (
-		poolID  = "us-west-2_EXAMPLE"
+		poolID  = "example-region_EXAMPLE"
 		termsID = "a1b2c3d4-5678-4321-8765-abcdef123456"
 	)
 
