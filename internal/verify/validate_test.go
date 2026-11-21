@@ -667,10 +667,9 @@ func TestFloatGreaterThan(t *testing.T) {
 func TestValidServicePrincipal(t *testing.T) {
 	t.Parallel()
 
-	v := ""
-	_, errors := ValidServicePrincipal(v, "test.google.com")
+	_, errors := ValidServicePrincipal("", "arn")
 	if len(errors) != 0 {
-		t.Fatalf("%q should not be validated as an Service Principal name: %q", v, errors)
+		t.Fatalf("empty string should be ignored. Got %q", errors)
 	}
 
 	validNames := []string{
@@ -680,6 +679,16 @@ func TestValidServicePrincipal(t *testing.T) {
 		"member.org.stacksets.cloudformation.amazonaws.com",
 		"vpc-flow-logs.amazonaws.com",
 		"logs.eu-central-1.amazonaws.com",
+		// Common service principals.
+		"ec2.amazonaws.com",
+		"s3.amazonaws.com",
+		"ec2.amazon.com",
+		// China partition (.cn) principals. Accepted via internal/types.IsServicePrincipal.
+		"ec2.amazonaws.com.cn",
+		"s3.amazonaws.com.cn",
+		// Label-count boundaries: 1-4 prefix labels are allowed.
+		"a.amazonaws.com",
+		"a.b.c.d.amazonaws.com",
 	}
 	for _, v := range validNames {
 		_, errors := ValidServicePrincipal(v, "arn")
@@ -693,6 +702,18 @@ func TestValidServicePrincipal(t *testing.T) {
 		"transfer.amz.com",
 		"test",
 		"testwithwildcard*",
+		// Structural edge cases.
+		"invalid",
+		"amazonaws.com",
+		"ec2",
+		".amazonaws.com",
+		"ec2.amazonaws",
+		"ec2.amazonaws.org",
+		"ec2.example.com",
+		"arn:aws:iam::123456789012:role/test",
+		"123456789012",
+		// Too many prefix labels (the quantifier allows at most 4).
+		"a.b.c.d.e.amazonaws.com",
 	}
 	for _, v := range invalidNames {
 		_, errors := ValidServicePrincipal(v, "arn")

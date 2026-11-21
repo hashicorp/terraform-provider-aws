@@ -89,7 +89,6 @@ This data source exports the following attributes in addition to the arguments a
 * `service_id` - ID of the endpoint service.
 * `service_region` - Region of the endpoint service.
 * `supported_ip_address_types` - Supported IP address types.
-* `tags` - Map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.
 
 ## Timeouts

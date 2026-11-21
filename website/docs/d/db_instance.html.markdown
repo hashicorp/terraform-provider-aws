@@ -68,6 +68,7 @@ This data source exports the following attributes in addition to the arguments a
 * `preferred_maintenance_window` - Weekly time range during which system maintenance can occur in UTC.
 * `publicly_accessible` - Accessibility options for the DB instance.
 * `replicate_source_db` - Identifier of the source DB that this is a replica of.
+* `replicate_source_db_cluster` - Identifier of the source Multi-AZ DB cluster that this is a replica of.
 * `resource_id` - RDS Resource ID of this instance.
 * `storage_encrypted` - Whether the DB instance is encrypted.
 * `storage_throughput` - Storage throughput value for the DB instance.

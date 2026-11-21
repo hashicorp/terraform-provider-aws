@@ -156,8 +156,8 @@ resource "aws_workspacesweb_session_logger" "example" {
 
 The following arguments are required:
 
-* `event_filter` - (Required) Event filter that determines which events are logged. See [Event Filter](#event-filter) below.
-* `log_configuration` - (Required) Configuration block for specifying where logs are delivered. See [Log Configuration](#log-configuration) below.
+* `event_filter` - (Required) Event filter that determines which events are logged. See [`event_filter` Block](#event_filter-block) below.
+* `log_configuration` - (Required) Configuration block for specifying where logs are delivered. See [`log_configuration` Block](#log_configuration-block) below.
 
 The following arguments are optional:
 
@@ -167,24 +167,24 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Log Configuration
+### `log_configuration` Block
 
-* `s3` - (Required) Configuration block for S3 log delivery. See [S3 Configuration](#s3-configuration) below.
+* `s3` - (Required) Configuration block for S3 log delivery. See [`s3` Block](#s3-block) below.
 
-### Event Filter
+### `event_filter` Block
 
 Exactly one of the following must be specified:
 
 * `all` - (Optional) Block that specifies to monitor all events. Set to `{}` to monitor all events.
 * `include` - (Optional) List of specific events to monitor. Valid values include session events like `SessionStart`, `SessionEnd`, etc.
 
-### S3 Configuration
+### `s3` Block
 
 * `bucket` - (Required) S3 bucket name where logs are delivered.
-* `folder_structure` - (Required) Folder structure that defines the organizational structure for log files in S3. Valid values: `FlatStructure`, `DateBasedStructure`.
-* `log_file_format` - (Required) Format of the log file written to S3. Valid values: `Json`, `Parquet`.
 * `bucket_owner` - (Optional) Expected bucket owner of the target S3 bucket.
+* `folder_structure` - (Required) Folder structure that defines the organizational structure for log files in S3. Valid values: `FlatStructure`, `DateBasedStructure`.
 * `key_prefix` - (Optional) S3 path prefix that determines where log files are stored.
+* `log_file_format` - (Required) Format of the log file written to S3. Valid values: `Json`, `Parquet`.
 
 ## Attribute Reference
 

@@ -162,7 +162,7 @@ var (
 			ConflictsWith: []string{"kms_master_key_id"},
 		},
 		names.AttrTags:    tftags.TagsSchema(),
-		names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 		names.AttrURL: {
 			Type:     schema.TypeString,
 			Computed: true,

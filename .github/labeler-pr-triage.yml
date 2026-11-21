@@ -24,11 +24,6 @@ documentation:
               - '**/*.md'
               - 'docs/**/*'
               - 'website/**/*'
-examples:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'examples/**/*'
 flex:
   - any:
       - changed-files:

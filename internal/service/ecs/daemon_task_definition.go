@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,7 +77,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 255),
-					stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+					lazystringvalidator.RegexMatches("^[0-9A-Za-z_-]+$", "must contain only alphanumeric characters, hyphens, and underscores"),
 				},
 			},
 			"memory": schema.StringAttribute{
@@ -153,7 +153,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(255),
-								stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+								lazystringvalidator.RegexMatches("^[0-9A-Za-z_-]+$", "must contain only alphanumeric characters, hyphens, and underscores"),
 							},
 						},
 						"privileged": schema.BoolAttribute{
@@ -500,7 +500,7 @@ func (r *daemonTaskDefinitionResource) Schema(ctx context.Context, request resou
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(255),
-								stringvalidator.RegexMatches(regexache.MustCompile("^[0-9A-Za-z_-]+$"), "must contain only alphanumeric characters, hyphens, and underscores"),
+								lazystringvalidator.RegexMatches("^[0-9A-Za-z_-]+$", "must contain only alphanumeric characters, hyphens, and underscores"),
 							},
 						},
 					},

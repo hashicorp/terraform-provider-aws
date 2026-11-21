@@ -14,7 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -48,6 +47,7 @@ import (
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -90,10 +90,7 @@ type gatewayTargetResource struct {
 // See: https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/gateway-headers.html
 func headerNameValidators() []validator.String {
 	return []validator.String{
-		stringvalidator.RegexMatches(
-			regexache.MustCompile(`^[a-zA-Z0-9_-]+$`),
-			"header names must contain only alphanumeric characters, hyphens, and underscores",
-		),
+		lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_-]+$`, "header names must contain only alphanumeric characters, hyphens, and underscores"),
 		tfstringvalidator.NoneOfCaseInsensitive(restrictedHeaders()...),
 		tfstringvalidator.PrefixNoneOfCaseInsensitive(
 			[]string{"X-Amzn-"},
@@ -538,7 +535,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][-]?){1,100}$`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen). The name can have up to 50 characters."),
+					lazystringvalidator.RegexMatches(`^([0-9a-zA-Z][-]?){1,100}$`, "Valid characters are a-z, A-Z, 0-9, and - (hyphen). The name can have up to 50 characters."),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -769,10 +766,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												names.AttrEndpoint: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile(`^https://.+`),
-															"Must start with https://",
-														),
+														lazystringvalidator.RegexMatches(`^https://.+`, "Must start with https://"),
 													},
 												},
 												"protocol_type": schema.StringAttribute{
@@ -876,10 +870,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												names.AttrEndpoint: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile(`^https://.+`),
-															"Must start with https://",
-														),
+														lazystringvalidator.RegexMatches(`^https://.+`, "Must start with https://"),
 													},
 												},
 											},
@@ -1189,10 +1180,7 @@ func (r *gatewayTargetResource) Schema(ctx context.Context, request resource.Sch
 												names.AttrEndpoint: schema.StringAttribute{
 													Required: true,
 													Validators: []validator.String{
-														stringvalidator.RegexMatches(
-															regexache.MustCompile(`^https://.+`),
-															"Must start with https://",
-														),
+														lazystringvalidator.RegexMatches(`^https://.+`, "Must start with https://"),
 													},
 												},
 												"listing_mode": schema.StringAttribute{

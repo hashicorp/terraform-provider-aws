@@ -20,6 +20,31 @@ resource "aws_ivs_channel" "example" {
 }
 ```
 
+### With Recording Configuration
+
+This example records broadcasts from the channel to an S3 bucket. To start streaming, configure streaming software with the channel's `ingest_endpoint` and the stream key from the [`aws_ivs_stream_key` data source](/docs/providers/aws/d/ivs_stream_key.html).
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket_prefix = "example-ivs-recordings-"
+}
+
+resource "aws_ivs_recording_configuration" "example" {
+  name = "example"
+
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.example.id
+    }
+  }
+}
+
+resource "aws_ivs_channel" "example" {
+  name                        = "example"
+  recording_configuration_arn = aws_ivs_recording_configuration.example.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:

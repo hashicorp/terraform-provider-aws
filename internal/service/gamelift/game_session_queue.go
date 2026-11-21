@@ -86,7 +86,7 @@ func resourceGameSessionQueue() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"timeout_in_seconds": {
 					Type:         schema.TypeInt,
 					Optional:     true,

@@ -8,7 +8,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/observabilityadmin/types"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -66,7 +66,7 @@ func (r *telemetryPipelineResource) Schema(ctx context.Context, request resource
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 28),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][a-z0-9\-]+$`), "must start with a lowercase letter and contain only lowercase letters, digits, and hyphens"),
+					lazystringvalidator.RegexMatches(`^[a-z][a-z0-9\-]+$`, "must start with a lowercase letter and contain only lowercase letters, digits, and hyphens"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

@@ -116,7 +116,7 @@ func resourceEmailIdentity() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"verification_status": {
 					Type:     schema.TypeString,
 					Computed: true,

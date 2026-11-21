@@ -5,4 +5,5 @@ list "aws_iam_role_policy_attachment" "test" {
   provider = aws
 
   include_resource = true
+  limit            = 250
 }

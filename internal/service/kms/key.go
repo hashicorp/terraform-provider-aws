@@ -121,7 +121,7 @@ func resourceKey() *schema.Resource {
 					RequiredWith: []string{"enable_key_rotation"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"xks_key_id": {
 					Type:         schema.TypeString,
 					Optional:     true,

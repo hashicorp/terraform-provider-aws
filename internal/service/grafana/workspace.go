@@ -158,7 +158,7 @@ func resourceWorkspace() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCConfiguration: {
 					Type:     schema.TypeList,
 					MaxItems: 1,

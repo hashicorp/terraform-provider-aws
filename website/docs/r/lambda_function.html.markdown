@@ -220,8 +220,25 @@ resource "aws_lambda_function" "example" {
     local_mount_path = "/mnt/data"
   }
 
-  # Ensure EFS is ready before Lambda creation
-  depends_on = [aws_efs_mount_target.example]
+  # Mount targets must be available and the execution role must have VPC
+  # permissions before the function is created.
+  depends_on = [
+    aws_efs_mount_target.example,
+    aws_iam_role_policy_attachment.vpc_access,
+  ]
+}
+
+data "aws_partition" "current" {}
+
+# Execution role permissions for VPC networking and EFS access
+resource "aws_iam_role_policy_attachment" "vpc_access" {
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "efs_access" {
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess"
 }
 ```
 

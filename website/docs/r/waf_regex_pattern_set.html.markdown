@@ -23,15 +23,15 @@ resource "aws_waf_regex_pattern_set" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name or description of the Regex Pattern Set.
-* `regex_pattern_strings` - (Optional) A list of regular expression (regex) patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`.
+* `name` - (Required) Name or description of the Regex Pattern Set.
+* `regex_pattern_strings` - (Optional) List of regular expression (regex) patterns for AWS WAF to search for, such as `B[a@]dB[o0]t`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF Regex Pattern Set.
-* `arn` - ARN
+* `arn` - ARN.
+* `id` - ID of the WAF Regex Pattern Set.
 
 ## Import
 

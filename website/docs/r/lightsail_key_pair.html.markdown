@@ -47,7 +47,7 @@ The following arguments are optional:
 * `name` - (Optional) Name of the Lightsail Key Pair. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `pgp_key` - (Optional) PGP key to encrypt the resulting private key material. Only used when creating a new key pair.
-* `public_key` - (Optional) Public key material. This public key will be imported into Lightsail.
+* `public_key` - (Optional) Public key material. This public key will be imported into Lightsail. The exported value is base64 encoded.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags to assign to the resource. To create a key-only tag, use an empty string as the value. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -63,7 +63,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `fingerprint` - MD5 public key fingerprint as specified in section 4 of RFC 4716.
 * `id` - Name used for this key pair.
 * `private_key` - Private key, base64 encoded. This is only populated when creating a new key, and when no `pgp_key` is provided.
-* `public_key` - Public key, base64 encoded.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

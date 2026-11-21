@@ -129,7 +129,7 @@ jobs:
 
       - run: tflint --config .ci/.tflint.hcl --init
 
-      - run: sudo apt-get update && sudo apt-get install -y parallel
+      - run: command -v parallel >/dev/null || { sudo apt-get update && sudo apt-get install -y parallel; }
 
       - run: |
           validate_file() {
