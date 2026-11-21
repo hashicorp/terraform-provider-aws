@@ -93,7 +93,9 @@ The following arguments are optional:
 * `description` - (Optional) Description of the guardrail or its version.
 * `kms_key_arn` - (Optional) KMS key with which the guardrail was encrypted at rest.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `sensitive_information_policy_config` - (Optional) Sensitive information policy config for a guardrail. See [`sensitive_information_policy_config` Block](#sensitive_information_policy_config-block) for more information.
+* `sensitive_information_policy_config` - (Optional) Sensitive information policy config for a guardrail. See [`sensitive_information_policy_config` Block]
+~> **NOTE** When configuring "sensitive_information_policy_config", it is highly recommended to specify all underlying attributes (including 'action','input_action','output_action','input_enabled', and 'output_enabled'), even if they are marked as optional. if these feilds are omitted, the upstream AWS API defaults to an implicit blocking/deny behaviour on inputs, despite showing "NONE" or "Disabled" within the AWS Management Console UI
+(#sensitive_information_policy_config-block) for more information.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topic_policy_config` - (Optional) Topic policy config for a guardrail. See [`topic_policy_config` Block](#topic_policy_config-block) for more information.
 * `word_policy_config` - (Optional) Word policy config for a guardrail. See [`word_policy_config` Block](#word_policy_config-block) for more information.
