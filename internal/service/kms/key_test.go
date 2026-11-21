@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -64,6 +65,80 @@ func TestAccKMSKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, t, resourceName, &key),
 				),
+			},
+		},
+	})
+}
+
+func TestAccKMSKey_skipDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyNoDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_skipDestroy(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					testAccCheckKeyScheduleDeletionOnCleanup(ctx, t, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKMSKey_skipDestroyRemovedFromConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var key awstypes.KeyMetadata
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_kms_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_skipDestroy(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					testAccCheckKeyScheduleDeletionOnCleanup(ctx, t, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
+				),
+			},
+			{
+				// In-place update; no AWS API call is made for this attribute.
+				Config: testAccKeyConfig_skipDestroy(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, t, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Remove the key from configuration. Terraform plans a destroy, but
+				// skip_destroy = true is read from prior state so the key is retained.
+				Config: testAccKeyConfig_skipDestroyRemoved(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyRetained(ctx, t, resourceName, &key),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroy),
+					},
+				},
 			},
 		},
 	})
@@ -764,6 +839,80 @@ func testAccCheckKeyDestroy(ctx context.Context, t *testing.T) resource.TestChec
 	}
 }
 
+// testAccCheckKeyNoDestroy verifies that keys with skip_destroy = true were
+// not scheduled for deletion. Cleanup is handled by testAccCheckKeyScheduleDeletionOnCleanup.
+func testAccCheckKeyNoDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_kms_key" {
+				continue
+			}
+
+			// findKeyByID treats PendingDeletion as NotFound.
+			if _, err := tfkms.FindKeyByID(ctx, conn, rs.Primary.ID); err != nil {
+				return fmt.Errorf("KMS Key %s was not retained: %w", rs.Primary.ID, err)
+			}
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckKeyRetained verifies that the resource is no longer in state and
+// that its key still exists in AWS and is not pending deletion.
+func testAccCheckKeyRetained(ctx context.Context, t *testing.T, n string, key *awstypes.KeyMetadata) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		keyID := aws.ToString(key.KeyId)
+
+		if _, ok := s.RootModule().Resources[n]; ok {
+			return fmt.Errorf("%s is still in state", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
+
+		// findKeyByID treats PendingDeletion as NotFound.
+		if _, err := tfkms.FindKeyByID(ctx, conn, keyID); err != nil {
+			return fmt.Errorf("KMS Key %s was not retained: %w", keyID, err)
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckKeyScheduleDeletionOnCleanup registers a test cleanup that
+// schedules the key for deletion, so a key retained by skip_destroy is removed
+// even if a later step or check fails.
+func testAccCheckKeyScheduleDeletionOnCleanup(ctx context.Context, t *testing.T, key *awstypes.KeyMetadata) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		keyID := aws.ToString(key.KeyId)
+		// acctest.Context is derived from t.Context(), which is canceled before cleanup functions run.
+		ctx := context.WithoutCancel(ctx)
+
+		t.Cleanup(func() {
+			conn := acctest.ProviderMeta(ctx, t).KMSClient(ctx)
+
+			input := kms.ScheduleKeyDeletionInput{
+				KeyId:               aws.String(keyID),
+				PendingWindowInDays: aws.Int32(7),
+			}
+			_, err := conn.ScheduleKeyDeletion(ctx, &input)
+
+			// Destroy already scheduled deletion, e.g. if a step failed while skip_destroy was false.
+			if errs.IsAErrorMessageContains[*awstypes.KMSInvalidStateException](err, "is pending deletion") {
+				return
+			}
+
+			if err != nil {
+				t.Errorf("cleaning up KMS Key (%s): %s", keyID, err)
+			}
+		})
+
+		return nil
+	}
+}
+
 func testAccCheckKeyExists(ctx context.Context, t *testing.T, name string, key *awstypes.KeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -821,6 +970,23 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
   enable_key_rotation     = true
 }
+`
+}
+
+func testAccKeyConfig_skipDestroy(rName string, skipDestroy bool) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  skip_destroy            = %[2]t
+}
+`, rName, skipDestroy)
+}
+
+func testAccKeyConfig_skipDestroyRemoved() string {
+	return `
+data "aws_caller_identity" "current" {}
 `
 }
 
