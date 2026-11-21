@@ -5,19 +5,21 @@ package apigatewayv2
 
 // Exports for use in tests only.
 var (
-	ResourceAPI                 = resourceAPI
-	ResourceAPIMapping          = resourceAPIMapping
-	ResourceAuthorizer          = resourceAuthorizer
-	ResourceDeployment          = resourceDeployment
-	ResourceDomainName          = resourceDomainName
-	ResourceIntegration         = resourceIntegration
-	ResourceIntegrationResponse = resourceIntegrationResponse
-	ResourceModel               = resourceModel
-	ResourceRoute               = resourceRoute
-	ResourceRouteResponse       = resourceRouteResponse
-	ResourceRoutingRule         = newRoutingRuleResource
-	ResourceStage               = resourceStage
-	ResourceVPCLink             = resourceVPCLink
+	ResourceAPI                        = resourceAPI
+	ResourceAPIMapping                 = resourceAPIMapping
+	ResourceAuthorizer                 = resourceAuthorizer
+	ResourceDeployment                 = resourceDeployment
+	ResourceDomainName                 = resourceDomainName
+	ResourceIntegration                = resourceIntegration
+	ResourceIntegrationResponse        = resourceIntegrationResponse
+	ResourceModel                      = resourceModel
+	ResourcePortalProduct              = newPortalProductResource
+	ResourcePortalProductSharingPolicy = newPortalProductSharingPolicyResource
+	ResourceRoute                      = resourceRoute
+	ResourceRouteResponse              = resourceRouteResponse
+	ResourceRoutingRule                = newRoutingRuleResource
+	ResourceStage                      = resourceStage
+	ResourceVPCLink                    = resourceVPCLink
 
 	FindAPIByID                           = findAPIByID
 	FindAPIMappingByTwoPartKey            = findAPIMappingByTwoPartKey
@@ -28,6 +30,8 @@ var (
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
 	FindIntegrations                      = findIntegrations
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
+	FindPortalProductByID                 = findPortalProductByID
+	FindPortalProductSharingPolicyByID    = findPortalProductSharingPolicyByID
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
 	FindRoutes                            = findRoutes
