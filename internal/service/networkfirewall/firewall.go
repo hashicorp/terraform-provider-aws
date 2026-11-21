@@ -43,7 +43,7 @@ import (
 // @ArnIdentity
 // @CustomImport
 // @Testing(preIdentityVersion="v6.72.0")
-// @Testing(importIgnore="delete_associated_nat_gateways;update_token")
+// @Testing(importIgnore="delete_associated_nat_gateways;update_token", plannableImportAction="NoOp")
 func resourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallCreate,

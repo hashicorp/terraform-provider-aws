@@ -81,13 +81,11 @@ func TestAccNetworkFirewallFirewall_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 4: Import block with Resource Identity
@@ -101,13 +99,11 @@ func TestAccNetworkFirewallFirewall_Identity_basic(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.Region())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -191,13 +187,11 @@ func TestAccNetworkFirewallFirewall_Identity_regionOverride(t *testing.T) {
 				ImportStateIdFunc: acctest.CrossRegionImportStateIdFunc(resourceName),
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 5: Import block with Import ID and no appended "@<region>"
@@ -212,13 +206,11 @@ func TestAccNetworkFirewallFirewall_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithID,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 
 			// Step 6: Import block with Resource Identity
@@ -233,13 +225,11 @@ func TestAccNetworkFirewallFirewall_Identity_regionOverride(t *testing.T) {
 				ImportStateKind: resource.ImportBlockWithResourceIdentity,
 				ImportPlanChecks: resource.ImportPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.NotNull()),
 						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrRegion), knownvalue.StringExact(acctest.AlternateRegion())),
 					},
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
