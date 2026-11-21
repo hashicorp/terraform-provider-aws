@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_cognito_identity_provider: `idp_identifiers` is now a set of strings and can no longer be indexed. Configurations referencing it by index, or passing it to functions that require a list, must wrap it in `tolist()`
+```
+
+```release-note:bug
+resource/aws_cognito_identity_provider: Change `idp_identifiers` to a set to prevent perpetual diffs when AWS returns the identifiers in a different order than configured
+```
