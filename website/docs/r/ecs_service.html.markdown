@@ -102,6 +102,31 @@ resource "aws_ecs_service" "example" {
 }
 ```
 
+### Early Success Criteria for Rolling Deployments
+
+Early success criteria is supported only with the `ROLLING` deployment strategy. To configure early completion for a service whose old tasks take a long time to drain:
+
+```terraform
+resource "aws_ecs_service" "example" {
+  name            = "example"
+  cluster         = aws_ecs_cluster.example.id
+  task_definition = aws_ecs_task_definition.example.arn
+  desired_count   = 2
+
+  deployment_configuration {
+    strategy = "ROLLING"
+
+    early_success_criteria {
+      enable                          = true
+      healthy_percent                 = 100
+      source_service_revision_cleanup = "DEFERRED"
+    }
+  }
+}
+```
+
+~> **Note:** `wait_for_steady_state = true` continues to wait for service stability, including the removal of previous deployments. Early deployment success does not shorten that wait. See the [Amazon ECS early success criteria documentation](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/early-success-criteria.html) for deployment behavior and limitations.
+
 ### Blue/Green Deployment with SIGINT Rollback
 
 ```terraform
@@ -320,9 +345,18 @@ The `deployment_configuration` configuration block supports the following:
 
 * `bake_time_in_minutes` - (Optional) Number of minutes to wait after a new deployment is fully provisioned before terminating the old deployment. Valid range: 0-1440 minutes. Used with `BLUE_GREEN`, `LINEAR`, and `CANARY` strategies.
 * `canary_configuration` - (Optional) Configuration block for canary deployment strategy. Required when `strategy` is set to `CANARY`. [See below](#canary_configuration-block).
+* `early_success_criteria` - (Optional) Configuration block for completing rolling deployments early. Only supported with the `ROLLING` deployment strategy. See [`early_success_criteria` Block](#early_success_criteria-block) below.
 * `lifecycle_hook` - (Optional) Configuration block for lifecycle hooks that are invoked during deployments. [See below](#lifecycle_hook-block).
 * `linear_configuration` - (Optional) Configuration block for linear deployment strategy. Required when `strategy` is set to `LINEAR`. [See below](#linear_configuration-block).
 * `strategy` - (Optional) Type of deployment strategy. Valid values: `ROLLING`, `BLUE_GREEN`, `LINEAR`, `CANARY`. Default: `ROLLING`.
+
+### `early_success_criteria` Block
+
+The `early_success_criteria` block supports the following:
+
+* `enable` - (Required) Whether to use early success criteria. Set to `false` to disable early success criteria. Omitting the block preserves the existing configuration.
+* `healthy_percent` - (Optional) Percentage of the desired task count that must be healthy before the deployment can complete. Required when `enable` is `true`. Valid values are integers from `0` to `100`, and the value must be at least `deployment_minimum_healthy_percent`.
+* `source_service_revision_cleanup` - (Optional) When to remove tasks from the previous service revision. Required when `enable` is `true`. Valid values are `BLOCKING` (remove previous tasks before deployment completion) and `DEFERRED` (remove previous tasks in the background after deployment completion).
 
 ### `lifecycle_hook` Block
 
