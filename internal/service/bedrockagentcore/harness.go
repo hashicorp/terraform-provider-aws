@@ -1069,6 +1069,30 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 			}
 		}
 
+		if state.Tools.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 && config.Tools.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+			// Clears configured tools. UpdateHarness keeps the existing tools when tools is omitted.
+			input.Tools = []awstypes.HarnessTool{}
+		}
+
+		if state.Skills.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 && config.Skills.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+			// Clears configured skills. UpdateHarness keeps the existing skills when skills is omitted.
+			input.Skills = []awstypes.HarnessSkill{}
+		}
+
+		if state.EnvironmentArtifact.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 && config.EnvironmentArtifact.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+			// Clears configured value for environment_artifact
+			input.EnvironmentArtifact = &awstypes.UpdatedHarnessEnvironmentArtifact{
+				OptionalValue: nil,
+			}
+		}
+
+		if state.AuthorizerConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 && config.AuthorizerConfiguration.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+			// Clears configured value for authorizer_configuration
+			input.AuthorizerConfiguration = &awstypes.UpdatedAuthorizerConfiguration{
+				OptionalValue: nil,
+			}
+		}
+
 		_, err := conn.UpdateHarness(ctx, &input)
 		if err != nil {
 			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, harnessID)
