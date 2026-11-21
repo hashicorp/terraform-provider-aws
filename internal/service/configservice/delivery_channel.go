@@ -153,9 +153,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrS3BucketName, channel.S3BucketName)
 	d.Set(names.AttrS3KeyPrefix, channel.S3KeyPrefix)
 	d.Set("s3_kms_key_arn", channel.S3KmsKeyArn)
-	if channel.ConfigSnapshotDeliveryProperties != nil {
-		d.Set("snapshot_delivery_properties", flattenSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
-	}
+	d.Set("snapshot_delivery_properties", flattenSnapshotDeliveryProperties(channel.ConfigSnapshotDeliveryProperties))
 	d.Set(names.AttrSNSTopicARN, channel.SnsTopicARN)
 
 	return diags
