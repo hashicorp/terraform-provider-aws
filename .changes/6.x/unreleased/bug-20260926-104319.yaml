@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-09-26T10:43:19.815366+05:30
+custom:
+    Body: Fix perpetual diff and duplicate quota increase requests caused by state not syncing after a rejected `RequestServiceQuotaIncrease` call
+    Impact: resource/aws_servicequotas_service_quota
+    PullRequest: "50172"
