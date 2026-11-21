@@ -179,6 +179,7 @@ func resourceRoute() *schema.Resource {
 				//
 				// Computed attributes.
 				//
+				"igw_firewall": routeIGWFirewallSchema(),
 				names.AttrInstanceID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -340,6 +341,40 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	return resourceRouteFlatten(d, route)
 }
 
+// routeIGWFirewallSchema describes the Automated Internet Firewall that inspects traffic for a route
+// to an internet gateway or egress-only internet gateway. It is read-only: the route target stays the gateway.
+func routeIGWFirewallSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"firewall_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenIGWFirewall(apiObject *awstypes.IgwFirewall) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"firewall_arn":   aws.ToString(apiObject.FirewallArn),
+		names.AttrStatus: apiObject.Status,
+	}
+
+	return []any{tfMap}
+}
+
 func resourceRouteFlatten(d *schema.ResourceData, route *awstypes.Route) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -357,6 +392,9 @@ func resourceRouteFlatten(d *schema.ResourceData, route *awstypes.Route) diag.Di
 		d.Set(names.AttrVPCEndpointID, nil)
 	}
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
+	if err := d.Set("igw_firewall", flattenIGWFirewall(route.IgwFirewall)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting igw_firewall: %s", err)
+	}
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set(names.AttrInstanceID, route.InstanceId)

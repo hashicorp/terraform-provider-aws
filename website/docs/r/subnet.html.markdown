@@ -141,6 +141,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the subnet
 * `arn` - The ARN of the subnet.
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
+* `network_firewall_connectivity_type` - Internet connectivity that the Automated Internet Firewall applies to the subnet: `az-unsupported`, `bidirectional`, `exclude`, `flexible` or `outbound-only`. Only set if the subnet's VPC has a firewall. AWS Network Security Manager sets this from the policy's `igw_firewall_config`.
 * `owner_id` - The ID of the AWS account that owns the subnet.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
