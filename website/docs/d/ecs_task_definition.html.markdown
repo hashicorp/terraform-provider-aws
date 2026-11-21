@@ -85,6 +85,7 @@ The following arguments are optional:
 * `runtime_platform` - Configuration block for [runtime_platform](#runtime_platform-block) that containers in your task may use.
 * `status` - Status of the task definition.
 * `task_role_arn` - ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `trusted_execution_configuration` - Isolation settings for tasks on Amazon ECS Managed Instances. See [`trusted_execution_configuration` Block](#trusted_execution_configuration-block).
 * `volume` - Configuration block for volumes that containers in your task may use. See [`volume` Block](#volume-block) for details.
 
 ### `ephemeral_storage` Block
@@ -106,6 +107,11 @@ The following arguments are optional:
 
 * `cpu_architecture` - Must be set to either `X86_64` or `ARM64`; see [CPU architecture](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform)
 * `operating_system_family` - If the `requires_compatibilities` is `FARGATE` this field is required; must be set to a valid option from the [operating system family in the runtime platform](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definition_parameters.html#runtime-platform) setting
+
+### `trusted_execution_configuration` Block
+
+* `attestation_policy` - Base64-encoded attestation policy envelope for the task.
+* `isolation_mode` - Isolation mode for tasks that use this task definition: `SHARED`, `ISOLATED_SANDBOX` or `CONFIDENTIAL_SANDBOX`.
 
 ### `volume` Block
 

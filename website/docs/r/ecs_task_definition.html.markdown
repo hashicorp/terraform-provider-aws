@@ -240,6 +240,7 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_role_arn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
 * `track_latest` - (Optional) Whether should track latest `ACTIVE` task definition on AWS or the one created with the resource stored in state. Default is `false`. Useful in the event the task definition is modified outside of this resource.
+* `trusted_execution_configuration` - (Optional) Configuration block for running tasks in isolated or confidential [Nitro Sandboxes](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/isolated-confidential-tasks.html) on Amazon ECS Managed Instances. Detailed below.
 * `volume` - (Optional) Repeatable configuration block for [volumes](#volume-block) that containers in your task may use. Detailed below.
 
 ~> **NOTE:** Proper escaping is required for JSON field values containing quotes (`"`) such as `environment` values. If directly setting the JSON, they should be escaped as `\"` in the JSON,  e.g., `"value": "I \"love\" escaped quotes"`. If using a Terraform variable value, they should be escaped as `\\\"` in the variable, e.g., `value = "I \\\"love\\\" escaped quotes"` in the variable and `"value": "${var.myvariable}"` in the JSON.
@@ -322,6 +323,11 @@ For more information, see [Mounting S3 file systems on Amazon ECS](https://docs.
 ### `ephemeral_storage` Block
 
 * `size_in_gib` - (Required) Total amount, in GiB, of ephemeral storage to set for the task. The minimum supported value is `21` GiB and the maximum supported value is `200` GiB.
+
+### `trusted_execution_configuration` Block
+
+* `attestation_policy` - (Optional) Base64-encoded attestation policy envelope for the task. It specifies which containers are allowed to run and the runtime configuration that is cryptographically attested. Required when `isolation_mode` is `CONFIDENTIAL_SANDBOX`.
+* `isolation_mode` - (Required) Isolation mode for tasks that use this task definition. Valid values are `SHARED` (default API behavior, the task shares the instance with other tasks), `ISOLATED_SANDBOX` (the task runs in its own Nitro Sandbox) and `CONFIDENTIAL_SANDBOX` (a Nitro Sandbox with cryptographic attestation). `ISOLATED_SANDBOX` and `CONFIDENTIAL_SANDBOX` need a capacity provider with `nitro_enclaves_enabled` set to `true`. A `SHARED` block without `attestation_policy` is treated the same as no block, so adding or removing it does not replace the task definition.
 
 ## Attribute Reference
 

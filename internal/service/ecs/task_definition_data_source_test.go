@@ -155,6 +155,31 @@ func TestAccECSTaskDefinitionDataSource_proxyConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinitionDataSource_trustedExecutionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_task_definition.test"
+	resourceName := "aws_ecs_task_definition.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionDataSourceConfig_trustedExecutionConfiguration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "trusted_execution_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "trusted_execution_configuration.0.isolation_mode", resourceName, "trusted_execution_configuration.0.isolation_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "trusted_execution_configuration.0.attestation_policy", resourceName, "trusted_execution_configuration.0.attestation_policy"),
+				),
+			},
+		},
+	})
+}
+
 func testAccTaskDefinitionDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -362,4 +387,12 @@ data "aws_ecs_task_definition" "test" {
   task_definition = aws_ecs_task_definition.test.family
 }
 `, rName)
+}
+
+func testAccTaskDefinitionDataSourceConfig_trustedExecutionConfiguration(rName string) string {
+	return acctest.ConfigCompose(testAccTaskDefinitionConfig_trustedExecutionConfiguration(rName, "ISOLATED_SANDBOX"), `
+data "aws_ecs_task_definition" "test" {
+  task_definition = aws_ecs_task_definition.test.arn
+}
+`)
 }
