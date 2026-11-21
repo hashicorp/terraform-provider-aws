@@ -244,6 +244,10 @@ func resourceObject() *schema.Resource {
 						},
 					},
 				},
+				"prevent_overwrite": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
 				"server_side_encryption": {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -610,6 +614,10 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, state := configuredString(d.GetRawConfig(), "object_lock_retain_until_date"); state == attrSet {
 		input.ObjectLockRetainUntilDate = expandObjectDate(v)
+	}
+
+	if d.Get("prevent_overwrite").(bool) {
+		input.IfNoneMatch = aws.String("*")
 	}
 
 	if v, ok := d.GetOk("server_side_encryption"); ok {
