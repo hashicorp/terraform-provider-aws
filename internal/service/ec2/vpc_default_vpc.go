@@ -148,6 +148,7 @@ func resourceDefaultVPC() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"network_firewall_association": vpcNetworkFirewallAssociationSchema(),
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,

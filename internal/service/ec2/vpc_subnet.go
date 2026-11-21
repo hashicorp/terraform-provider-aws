@@ -167,6 +167,10 @@ func resourceSubnet() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
+				"network_firewall_connectivity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrOutpostARN: {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -803,6 +807,7 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	rd.Set("ipv6_native", subnet.Ipv6Native)
 	rd.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	rd.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
+	rd.Set("network_firewall_connectivity_type", subnet.NetworkFirewallConnectivityType)
 	rd.Set(names.AttrOutpostARN, subnet.OutpostArn)
 	rd.Set(names.AttrOwnerID, subnet.OwnerId)
 	rd.Set(names.AttrVPCID, subnet.VpcId)

@@ -185,6 +185,7 @@ func resourceVPC() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"network_firewall_association": vpcNetworkFirewallAssociationSchema(),
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -730,6 +731,49 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v str
 	return nil
 }
 
+// vpcNetworkFirewallAssociationSchema describes the Automated Internet Firewall that AWS Network
+// Security Manager sets up between a VPC and its internet gateway. It is read-only.
+func vpcNetworkFirewallAssociationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"firewall_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_onboarding_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenNetworkFirewallAssociations(apiObjects []awstypes.NetworkFirewallAssociation) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			"firewall_arn":               aws.ToString(apiObject.FirewallArn),
+			"firewall_mode":              apiObject.FirewallMode,
+			"firewall_onboarding_status": apiObject.FirewallOnboardingStatus,
+		})
+	}
+
+	return tfList
+}
+
 func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awstypes.Vpc, d *schema.ResourceData) error {
 	conn := client.EC2Client(ctx)
 	ownerID := aws.ToString(vpc.OwnerId)
@@ -737,6 +781,9 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
+	if err := d.Set("network_firewall_association", flattenNetworkFirewallAssociations(vpc.NetworkFirewallAssociations)); err != nil {
+		return fmt.Errorf("setting network_firewall_association: %w", err)
+	}
 	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {
