@@ -58,7 +58,11 @@ The arguments of this data source act as filters for querying the available Rout
 
 ## Attribute Reference
 
-This data source exports no additional attributes.
+This data source exports the following attributes in addition to the arguments above:
+
+* `igw_firewall` - Automated Internet Firewall that inspects traffic for the route. Only set for routes that target an internet gateway or egress-only internet gateway in a VPC that has a firewall.
+    * `firewall_arn` - ARN of the firewall.
+    * `status` - Status of the firewall: `active`, `pending` or `disabling`.
 
 ## Timeouts
 
