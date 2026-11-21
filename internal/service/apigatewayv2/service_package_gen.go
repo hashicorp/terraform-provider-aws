@@ -31,9 +31,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newPortalProductResource,
 			TypeName: "aws_apigatewayv2_portal_product",
 			Name:     "Portal Product",
-			Tags: unique.Make(inttypes.ServicePackageResourceTags{
-				IdentifierAttribute: "portal_product_arn",
-			}),
+			Tags:     inttypes.ResourceTagsAttribute("portal_product_arn"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("portal_product_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newPortalProductSharingPolicyResource,
+			TypeName: "aws_apigatewayv2_portal_product_sharing_policy",
+			Name:     "Portal Product Sharing Policy",
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("portal_product_id", true)),
 			Import: inttypes.FrameworkImport{
