@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,10 +23,22 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
+			acctest.CtBasic:                           testAccEBSEncryptionByDefault_basic,
+			"importUpgrade_generatedID":               testAccEBSEncryptionByDefault_importUpgrade_generatedID,
+			"importUpgrade_default":                   testAccEBSEncryptionByDefault_importUpgrade_default,
+			"importUpgrade_generatedIDRegionOverride": testAccEBSEncryptionByDefault_importUpgrade_generatedIDRegionOverride,
+			"importUpgrade_defaultRegionOverride":     testAccEBSEncryptionByDefault_importUpgrade_defaultRegionOverride,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
+		},
+		"List": {
+			acctest.CtBasic:   testAccEC2EBSEncryptionByDefault_List_basic,
+			"includeResource": testAccEC2EBSEncryptionByDefault_List_includeResource,
+			"regionOverride":  testAccEC2EBSEncryptionByDefault_List_regionOverride,
+		},
+		"Identity": {
+			"serial": testAccEC2EBSEBSEncryptionByDefault_identitySerial,
 		},
 	}
 
@@ -107,6 +121,170 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, t *testing.T, n str
 
 		return nil
 	}
+}
+
+func testAccCheckEBSEncryptionByDefaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckEncryptionByDefaultDestroy(ctx, t)
+}
+
+func testAccCheckEBSEncryptionByDefaultExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+	return testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true)
+}
+
+func testAccEBSEncryptionByDefault_importUpgrade(t *testing.T, useGeneratedID bool, alternateRegion bool) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ebs_encryption_by_default.test"
+
+	region := acctest.Region()
+	if alternateRegion {
+		region = acctest.AlternateRegion()
+	}
+
+	var originalID string
+
+	destroyCtx := conns.NewResourceContext(ctx, names.EC2, "EBS Encryption By Default", "aws_ebs_encryption_by_default", region)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			if alternateRegion {
+				acctest.PreCheckMultipleRegion(t, 2)
+			}
+		},
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckEncryptionByDefaultDestroy(destroyCtx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "= 6.73.0",
+					},
+				},
+				Config: testAccEBSEncryptionByDefaultConfig_importUpgrade(region, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, region),
+					func(s *terraform.State) error {
+						rs, ok := s.RootModule().Resources[resourceName]
+						if !ok || rs.Primary == nil {
+							return fmt.Errorf("resource %q not found", resourceName)
+						}
+
+						originalID = rs.Primary.ID
+						if originalID == "" {
+							return fmt.Errorf("resource %q has an empty ID", resourceName)
+						}
+						if inttypes.IsAWSRegion(originalID) {
+							return fmt.Errorf("expected a legacy generated ID, got region-form ID %q", originalID)
+						}
+
+						return nil
+					},
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config: testAccEBSEncryptionByDefaultConfig_importUpgrade(
+					region, false,
+				),
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(_ *terraform.State) (string, error) {
+					id := originalID
+
+					// Use "default" for explicit-ID case; generated ID for generated case
+					if !useGeneratedID {
+						id = "default"
+					}
+
+					if id == "" {
+						return "", fmt.Errorf("original resource ID was not captured")
+					}
+
+					// Append region qualifier for alternate-region imports
+					if alternateRegion {
+						id += "@" + region
+					}
+
+					return id, nil
+				},
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrRegion,
+				ImportStateVerifyIgnore:              []string{names.AttrID},
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					func(states []*terraform.InstanceState) error {
+						if len(states) != 1 {
+							return fmt.Errorf(
+								"expected one imported resource, got %d",
+								len(states),
+							)
+						}
+						if got := states[0].ID; got != region {
+							return fmt.Errorf(
+								"expected imported ID %q, got %q",
+								region, got,
+							)
+						}
+
+						return nil
+					},
+					acctest.ImportCheckResourceAttr(
+						names.AttrID, region,
+					),
+					acctest.ImportCheckResourceAttr(
+						names.AttrRegion, region,
+					),
+					acctest.ImportCheckResourceAttr(
+						names.AttrEnabled, acctest.CtTrue,
+					),
+				),
+			},
+		},
+	})
+}
+
+// Case 1: Generated ID, default region
+func testAccEBSEncryptionByDefault_importUpgrade_generatedID(t *testing.T) {
+	testAccEBSEncryptionByDefault_importUpgrade(t, true, false)
+}
+
+// Case 2: Explicit "default" ID, default region
+func testAccEBSEncryptionByDefault_importUpgrade_default(t *testing.T) {
+	testAccEBSEncryptionByDefault_importUpgrade(t, false, false)
+}
+
+// Case 3: Generated ID, alternate region with @region qualifier
+func testAccEBSEncryptionByDefault_importUpgrade_generatedIDRegionOverride(t *testing.T) {
+	testAccEBSEncryptionByDefault_importUpgrade(t, true, true)
+}
+
+// Case 4: Explicit "default" ID, alternate region with @region qualifier
+func testAccEBSEncryptionByDefault_importUpgrade_defaultRegionOverride(t *testing.T) {
+	testAccEBSEncryptionByDefault_importUpgrade(t, false, true)
+}
+
+func testAccEBSEncryptionByDefaultConfig_importUpgrade(region string, preChange bool) string {
+	versionConstraint := ""
+	if preChange {
+		versionConstraint = `version = "6.73.0"`
+	}
+
+	return fmt.Sprintf(`
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      %[1]s
+    }
+  }
+}
+
+resource "aws_ebs_encryption_by_default" "test" {
+  region  = %[2]q
+  enabled = true
+}
+`, versionConstraint, region)
 }
 
 func testAccEBSEncryptionByDefaultConfig_basic(enabled bool) string {
