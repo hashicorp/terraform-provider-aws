@@ -11,12 +11,15 @@ var (
 	ResourceStackInstances   = resourceStackInstances
 	ResourceType             = resourceType
 
-	FindStackInstanceByFourPartKey          = findStackInstanceByFourPartKey
-	FindStackInstanceSummariesByFourPartKey = findStackInstanceSummariesByFourPartKey
-	FindStackSetByName                      = findStackSetByName
-	FindTypeByARN                           = findTypeByARN
-	FindStackInstancesByNameCallAs          = findStackInstancesByNameCallAs
-	StackSetInstanceResourceIDPartCount     = stackSetInstanceResourceIDPartCount
-	StackInstancesResourceIDPartCount       = stackInstancesResourceIDPartCount
-	TypeVersionARNToTypeARNAndVersionID     = typeVersionARNToTypeARNAndVersionID
+	FindStackInstanceByFourPartKey            = findStackInstanceByFourPartKey
+	FindStackInstanceSummariesByFourPartKey   = findStackInstanceSummariesByFourPartKey
+	FindStackSetByName                        = findStackSetByName
+	FindTypeByARN                             = findTypeByARN
+	FindStackInstancesByNameCallAs            = findStackInstancesByNameCallAs
+	StackSetInstanceResourceIDPartCount       = stackSetInstanceResourceIDPartCount
+	StackInstancesResourceIDPartCount         = stackInstancesResourceIDPartCount
+	TypeVersionARNToTypeARNAndVersionID       = typeVersionARNToTypeARNAndVersionID
+	ExpandStackSetManagedExecutionUpdateInput = expandStackSetManagedExecutionUpdateInput
+	ManagedExecutionActive                    = managedExecutionActive
+	StackSetParametersDiffer                  = stackSetParametersDiffer
 )
