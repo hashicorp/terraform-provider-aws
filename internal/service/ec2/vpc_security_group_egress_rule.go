@@ -32,8 +32,13 @@ type securityGroupEgressRuleResource struct {
 	securityGroupRuleResource
 }
 
-func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
-	return []resource.StateMover{}
+func (r *securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
+	return []resource.StateMover{
+		{
+			SourceSchema: legacySecurityGroupRuleResourceSchemaV2(ctx),
+			StateMover:   r.moveStateResourceSecurityGroupRule,
+		},
+	}
 }
 
 func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
@@ -70,4 +75,14 @@ func (r *securityGroupEgressRuleResource) findByID(ctx context.Context, id strin
 	conn := r.Meta().EC2Client(ctx)
 
 	return findSecurityGroupEgressRuleByID(ctx, conn, id)
+}
+
+// moveStateResourceSecurityGroupRule transforms the state of an `aws_security_group_rule` resource to this resource's schema.
+func (r *securityGroupEgressRuleResource) moveStateResourceSecurityGroupRule(ctx context.Context, request resource.MoveStateRequest, response *resource.MoveStateResponse) {
+	source, done := r.validateMoveSupport(ctx, request, response, securityGroupRuleTypeEgress)
+	if done {
+		return
+	}
+
+	r.populateSgRuleModel(ctx, source, response)
 }
