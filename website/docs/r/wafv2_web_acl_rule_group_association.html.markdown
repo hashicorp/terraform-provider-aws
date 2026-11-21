@@ -373,12 +373,16 @@ Exactly one of the following action blocks must be specified:
 Exactly one of the following arguments must be specified:
 
 * `disable` - (Optional) Turns off the use of Amazon Bedrock Guardrails. The rule group continues to run its own inspections. Specify as an empty block, `disable {}`.
-* `protect_request_and_response` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests and the responses to them. [See below](#protect_request_and_response-and-protect_request_only-blocks).
-* `protect_request_only` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests. [See below](#protect_request_and_response-and-protect_request_only-blocks).
+* `protect_request_and_response` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests and the responses to them. [See below](#protect_request_and_response-block).
+* `protect_request_only` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests. [See below](#protect_request_only-block).
 
-### `protect_request_and_response` and `protect_request_only` Blocks
+### `protect_request_and_response` Block
 
 * `role_arn` - (Required) ARN of the IAM role that AWS WAF uses to call Amazon Bedrock Guardrails for the rule group. The role must be in the same AWS account as the web ACL, must trust the `wafv2.amazonaws.com` service principal and allow `bedrock:InvokeGuardrailChecks`, and you must have permission to call `iam:PassRole` on it.
+
+### `protect_request_only` Block
+
+* `role_arn` - (Required) ARN of the IAM role that AWS WAF uses to call Amazon Bedrock Guardrails for the rule group. Same requirements as `role_arn` in [`protect_request_and_response`](#protect_request_and_response-block).
 
 ### `aws_managed_rules_anti_ddos_rule_set` Block
 
