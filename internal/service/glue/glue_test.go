@@ -36,6 +36,7 @@ func TestAccGlue_serial(t *testing.T) {
 			"federatedCatalog_mySQL":           testAccCatalogDataSource_FederatedCatalog_mySQL,
 			"federatedCatalog_s3Tables":        testAccCatalogDataSource_FederatedCatalog_s3Tables,
 			"targetRedshiftCatalog_serverless": testAccCatalogDataSource_TargetRedshiftCatalog_serverless,
+			"rootCatalog":                      testAccCatalogDataSource_rootCatalog,
 		},
 		// Catalog list tests are serialized due to aws_lakeformation_data_lake_settings, a per-account
 		// singleton that is needed for permissions. Ideally, we would be able to do a setup for
