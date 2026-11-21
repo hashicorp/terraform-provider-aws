@@ -373,7 +373,7 @@ Metadata options can be applied/modified to the EC2 Instance at any time.
 The `metadata_options` block supports the following:
 
 * `http_endpoint` - (Optional) Whether the metadata service is available. Valid values include `enabled` or `disabled`. Defaults to `enabled`.
-* `http_protocol_ipv6` - (Optional) Whether the IPv6 endpoint for the instance metadata service is enabled. Defaults to `disabled`.
+* `http_protocol_ipv6` - (Optional) Whether the IPv6 endpoint for the instance metadata service is enabled. Valid values include `enabled` or `disabled`. If not specified, no value is sent to the API and the AWS default (`disabled` in partitions that support this option) applies. This option is not supported in all AWS partitions.
 * `http_put_response_hop_limit` - (Optional) Desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Valid values are integer from `1` to `64`. Defaults to `1`.
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Valid values include `optional` or `required`.
 * `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Valid values include `enabled` or `disabled`. Defaults to `disabled`.
