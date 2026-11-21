@@ -727,6 +727,83 @@ func TestAccECSCapacityProvider_ManagedInstancesProvider_capacityReservations(t 
 	})
 }
 
+func TestAccECSCapacityProvider_ManagedInstancesProvider_nitroEnclavesEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider awstypes.CapacityProvider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_capacity_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_nitroEnclavesEnabled(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.nitro_enclaves_enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.nitro_enclaves_enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				Config: testAccCapacityProviderConfig_ManagedInstancesProvider_nitroEnclavesEnabled(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCapacityProviderExists(ctx, t, resourceName, &provider),
+					resource.TestCheckResourceAttr(resourceName, "managed_instances_provider.0.instance_launch_template.0.nitro_enclaves_enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSCapacityProvider_ManagedInstancesProvider_nitroEnclavesEnabledWithLocalStorage(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCapacityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCapacityProviderConfig_ManagedInstancesProvider_nitroEnclavesEnabledWithLocalStorage(rName),
+				ExpectError: regexache.MustCompile(`nitro_enclaves_enabled can't be true when local_storage_configuration.use_local_storage is true`),
+			},
+		},
+	})
+}
+
 func TestAccECSCapacityProvider_ManagedInstancesProvider_capacityReservationsValidation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -1549,6 +1626,56 @@ resource "aws_ecs_capacity_provider" "test" {
 
     instance_launch_template {
       ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+
+      local_storage_configuration {
+        use_local_storage = true
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccCapacityProviderConfig_ManagedInstancesProvider_nitroEnclavesEnabled(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+      nitro_enclaves_enabled   = %[2]t
+
+      network_configuration {
+        subnets         = aws_subnet.test[*].id
+        security_groups = [aws_security_group.test.id]
+      }
+    }
+  }
+}
+`, rName, enabled))
+}
+
+func testAccCapacityProviderConfig_ManagedInstancesProvider_nitroEnclavesEnabledWithLocalStorage(rName string) string {
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_ManagedInstancesProvider_base(rName), fmt.Sprintf(`
+resource "aws_ecs_capacity_provider" "test" {
+  name    = %[1]q
+  cluster = aws_ecs_cluster.test.name
+
+  managed_instances_provider {
+    infrastructure_role_arn = aws_iam_role.test.arn
+
+    instance_launch_template {
+      ec2_instance_profile_arn = aws_iam_instance_profile.test.arn
+      nitro_enclaves_enabled   = true
 
       network_configuration {
         subnets         = aws_subnet.test[*].id
