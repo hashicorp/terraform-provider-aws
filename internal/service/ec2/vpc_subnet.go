@@ -323,7 +323,9 @@ func resourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
 	}
 
-	resourceSubnetFlatten(ctx, subnet, d)
+	if err := resourceSubnetFlatten(ctx, meta.(*conns.AWSClient), subnet, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnet (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -791,7 +793,7 @@ func modifySubnetPrivateDNSHostnameTypeOnLaunch(ctx context.Context, conn *ec2.C
 	return nil
 }
 
-func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *schema.ResourceData) {
+func resourceSubnetFlatten(ctx context.Context, _ *conns.AWSClient, subnet *awstypes.Subnet, rd *schema.ResourceData) error {
 	rd.Set(names.AttrARN, subnet.SubnetArn)
 	rd.Set("assign_ipv6_address_on_creation", subnet.AssignIpv6AddressOnCreation)
 	rd.Set(names.AttrAvailabilityZone, subnet.AvailabilityZone)
@@ -830,6 +832,8 @@ func resourceSubnetFlatten(ctx context.Context, subnet *awstypes.Subnet, rd *sch
 	}
 
 	setTagsOut(ctx, subnet.Tags)
+
+	return nil
 }
 
 func isUnauthorizedError(err error) bool {

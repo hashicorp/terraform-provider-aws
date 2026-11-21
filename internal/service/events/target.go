@@ -554,7 +554,11 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta any) d
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	resourceTargetFlatten(ctx, eventBusName, d, target)
+	d.Set("event_bus_name", eventBusName)
+
+	if err := resourceTargetFlatten(ctx, meta.(*conns.AWSClient), target, d); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
+	}
 
 	return diags
 }
@@ -1466,9 +1470,8 @@ func (targetImportID) Parse(id string) (string, map[string]any, error) {
 	return targetCreateResourceID(eventBusName, rule, targetID), results, nil
 }
 
-func resourceTargetFlatten(ctx context.Context, eventBusName string, d *schema.ResourceData, target *types.Target) {
+func resourceTargetFlatten(ctx context.Context, _ *conns.AWSClient, target *types.Target, d *schema.ResourceData) error {
 	d.Set(names.AttrARN, target.Arn)
-	d.Set("event_bus_name", eventBusName)
 	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
@@ -1524,4 +1527,6 @@ func resourceTargetFlatten(ctx context.Context, eventBusName string, d *schema.R
 	if target.AppSyncParameters != nil {
 		d.Set("appsync_target", flattenAppSyncParameters(target.AppSyncParameters))
 	}
+
+	return nil
 }
