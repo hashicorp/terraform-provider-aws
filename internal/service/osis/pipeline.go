@@ -220,6 +220,27 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 							Optional:   true,
 						},
 					},
+					Blocks: map[string]schema.Block{
+						"vpc_attachment_options": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vpcAttachmentOptionsModel](ctx),
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"attach_to_vpc": schema.BoolAttribute{
+										Required: true,
+									},
+									names.AttrCIDRBlock: schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -547,7 +568,13 @@ type cloudWatchLogDestinationModel struct {
 }
 
 type vpcOptionsModel struct {
-	SecurityGroupIDs      fwtypes.SetValueOf[types.String]                   `tfsdk:"security_group_ids"`
-	SubnetIDs             fwtypes.SetValueOf[types.String]                   `tfsdk:"subnet_ids"`
-	VpcEndpointManagement fwtypes.StringEnum[awstypes.VpcEndpointManagement] `tfsdk:"vpc_endpoint_management"`
+	SecurityGroupIDs      fwtypes.SetValueOf[types.String]                           `tfsdk:"security_group_ids"`
+	SubnetIDs             fwtypes.SetValueOf[types.String]                           `tfsdk:"subnet_ids"`
+	VPCAttachmentOptions  fwtypes.ListNestedObjectValueOf[vpcAttachmentOptionsModel] `tfsdk:"vpc_attachment_options"`
+	VpcEndpointManagement fwtypes.StringEnum[awstypes.VpcEndpointManagement]         `tfsdk:"vpc_endpoint_management"`
+}
+
+type vpcAttachmentOptionsModel struct {
+	AttachToVPC types.Bool   `tfsdk:"attach_to_vpc"`
+	CIDRBlock   types.String `tfsdk:"cidr_block"`
 }

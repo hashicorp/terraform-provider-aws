@@ -108,7 +108,13 @@ The following arguments are optional:
 
 * `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoint.
 * `security_group_ids` - (Optional) A list of security groups associated with the VPC endpoint.
+* `vpc_attachment_options` - (Optional) Options for attaching a VPC to the pipeline. See [`vpc_attachment_options`](#vpc_attachment_options) below.
 * `vpc_endpoint_management` - (Optional) Whether you or Amazon OpenSearch Ingestion service create and manage the VPC endpoint configured for the pipeline. Valid values are `CUSTOMER` or `SERVICE`
+
+### vpc_attachment_options
+
+* `attach_to_vpc` - (Required) Whether to attach a VPC to the pipeline.
+* `cidr_block` - (Optional) CIDR block to reserve for OpenSearch Ingestion to create elastic network interfaces (ENIs).
 
 ## Attribute Reference
 
