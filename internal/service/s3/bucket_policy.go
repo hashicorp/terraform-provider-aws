@@ -76,14 +76,6 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta a
 
 	if d.IsNewResource() {
 		d.SetId(bucket)
-
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-			return findBucketPolicy(ctx, conn, bucket)
-		})
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Policy (%s) create: %s", d.Id(), err)
-		}
 	}
 
 	return append(diags, resourceBucketPolicyRead(ctx, d, meta)...)
@@ -98,7 +90,9 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
-	policy, err := findBucketPolicy(ctx, conn, bucket)
+	policy, err := tfresource.RetryWhenNewResourceNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (string, error) {
+		return findBucketPolicy(ctx, conn, bucket)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Policy (%s) not found, removing from state", d.Id())
