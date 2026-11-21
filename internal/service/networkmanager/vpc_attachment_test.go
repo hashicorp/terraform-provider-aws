@@ -6,6 +6,7 @@ package networkmanager_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -615,7 +616,12 @@ func testAccCheckVPCAttachmentDestroy(ctx context.Context, t *testing.T) resourc
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).NetworkManagerClient(ctx)
 
-		for _, rs := range s.RootModule().Resources {
+		for n, rs := range s.RootModule().Resources {
+			// The aws_networkmanager_vpc_attachment data source shares the resource's type name. Ignore it.
+			if strings.HasPrefix(n, "data.") {
+				continue
+			}
+
 			if rs.Type != "aws_networkmanager_vpc_attachment" {
 				continue
 			}
