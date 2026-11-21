@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codebuild_project: Always include `vpc_config` in `UpdateProject` API requests when set in state, so that SCPs requiring `vpcConfig` on every call do not deny non-VPC attribute updates.
+```
