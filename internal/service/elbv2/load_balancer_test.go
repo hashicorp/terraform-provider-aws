@@ -6,6 +6,7 @@ package elbv2_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"regexp"
 	"testing"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -38,6 +40,87 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"ValidationError: Protocol 'GENEVE' must be one of",
 		"ValidationError: Type must be one of: 'application, network'",
 	)
+}
+
+func TestFlattenSubnetMappingsFromAvailabilityZones(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName  string
+		APIObject []awstypes.AvailabilityZone
+		Want      []map[string]any
+	}{
+		{
+			TestName: "no addresses",
+			APIObject: []awstypes.AvailabilityZone{
+				{SubnetId: aws.String("subnet-1")},
+			},
+			Want: []map[string]any{
+				{names.AttrSubnetID: "subnet-1"},
+			},
+		},
+		{
+			TestName: "IPv4 allocation ID only",
+			APIObject: []awstypes.AvailabilityZone{
+				{
+					SubnetId: aws.String("subnet-1"),
+					LoadBalancerAddresses: []awstypes.LoadBalancerAddress{
+						{AllocationId: aws.String("eipalloc-1"), IpAddress: aws.String("203.0.113.10")},
+					},
+				},
+			},
+			Want: []map[string]any{
+				{"allocation_id": "eipalloc-1", names.AttrSubnetID: "subnet-1"},
+			},
+		},
+		{
+			TestName: "dualstack allocation ID and IPv6 address",
+			APIObject: []awstypes.AvailabilityZone{
+				{
+					SubnetId: aws.String("subnet-1"),
+					LoadBalancerAddresses: []awstypes.LoadBalancerAddress{
+						{AllocationId: aws.String("eipalloc-1"), IpAddress: aws.String("203.0.113.10")},
+						{IPv6Address: aws.String("2001:db8:1::10")},
+					},
+				},
+			},
+			Want: []map[string]any{
+				{"allocation_id": "eipalloc-1", "ipv6_address": "2001:db8:1::10", names.AttrSubnetID: "subnet-1"},
+			},
+		},
+		{
+			TestName: "dualstack private IPv4 and IPv6 address",
+			APIObject: []awstypes.AvailabilityZone{
+				{
+					SubnetId: aws.String("subnet-1"),
+					LoadBalancerAddresses: []awstypes.LoadBalancerAddress{
+						{PrivateIPv4Address: aws.String("10.0.1.10")},
+						{IPv6Address: aws.String("2001:db8:1::10")},
+					},
+				},
+			},
+			Want: []map[string]any{
+				{"ipv6_address": "2001:db8:1::10", "private_ipv4_address": "10.0.1.10", names.AttrSubnetID: "subnet-1"},
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfelbv2.FlattenSubnetMappingsFromAvailabilityZones(testCase.APIObject)
+
+			// SDKv2 treats an absent key and "" the same, so compare only set values.
+			for _, m := range got {
+				maps.DeleteFunc(m, func(_ string, v any) bool { return v == "" })
+			}
+
+			if diff := cmp.Diff(got, testCase.Want); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
 }
 
 func TestLBCloudWatchSuffixFromARN(t *testing.T) {
@@ -502,6 +585,51 @@ func TestAccELBV2LoadBalancer_NLB_allocationID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_NLB_allocationIDAndIPv6(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.LoadBalancer
+	resourceName := "aws_lb.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbAllocationIDAndIPv6(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.0.allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.0.ipv6_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.1.allocation_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_mapping.1.ipv6_address"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbAllocationIDAndIPv6(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3864,6 +3992,38 @@ resource "aws_eip" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName))
+}
+
+func testAccLoadBalancerConfig_nlbAllocationIDAndIPv6(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_eip" "test" {
+  count = 2
+}
+
+resource "aws_lb" "test" {
+  name               = %[1]q
+  load_balancer_type = "network"
+  ip_address_type    = "dualstack"
+
+  subnet_mapping {
+    subnet_id     = aws_subnet.test[0].id
+    allocation_id = aws_eip.test[0].id
+    ipv6_address  = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 0), 5)
+  }
+
+  subnet_mapping {
+    subnet_id     = aws_subnet.test[1].id
+    allocation_id = aws_eip.test[1].id
+    ipv6_address  = cidrhost(cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1), 5)
+  }
+
+  depends_on = [aws_internet_gateway.test]
 }
 `, rName))
 }
