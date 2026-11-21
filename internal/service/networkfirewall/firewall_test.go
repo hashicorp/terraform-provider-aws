@@ -596,7 +596,8 @@ func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 }
 
 // NAT/Proxy firewall tests allocate Elastic IP addresses, whose default limit is 5 per Region.
-// Each group runs its tests serially, so the two groups together hold at most 3 addresses.
+// Each group runs its tests serially, so the two groups together hold at most 3 addresses,
+// leaving room for TestAccNetworkFirewallFirewallDataSource_natProxy.
 func TestAccNetworkFirewallFirewall_NATProxy1_serial(t *testing.T) {
 	t.Parallel()
 
