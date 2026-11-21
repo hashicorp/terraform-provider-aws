@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_task_definition: Fix perpetual diff when a container has `firelensConfiguration` and no `user`
+```
