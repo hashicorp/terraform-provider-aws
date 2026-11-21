@@ -462,8 +462,8 @@ func expandAttributeTypes(tfMap map[string]any) []awstypes.AttributeType {
 	return apiObjects
 }
 
-func flattenAttributeTypes(apiObjects []awstypes.AttributeType) map[string]any {
-	tfMap := make(map[string]any)
+func flattenAttributeTypes(apiObjects []awstypes.AttributeType) map[string]string {
+	tfMap := make(map[string]string)
 
 	for _, apiObject := range apiObjects {
 		if apiObject.Name != nil {
