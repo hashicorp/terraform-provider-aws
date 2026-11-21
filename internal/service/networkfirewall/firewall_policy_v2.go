@@ -178,6 +178,17 @@ func (r *firewallPolicyV2Resource) Schema(ctx context.Context, req resource.Sche
 						"tls_inspection_configuration_arn": schema.StringAttribute{
 							CustomType: fwtypes.ARNType,
 							Optional:   true,
+							PlanModifiers: []planmodifier.String{
+								// The API rejects adding or removing a TLS inspection configuration on update,
+								// but allows replacing one with another.
+								stringplanmodifier.RequiresReplaceIf(
+									func(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+										resp.RequiresReplace = req.StateValue.IsNull() != req.PlanValue.IsNull()
+									},
+									"Adding or removing a TLS inspection configuration requires replacement.",
+									"Adding or removing a TLS inspection configuration requires replacement.",
+								),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{

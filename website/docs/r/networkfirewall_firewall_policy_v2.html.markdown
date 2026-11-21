@@ -156,7 +156,7 @@ The following arguments are optional:
 * `policy_variables` - (Optional) Variables that override the IP set variables of the rule groups in the policy. See [`policy_variables` Block](#policy_variables-block) below.
 * `route53_resolved_ip_validation` - (Optional) Validates destination IPs against Route 53 Resolver DNS responses. See [`route53_resolved_ip_validation` Block](#route53_resolved_ip_validation-block) below.
 * `stateful_engine_options` - (Optional) Options for the stateful engine. See [`stateful_engine_options` Block](#stateful_engine_options-block) below.
-* `tls_inspection_configuration_arn` - (Optional) ARN of the TLS inspection configuration to use with the policy.
+* `tls_inspection_configuration_arn` - (Optional) ARN of the TLS inspection configuration to use with the policy. Changing to a different TLS inspection configuration updates the policy in place, but adding or removing one forces a new resource, which fails while the policy is associated with a firewall.
 
 ### `firewall_rule_group_entry` Block
 

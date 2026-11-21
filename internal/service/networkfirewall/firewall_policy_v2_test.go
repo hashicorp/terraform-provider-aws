@@ -663,16 +663,29 @@ func testAccFirewallPolicyV2_tlsInspectionConfigurationARN(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tlsPath, knownvalue.StringExact(arn2)),
 				},
 			},
+			// The API rejects adding or removing a TLS inspection configuration on update, so the policy is replaced.
 			{
 				Config: testAccFirewallPolicyV2Config_basic(rName),
 				Check:  testAccCheckFirewallPolicyV2Exists(ctx, t, resourceName, &v),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tlsPath, knownvalue.Null()),
+				},
+			},
+			{
+				Config: testAccFirewallPolicyV2Config_tlsInspectionConfigurationARN(rName, arn1),
+				Check:  testAccCheckFirewallPolicyV2Exists(ctx, t, resourceName, &v),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tlsPath, knownvalue.StringExact(arn1)),
 				},
 			},
 		},
