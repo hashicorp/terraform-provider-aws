@@ -226,7 +226,9 @@ func (r *bucketMetadataConfigurationResource) Create(ctx context.Context, reques
 		return
 	}
 
-	_, err := conn.CreateBucketMetadataConfiguration(ctx, &input)
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateBucketMetadataConfiguration(ctx, &input)
+	}, errCodeNoSuchBucket)
 
 	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusMethodNotAllowed) {
 		err = errDirectoryBucket(err)
