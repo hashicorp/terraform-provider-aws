@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagentcore_consent_portal
+```
+
+```release-note:new-data-source
+aws_bedrockagentcore_consent_portal
+```
