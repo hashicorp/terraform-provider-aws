@@ -48,6 +48,8 @@ resource "aws_networkfirewall_firewall" "example" {
 
 ### NAT/Proxy Firewall
 
+A public NAT gateway needs a route from its subnet to an internet gateway, so the firewall depends on that subnet's route table association.
+
 ```terraform
 resource "aws_networkfirewall_firewall" "example" {
   name                           = "example"
@@ -77,7 +79,7 @@ resource "aws_networkfirewall_firewall" "example" {
     }
   }
 
-  depends_on = [aws_internet_gateway.example]
+  depends_on = [aws_route_table_association.nat]
 }
 ```
 
@@ -88,6 +90,7 @@ resource "aws_networkfirewall_firewall" "example" {
   name                            = "example"
   firewall_policy_arn             = aws_networkfirewall_firewall_policy.example.arn
   vpc_id                          = aws_vpc.example.id
+  delete_associated_nat_gateways  = true
   transparent_filtering_nat_scope = "NAT_NONE"
 
   subnet_mapping {
@@ -103,6 +106,11 @@ resource "aws_networkfirewall_firewall" "example" {
   proxy_settings {
     certificate_arn = aws_acm_certificate.example.arn
     domain_name     = "proxy.example.com"
+
+    listener_property {
+      port = 8443
+      type = "HTTPS"
+    }
   }
 }
 ```
@@ -148,7 +156,7 @@ This resource supports the following arguments:
 * `firewall_policy_arn` - (Required) ARN of the VPC Firewall policy.
 * `firewall_policy_change_protection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
-* `nat_gateway_create_mapping` - (Optional) Required when creating a NAT/Proxy firewall. Set of configuration blocks describing the NAT gateways that Network Firewall creates, one for each Availability Zone in `subnet_mapping`. Specifying this block creates a NAT/Proxy firewall; adding it to or removing it from a routed firewall forces a new resource to be created. A mapping can only be added together with the `subnet_mapping` for a new Availability Zone. See [NAT Gateway Create Mapping](#nat-gateway-create-mapping) below for details.
+* `nat_gateway_create_mapping` - (Optional) Required when creating a NAT/Proxy firewall. List of configuration blocks describing the NAT gateways that Network Firewall creates, one for each Availability Zone in `subnet_mapping`. Specifying this block creates a NAT/Proxy firewall, which can't be attached to a transit gateway; adding it to or removing it from a routed firewall forces a new resource to be created. A mapping can only be added or removed together with the `subnet_mapping` for its Availability Zone. Removing an Availability Zone detaches its NAT gateway without deleting it, so the NAT gateway keeps running as a regular NAT gateway until you delete it. Changing an existing mapping forces a new resource to be created. Network Firewall doesn't return the mappings, so Terraform doesn't detect changes made outside Terraform, and an imported firewall takes them from its configuration without being replaced. See [NAT Gateway Create Mapping](#nat-gateway-create-mapping) below for details.
 * `proxy_settings` - (Optional) Proxy settings of a NAT/Proxy firewall. If not specified, the firewall listens for HTTP on port `3128` and HTTPS on port `8443`. See [Proxy Settings](#proxy-settings) below for details.
 * `subnet_change_protection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
 * `subnet_mapping` - (Optional) Required when creating a VPC attached or NAT/Proxy firewall. Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
@@ -175,8 +183,8 @@ The `availability_zone_mapping` block supports the following arguments:
 The `nat_gateway_create_mapping` block supports the following arguments:
 
 * `allocation_ids` - (Optional) List of 1 to 8 Elastic IP address allocation IDs for a public NAT gateway. If not specified, Network Firewall creates a private NAT gateway.
-* `private_ips` - (Optional) List of 1 to 8 private IPv4 addresses of the NAT gateway in `subnet_id`. For a public NAT gateway, specify exactly one address for each allocation ID in `allocation_ids`. The first address is the primary address.
-* `subnet_id` - (Required) ID of the subnet where Network Firewall creates the NAT gateway. The subnet must be in the firewall's VPC, can't be one of the firewall endpoint subnets, and each mapping must be in a different Availability Zone.
+* `private_ips` - (Optional) List of 1 to 8 private IPv4 addresses of the NAT gateway in `subnet_id`. Required if `allocation_ids` is specified, with exactly one address for each allocation ID. The first address is the primary address.
+* `subnet_id` - (Required) ID of the subnet where Network Firewall creates the NAT gateway. The subnet must be in the firewall's VPC, can't be one of the firewall endpoint subnets, and each mapping must be in a different Availability Zone. For a public NAT gateway, the subnet must have a route to an internet gateway.
 
 ### Proxy Settings
 
@@ -184,7 +192,7 @@ The `proxy_settings` block supports the following arguments:
 
 * `certificate_arn` - (Optional, Forces new resource) ARN of an ACM certificate in the same account and Region that the HTTPS proxy listener presents to clients. Its subject alternative names must cover `domain_name`. Required if `domain_name` is specified.
 * `domain_name` - (Optional, Forces new resource) Domain name that clients use to reach the proxy. Network Firewall creates the Route 53 private hosted zones that resolve it. Required if `certificate_arn` is specified.
-* `listener_property` - (Optional) Set of 1 or 2 configuration blocks describing the proxy listeners. Specify at most one HTTP and one HTTPS listener, on different ports. See [Listener Property](#listener-property) below for details.
+* `listener_property` - (Required) Set of 1 or 2 configuration blocks describing the proxy listeners. Specify at most one HTTP and one HTTPS listener, on different ports. See [Listener Property](#listener-property) below for details.
 
 ### Listener Property
 
