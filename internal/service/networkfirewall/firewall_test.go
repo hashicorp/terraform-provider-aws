@@ -606,6 +606,7 @@ func TestAccNetworkFirewallFirewall_NATProxy1_serial(t *testing.T) {
 		"listenerProperties":             testAccFirewall_NATProxy_listenerProperties,
 		"capabilityForcesReplacement":    testAccFirewall_NATProxy_capabilityForcesReplacement,
 		"allocationIDsWithoutPrivateIPs": testAccFirewall_NATProxy_allocationIDsWithoutPrivateIPs,
+		"tlsInspection":                  testAccFirewall_NATProxy_tlsInspection,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -853,6 +854,56 @@ func testAccFirewall_NATProxy_customDomain(t *testing.T) {
 						names.AttrPort: "8444",
 						names.AttrType: string(awstypes.ListenerPropertyTypeHttps),
 					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccFirewall_NATProxy_tlsInspection(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	commonName := acctest.RandomDomain(t)
+	certificateDomainName := commonName.RandomSubdomain(t).String()
+	resourceName := "aws_networkfirewall_firewall.test"
+	tlsInspectionConfigurationResourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"tls": {
+				Source:            "hashicorp/tls",
+				VersionConstraint: "4.0.5",
+			},
+		},
+		CheckDestroy: resource.ComposeTestCheckFunc(
+			testAccCheckFirewallDestroy(ctx, t),
+			testAccCheckTLSInspectionConfigurationDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_natProxyTLSInspection(rName, commonName.String(), certificateDomainName, "DECRYPT"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "firewall_policy_arn", "aws_networkfirewall_firewall_policy.tls", names.AttrARN),
+					resource.TestCheckResourceAttrPair("aws_networkfirewall_firewall_policy.tls", "firewall_policy.0.tls_inspection_configuration_arn", tlsInspectionConfigurationResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(tlsInspectionConfigurationResourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.decryption_action", "DECRYPT"),
+				),
+			},
+			// The TLS inspection configuration updates in place while a proxy mode firewall uses it.
+			{
+				Config: testAccFirewallConfig_natProxyTLSInspection(rName, commonName.String(), certificateDomainName, "BYPASS"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(tlsInspectionConfigurationResourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(tlsInspectionConfigurationResourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.decryption_action", "BYPASS"),
 				),
 			},
 		},
@@ -1728,4 +1779,77 @@ resource "aws_networkfirewall_firewall" "test" {
   depends_on = [aws_route_table_association.nat]
 }
 `, rName, domainName, httpPort, httpsPort))
+}
+
+func testAccFirewallConfig_natProxyTLSInspection(rName, commonName, certificateDomainName, decryptionAction string) string {
+	return acctest.ConfigCompose(
+		testAccFirewallConfig_baseNATProxy(rName, 1),
+		testAccTLSInspectionConfigurationConfig_certificateCheckCertificateRevocationStatus(commonName, certificateDomainName),
+		fmt.Sprintf(`
+resource "aws_networkfirewall_tls_inspection_configuration" "test" {
+  name = %[1]q
+
+  tls_inspection_configuration {
+    server_certificate_configuration {
+      certificate_authority_arn   = aws_acm_certificate.test.arn
+      default_decryption_behavior = "BYPASS"
+
+      scope {
+        decryption_action = %[2]q
+        deployment_mode   = "EXPLICIT_PROXY_ONLY"
+        protocols         = [6]
+
+        destination {
+          address_definition = "0.0.0.0/0"
+        }
+
+        domain_match {
+          domains = ["example.com", "*.example.com"]
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networkfirewall_firewall_policy" "tls" {
+  name = "%[1]s-tls"
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+    tls_inspection_configuration_arn   = aws_networkfirewall_tls_inspection_configuration.test.arn
+  }
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                           = %[1]q
+  firewall_policy_arn            = aws_networkfirewall_firewall_policy.tls.arn
+  vpc_id                         = aws_vpc.test.id
+  delete_associated_nat_gateways = true
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id      = aws_subnet.nat[0].id
+    allocation_ids = [aws_eip.test[0].allocation_id]
+    private_ips    = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+
+  proxy_settings {
+    listener_property {
+      port = 3128
+      type = "HTTP"
+    }
+
+    listener_property {
+      port = 8443
+      type = "HTTPS"
+    }
+  }
+
+  depends_on = [aws_route_table_association.nat]
+}
+`, rName, decryptionAction))
 }
