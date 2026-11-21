@@ -18,6 +18,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go-v2/service/signer"
 	signertypes "github.com/aws/aws-sdk-go-v2/service/signer/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -954,6 +956,151 @@ func TestAccLambdaFunction_s3FileSystem(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_s3FilesConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_s3FilesConfig(rName, string(awstypes.DirectS3ReadEnabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_s3files_access_point.for_lambda", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.0.direct_s3_read", string(awstypes.DirectS3ReadEnabled)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_s3FilesConfig(rName, string(awstypes.DirectS3ReadDisabled)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.0.direct_s3_read", string(awstypes.DirectS3ReadDisabled)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccFunctionConfig_s3FilesConfig(rName, string(awstypes.DirectS3ReadAuto)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.0.direct_s3_read", string(awstypes.DirectS3ReadAuto)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// Removing the block keeps the current setting and does not cause drift.
+				Config: testAccFunctionConfig_s3FilesConfigRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.s3_files_config.0.direct_s3_read", string(awstypes.DirectS3ReadAuto)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestExpandFileSystemConfigs(t *testing.T) {
+	t.Parallel()
+
+	s3FilesConfig := []any{map[string]any{"direct_s3_read": string(awstypes.DirectS3ReadEnabled)}}
+
+	testCases := map[string]struct {
+		arn      string
+		tfConfig []any
+		expected *awstypes.S3FilesConfig
+	}{
+		"S3 Files access point": {
+			arn:      "arn:aws:s3files:us-west-2:123456789012:file-system/fs-00000000000000000/access-point/fsap-00000000000000000", //lintignore:AWSAT003,AWSAT005
+			tfConfig: s3FilesConfig,
+			expected: &awstypes.S3FilesConfig{DirectS3Read: awstypes.DirectS3ReadEnabled},
+		},
+		"S3 Files access point without s3_files_config": {
+			arn: "arn:aws:s3files:us-west-2:123456789012:file-system/fs-00000000000000000/access-point/fsap-00000000000000000", //lintignore:AWSAT003,AWSAT005
+		},
+		"EFS access point ignores s3_files_config": {
+			arn:      "arn:aws:elasticfilesystem:us-west-2:123456789012:access-point/fsap-00000000000000000", //lintignore:AWSAT003,AWSAT005
+			tfConfig: s3FilesConfig,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			tfMap := map[string]any{
+				names.AttrARN:      testCase.arn,
+				"local_mount_path": "/mnt/test",
+			}
+			if testCase.tfConfig != nil {
+				tfMap["s3_files_config"] = testCase.tfConfig
+			}
+
+			got := tflambda.ExpandFileSystemConfigs([]any{tfMap})
+			if len(got) != 1 {
+				t.Fatalf("expected 1 file system config, got %d", len(got))
+			}
+
+			if diff := cmp.Diff(testCase.expected, got[0].S3FilesConfig, cmpopts.IgnoreUnexported(awstypes.S3FilesConfig{})); diff != "" {
+				t.Errorf("unexpected S3FilesConfig (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestAccLambdaFunction_s3FilesConfigInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFunctionConfig_s3FilesConfigInvalid(rName, testAccFunctionS3FilesAccessPointARN, "ALWAYS"),
+				ExpectError: regexache.MustCompile(`to be one of`),
+			},
+			{
+				Config:      testAccFunctionConfig_s3FilesConfigInvalid(rName, testAccFunctionEFSAccessPointARN, string(awstypes.DirectS3ReadEnabled)),
+				ExpectError: regexache.MustCompile(`s3_files_config can only be set when file_system_config.0.arn is an Amazon S3 Files access point`),
 			},
 		},
 	})
@@ -3996,7 +4143,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_s3FileSystem(rName string) string {
+func testAccFunctionConfig_s3FileSystemBase(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -4226,7 +4373,13 @@ resource "aws_vpc_security_group_egress_rule" "lambda_s3files_nfs" {
   to_port                      = 2049
   referenced_security_group_id = aws_security_group.s3files_mount_targets.id
 }
+`, rName))
+}
 
+func testAccFunctionConfig_s3FileSystem(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_s3FileSystemBase(rName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambda_invocation.zip"
   function_name = %[1]q
@@ -4259,6 +4412,91 @@ resource "aws_lambda_invocation" "test" {
   depends_on    = [time_sleep.wait_for_sg_ready]
 }
 `, rName))
+}
+
+func testAccFunctionConfig_s3FilesConfig(rName, directS3Read string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_s3FileSystemBase(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.lambda_s3files.id]
+  }
+
+  file_system_config {
+    arn              = aws_s3files_access_point.for_lambda.arn
+    local_mount_path = "/mnt/s3files"
+
+    s3_files_config {
+      direct_s3_read = %[2]q
+    }
+  }
+  depends_on = [aws_s3files_mount_target.for_lambda]
+}
+`, rName, directS3Read))
+}
+
+func testAccFunctionConfig_s3FilesConfigRemoved(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFunctionConfig_s3FileSystemBase(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.lambda_s3files.id]
+  }
+
+  file_system_config {
+    arn              = aws_s3files_access_point.for_lambda.arn
+    local_mount_path = "/mnt/s3files"
+  }
+  depends_on = [aws_s3files_mount_target.for_lambda]
+}
+`, rName))
+}
+
+const (
+	testAccFunctionS3FilesAccessPointARN = "arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:file-system/fs-00000000000000000/access-point/fsap-00000000000000000"
+	testAccFunctionEFSAccessPointARN     = "arn:${data.aws_partition.current.partition}:elasticfilesystem:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:access-point/fsap-00000000000000000"
+)
+
+// testAccFunctionConfig_s3FilesConfigInvalid fails at plan time before any resource is created.
+func testAccFunctionConfig_s3FilesConfigInvalid(rName, accessPointARN, directS3Read string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/%[1]s"
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+
+  file_system_config {
+    arn              = %[2]q
+    local_mount_path = "/mnt/s3files"
+
+    s3_files_config {
+      direct_s3_read = %[3]q
+    }
+  }
+}
+`, rName, accessPointARN, directS3Read)
 }
 
 func testAccFunctionConfig_image(rName, imageID string) string {

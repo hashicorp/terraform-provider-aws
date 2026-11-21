@@ -210,6 +210,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the Amazon EFS Access Point that provides access to the file system.
 * `local_mount_path` - Path where the function can access the file system, starting with `/mnt/`.
+* `s3_files_config` - How the function reads data from an Amazon S3 Files file system. See [`s3_files_config`](#s3_files_config-block) below.
+
+#### `s3_files_config` Block
+
+* `direct_s3_read` - Whether reads go directly to the S3 bucket. `AUTO`, `ENABLED` or `DISABLED`.
 
 ### `logging_config` Block
 
