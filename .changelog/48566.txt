@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_iot_policy_attachment: Retry the post-create read to tolerate IoT eventual consistency, preventing intermittent `empty result` errors that incorrectly tainted the resource
+```
+
+```release-note:bug
+resource/aws_iot_thing_principal_attachment: Retry the post-create read to tolerate IoT eventual consistency, preventing intermittent `empty result` errors that incorrectly tainted the resource
+```
+
+```release-note:bug
+resource/aws_iot_thing_group_membership: Retry the post-create read to tolerate IoT eventual consistency, preventing intermittent `empty result` errors that incorrectly tainted the resource
+```
