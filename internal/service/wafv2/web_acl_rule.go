@@ -1534,9 +1534,24 @@ type webACLRuleAWSManagedRulesAntiDDoSRuleSetModel struct {
 	SensitivityToBlock     fwtypes.StringEnum[awstypes.SensitivityToAct]                          `tfsdk:"sensitivity_to_block"`
 }
 
+type webACLRuleAWSManagedRulesAISecurityRuleSetModel struct {
+	BedrockGuardrails fwtypes.ListNestedObjectValueOf[webACLRuleBedrockGuardrailsModel] `tfsdk:"bedrock_guardrails"`
+}
+
+type webACLRuleBedrockGuardrailsModel struct {
+	Disable                   fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]            `tfsdk:"disable"`
+	ProtectRequestAndResponse fwtypes.ListNestedObjectValueOf[webACLRuleBedrockGuardrailsRoleModel] `tfsdk:"protect_request_and_response"`
+	ProtectRequestOnly        fwtypes.ListNestedObjectValueOf[webACLRuleBedrockGuardrailsRoleModel] `tfsdk:"protect_request_only"`
+}
+
+type webACLRuleBedrockGuardrailsRoleModel struct {
+	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
+}
+
 // Main managed rule group config model
 type webACLRuleManagedRuleGroupConfigModel struct {
 	AWSManagedRulesACFPRuleSet       fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesACFPRuleSetModel]       `tfsdk:"aws_managed_rules_acfp_rule_set"`
+	AWSManagedRulesAISecurityRuleSet fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesAISecurityRuleSetModel] `tfsdk:"aws_managed_rules_ai_security_rule_set"`
 	AWSManagedRulesAntiDDoSRuleSet   fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel]   `tfsdk:"aws_managed_rules_anti_ddos_rule_set"`
 	AWSManagedRulesATPRuleSet        fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesATPRuleSetModel]        `tfsdk:"aws_managed_rules_atp_rule_set"`
 	AWSManagedRulesBotControlRuleSet fwtypes.ListNestedObjectValueOf[webACLRuleAWSManagedRulesBotControlRuleSetModel] `tfsdk:"aws_managed_rules_bot_control_rule_set"`
@@ -1576,6 +1591,9 @@ func (m webACLRuleManagedRuleGroupConfigModel) expand(ctx context.Context) (resu
 	if !m.AWSManagedRulesAntiDDoSRuleSet.IsNull() {
 		diags.Append(flex.Expand(ctx, m.AWSManagedRulesAntiDDoSRuleSet, &r.AWSManagedRulesAntiDDoSRuleSet)...)
 	}
+	if !m.AWSManagedRulesAISecurityRuleSet.IsNull() {
+		diags.Append(flex.Expand(ctx, m.AWSManagedRulesAISecurityRuleSet, &r.AWSManagedRulesAISecurityRuleSet)...)
+	}
 
 	return r, diags
 }
@@ -1583,6 +1601,7 @@ func (m webACLRuleManagedRuleGroupConfigModel) expand(ctx context.Context) (resu
 func (m *webACLRuleManagedRuleGroupConfigModel) flatten(ctx context.Context, v awstypes.ManagedRuleGroupConfig) (diags diag.Diagnostics) {
 	// Initialize all nested fields to null
 	m.AWSManagedRulesACFPRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesACFPRuleSetModel](ctx)
+	m.AWSManagedRulesAISecurityRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesAISecurityRuleSetModel](ctx)
 	m.AWSManagedRulesAntiDDoSRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesAntiDDoSRuleSetModel](ctx)
 	m.AWSManagedRulesATPRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesATPRuleSetModel](ctx)
 	m.AWSManagedRulesBotControlRuleSet = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAWSManagedRulesBotControlRuleSetModel](ctx)
@@ -1627,6 +1646,11 @@ func (m *webACLRuleManagedRuleGroupConfigModel) flatten(ctx context.Context, v a
 		var model webACLRuleAWSManagedRulesAntiDDoSRuleSetModel
 		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesAntiDDoSRuleSet, &model)...)
 		m.AWSManagedRulesAntiDDoSRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+	}
+	if v.AWSManagedRulesAISecurityRuleSet != nil {
+		var model webACLRuleAWSManagedRulesAISecurityRuleSetModel
+		diags.Append(flex.Flatten(ctx, v.AWSManagedRulesAISecurityRuleSet, &model)...)
+		m.AWSManagedRulesAISecurityRuleSet = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
 	}
 
 	return diags

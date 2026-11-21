@@ -335,6 +335,7 @@ Exactly one of the following action blocks must be specified:
 ### `managed_rule_group_configs` Block
 
 * `aws_managed_rules_acfp_rule_set` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client. [See below](#aws_managed_rules_acfp_rule_set-block).
+* `aws_managed_rules_ai_security_rule_set` - (Optional) Configuration for using the AI security managed rule group, `AWSManagedRulesAISecurityRuleSet`. The rule group requires this configuration. [See below](#aws_managed_rules_ai_security_rule_set-block).
 * `aws_managed_rules_anti_ddos_rule_set` - (Optional) Configuration for using the anti-DDoS managed rule group. [See below](#aws_managed_rules_anti_ddos_rule_set-block).
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client. [See below](#aws_managed_rules_atp_rule_set-block).
 * `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. [See below](#aws_managed_rules_bot_control_rule_set-block).
@@ -360,6 +361,24 @@ Exactly one of the following action blocks must be specified:
 * `payload_type` - (Required) Payload type for your login endpoint, either JSON or form encoded.
 * `phone_number_fields` - (Optional) Names of the fields in the request payload that contain your customer's primary phone number. [See below](#phone_number_fields-block).
 * `username_field` - (Optional) Details about your login page username field. [See below](#username_field-block).
+
+### `aws_managed_rules_ai_security_rule_set` Block
+
+~> **NOTE:** AWS WAF associates a web ACL that uses `AWSManagedRulesAISecurityRuleSet` only with Application Load Balancers, Amazon API Gateway REST API stages and Amazon CloudFront distributions. Response inspection (`protect_request_and_response`) is available only on web ACLs that protect CloudFront distributions.
+
+* `bedrock_guardrails` - (Required) Whether and how the rule group uses Amazon Bedrock Guardrails. [See below](#bedrock_guardrails-block).
+
+### `bedrock_guardrails` Block
+
+Exactly one of the following arguments must be specified:
+
+* `disable` - (Optional) Turns off the use of Amazon Bedrock Guardrails. The rule group continues to run its own inspections. Specify as an empty block, `disable {}`.
+* `protect_request_and_response` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests and the responses to them. [See below](#protect_request_and_response-and-protect_request_only-blocks).
+* `protect_request_only` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests. [See below](#protect_request_and_response-and-protect_request_only-blocks).
+
+### `protect_request_and_response` and `protect_request_only` Blocks
+
+* `role_arn` - (Required) ARN of the IAM role that AWS WAF uses to call Amazon Bedrock Guardrails for the rule group. The role must be in the same AWS account as the web ACL, must trust the `wafv2.amazonaws.com` service principal and allow `bedrock:InvokeGuardrailChecks`, and you must have permission to call `iam:PassRole` on it.
 
 ### `aws_managed_rules_anti_ddos_rule_set` Block
 

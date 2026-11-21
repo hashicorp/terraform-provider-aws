@@ -228,6 +228,91 @@ resource "aws_wafv2_web_acl" "atp-example" {
 }
 ```
 
+### AI Security With Amazon Bedrock Guardrails
+
+The `AWSManagedRulesAISecurityRuleSet` rule group requires `aws_managed_rules_ai_security_rule_set`. To use Amazon Bedrock Guardrails, AWS WAF assumes an IAM role that trusts `wafv2.amazonaws.com` and allows `bedrock:InvokeGuardrailChecks`.
+
+```terraform
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "example" {
+  name = "waf-bedrock-guardrails"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "wafv2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+      Condition = {
+        StringEquals = { "aws:SourceAccount" = data.aws_caller_identity.current.account_id }
+      }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "example" {
+  name = "bedrock-guardrails"
+  role = aws_iam_role.example.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "bedrock:InvokeGuardrailChecks"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_wafv2_web_acl" "example" {
+  name  = "ai-security-example"
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "ai-security"
+    priority = 0
+
+    override_action {
+      none {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAISecurityRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_ai_security_rule_set {
+            bedrock_guardrails {
+              protect_request_and_response {
+                role_arn = aws_iam_role.example.arn
+              }
+            }
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "ai-security"
+      sampled_requests_enabled   = true
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "ai-security-example"
+    sampled_requests_enabled   = true
+  }
+}
+```
+
 ### Rate Based
 
 Rate-limit US and NL-based clients to 10,000 requests for every 5 minutes.
@@ -836,6 +921,7 @@ The `rule_action_override` block supports the following arguments:
 The `managed_rule_group_configs` block support the following arguments:
 
 * `aws_managed_rules_acfp_rule_set` - (Optional) Additional configuration for using the Account Creation Fraud Prevention managed rule group. Use this to specify information such as the registration page of your application and the type of content to accept or reject from the client.
+* `aws_managed_rules_ai_security_rule_set` - (Optional) Configuration for using the AI security managed rule group, `AWSManagedRulesAISecurityRuleSet`. The rule group requires this configuration. See [`aws_managed_rules_ai_security_rule_set`](#aws_managed_rules_ai_security_rule_set-block) for more details.
 * `aws_managed_rules_anti_ddos_rule_set` - (Optional) Configuration for using the anti-DDoS managed rule group. See [`aws_managed_rules_anti_ddos_rule_set`](#aws_managed_rules_anti_ddos_rule_set-block) for more details.
 * `aws_managed_rules_atp_rule_set` - (Optional) Additional configuration for using the Account Takeover Protection managed rule group. Use this to specify information such as the sign-in page of your application and the type of content to accept or reject from the client.
 * `aws_managed_rules_bot_control_rule_set` - (Optional) Additional configuration for using the Bot Control managed rule group. Use this to specify the inspection level that you want to use. See [`aws_managed_rules_bot_control_rule_set`](#aws_managed_rules_bot_control_rule_set-block) for more details
@@ -865,6 +951,32 @@ The `managed_rule_group_configs` block support the following arguments:
 * `payloadType` (Required) The payload type for your login endpoint, either JSON or form encoded.
 * `phoneNumberFields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phoneNumberFields`](#phone_number_fields-block) for more details.
 * `usernameField` (Optional) Details about your login page username field. See [`usernameField`](#username_field-block) for more details.
+
+### `aws_managed_rules_ai_security_rule_set` Block
+
+The rule group always runs its own inspections. This configuration determines whether it also uses Amazon Bedrock Guardrails to inspect web requests, or web requests and the responses to them. Use of this rule group is not supported in AWS Firewall Manager.
+
+~> **NOTE:** AWS WAF associates a web ACL that uses `AWSManagedRulesAISecurityRuleSet` only with Application Load Balancers, Amazon API Gateway REST API stages and Amazon CloudFront distributions. Associating it with any other resource type fails with `WAFInvalidOperationException`.
+
+* `bedrock_guardrails` - (Required) Whether and how the rule group uses Amazon Bedrock Guardrails. See [`bedrock_guardrails`](#bedrock_guardrails-block) for more details.
+
+### `bedrock_guardrails` Block
+
+Exactly one of the following arguments must be specified:
+
+* `disable` - (Optional) Turns off the use of Amazon Bedrock Guardrails. The rule group continues to run its own inspections. Specify as an empty block, `disable {}`.
+* `protect_request_and_response` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests and the responses to them. See [`protect_request_and_response`](#protect_request_and_response-block) for more details.
+* `protect_request_only` - (Optional) Uses Amazon Bedrock Guardrails to inspect web requests. See [`protect_request_only`](#protect_request_only-block) for more details.
+
+### `protect_request_and_response` Block
+
+Response inspection is available only on web ACLs that protect CloudFront distributions.
+
+* `role_arn` - (Required) ARN of the IAM role that AWS WAF uses to call Amazon Bedrock Guardrails for the rule group. The role must be in the same AWS account as the web ACL, must trust the `wafv2.amazonaws.com` service principal and allow `bedrock:InvokeGuardrailChecks`, and you must have permission to call `iam:PassRole` on it. AWS WAF does not validate the role when you create or update the web ACL. If WAF cannot use the role, requests are labeled `awswaf:managed:aws:ai-security:guardrails:call_failed`.
+
+### `protect_request_only` Block
+
+* `role_arn` - (Required) ARN of the IAM role that AWS WAF uses to call Amazon Bedrock Guardrails for the rule group. Same requirements as `role_arn` in [`protect_request_and_response`](#protect_request_and_response-block).
 
 ### `aws_managed_rules_anti_ddos_rule_set` Block
 

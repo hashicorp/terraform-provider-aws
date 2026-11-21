@@ -314,6 +314,20 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 			},
 		},
 	}
+	bedrockGuardrailsRoleLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockGuardrailsRoleModel](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrRoleARN: schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+				},
+			},
+		},
+	}
 	managedRulegroupConfigLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[managedRuleGroupConfigModel](ctx),
 		Validators: []validator.List{
@@ -356,6 +370,30 @@ func (r *resourceWebACLRuleGroupAssociation) Schema(ctx context.Context, req res
 						Blocks: map[string]schema.Block{
 							"request_inspection":  managedRulegroupConfigACFPRequestInspectionLNB,
 							"response_inspection": managedRulegroupConfigResponseInspectionLNB,
+						},
+					},
+				},
+				"aws_managed_rules_ai_security_rule_set": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[awsManagedRulesAISecurityRuleSetModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"bedrock_guardrails": schema.ListNestedBlock{
+								CustomType: fwtypes.NewListNestedObjectTypeOf[bedrockGuardrailsModel](ctx),
+								Validators: []validator.List{
+									listvalidator.SizeAtMost(1),
+									listvalidator.IsRequired(),
+								},
+								NestedObject: schema.NestedBlockObject{
+									Blocks: map[string]schema.Block{
+										"disable":                      emptyBlock(ctx),
+										"protect_request_and_response": bedrockGuardrailsRoleLNB,
+										"protect_request_only":         bedrockGuardrailsRoleLNB,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -1809,6 +1847,7 @@ type managedRuleGroupModel struct {
 
 type managedRuleGroupConfigModel struct {
 	AWSManagedRulesACFPRuleSet       fwtypes.ListNestedObjectValueOf[awsManagedRulesACFPRuleSetModel]       `tfsdk:"aws_managed_rules_acfp_rule_set"`
+	AWSManagedRulesAISecurityRuleSet fwtypes.ListNestedObjectValueOf[awsManagedRulesAISecurityRuleSetModel] `tfsdk:"aws_managed_rules_ai_security_rule_set"`
 	AWSManagedRulesATPRuleSet        fwtypes.ListNestedObjectValueOf[awsManagedRulesATPRuleSetModel]        `tfsdk:"aws_managed_rules_atp_rule_set"`
 	AWSManagedRulesAntiDDoSRuleSet   fwtypes.ListNestedObjectValueOf[awsManagedRulesAntiDDoSRuleSetModel]   `tfsdk:"aws_managed_rules_anti_ddos_rule_set"`
 	AWSManagedRulesBotControlRuleSet fwtypes.ListNestedObjectValueOf[awsManagedRulesBotControlRuleSetModel] `tfsdk:"aws_managed_rules_bot_control_rule_set"`
@@ -1841,6 +1880,20 @@ func (m *awsManagedRulesBotControlRuleSetModel) Flatten(ctx context.Context, v a
 		diags.AddError("Unexpected type", fmt.Sprintf("expected awstypes.AWSManagedRulesBotControlRuleSet, got %T", v))
 	}
 	return diags
+}
+
+type awsManagedRulesAISecurityRuleSetModel struct {
+	BedrockGuardrails fwtypes.ListNestedObjectValueOf[bedrockGuardrailsModel] `tfsdk:"bedrock_guardrails"`
+}
+
+type bedrockGuardrailsModel struct {
+	Disable                   fwtypes.ListNestedObjectValueOf[webACLRuleTrulyEmptyModel]  `tfsdk:"disable"`
+	ProtectRequestAndResponse fwtypes.ListNestedObjectValueOf[bedrockGuardrailsRoleModel] `tfsdk:"protect_request_and_response"`
+	ProtectRequestOnly        fwtypes.ListNestedObjectValueOf[bedrockGuardrailsRoleModel] `tfsdk:"protect_request_only"`
+}
+
+type bedrockGuardrailsRoleModel struct {
+	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
 }
 
 type awsManagedRulesAntiDDoSRuleSetModel struct {
