@@ -625,6 +625,7 @@ var requestBodySchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"agentcore_gateway":        requestBodyAssociatedResourceTypeSchema(),
 				"api_gateway":              requestBodyAssociatedResourceTypeSchema(),
 				"app_runner_service":       requestBodyAssociatedResourceTypeSchema(),
 				"cloudfront":               requestBodyAssociatedResourceTypeSchema(),
