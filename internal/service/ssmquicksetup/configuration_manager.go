@@ -222,6 +222,12 @@ func (r *configurationManagerResource) Update(ctx context.Context, request resou
 
 	arn := fwflex.StringValueFromFramework(ctx, new.ManagerARN)
 
+	// Tags are updated before this handler runs, and tagging a configuration
+	// manager starts a new deployment. Updates are rejected with a
+	// ConflictException while the manager is DEPLOYING, so retry until the
+	// deployment finishes.
+	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+
 	if !new.Description.Equal(old.Description) || !new.Name.Equal(old.Name) {
 		var input ssmquicksetup.UpdateConfigurationManagerInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
@@ -229,7 +235,9 @@ func (r *configurationManagerResource) Update(ctx context.Context, request resou
 			return
 		}
 
-		_, err := conn.UpdateConfigurationManager(ctx, &input)
+		_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, updateTimeout, func(ctx context.Context) (any, error) {
+			return conn.UpdateConfigurationManager(ctx, &input)
+		})
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating SSM Quick Setup Configuration Manager (%s)", arn), err.Error())
@@ -248,7 +256,9 @@ func (r *configurationManagerResource) Update(ctx context.Context, request resou
 		for _, input := range inputs {
 			input.ManagerArn = aws.String(arn)
 
-			_, err := conn.UpdateConfigurationDefinition(ctx, &input)
+			_, err := tfresource.RetryWhenIsA[any, *awstypes.ConflictException](ctx, updateTimeout, func(ctx context.Context) (any, error) {
+				return conn.UpdateConfigurationDefinition(ctx, &input)
+			})
 
 			if err != nil {
 				response.Diagnostics.AddError(fmt.Sprintf("updating SSM Quick Setup Configuration Manager (%s)", arn), err.Error())
