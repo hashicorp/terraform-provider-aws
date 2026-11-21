@@ -85,6 +85,11 @@ func resourceBranch() *schema.Resource {
 					ForceNew:     true,
 					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z/_.-]{1,255}$`, "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 				},
+				"compute_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
 				"custom_domains": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -203,6 +208,10 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta any)
 		input.BasicAuthCredentials = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("compute_role_arn"); ok {
+		input.ComputeRoleArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -289,6 +298,7 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set("backend_environment_arn", branch.BackendEnvironmentArn)
 	d.Set("basic_auth_credentials", branch.BasicAuthCredentials)
 	d.Set("branch_name", branch.BranchName)
+	d.Set("compute_role_arn", branch.ComputeRoleArn)
 	d.Set("custom_domains", branch.CustomDomains)
 	d.Set(names.AttrDescription, branch.Description)
 	d.Set("destination_branch", branch.DestinationBranch)
@@ -332,6 +342,10 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 		if d.HasChange("basic_auth_credentials") {
 			input.BasicAuthCredentials = aws.String(d.Get("basic_auth_credentials").(string))
+		}
+
+		if d.HasChange("compute_role_arn") {
+			input.ComputeRoleArn = aws.String(d.Get("compute_role_arn").(string))
 		}
 
 		if d.HasChange(names.AttrDescription) {
