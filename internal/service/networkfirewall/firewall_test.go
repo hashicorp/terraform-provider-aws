@@ -13,9 +13,12 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfnetworkfirewall "github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
@@ -559,6 +562,50 @@ func TestAccNetworkFirewallFirewall_transitGatewayAttachment_updateAvailabilityZ
 	})
 }
 
+func TestAccNetworkFirewallFirewall_firewallPolicyV2(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_firewallPolicyV2(rName, 0),
+				Check:  testAccCheckFirewallExists(ctx, t, resourceName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("firewall_policy_arn"), "aws_networkfirewall_firewall_policy_v2.test[0]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFirewallConfig_firewallPolicyV2(rName, 1),
+				Check:  testAccCheckFirewallExists(ctx, t, resourceName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("firewall_policy_arn"), "aws_networkfirewall_firewall_policy_v2.test[1]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -672,6 +719,31 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFirewallConfig_firewallPolicyV2(rName string, policyIndex int) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+# Both policies are always present so that neither is deleted while still associated with the firewall.
+resource "aws_networkfirewall_firewall_policy_v2" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+
+  firewall_policy {
+    firewall_default_action = "DROP"
+  }
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy_v2.test[%[2]d].arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test[0].id
+  }
+}
+`, rName, policyIndex))
 }
 
 func testAccFirewallConfig_deleteProtection(rName string, deleteProtection bool) string {
