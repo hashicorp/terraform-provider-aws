@@ -37,5 +37,8 @@ var (
 	ValidBusNameOrARN       = validBusNameOrARN
 	ValidateRuleName        = validateRuleName
 
+	SuppressEquivalentBusNameOrARN = suppressEquivalentBusNameOrARN
+	BusNameFromNameOrARN           = busNameFromNameOrARN
+
 	DefaultEventBusName = defaultEventBusName
 )
