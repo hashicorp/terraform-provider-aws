@@ -9,13 +9,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
 	awsv2.Register("aws_ecr_repository", sweepRepositories)
+	awsv2.Register("aws_ecr_signing_configuration", sweepSigningConfigurations)
 }
 
 func sweepRepositories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -42,4 +45,25 @@ func sweepRepositories(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	}
 
 	return sweepResources, nil
+}
+
+// sweepSigningConfigurations removes the registry's signing configuration in the swept Region.
+// There is at most one per Region and it carries no name or tags, so a configuration not created
+// by the acceptance tests cannot be told apart and is removed too.
+func sweepSigningConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.ECRClient(ctx)
+
+	output, err := findSigningConfiguration(ctx, conn)
+	if retry.NotFound(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return []sweep.Sweepable{
+		framework.NewSweepResource(newSigningConfigurationResource, client,
+			framework.NewAttribute("registry_id", aws.ToString(output.RegistryId)),
+		),
+	}, nil
 }

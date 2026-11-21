@@ -69,7 +69,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Pull Time Update Exclusion",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newSigningConfigurationResource,
+			TypeName: "aws_ecr_signing_configuration",
+			Name:     "Signing Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
 	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newSigningConfigurationResourceAsListResource,
+			TypeName: "aws_ecr_signing_configuration",
+			Name:     "Signing Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingletonIdentity(),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {
