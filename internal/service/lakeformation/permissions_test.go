@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -498,6 +500,49 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func testAccPermissions_tableIAMAllowedWithRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+	tableName := "aws_glue_catalog_table.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// IAM_ALLOWED_PRINCIPALS holds ALL on the table. The role's own grant must not pick it up.
+				Config: testAccPermissionsConfig_tableIAMAllowedWithRole(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(roleName, names.AttrARN, resourceName, names.AttrPrincipal),
+					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionDescribe)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "permissions.*", string(awstypes.PermissionSelect)),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
+				),
+			},
+			{
+				Config: testAccPermissionsConfig_tableIAMAllowedWithRole(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
@@ -2191,6 +2236,73 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName)
 }
 
+func testAccPermissionsConfig_tableIAMAllowedWithRole(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  path = "/"
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+}
+
+resource "aws_lakeformation_permissions" "iam_allowed" {
+  permissions = ["ALL"]
+  principal   = "IAM_ALLOWED_PRINCIPALS"
+
+  table {
+    database_name = aws_glue_catalog_table.test.database_name
+    name          = aws_glue_catalog_table.test.name
+  }
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  permissions = ["DESCRIBE", "SELECT"]
+  principal   = aws_iam_role.test.arn
+
+  table {
+    database_name = aws_glue_catalog_table.test.database_name
+    name          = aws_glue_catalog_table.test.name
+  }
+
+  # grant after IAM_ALLOWED_PRINCIPALS so that it holds ALL on the table when this grant is read
+  depends_on = [aws_lakeformation_permissions.iam_allowed]
+}
+`, rName)
+}
+
 func testAccPermissionsConfig_tableIAMPrincipals(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -3310,4 +3422,52 @@ resource "aws_lakeformation_permissions" "test" {
   ]
 }
 `, rName))
+}
+
+func TestListPermissionsInput(t *testing.T) {
+	t.Parallel()
+
+	//lintignore:AWSAT005
+	principalIdentifier := fmt.Sprintf("arn:aws:iam::%s:role/test", acctest.Ct12Digit)
+
+	testCases := map[string]struct {
+		raw      map[string]any
+		expected awstypes.Resource
+	}{
+		names.AttrDatabase: {
+			raw: map[string]any{
+				names.AttrDatabase: []any{map[string]any{names.AttrName: "db"}},
+			},
+			expected: awstypes.Resource{Database: &awstypes.DatabaseResource{Name: aws.String("db")}},
+		},
+		"table": {
+			raw: map[string]any{
+				"table": []any{map[string]any{names.AttrDatabaseName: "db", names.AttrName: "tbl"}},
+			},
+			expected: awstypes.Resource{Table: &awstypes.TableResource{DatabaseName: aws.String("db"), Name: aws.String("tbl")}},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			testCase.raw[names.AttrPrincipal] = principalIdentifier
+			testCase.raw[names.AttrPermissions] = []any{"DESCRIBE"}
+			d := schema.TestResourceDataRaw(t, tflakeformation.ResourcePermissions().SchemaMap(), testCase.raw)
+
+			got := tflakeformation.ListPermissionsInput(d)
+
+			// Listing with a principal makes Lake Formation fold permissions held by
+			// IAM_ALLOWED_PRINCIPALS on the resource (typically ALL) into the principal's own.
+			// The principal must be matched client-side instead.
+			if got.Principal != nil {
+				t.Errorf("Principal = %s, want nil", aws.ToString(got.Principal.DataLakePrincipalIdentifier))
+			}
+
+			if diff := cmp.Diff(got.Resource, &testCase.expected, cmpopts.IgnoreUnexported(awstypes.Resource{}, awstypes.DatabaseResource{}, awstypes.TableResource{})); diff != "" {
+				t.Errorf("unexpected Resource diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
 }
