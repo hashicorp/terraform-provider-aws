@@ -19,4 +19,9 @@ var (
 	StackSetInstanceResourceIDPartCount     = stackSetInstanceResourceIDPartCount
 	StackInstancesResourceIDPartCount       = stackInstancesResourceIDPartCount
 	TypeVersionARNToTypeARNAndVersionID     = typeVersionARNToTypeARNAndVersionID
+
+	DeploymentTargetsEquivalentToID     = deploymentTargetsEquivalentToID
+	ExpandStackSetInstanceDeleteTargets = expandStackSetInstanceDeleteTargets
+	ExpandStackSetInstanceUpdateTargets = expandStackSetInstanceUpdateTargets
+	StackSetInstanceIDTarget            = stackSetInstanceIDTarget
 )

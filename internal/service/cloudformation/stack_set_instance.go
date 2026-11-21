@@ -75,10 +75,11 @@ func resourceStackSetInstance() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
 				},
 				"deployment_targets": {
-					Type:     schema.TypeList,
-					Optional: true,
-					ForceNew: true,
-					MaxItems: 1,
+					Type:             schema.TypeList,
+					Optional:         true,
+					ForceNew:         true,
+					MaxItems:         1,
+					DiffSuppressFunc: suppressEquivalentDeploymentTargets,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"organizational_unit_ids": {
@@ -267,9 +268,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		dt := expandDeploymentTargets(v.([]any))
-		if len(dt.OrganizationalUnitIds) > 0 {
-			accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
-		}
+		accountOrOrgID = stackSetInstanceIDTarget(accountID, dt)
 		input.DeploymentTargets = dt
 	} else {
 		d.Set(names.AttrAccountID, accountID)
@@ -353,7 +352,16 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		d.Set("stack_id", stackInstance.StackId)
-		d.Set("stack_instance_summaries", nil)
+		// Single-account deployment targets are recorded by account ID.
+		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			d.Set("stack_instance_summaries", []any{map[string]any{
+				names.AttrAccountID:      stackInstance.Account,
+				"organizational_unit_id": stackInstance.OrganizationalUnitId,
+				"stack_id":               stackInstance.StackId,
+			}})
+		} else {
+			d.Set("stack_instance_summaries", nil)
+		}
 	} else {
 		// Stack instances deployed by organizational unit ID
 		orgIDs := strings.Split(accountOrOrgID, "/")
@@ -388,12 +396,13 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 		input := &cloudformation.UpdateStackInstancesInput{
-			Accounts:           []string{accountOrOrgID},
 			OperationId:        aws.String(create.UniqueId(ctx)),
 			ParameterOverrides: []awstypes.Parameter{},
 			Regions:            []string{region},
 			StackSetName:       aws.String(stackSetName),
 		}
+
+		input.Accounts, input.DeploymentTargets = expandStackSetInstanceUpdateTargets(accountOrOrgID, d.Get("organizational_unit_id").(string), expandDeploymentTargets(d.Get("deployment_targets").([]any)))
 
 		callAs := d.Get("call_as").(string)
 		if v, ok := d.GetOk("call_as"); ok {
@@ -433,7 +442,6 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 
 	stackSetName, accountOrOrgID, region := parts[0], parts[1], parts[2]
 	input := &cloudformation.DeleteStackInstancesInput{
-		Accounts:     []string{accountOrOrgID},
 		OperationId:  aws.String(create.UniqueId(ctx)),
 		Regions:      []string{region},
 		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
@@ -445,13 +453,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
-	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
-		dt := expandDeploymentTargets(v.([]any))
-		// For instances associated with stack sets that use a self-managed permission model,
-		// the organizational unit must be provided;
-		input.Accounts = nil
-		input.DeploymentTargets = dt
-	}
+	input.Accounts, input.DeploymentTargets = expandStackSetInstanceDeleteTargets(accountOrOrgID, d.Get("organizational_unit_id").(string), expandDeploymentTargets(d.Get("deployment_targets").([]any)))
 
 	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		input.OperationPreferences = expandOperationPreferences(v.([]any)[0].(map[string]any))
@@ -596,4 +598,133 @@ func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []
 	}
 
 	return tfList
+}
+
+// singleAccountDeploymentTarget returns the account ID if the deployment targets select exactly one account.
+func singleAccountDeploymentTarget(dt *awstypes.DeploymentTargets) (string, bool) {
+	if dt == nil || dt.AccountsUrl != nil || len(dt.OrganizationalUnitIds) == 0 || len(dt.Accounts) != 1 || dt.AccountFilterType != awstypes.AccountFilterTypeIntersection {
+		return "", false
+	}
+
+	return dt.Accounts[0], true
+}
+
+// stackSetInstanceIDTarget returns the account ID or slash-delimited organizational unit IDs part of the resource ID.
+func stackSetInstanceIDTarget(accountID string, dt *awstypes.DeploymentTargets) string {
+	if dt == nil {
+		return accountID
+	}
+
+	if v, ok := singleAccountDeploymentTarget(dt); ok {
+		return v
+	}
+
+	if len(dt.OrganizationalUnitIds) > 0 {
+		return strings.Join(dt.OrganizationalUnitIds, "/")
+	}
+
+	return accountID
+}
+
+// expandStackSetInstanceUpdateTargets returns the Accounts or DeploymentTargets for UpdateStackInstances.
+// Accounts is documented for SELF_MANAGED stack sets only, so an instance that reports an organizational unit is targeted by INTERSECTION.
+func expandStackSetInstanceUpdateTargets(accountOrOrgID, organizationalUnitID string, dt *awstypes.DeploymentTargets) ([]string, *awstypes.DeploymentTargets) {
+	if dt != nil && len(dt.OrganizationalUnitIds) > 0 {
+		return nil, dt
+	}
+
+	if inttypes.IsAWSAccountID(accountOrOrgID) {
+		if organizationalUnitID == "" {
+			return []string{accountOrOrgID}, nil
+		}
+
+		return nil, &awstypes.DeploymentTargets{
+			AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			Accounts:              []string{accountOrOrgID},
+			OrganizationalUnitIds: []string{organizationalUnitID},
+		}
+	}
+
+	return nil, &awstypes.DeploymentTargets{
+		OrganizationalUnitIds: strings.Split(accountOrOrgID, "/"),
+	}
+}
+
+// expandStackSetInstanceDeleteTargets returns the Accounts or DeploymentTargets for DeleteStackInstances.
+func expandStackSetInstanceDeleteTargets(accountOrOrgID, organizationalUnitID string, dt *awstypes.DeploymentTargets) ([]string, *awstypes.DeploymentTargets) {
+	if dt != nil {
+		return nil, dt
+	}
+
+	if inttypes.IsAWSAccountID(accountOrOrgID) {
+		if organizationalUnitID == "" {
+			return []string{accountOrOrgID}, nil
+		}
+
+		return nil, &awstypes.DeploymentTargets{
+			AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			Accounts:              []string{accountOrOrgID},
+			OrganizationalUnitIds: []string{organizationalUnitID},
+		}
+	}
+
+	return nil, &awstypes.DeploymentTargets{
+		OrganizationalUnitIds: strings.Split(accountOrOrgID, "/"),
+	}
+}
+
+// deploymentTargetsEquivalentToID reports whether the deployment targets select exactly the stack instances the resource ID addresses.
+func deploymentTargetsEquivalentToID(accountOrOrgID, organizationalUnitID string, dt *awstypes.DeploymentTargets) bool {
+	if dt == nil {
+		return false
+	}
+
+	if inttypes.IsAWSAccountID(accountOrOrgID) {
+		v, ok := singleAccountDeploymentTarget(dt)
+		if !ok || v != accountOrOrgID {
+			return false
+		}
+
+		return organizationalUnitID == "" || slices.Contains(dt.OrganizationalUnitIds, organizationalUnitID)
+	}
+
+	if len(dt.Accounts) > 0 || dt.AccountsUrl != nil || (dt.AccountFilterType != "" && dt.AccountFilterType != awstypes.AccountFilterTypeNone) {
+		return false
+	}
+
+	want := strings.Split(accountOrOrgID, "/")
+	if len(want) != len(dt.OrganizationalUnitIds) {
+		return false
+	}
+	for _, v := range dt.OrganizationalUnitIds {
+		if !slices.Contains(want, v) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// suppressEquivalentDeploymentTargets suppresses the diff after import, when deployment_targets is not in state (it cannot be read from the API).
+func suppressEquivalentDeploymentTargets(_, _, _ string, d *schema.ResourceData) bool {
+	if d.Id() == "" {
+		return false
+	}
+
+	o, n := d.GetChange("deployment_targets")
+	if v, ok := o.([]any); !ok || len(v) > 0 {
+		return false
+	}
+
+	parts, err := flex.ExpandResourceId(d.Id(), stackSetInstanceResourceIDPartCount, false)
+	if err != nil {
+		return false
+	}
+
+	tfList, ok := n.([]any)
+	if !ok {
+		return false
+	}
+
+	return deploymentTargetsEquivalentToID(parts[1], d.Get("organizational_unit_id").(string), expandDeploymentTargets(tfList))
 }

@@ -11,7 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -213,7 +216,7 @@ func TestAccCloudFormationStackSetInstance_parameterOverrides(t *testing.T) {
 
 func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stackInstanceSummaries []awstypes.StackInstanceSummary
+	var stackInstance1, stackInstance2 awstypes.StackInstance
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack_set_instance.test"
 
@@ -227,17 +230,142 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationEndpointID, "organizations"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx, t),
+		CheckDestroy:             testAccCheckStackSetInstanceDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
+				// A single-account INTERSECTION target is recorded by account ID.
 				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, t, resourceName, stackInstanceSummaries),
+					testAccCheckStackSetInstanceExists(ctx, t, resourceName, &stackInstance1),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.account_filter_type", "INTERSECTION"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.accounts_url", ""),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, "data.aws_organizations_organization.test", "non_master_accounts.0.id"),
+					resource.TestCheckResourceAttr(resourceName, "stack_instance_summaries.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_stack",
+					"call_as",
+					"deployment_targets",
+					"stack_instance_summaries",
+				},
+			},
+			{
+				// operation_preferences is updated in place with DeploymentTargets.
+				Config: testAccStackSetInstanceConfig_deploymentTargetsOperationPreferences(rName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceExists(ctx, t, resourceName, &stackInstance2),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", "2"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/40675.
+func TestAccCloudFormationStackSetInstance_DeploymentTargets_adoptedByAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstance1, stackInstance2 awstypes.StackInstance
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationEndpointID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceExists(ctx, t, resourceName, &stackInstance1),
+				),
+			},
+			{
+				// Forget the stack instance so it can be imported again.
+				Config: testAccStackSetInstanceConfig_deploymentTargetsRemoved(rName),
+			},
+			{
+				// Imported state has no deployment_targets.
+				Config:       testAccStackSetInstanceConfig_deploymentTargets(rName),
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(*terraform.State) (string, error) {
+					return fmt.Sprintf("%s,%s,%s", rName, aws.ToString(stackInstance1.Account), acctest.Region()), nil
+				},
+				ImportStatePersist: true,
+			},
+			{
+				// The configured block selects the imported instance: no replacement.
+				// call_as and retain_stack are not imported.
+				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				// An in-place update of the imported instance.
+				Config: testAccStackSetInstanceConfig_deploymentTargetsOperationPreferences(rName, 2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceExists(ctx, t, resourceName, &stackInstance2),
+					testAccCheckStackSetInstanceNotRecreated(&stackInstance1, &stackInstance2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFormationStackSetInstance_DeploymentTargets_multipleOUs(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackInstanceSummaries []awstypes.StackInstanceSummary
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set_instance.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/stacksets.cloudformation.amazonaws.com")
+			acctest.PreCheckMultipleOrganizationalUnitsWithAccounts(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationEndpointID, "organizations"),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackSetInstanceForOrganizationalUnitDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackSetInstanceConfig_multipleOUs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, t, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.0.organizational_unit_ids.#", "2"),
 				),
 			},
 			{
@@ -251,9 +379,20 @@ func TestAccCloudFormationStackSetInstance_deploymentTargets(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccStackSetInstanceConfig_deploymentTargets(rName),
+				// operation_preferences is updated in place with DeploymentTargets.
+				Config: testAccStackSetInstanceConfig_multipleOUsOperationPreferences(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetInstanceForOrganizationalUnitExists(ctx, t, resourceName, stackInstanceSummaries),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "100"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", "PARALLEL"),
 				),
 			},
 		},
@@ -952,6 +1091,87 @@ resource "aws_cloudformation_stack_set_instance" "test" {
 `)
 }
 
+func testAccStackSetInstanceConfig_deploymentTargetsRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+removed {
+  from = aws_cloudformation_stack_set_instance.test
+
+  lifecycle {
+    destroy = false
+  }
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_deploymentTargetsOperationPreferences(rName string, maxConcurrentCount int) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), fmt.Sprintf(`
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  deployment_targets {
+    organizational_unit_ids = [data.aws_organizations_organization.test.roots[0].id]
+    account_filter_type     = "INTERSECTION"
+    accounts                = [data.aws_organizations_organization.test.non_master_accounts[0].id]
+  }
+
+  operation_preferences {
+    max_concurrent_count = %[1]d
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`, maxConcurrentCount))
+}
+
+func testAccStackSetInstanceConfig_multipleOUs(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+data "aws_organizations_organizational_units" "test" {
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
+
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  deployment_targets {
+    organizational_unit_ids = [
+      data.aws_organizations_organizational_units.test.children[0].id,
+      data.aws_organizations_organizational_units.test.children[1].id,
+    ]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
+func testAccStackSetInstanceConfig_multipleOUsOperationPreferences(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), `
+data "aws_organizations_organizational_units" "test" {
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
+
+resource "aws_cloudformation_stack_set_instance" "test" {
+  depends_on = [aws_iam_role_policy.Administration, aws_iam_role_policy.Execution]
+
+  operation_preferences {
+    failure_tolerance_count   = 1
+    max_concurrent_percentage = 100
+    concurrency_mode          = "SOFT_FAILURE_TOLERANCE"
+    region_concurrency_type   = "PARALLEL"
+  }
+
+  deployment_targets {
+    organizational_unit_ids = [
+      data.aws_organizations_organizational_units.test.children[0].id,
+      data.aws_organizations_organizational_units.test.children[1].id,
+    ]
+  }
+
+  stack_set_name = aws_cloudformation_stack_set.test.name
+}
+`)
+}
+
 func testAccStackSetInstanceConfig_DeploymentTargets_emptyOU(rName string) string {
 	return acctest.ConfigCompose(testAccStackSetInstanceBaseConfig_ServiceManagedStackSet(rName), fmt.Sprintf(`
 resource "aws_organizations_organizational_unit" "test" {
@@ -1046,4 +1266,363 @@ resource "aws_cloudformation_stack_set_instance" "test" {
   stack_set_name = aws_cloudformation_stack_set.test.name
 }
 `, acctest.AlternateRegion()))
+}
+
+const (
+	testStackSetInstanceAccount1 = "111111111111"
+	testStackSetInstanceAccount2 = "222222222222"
+	testStackSetInstanceOU1      = "ou-abcd-11111111"
+	testStackSetInstanceOU2      = "ou-abcd-22222222"
+)
+
+func TestStackSetInstanceIDTarget(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		accountID string
+		dt        *awstypes.DeploymentTargets
+		want      string
+	}{
+		"account_id (no deployment_targets)": {
+			accountID: testStackSetInstanceAccount1,
+			want:      testStackSetInstanceAccount1,
+		},
+		"single account INTERSECTION": {
+			accountID: testStackSetInstanceAccount2, // caller account; ignored
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			want: testStackSetInstanceAccount1,
+		},
+		"single account INTERSECTION across multiple OUs": {
+			accountID: testStackSetInstanceAccount2,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			want: testStackSetInstanceAccount1,
+		},
+		"single account DIFFERENCE": {
+			accountID: testStackSetInstanceAccount2,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeDifference,
+			},
+			want: testStackSetInstanceOU1,
+		},
+		"multiple accounts INTERSECTION": {
+			accountID: testStackSetInstanceAccount2,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1, testStackSetInstanceAccount2},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			want: testStackSetInstanceOU1,
+		},
+		"single account INTERSECTION with accounts_url": {
+			accountID: testStackSetInstanceAccount2,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountsUrl:           aws.String("s3://bucket/accounts.csv"),
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			want: testStackSetInstanceOU1,
+		},
+		"multiple OUs": {
+			accountID: testStackSetInstanceAccount2,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+			},
+			want: testStackSetInstanceOU1 + "/" + testStackSetInstanceOU2,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfcloudformation.StackSetInstanceIDTarget(tc.accountID, tc.dt); got != tc.want {
+				t.Errorf("got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestExpandStackSetInstanceUpdateTargets(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		accountOrOrgID string
+		ouID           string
+		dt             *awstypes.DeploymentTargets
+		wantAccounts   []string
+		wantTargets    *awstypes.DeploymentTargets
+	}{
+		"account_id on SELF_MANAGED (no deployment_targets)": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			wantAccounts:   []string{testStackSetInstanceAccount1},
+		},
+		"imported account ID on SERVICE_MANAGED (no deployment_targets)": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			ouID:           testStackSetInstanceOU1,
+			dt:             &awstypes.DeploymentTargets{},
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+		},
+		"imported account ID, organizational unit unknown (no deployment_targets)": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			dt:             &awstypes.DeploymentTargets{},
+			wantAccounts:   []string{testStackSetInstanceAccount1},
+		},
+		"single account INTERSECTION": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			ouID:           testStackSetInstanceOU1,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+		},
+		"single account INTERSECTION created as an OU ID": {
+			accountOrOrgID: testStackSetInstanceOU1,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+		},
+		"multiple OUs": {
+			accountOrOrgID: testStackSetInstanceOU1 + "/" + testStackSetInstanceOU2,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+			},
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+			},
+		},
+		"imported multiple OUs (no deployment_targets)": {
+			accountOrOrgID: testStackSetInstanceOU1 + "/" + testStackSetInstanceOU2,
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			accounts, targets := tfcloudformation.ExpandStackSetInstanceUpdateTargets(tc.accountOrOrgID, tc.ouID, tc.dt)
+			if diff := cmp.Diff(tc.wantAccounts, accounts); diff != "" {
+				t.Errorf("Accounts mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.wantTargets, targets, cmp.AllowUnexported(awstypes.DeploymentTargets{})); diff != "" {
+				t.Errorf("DeploymentTargets mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestExpandStackSetInstanceDeleteTargets(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		accountOrOrgID string
+		ouID           string
+		dt             *awstypes.DeploymentTargets
+		wantAccounts   []string
+		wantTargets    *awstypes.DeploymentTargets
+	}{
+		"account_id on SELF_MANAGED": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			wantAccounts:   []string{testStackSetInstanceAccount1},
+		},
+		"imported account ID on SERVICE_MANAGED": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			ouID:           testStackSetInstanceOU1,
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+		},
+		"single account INTERSECTION": {
+			accountOrOrgID: testStackSetInstanceAccount1,
+			ouID:           testStackSetInstanceOU1,
+			dt: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+				Accounts:              []string{testStackSetInstanceAccount1},
+				AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+			},
+		},
+		"imported multiple OUs": {
+			accountOrOrgID: testStackSetInstanceOU1 + "/" + testStackSetInstanceOU2,
+			wantTargets: &awstypes.DeploymentTargets{
+				OrganizationalUnitIds: []string{testStackSetInstanceOU1, testStackSetInstanceOU2},
+			},
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			accounts, targets := tfcloudformation.ExpandStackSetInstanceDeleteTargets(tc.accountOrOrgID, tc.ouID, tc.dt)
+			if diff := cmp.Diff(tc.wantAccounts, accounts); diff != "" {
+				t.Errorf("Accounts mismatch (-want +got):\n%s", diff)
+			}
+			if diff := cmp.Diff(tc.wantTargets, targets, cmp.AllowUnexported(awstypes.DeploymentTargets{})); diff != "" {
+				t.Errorf("DeploymentTargets mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestDeploymentTargetsEquivalentToID(t *testing.T) {
+	t.Parallel()
+
+	single := func(acct string, ous ...string) *awstypes.DeploymentTargets {
+		return &awstypes.DeploymentTargets{
+			OrganizationalUnitIds: ous,
+			Accounts:              []string{acct},
+			AccountFilterType:     awstypes.AccountFilterTypeIntersection,
+		}
+	}
+
+	testCases := map[string]struct {
+		accountOrOrgID string
+		ouID           string
+		dt             *awstypes.DeploymentTargets
+		want           bool
+	}{
+		"no deployment_targets":                 {testStackSetInstanceAccount1, "", nil, false},
+		"same account, same OU":                 {testStackSetInstanceAccount1, testStackSetInstanceOU1, single(testStackSetInstanceAccount1, testStackSetInstanceOU1), true},
+		"same account, OU among several":        {testStackSetInstanceAccount1, testStackSetInstanceOU2, single(testStackSetInstanceAccount1, testStackSetInstanceOU1, testStackSetInstanceOU2), true},
+		"same account, OU unknown":              {testStackSetInstanceAccount1, "", single(testStackSetInstanceAccount1, testStackSetInstanceOU1), true},
+		"same account, different OU":            {testStackSetInstanceAccount1, testStackSetInstanceOU2, single(testStackSetInstanceAccount1, testStackSetInstanceOU1), false},
+		"different account":                     {testStackSetInstanceAccount1, testStackSetInstanceOU1, single(testStackSetInstanceAccount2, testStackSetInstanceOU1), false},
+		"account ID, OU-only deployment target": {testStackSetInstanceAccount1, testStackSetInstanceOU1, &awstypes.DeploymentTargets{OrganizationalUnitIds: []string{testStackSetInstanceOU1}}, false},
+		"same OUs, different order": {
+			testStackSetInstanceOU1 + "/" + testStackSetInstanceOU2, "",
+			&awstypes.DeploymentTargets{OrganizationalUnitIds: []string{testStackSetInstanceOU2, testStackSetInstanceOU1}}, true,
+		},
+		"OU subset": {
+			testStackSetInstanceOU1 + "/" + testStackSetInstanceOU2, "",
+			&awstypes.DeploymentTargets{OrganizationalUnitIds: []string{testStackSetInstanceOU1}}, false,
+		},
+		"OU ID, accounts filter": {
+			testStackSetInstanceOU1, "", single(testStackSetInstanceAccount1, testStackSetInstanceOU1), false,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfcloudformation.DeploymentTargetsEquivalentToID(tc.accountOrOrgID, tc.ouID, tc.dt); got != tc.want {
+				t.Errorf("got %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestStackSetInstanceDiff_importedDeploymentTargets(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	state := func(id, accountID, ouID string) *sdkterraform.InstanceState {
+		return &sdkterraform.InstanceState{
+			ID: id,
+			Attributes: map[string]string{
+				names.AttrID:                id,
+				names.AttrAccountID:         accountID,
+				"call_as":                   "SELF",
+				"deployment_targets.#":      "0",
+				"organizational_unit_id":    ouID,
+				names.AttrRegion:            endpoints.UsEast1RegionID,
+				"retain_stack":              acctest.CtTrue,
+				"stack_set_instance_region": endpoints.UsEast1RegionID,
+				"stack_set_name":            "example",
+			},
+		}
+	}
+	config := func(ous []any, accounts []any, filter string) *sdkterraform.ResourceConfig {
+		dt := map[string]any{"organizational_unit_ids": ous}
+		if accounts != nil {
+			dt["accounts"] = accounts
+		}
+		if filter != "" {
+			dt["account_filter_type"] = filter
+		}
+		return sdkterraform.NewResourceConfigRaw(map[string]any{
+			"stack_set_name":            "example",
+			"stack_set_instance_region": endpoints.UsEast1RegionID,
+			"retain_stack":              true,
+			"deployment_targets":        []any{dt},
+		})
+	}
+
+	testCases := map[string]struct {
+		state       *sdkterraform.InstanceState
+		config      *sdkterraform.ResourceConfig
+		wantReplace bool
+	}{
+		"imported account ID, equivalent single account INTERSECTION": {
+			state:  state("example,"+testStackSetInstanceAccount1+","+endpoints.UsEast1RegionID, testStackSetInstanceAccount1, testStackSetInstanceOU1),
+			config: config([]any{testStackSetInstanceOU1}, []any{testStackSetInstanceAccount1}, "INTERSECTION"),
+		},
+		"imported account ID, different account": {
+			state:       state("example,"+testStackSetInstanceAccount1+","+endpoints.UsEast1RegionID, testStackSetInstanceAccount1, testStackSetInstanceOU1),
+			config:      config([]any{testStackSetInstanceOU1}, []any{testStackSetInstanceAccount2}, "INTERSECTION"),
+			wantReplace: true,
+		},
+		"imported account ID, different OU": {
+			state:       state("example,"+testStackSetInstanceAccount1+","+endpoints.UsEast1RegionID, testStackSetInstanceAccount1, testStackSetInstanceOU1),
+			config:      config([]any{testStackSetInstanceOU2}, []any{testStackSetInstanceAccount1}, "INTERSECTION"),
+			wantReplace: true,
+		},
+		"imported OU IDs, equivalent multi-OU target": {
+			state:  state("example,"+testStackSetInstanceOU1+"/"+testStackSetInstanceOU2+","+endpoints.UsEast1RegionID, "", ""),
+			config: config([]any{testStackSetInstanceOU2, testStackSetInstanceOU1}, nil, ""),
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diff, err := tfcloudformation.ResourceStackSetInstance().Diff(ctx, tc.state, tc.config, nil)
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if got := diff != nil && diff.RequiresNew(); got != tc.wantReplace {
+				t.Errorf("RequiresNew: got %t, want %t (diff: %v)", got, tc.wantReplace, diff)
+			}
+		})
+	}
 }
