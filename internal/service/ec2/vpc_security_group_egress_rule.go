@@ -38,10 +38,17 @@ func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resourc
 
 func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
 	conn := r.Meta().EC2Client(ctx)
+	ipPermission := data.expandIPPermission(ctx)
+
+	if len(ipPermission.Ipv6Ranges) > 0 {
+		if err := revokeSecurityGroupDefaultIPv6EgressRule(ctx, conn, data.SecurityGroupID.ValueString()); err != nil {
+			return "", err
+		}
+	}
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
 		GroupId:           fwflex.StringFromFramework(ctx, data.SecurityGroupID),
-		IpPermissions:     []awstypes.IpPermission{data.expandIPPermission(ctx)},
+		IpPermissions:     []awstypes.IpPermission{ipPermission},
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSecurityGroupRule),
 	}
 
