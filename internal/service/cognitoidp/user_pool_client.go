@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
@@ -316,6 +317,10 @@ func (r *userPoolClientResource) Schema(ctx context.Context, request resource.Sc
 						},
 						"retry_grace_period_seconds": schema.Int32Attribute{
 							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.Int32{
+								int32planmodifier.UseStateForUnknown(),
+							},
 							Validators: []validator.Int32{
 								int32validator.Between(0, 60),
 							},
