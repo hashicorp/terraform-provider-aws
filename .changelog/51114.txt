@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_metric_alarm: Fix an empty `evaluation_window.wall_clock_window` block being ignored, which left the alarm on a sliding window and caused a persistent diff
+```
