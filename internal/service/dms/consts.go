@@ -9,6 +9,11 @@ import (
 
 const (
 	propagationTimeout = 2 * time.Minute
+
+	// endpointReplicationTaskTimeout bounds each wait, stop, or start of a
+	// replication task that aws_dms_endpoint pauses, as its update has no
+	// configurable timeout.
+	endpointReplicationTaskTimeout = 5 * time.Minute
 )
 
 const (
