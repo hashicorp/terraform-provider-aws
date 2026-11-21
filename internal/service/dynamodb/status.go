@@ -5,6 +5,7 @@ package dynamodb
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -12,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 )
 
-func statusTable(conn *dynamodb.Client, tableName string) retry.StateRefreshFunc {
+func statusTable(conn *dynamodb.Client, tableName string, optFns ...func(*dynamodb.Options)) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
-		output, err := findTableByName(ctx, conn, tableName)
+		output, err := findTableByName(ctx, conn, tableName, optFns...)
 
 		if retry.NotFound(err) {
 			return nil, "", nil
@@ -87,6 +88,36 @@ func statusReplicaUpdate(conn *dynamodb.Client, tableName, region string, optFns
 		}
 
 		return output, string(awstypes.ReplicaStatusCreating), nil
+	}
+}
+
+// statusReplicaDisassociation reads the disassociating replica's table in its own Region.
+// The table is UPDATING while DynamoDB delivers writes to the remaining replicas. It returns
+// to ACTIVE either without other replicas, which is reported as replicaStatusDisassociated, or
+// with them, when DynamoDB rolled back the disassociation. An accepted request can leave the
+// table ACTIVE with other replicas for a few seconds before it reports UPDATING, so that state
+// is reported as replicaStatusDisassociationPending until UPDATING is seen or acceptWindow ends.
+func statusReplicaDisassociation(conn *dynamodb.Client, tableName, region string, acceptWindow time.Duration) retry.StateRefreshFunc {
+	acceptDeadline := time.Now().Add(acceptWindow)
+	updating := false
+
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTableByName(ctx, conn, tableName, func(o *dynamodb.Options) { o.Region = region })
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		switch {
+		case output.TableStatus == awstypes.TableStatusUpdating:
+			updating = true
+		case output.TableStatus == awstypes.TableStatusActive && !hasOtherReplicas(output, region):
+			return output, replicaStatusDisassociated, nil
+		case output.TableStatus == awstypes.TableStatusActive && !updating && time.Now().Before(acceptDeadline):
+			return output, replicaStatusDisassociationPending, nil
+		}
+
+		return output, string(output.TableStatus), nil
 	}
 }
 

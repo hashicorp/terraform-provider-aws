@@ -31,10 +31,14 @@ var (
 	FindTag                                      = findTag
 	FlattenTableItemAttributes                   = flattenTableItemAttributes
 	ListTags                                     = listTags
+	PartitionReplicaRemovals                     = partitionReplicaRemovals
 	RegionFromARN                                = regionFromARN
+	ReplicaRegionsIn                             = replicaRegionsIn
 	ReplicaForRegion                             = replicaForRegion
 	TableNameFromARN                             = tableNameFromARN
 	TableReplicaParseResourceID                  = tableReplicaParseResourceID
 	UpdateDiffGSI                                = updateDiffGSI
+	ValidateReplicaDisassociation                = validateReplicaDisassociation
 	CheckIfGSIRecreateAttributesChanged          = checkIfGSIRecreateAttributesChanged
+	CheckReplicasUnprotected                     = checkReplicasUnprotected
 )

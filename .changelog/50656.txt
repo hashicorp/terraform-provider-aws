@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `disassociate_replica_regions` argument
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table_replica: Add `disassociate_on_destroy` argument
+```
