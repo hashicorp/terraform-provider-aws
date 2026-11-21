@@ -442,11 +442,13 @@ func resourceS3EndpointRead(ctx context.Context, d *schema.ResourceData, meta an
 	d.Set("timestamp_column_name", s3settings.TimestampColumnName)
 	d.Set("use_task_start_time_for_full_load_timestamp", s3settings.UseTaskStartTimeForFullLoadTimestamp)
 
+	// Read back for every endpoint type, matching the expanders in s3Settings.
+	d.Set("compression_type", s3settings.CompressionType)
+	d.Set("data_format", s3settings.DataFormat)
+
 	if d.Get(names.AttrEndpointType).(string) == string(awstypes.ReplicationEndpointTypeValueTarget) {
 		d.Set("add_trailing_padding_character", s3settings.AddTrailingPaddingCharacter)
-		d.Set("compression_type", s3settings.CompressionType)
 		d.Set("csv_no_sup_value", s3settings.CsvNoSupValue)
-		d.Set("data_format", s3settings.DataFormat)
 		d.Set("date_partition_delimiter", strings.ToUpper(string(s3settings.DatePartitionDelimiter)))
 		d.Set("date_partition_enabled", s3settings.DatePartitionEnabled)
 		d.Set("date_partition_sequence", s3settings.DatePartitionSequence)
@@ -584,7 +586,7 @@ func s3Settings(d *schema.ResourceData, target bool) *awstypes.S3Settings {
 		s3s.CdcPath = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("compression_type"); ok && target { // likely only useful for target
+	if v, ok := d.GetOk("compression_type"); ok {
 		s3s.CompressionType = awstypes.CompressionTypeValue(v.(string))
 	}
 
@@ -604,7 +606,8 @@ func s3Settings(d *schema.ResourceData, target bool) *awstypes.S3Settings {
 		s3s.CsvRowDelimiter = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("data_format"); ok && target { // target
+	// Valid for source endpoints too: DMS 3.5.3 and later can read Parquet from S3.
+	if v, ok := d.GetOk("data_format"); ok {
 		s3s.DataFormat = awstypes.DataFormatValue(v.(string))
 	}
 
