@@ -172,6 +172,61 @@ resource "aws_arcregionswitch_plan" "complex" {
 }
 ```
 
+### Post-Recovery Workflow
+
+```terraform
+resource "aws_arcregionswitch_plan" "post_recovery" {
+  name                         = "post-recovery-plan"
+  execution_role               = aws_iam_role.example.arn
+  recovery_approach            = "activePassive"
+  regions                      = ["us-east-1", "us-west-2"]
+  primary_region               = "us-east-1"
+  service_quota_checks_enabled = true
+
+  workflow {
+    workflow_target_action = "activate"
+    workflow_target_region = "us-west-2"
+
+    step {
+      name                 = "ec2-scaling"
+      execution_block_type = "EC2AutoScaling"
+
+      ec2_asg_capacity_increase_config {
+        asg {
+          arn = aws_autoscaling_group.example.arn
+        }
+        capacity_monitoring_approach  = "sampledMaxInLast24Hours"
+        target_percent                = 100
+        wait_elb_target_group_healthy = "enabled"
+      }
+    }
+  }
+
+  # A postRecovery workflow runs after a recovery to restore the original
+  # configuration, for example re-creating cross-region read replicas.
+  workflow {
+    workflow_target_action = "postRecovery"
+    workflow_description    = "Restore cross-region read replicas after recovery"
+
+    step {
+      name                 = "post-recovery-lambda"
+      execution_block_type = "CustomActionLambda"
+
+      custom_action_lambda_config {
+        region_to_run          = "activeRegion"
+        retry_interval_minutes = 5.0
+        timeout_minutes        = 30
+
+        lambda {
+          arn     = aws_lambda_function.example.arn
+          payload = jsonencode({ action = "post-recovery" })
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -190,6 +245,7 @@ The following arguments are optional:
 * `recovery_time_objective_minutes` - (Optional) Recovery time objective in minutes.
 * `region` - (Optional, **Deprecated**) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `report_configuration` - (Optional) Configuration for automated execution reports. See [`report_configuration` Block](#report_configuration-block) for details.
+* `service_quota_checks_enabled` - (Optional) Whether to enable service quota checks for the plan.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `triggers` - (Optional) Triggers that can initiate the plan execution. See [`triggers` Block](#triggers-block) for details.
 
@@ -197,7 +253,7 @@ The following arguments are optional:
 
 * `step` - (Optional) Steps in the workflow. See [`workflow.step` Block](#workflowstep-block) for details.
 * `workflow_description` - (Optional) Description of the workflow.
-* `workflow_target_action` - (Required) Action to perform. Valid values: `activate`, `deactivate`.
+* `workflow_target_action` - (Required) Action to perform. Valid values: `activate`, `deactivate`, `postRecovery`.
 * `workflow_target_region` - (Optional) Target region for the workflow.
 
 ### `workflow.step` Block
@@ -254,6 +310,7 @@ The following arguments are optional:
 * `arn` - (Required) ARN of the Lambda function.
 * `cross_account_role` - (Optional) ARN of the cross-account role to assume.
 * `external_id` - (Optional) External ID for cross-account role assumption.
+* `payload` - (Optional, Sensitive) Custom payload passed to the Lambda invocation.
 
 ### `workflow.step.custom_action_lambda_config.ungraceful` Block
 
@@ -280,6 +337,7 @@ The following arguments are optional:
 * `target_percent` - (Optional) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [`workflow.step.ec2_asg_capacity_increase_config.ungraceful` Block](#workflowstepec2_asg_capacity_increase_configungraceful-block) for details.
+* `wait_elb_target_group_healthy` - (Optional) Whether the step waits for instances to be healthy in the Auto Scaling group's ELB target groups before completing. Valid values: `enabled`, `disabled`.
 
 ### `asg` Block
 
@@ -298,6 +356,7 @@ The following arguments are optional:
 * `target_percent` - (Optional) Target capacity percentage.
 * `timeout_minutes` - (Optional) Timeout in minutes.
 * `ungraceful` - (Optional) Ungraceful behavior configuration. See [`workflow.step.ecs_capacity_increase_config.ungraceful` Block](#workflowstepecs_capacity_increase_configungraceful-block) for details.
+* `wait_elb_target_group_healthy` - (Optional) Whether the step waits for tasks to be healthy in the service's ELB target groups before completing. Valid values: `enabled`, `disabled`.
 
 ### `service` Block
 
