@@ -1045,6 +1045,7 @@ func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 	})
 }
 
+// Steps 2 and 3 are tag-only updates, guarding the status race where a tag-only apply could return a transient "modifying" status and fail with "inconsistent result after apply".
 func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1084,6 +1085,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 				Config: testAccServerlessCacheConfig_tags(rName, tags1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "available"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -1092,6 +1094,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 				Config: testAccServerlessCacheConfig_tags(rName, tags2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "available"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -1101,6 +1104,7 @@ func TestAccElastiCacheServerlessCache_tags(t *testing.T) {
 				Config: testAccServerlessCacheConfig_tags(rName, tags3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerlessCacheExists(ctx, t, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "available"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
