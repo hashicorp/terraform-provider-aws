@@ -53,6 +53,10 @@ const (
 )
 
 const (
+	clusterSnapshotAttributeNameRestore = "restore"
+)
+
+const (
 	clusterSnapshotStatusAvailable = "available"
 	clusterSnapshotStatusCreating  = "creating"
 )
