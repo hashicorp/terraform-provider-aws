@@ -61,6 +61,55 @@ resource "aws_lambda_capacity_provider" "example" {
 }
 ```
 
+### Logging Configuration
+
+```terraform
+resource "aws_lambda_capacity_provider" "example" {
+  name = "example"
+
+  vpc_config {
+    subnet_ids         = aws_subnet.example[*].id
+    security_group_ids = [aws_security_group.example.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.example.arn
+  }
+
+  telemetry_config {
+    logging_config {
+      log_group        = aws_cloudwatch_log_group.example.name
+      system_log_level = "WARN"
+    }
+  }
+}
+```
+
+### Tag Propagation to Managed Instances
+
+```terraform
+resource "aws_lambda_capacity_provider" "example" {
+  name = "example"
+
+  vpc_config {
+    subnet_ids         = aws_subnet.example[*].id
+    security_group_ids = [aws_security_group.example.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.example.arn
+  }
+
+  propagate_tags {
+    mode = "Explicit"
+    explicit_tags = {
+      CostCenter = "12345"
+      Team       = "platform"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -74,8 +123,10 @@ The following arguments are optional:
 * `capacity_provider_scaling_config` - (Optional) Configuration block for scaling policy settings. See [Capacity Provider Scaling Config](#capacity_provider_scaling_config-block) below.
 * `instance_requirements` - (Optional) Configuration block for instance requirements settings. See [Instance Requirements](#instance_requirements-block) below.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the Capacity Provider.
+* `propagate_tags` - (Optional) Configuration block for the tags that Lambda applies to the managed resources (EC2 instances, EBS volumes and network interfaces) launched by the Capacity Provider. See [Propagate Tags](#propagate_tags-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `telemetry_config` - (Optional) Configuration block for the CloudWatch Logs settings of the Capacity Provider. See [Telemetry Config](#telemetry_config-block) below.
 
 ### `vpc_config` Block
 
@@ -102,6 +153,24 @@ The following arguments are optional:
 * `allowed_instance_types` - (Optional) List of allowed instance types (e.g., `["m5.xlarge"]`).
 * `architectures` - (Required) List of CPU architectures. Valid values are `["x86_64"]` and `["arm64"]`.
 * `excluded_instance_types` - (Optional) List of excluded instance types. You can specify only one of `allowed_instance_types` or `excluded_instance_types`.
+
+### `propagate_tags` Block
+
+* `explicit_tags` - (Optional) Map of tags to apply to managed resources. Required when `mode` is `"Explicit"` and not allowed otherwise. Between 1 and 40 tags.
+* `mode` - (Required) Tag propagation mode. Valid values are `"Explicit"` and `"None"`.
+
+~> **NOTE:** Changes apply only to managed resources launched after the update. Existing instances keep their tags. Removing the `propagate_tags` block does not change the setting in AWS. To turn tag propagation off, set `mode = "None"`. These tags are separate from `tags` and the provider `default_tags`, which only apply to the Capacity Provider itself.
+
+### `telemetry_config` Block
+
+* `logging_config` - (Required) Configuration block for CloudWatch Logs. See [Logging Config](#logging_config-block) below.
+
+~> **NOTE:** Removing the `telemetry_config` block does not change the setting in AWS.
+
+#### `logging_config` Block
+
+* `log_group` - (Required) Name of the CloudWatch log group the Capacity Provider sends logs to. Without `telemetry_config`, Lambda uses a log group named `/aws/lambda/capacity-provider/<name>`.
+* `system_log_level` - (Required) Level of system logs that Lambda sends to CloudWatch. Valid values are `"DEBUG"`, `"INFO"` and `"WARN"`.
 
 ## Attribute Reference
 
