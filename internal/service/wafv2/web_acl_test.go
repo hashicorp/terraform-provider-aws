@@ -4059,6 +4059,165 @@ func TestAccWAFV2WebACL_monetize(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_aiSecurityRuleSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+	roleResourceName := "aws_iam_role.test"
+	configPrefix := "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_ai_security_rule_set.0.bedrock_guardrails.0."
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", testAccWebACLAISecurityBedrockGuardrails("disable")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName: "rule-1",
+						"statement.0.managed_rule_group_statement.0.name":                                                                                       "AWSManagedRulesAISecurityRuleSet",
+						"statement.0.managed_rule_group_statement.0.vendor_name":                                                                                "AWS",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.#":                                                               "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_ai_security_rule_set.#":                      "1",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_ai_security_rule_set.0.bedrock_guardrails.#": "1",
+						configPrefix + "disable.#":                      "1",
+						configPrefix + "protect_request_and_response.#": "0",
+						configPrefix + "protect_request_only.#":         "0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", testAccWebACLAISecurityBedrockGuardrails("protect_request_only")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						configPrefix + "disable.#":                      "0",
+						configPrefix + "protect_request_and_response.#": "0",
+						configPrefix + "protect_request_only.#":         "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*."+configPrefix+"protect_request_only.0.role_arn", roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", testAccWebACLAISecurityBedrockGuardrails("protect_request_and_response")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						configPrefix + "disable.#":                      "0",
+						configPrefix + "protect_request_and_response.#": "1",
+						configPrefix + "protect_request_only.#":         "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*."+configPrefix+"protect_request_and_response.0.role_arn", roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", testAccWebACLAISecurityBedrockGuardrails("disable")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						configPrefix + "disable.#":                      "1",
+						configPrefix + "protect_request_and_response.#": "0",
+						configPrefix + "protect_request_only.#":         "0",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_aiSecurityRuleSetCloudFront(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+	roleResourceName := "aws_iam_role.test"
+	configPrefix := "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_ai_security_rule_set.0.bedrock_guardrails.0."
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "CLOUDFRONT", testAccWebACLAISecurityBedrockGuardrails("protect_request_and_response")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeCloudfront)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						configPrefix + "disable.#":                      "0",
+						configPrefix + "protect_request_and_response.#": "1",
+						configPrefix + "protect_request_only.#":         "0",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*."+configPrefix+"protect_request_and_response.0.role_arn", roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_aiSecurityRuleSetValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	webACLName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", `bedrock_guardrails {
+              protect_request_only {
+                role_arn = "not-an-arn"
+              }
+            }`),
+				ExpectError: regexache.MustCompile(`invalid ARN`),
+			},
+			{
+				Config:      testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", "bedrock_guardrails {}"),
+				ExpectError: regexache.MustCompile(`EXACTLY_ONE_CONDITION_REQUIRED`),
+			},
+			{
+				Config: testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(webACLName, "REGIONAL", `bedrock_guardrails {
+              disable {}
+              protect_request_only {
+                role_arn = aws_iam_role.test.arn
+              }
+            }`),
+				ExpectError: regexache.MustCompile(`EXACTLY_ONE_CONDITION_REQUIRED`),
+			},
+		},
+	})
+}
+
 func testAccCheckWebACLDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).WAFV2Client(ctx)
@@ -8177,4 +8336,78 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName)
+}
+
+func testAccWebACLAISecurityBedrockGuardrails(mode string) string {
+	if mode == "disable" {
+		return `bedrock_guardrails {
+              disable {}
+            }`
+	}
+
+	return fmt.Sprintf(`bedrock_guardrails {
+              %[1]s {
+                role_arn = aws_iam_role.test.arn
+              }
+            }`, mode)
+}
+
+func testAccWebACLConfig_managedRuleGroupStatementManagedRuleGroupConfig_aiSecurityRuleSet(rName, scope, bedrockGuardrails string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = %[2]q
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesAISecurityRuleSet"
+        vendor_name = "AWS"
+
+        managed_rule_group_configs {
+          aws_managed_rules_ai_security_rule_set {
+            %[3]s
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "wafv2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+`, rName, scope, bedrockGuardrails)
 }
