@@ -185,14 +185,57 @@ func TestAccNetworkFirewallRuleGroup_Basic_statefulRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "1.2.3.4/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "53"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
-						"keyword":    "sid",
-						"settings.#": "1",
-						"settings.0": "1",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.keyword", "sid"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.0", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.stateful_rule_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallRuleGroup_statefulRuleOptionOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ruleGroup networkfirewall.DescribeRuleGroupOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_rule_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleGroupConfig_statefulRuleOptionOrder(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, t, resourceName, &ruleGroup),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.keyword", "flow"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.0", "to_server"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.1", "established"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.1.keyword", names.AttrContent),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.1.settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.1.settings.0", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.2.keyword", "endswith"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.3.keyword", "sid"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -699,16 +742,12 @@ func TestAccNetworkFirewallRuleGroup_updateStatefulRule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source", "124.1.1.24/32"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.header.0.source_port", "1001"),
 					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
-						"keyword":    "sid",
-						"settings.#": "1",
-						"settings.0": "1",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.*", map[string]string{
-						"keyword":    "rev",
-						"settings.#": "1",
-						"settings.0": "2",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.keyword", "sid"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.0.settings.0", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.1.keyword", "rev"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.1.settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule_group.0.rules_source.0.stateful_rule.0.rule_option.1.settings.0", "2"),
 				),
 			},
 			{
@@ -1446,6 +1485,52 @@ resource "aws_networkfirewall_rule_group" "test" {
           protocol         = "TCP"
           source           = "1.2.3.4/32"
           source_port      = 53
+        }
+
+        rule_option {
+          keyword  = "sid"
+          settings = ["1"]
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_statefulRuleOptionOrder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_networkfirewall_rule_group" "test" {
+  capacity = 100
+  name     = %[1]q
+  type     = "STATEFUL"
+
+  rule_group {
+    rules_source {
+      stateful_rule {
+        action = "PASS"
+
+        header {
+          destination      = "ANY"
+          destination_port = 80
+          direction        = "FORWARD"
+          protocol         = "TCP"
+          source           = "ANY"
+          source_port      = "ANY"
+        }
+
+        rule_option {
+          keyword  = "flow"
+          settings = ["to_server", "established"]
+        }
+
+        rule_option {
+          keyword  = "content"
+          settings = ["example.com"]
+        }
+
+        rule_option {
+          keyword = "endswith"
         }
 
         rule_option {

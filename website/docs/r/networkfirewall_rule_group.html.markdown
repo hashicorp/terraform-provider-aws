@@ -423,7 +423,7 @@ The `stateful_rule` block supports the following arguments:
 
 * `header` - (Required) A configuration block containing the stateful 5-tuple inspection criteria for the rule, used to inspect traffic flows. See [Header](#header) below for details.
 
-* `rule_option` - (Required) Set of configuration blocks containing additional settings for a stateful rule. See [Rule Option](#rule-option) below for details.
+* `rule_option` - (Required) List of configuration blocks containing additional settings for a stateful rule. The order of the blocks is preserved. See [Rule Option](#rule-option) below for details.
 
 ### Stateless Rules and Custom Actions
 
@@ -455,7 +455,7 @@ The `rule_option` block supports the following arguments:
 
 * `keyword` - (Required) Keyword defined by open source detection systems like Snort or Suricata for stateful rule inspection.
 See [Snort General Rule Options](http://manual-snort-org.s3-website-us-east-1.amazonaws.com/node31.html) or [Suricata Rule Options](https://suricata.readthedocs.io/en/suricata-5.0.1/rules/intro.html#rule-options) for more details.
-* `settings` - (Optional) Set of strings for additional settings to use in stateful rule inspection.
+* `settings` - (Optional) List of strings for additional settings to use in stateful rule inspection. The order of the strings is preserved.
 
 ### Custom Action
 
