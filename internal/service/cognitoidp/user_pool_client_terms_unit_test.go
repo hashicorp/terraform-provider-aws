@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -80,7 +81,7 @@ func TestUserPoolClientTermsModel(t *testing.T) {
 				t.Errorf("updated links = %v, want %v", update.Links, links)
 			}
 
-			if len(links) == 0 && !model.Links.Equal(types.MapValueMust(types.StringType, nil)) {
+			if len(links) == 0 && !model.Links.Equal(fwtypes.NewMapValueOfEmpty[types.String](ctx)) {
 				t.Errorf("links = %v, want an empty map", model.Links)
 			}
 		})

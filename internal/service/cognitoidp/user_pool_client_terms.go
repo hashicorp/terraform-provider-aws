@@ -26,6 +26,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -64,10 +65,11 @@ func (r *userPoolClientTermsResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 			"links": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				Default:     mapdefault.StaticValue(types.MapValueMust(types.StringType, nil)),
+				Default:     mapdefault.StaticValue(fwtypes.NewMapValueOfEmpty[types.String](ctx).MapValue),
 				Validators: []validator.Map{
 					mapvalidator.SizeAtMost(13),
 					mapvalidator.KeysAre(lazystringvalidator.RegexMatches(
@@ -258,18 +260,18 @@ func findUserPoolClientTermsByID(ctx context.Context, conn *cognitoidentityprovi
 
 type userPoolClientTermsResourceModel struct {
 	framework.WithRegionModel
-	ClientID   types.String `tfsdk:"client_id"`
-	Links      types.Map    `tfsdk:"links"`
-	TermsID    types.String `tfsdk:"terms_id"`
-	TermsName  types.String `tfsdk:"terms_name"`
-	UserPoolID types.String `tfsdk:"user_pool_id"`
+	ClientID   types.String        `tfsdk:"client_id"`
+	Links      fwtypes.MapOfString `tfsdk:"links"`
+	TermsID    types.String        `tfsdk:"terms_id"`
+	TermsName  types.String        `tfsdk:"terms_name"`
+	UserPoolID types.String        `tfsdk:"user_pool_id"`
 }
 
 func (m *userPoolClientTermsResourceModel) flatten(ctx context.Context, terms *awstypes.TermsType) diag.Diagnostics {
 	diags := flex.Flatten(ctx, terms, m)
 	// Cognito can omit Links when empty. Match the Terraform default in state.
 	if len(terms.Links) == 0 {
-		m.Links = types.MapValueMust(types.StringType, nil)
+		m.Links = fwtypes.NewMapValueOfEmpty[types.String](ctx)
 	}
 	return diags
 }
