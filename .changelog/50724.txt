@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_autoscaling_group: Add `mixed_instances_policy.launch_template.override.image_id` argument
+```
+
+```release-note:enhancement
+resource/aws_autoscaling_group: Support `ReplaceRootVolume` as `instance_refresh.strategy`
+```
