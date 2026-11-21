@@ -1,0 +1,5 @@
+kind: feature
+time: 2026-11-21T12:01:49.634472413-08:00
+custom:
+    Name: aws_cognito_user_pool_client_terms
+    NewType: New Resource
