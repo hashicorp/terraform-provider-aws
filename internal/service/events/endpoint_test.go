@@ -158,6 +158,40 @@ func TestAccEventsEndpoint_roleARN(t *testing.T) {
 	})
 }
 
+// TestAccEventsEndpoint_roleARNPolicyPropagation attaches the role's policy only
+// after a delay, so the first create always fails with CREATE_FAILED the same way
+// it does while a new policy is still propagating.
+func TestAccEventsEndpoint_roleARNPolicyPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v eventbridge.DescribeEndpointOutput
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_endpoint.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.13.0",
+			},
+		},
+		CheckDestroy: testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_roleARNPolicyPropagation(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_url"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEventsEndpoint_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v eventbridge.DescribeEndpointOutput
@@ -449,6 +483,126 @@ resource "aws_cloudwatch_event_endpoint" "test" {
 
 func testAccEndpointConfig_roleARN(rName string) string {
 	return acctest.ConfigCompose(testAccEndpointConfig_base(rName), fmt.Sprintf(`
+resource "aws_cloudwatch_event_endpoint" "test" {
+  name = %[1]q
+
+  event_bus {
+    event_bus_arn = aws_cloudwatch_event_bus.primary.arn
+  }
+  event_bus {
+    event_bus_arn = aws_cloudwatch_event_bus.secondary.arn
+  }
+
+  role_arn = aws_iam_role.test.arn
+
+  routing_config {
+    failover_config {
+      primary {
+        health_check = aws_route53_health_check.test.arn
+      }
+
+      secondary {
+        route = %[2]q
+      }
+    }
+  }
+}
+`, rName, acctest.AlternateRegion()))
+}
+
+func testAccEndpointConfig_roleARNPolicyPropagation(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_cloudwatch_event_bus" "primary" {
+  name = %[1]q
+}
+
+resource "aws_cloudwatch_event_bus" "secondary" {
+  provider = "awsalternate"
+
+  name = %[1]q
+}
+
+data "aws_iam_policy_document" "test_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.test_assume.json
+}
+
+# The endpoint does not depend on the policy, which is attached only after
+# the first CreateEndpoint has gone to CREATE_FAILED.
+resource "time_sleep" "test" {
+  depends_on = [aws_iam_role.test]
+
+  create_duration = "30s"
+}
+
+resource "aws_iam_role_policy" "test" {
+  depends_on = [time_sleep.test]
+
+  name   = %[1]q
+  role   = aws_iam_role.test.id
+  policy = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "events:PutRule",
+      "events:PutTargets",
+      "events:DeleteRule",
+      "events:RemoveTargets",
+    ]
+
+    resources = ["arn:${data.aws_partition.current.partition}:events:*:*:rule/%[1]s/GlobalEndpointManagedRule-*"]
+  }
+
+  statement {
+    actions = ["events:PutEvents"]
+
+    resources = [
+      aws_cloudwatch_event_bus.primary.arn,
+      aws_cloudwatch_event_bus.secondary.arn,
+    ]
+  }
+
+  statement {
+    actions = ["iam:PassRole"]
+
+    resources = [aws_iam_role.test.arn]
+
+    condition {
+      test     = "StringLike"
+      variable = "iam:PassedToService"
+
+      values = ["events.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+
+resource "aws_route53_health_check" "test" {
+  fqdn             = "example.com"
+  type             = "HTTP"
+  request_interval = "30"
+  disabled         = true
+  port             = 80
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_cloudwatch_event_endpoint" "test" {
   name = %[1]q
 
