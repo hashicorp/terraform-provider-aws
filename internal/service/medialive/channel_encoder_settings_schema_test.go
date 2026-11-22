@@ -15,6 +15,7 @@ func embeddedSettingsKey(m map[string]any) []any {
 }
 
 func TestFlattenCaptionDestinationSettingsEmbedded(t *testing.T) {
+	t.Parallel()
 	// Non-nil embedded settings round-trips as a single empty element.
 	in := &types.CaptionDestinationSettings{
 		EmbeddedDestinationSettings: &types.EmbeddedDestinationSettings{},
@@ -47,6 +48,7 @@ func TestFlattenCaptionDestinationSettingsEmbedded(t *testing.T) {
 }
 
 func TestFlattenExpandCaptionDestinationSettingsEmbeddedRoundTrip(t *testing.T) {
+	t.Parallel()
 	// Non-nil embedded settings survive a flatten/expand round trip.
 	in := &types.CaptionDestinationSettings{
 		EmbeddedDestinationSettings: &types.EmbeddedDestinationSettings{},
