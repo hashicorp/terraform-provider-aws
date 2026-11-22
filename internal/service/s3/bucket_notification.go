@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -326,17 +327,57 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 
 	if d.IsNewResource() {
 		d.SetId(bucket)
+	}
 
-		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func(ctx context.Context) (any, error) {
-			return findBucketNotificationConfiguration(ctx, conn, bucket, "")
-		})
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Notification (%s) create: %s", d.Id(), err)
-		}
+	if err := waitBucketNotificationConfigurationWritten(ctx, conn, bucket, notificationConfiguration, bucketPropagationTimeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket Notification (%s) write: %s", bucket, err)
 	}
 
 	return append(diags, resourceBucketNotificationRead(ctx, d, meta)...)
+}
+
+// waitBucketNotificationConfigurationWritten waits until S3 returns the notification configuration that was just
+// written. S3 can keep returning the previous configuration for a short time after PutBucketNotificationConfiguration
+// succeeds.
+func waitBucketNotificationConfigurationWritten(ctx context.Context, conn *s3.Client, bucket string, written *types.NotificationConfiguration, timeout time.Duration) error {
+	_, err := tfresource.RetryUntilEqual(ctx, timeout, newBucketNotificationShape(written), func(ctx context.Context) (bucketNotificationShape, error) {
+		output, err := findBucketNotificationConfiguration(ctx, conn, bucket, "")
+
+		if retry.NotFound(err) {
+			return bucketNotificationShape{}, nil
+		}
+
+		if err != nil {
+			return bucketNotificationShape{}, err
+		}
+
+		return newBucketNotificationShape(&types.NotificationConfiguration{
+			EventBridgeConfiguration:     output.EventBridgeConfiguration,
+			LambdaFunctionConfigurations: output.LambdaFunctionConfigurations,
+			QueueConfigurations:          output.QueueConfigurations,
+			TopicConfigurations:          output.TopicConfigurations,
+		}), nil
+	})
+
+	return err
+}
+
+// bucketNotificationShape summarizes a notification configuration well enough to tell whether S3 returns the
+// configuration that was written. It is comparable so that it can be used with tfresource.RetryUntilEqual.
+type bucketNotificationShape struct {
+	eventBridge     bool
+	lambdaFunctions int
+	queues          int
+	topics          int
+}
+
+func newBucketNotificationShape(v *types.NotificationConfiguration) bucketNotificationShape {
+	return bucketNotificationShape{
+		eventBridge:     v.EventBridgeConfiguration != nil,
+		lambdaFunctions: len(v.LambdaFunctionConfigurations),
+		queues:          len(v.QueueConfigurations),
+		topics:          len(v.TopicConfigurations),
+	}
 }
 
 func resourceBucketNotificationRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

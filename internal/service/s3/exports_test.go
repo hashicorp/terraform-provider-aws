@@ -5,6 +5,7 @@ package s3
 
 // Exports for use in tests only.
 var (
+	WaitBucketNotificationConfigurationWritten      = waitBucketNotificationConfigurationWritten
 	ResourceBucketABAC                              = newResourceBucketABAC
 	ResourceBucketAccelerateConfiguration           = resourceBucketAccelerateConfiguration
 	ResourceBucketACL                               = resourceBucketACL
