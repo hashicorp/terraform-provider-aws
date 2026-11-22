@@ -1,0 +1,27 @@
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Add `nat_gateway_create_mapping`, `proxy_settings`, `transparent_filtering_nat_scope`, and `delete_associated_nat_gateways` arguments to support NAT/Proxy firewalls
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Add `firewall_status.sync_states.attachment.dns_name` and `firewall_status.sync_states.nat_gateway_attachment` attributes
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_firewall: Add Resource Identity support
+```
+
+```release-note:new-list-resource
+aws_networkfirewall_firewall
+```
+
+```release-note:enhancement
+data-source/aws_networkfirewall_firewall: Add `nat_gateway_create_mapping`, `proxy_settings`, `transparent_filtering_nat_scope`, `firewall_status.sync_states.attachment.dns_name`, and `firewall_status.sync_states.nat_gateway_attachment` attributes
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_tls_inspection_configuration: Add `tls_inspection_configuration.server_certificate_configuration.default_decryption_behavior`, `tls_inspection_configuration.server_certificate_configuration.scope.decryption_action`, `tls_inspection_configuration.server_certificate_configuration.scope.deployment_mode`, and `tls_inspection_configuration.server_certificate_configuration.scope.domain_match` arguments
+```
+
+```release-note:bug
+resource/aws_networkfirewall_tls_inspection_configuration: Retry deletion while the TLS inspection configuration is still in use by a recently deleted firewall policy
+```
