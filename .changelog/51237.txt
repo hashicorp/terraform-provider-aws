@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_notification: Wait until the written notification configuration can be read back, so that `eventbridge` is no longer recorded as `false` after a create when S3 returns a stale read
+```
