@@ -476,8 +476,10 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("subnet_configuration") {
-			if v, ok := d.GetOk("subnet_configuration"); ok && v.(*schema.Set).Len() > 0 {
-				input.SubnetConfigurations = expandSubnetConfigurations(v.(*schema.Set).List())
+			// Resending an unchanged configuration fails with "Error during creation of network interface".
+			o, n := d.GetChange("subnet_configuration")
+			if v := n.(*schema.Set).Difference(o.(*schema.Set)); v.Len() > 0 {
+				input.SubnetConfigurations = expandSubnetConfigurations(v.List())
 			}
 		}
 
