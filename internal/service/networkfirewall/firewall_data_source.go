@@ -229,6 +229,28 @@ func dataSourceFirewall() *schema.Resource {
 					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
 					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 				},
+				"nat_gateway_create_mapping": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_ids": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"private_ips": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"proxy_settings": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -338,6 +360,13 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
 	d.Set(names.AttrName, firewall.FirewallName)
+	natGatewayCreateMappings, err := findNATGatewayCreateMappings(ctx, meta.(*conns.AWSClient).EC2Client(ctx), output.FirewallStatus)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s) NAT gateways: %s", d.Id(), err)
+	}
+	if err := d.Set("nat_gateway_create_mapping", flattenNatGatewayCreateMappings(orderNATGatewayCreateMappings(natGatewayCreateMappings, nil))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting nat_gateway_create_mapping: %s", err)
+	}
 	if err := d.Set("proxy_settings", flattenProxySettings(firewall.ProxySettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting proxy_settings: %s", err)
 	}

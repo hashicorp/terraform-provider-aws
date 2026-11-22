@@ -89,6 +89,10 @@ This data source exports the following attributes in addition to the arguments a
         * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.
 * `id` - ARN that identifies the firewall.
 * `name` - Descriptive name of the firewall.
+* `nat_gateway_create_mapping` - List of the NAT gateways attached to a NAT/Proxy firewall, one for each Availability Zone. Network Firewall doesn't return the mappings, so Terraform reads them from the NAT gateways, which requires the `ec2:DescribeNatGateways` permission.
+    * `allocation_ids` - Allocation IDs of the Elastic IP addresses associated with the NAT gateway, primary address first.
+    * `private_ips` - Private IPv4 addresses of the NAT gateway, primary address first.
+    * `subnet_id` - ID of the subnet that the NAT gateway is in.
 * `proxy_settings` - Proxy settings of a NAT/Proxy firewall.
     * `certificate_arn` - ARN of the ACM certificate that the HTTPS proxy listener presents to clients.
     * `domain_name` - Custom domain name that clients use to reach the proxy.

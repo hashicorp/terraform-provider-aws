@@ -211,6 +211,10 @@ func TestAccNetworkFirewallFirewallDataSource_natProxy(t *testing.T) {
 						"nat_gateway_attachment.0.nat_gateway_id": regexache.MustCompile(`nat-`),
 						"nat_gateway_attachment.0.status":         regexache.MustCompile(`^READY$`),
 					}),
+					resource.TestCheckResourceAttrPair(dataSourceName, "nat_gateway_create_mapping.#", resourceName, "nat_gateway_create_mapping.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "nat_gateway_create_mapping.0.subnet_id", resourceName, "nat_gateway_create_mapping.0.subnet_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "nat_gateway_create_mapping.0.allocation_ids.0", resourceName, "nat_gateway_create_mapping.0.allocation_ids.0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "nat_gateway_create_mapping.0.private_ips.0", resourceName, "nat_gateway_create_mapping.0.private_ips.0"),
 					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.0.listener_property.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "proxy_settings.0.listener_property.*", map[string]string{
