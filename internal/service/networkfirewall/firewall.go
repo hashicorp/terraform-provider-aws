@@ -1208,32 +1208,32 @@ func flattenNatGatewayAttachments(apiObjects []awstypes.NatGatewayAttachment) []
 
 // natGatewayCreateMappingResource is a list element, not a set element, as a set holds an extra
 // empty element while its nested values are unknown during planning.
+// It uses Schema, not SchemaFunc: ResourceDiff.ForceNew marks the nested schema that it looks up,
+// and SchemaFunc returns a new map on each lookup, which drops the mark before the re-diff.
 func natGatewayCreateMappingResource() *schema.Resource {
 	return &schema.Resource{
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				"allocation_ids": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 8,
-					Elem:     &schema.Schema{Type: schema.TypeString},
+		Schema: map[string]*schema.Schema{ // nosemgrep:ci.semgrep.pluginsdk.use-schema-func
+			"allocation_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 8,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"private_ips": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 8,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv4Address,
 				},
-				"private_ips": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MinItems: 1,
-					MaxItems: 8,
-					Elem: &schema.Schema{
-						Type:         schema.TypeString,
-						ValidateFunc: validation.IsIPv4Address,
-					},
-				},
-				names.AttrSubnetID: {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-			}
+			},
+			names.AttrSubnetID: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 		},
 	}
 }
