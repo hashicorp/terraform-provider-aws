@@ -464,9 +464,11 @@ func (r *tlsInspectionConfigurationResource) Delete(ctx context.Context, request
 
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
-	_, err := conn.DeleteTLSInspectionConfiguration(ctx, &networkfirewall.DeleteTLSInspectionConfigurationInput{
-		TLSInspectionConfigurationArn: data.ID.ValueStringPointer(),
-	})
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[any, *awstypes.InvalidOperationException](ctx, r.DeleteTimeout(ctx, data.Timeouts), func(ctx context.Context) (any, error) {
+		return conn.DeleteTLSInspectionConfiguration(ctx, &networkfirewall.DeleteTLSInspectionConfigurationInput{
+			TLSInspectionConfigurationArn: data.ID.ValueStringPointer(),
+		})
+	}, "Unable to delete the object because it is still in use")
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
