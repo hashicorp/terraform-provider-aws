@@ -20,7 +20,7 @@ func main() {
 	var insert InsertOptions
 	flag.StringVar(&insert.Root, "root", "../..", "path to the root of the terraform-provider-aws repository")
 	flag.Var((*stringList)(&insert.Files), "insert-file", "comma-separated documentation files, relative to -root, to add IAM permissions to")
-	flag.Var((*stringList)(&insert.Services), "insert-service", "comma-separated service packages whose documentation to add IAM permissions to, e.g. s3,sqs")
+	flag.Var((*stringList)(&insert.Services), "insert-service", "comma-separated service packages to add IAM permissions to, e.g. s3,sqs")
 	flag.BoolVar(&insert.All, "insert-all", false, "add IAM permissions to the documentation of every resource and data source")
 	flag.BoolVar(&insert.DryRun, "dry-run", false, "report documentation changes without writing them")
 	flag.Parse()
