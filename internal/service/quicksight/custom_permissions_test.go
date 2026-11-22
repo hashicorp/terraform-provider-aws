@@ -67,6 +67,7 @@ func TestAccQuickSightCustomPermissions_basic(t *testing.T) {
 							"create_and_update_themes":                   knownvalue.Null(),
 							"create_and_update_threshold_alerts":         knownvalue.Null(),
 							"create_chat_agents":                         knownvalue.Null(),
+							"create_dashboard_executive_summary_with_q":  knownvalue.Null(),
 							"create_shared_folders":                      knownvalue.Null(),
 							"create_spice_dataset":                       knownvalue.Null(),
 							"dashboard":                                  knownvalue.Null(),
@@ -79,6 +80,7 @@ func TestAccQuickSightCustomPermissions_basic(t *testing.T) {
 							"flow":                                       knownvalue.Null(),
 							"include_content_in_scheduled_reports_email": knownvalue.Null(),
 							"knowledge_base":                             knownvalue.Null(),
+							"manage_shared_folders":                      knownvalue.Null(),
 							"perform_flow_ui_task":                       knownvalue.Null(),
 							"print_reports":                              tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
 							"publish_without_approval":                   knownvalue.Null(),
@@ -90,6 +92,7 @@ func TestAccQuickSightCustomPermissions_basic(t *testing.T) {
 							"share_data_sources":                         knownvalue.Null(),
 							"space":                                      knownvalue.Null(),
 							"subscribe_dashboard_email_reports":          knownvalue.Null(),
+							"topic":                                      knownvalue.Null(),
 							"use_agent_web_search":                       knownvalue.Null(),
 							"use_bedrock_models":                         knownvalue.Null(),
 							"view_account_spice_capacity":                knownvalue.Null(),
@@ -186,6 +189,7 @@ func TestAccQuickSightCustomPermissions_update(t *testing.T) {
 							"create_and_update_themes":                   knownvalue.Null(),
 							"create_and_update_threshold_alerts":         knownvalue.Null(),
 							"create_chat_agents":                         knownvalue.Null(),
+							"create_dashboard_executive_summary_with_q":  knownvalue.Null(),
 							"create_shared_folders":                      knownvalue.Null(),
 							"create_spice_dataset":                       knownvalue.Null(),
 							"dashboard":                                  knownvalue.Null(),
@@ -198,6 +202,7 @@ func TestAccQuickSightCustomPermissions_update(t *testing.T) {
 							"flow":                                       knownvalue.Null(),
 							"include_content_in_scheduled_reports_email": knownvalue.Null(),
 							"knowledge_base":                             knownvalue.Null(),
+							"manage_shared_folders":                      knownvalue.Null(),
 							"perform_flow_ui_task":                       knownvalue.Null(),
 							"print_reports":                              tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
 							"publish_without_approval":                   knownvalue.Null(),
@@ -209,6 +214,7 @@ func TestAccQuickSightCustomPermissions_update(t *testing.T) {
 							"share_data_sources":                         knownvalue.Null(),
 							"space":                                      knownvalue.Null(),
 							"subscribe_dashboard_email_reports":          knownvalue.Null(),
+							"topic":                                      knownvalue.Null(),
 							"use_agent_web_search":                       knownvalue.Null(),
 							"use_bedrock_models":                         knownvalue.Null(),
 							"view_account_spice_capacity":                knownvalue.Null(),
@@ -246,11 +252,14 @@ func TestAccQuickSightCustomPermissions_update(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), tfknownvalue.AccountID()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("capabilities"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectPartial(map[string]knownvalue.Check{
-							"create_and_update_datasets":     tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
-							"create_and_update_data_sources": tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
-							"export_to_pdf":                  tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
-							"print_reports":                  knownvalue.Null(),
-							"share_dashboards":               knownvalue.Null(),
+							"create_and_update_datasets":                tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
+							"create_and_update_data_sources":            tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
+							"create_dashboard_executive_summary_with_q": tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
+							"export_to_pdf":                             tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
+							"manage_shared_folders":                     tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
+							"print_reports":                             knownvalue.Null(),
+							"share_dashboards":                          knownvalue.Null(),
+							"topic":                                     tfknownvalue.StringExact(awstypes.CapabilityStateDeny),
 						}),
 					})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("custom_permissions_name"), knownvalue.StringExact(rName)),
@@ -333,9 +342,12 @@ resource "aws_quicksight_custom_permissions" "test" {
   custom_permissions_name = %[1]q
 
   capabilities {
-    create_and_update_datasets     = "DENY"
-    create_and_update_data_sources = "DENY"
-    export_to_pdf                  = "DENY"
+    create_and_update_datasets                = "DENY"
+    create_and_update_data_sources            = "DENY"
+    create_dashboard_executive_summary_with_q = "DENY"
+    export_to_pdf                             = "DENY"
+    manage_shared_folders                     = "DENY"
+    topic                                     = "DENY"
   }
 }
 `, rName)

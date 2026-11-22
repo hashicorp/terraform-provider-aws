@@ -49,6 +49,7 @@ The following arguments are optional:
 * `create_and_update_themes` - (Optional) Ability to create and update themes. Valid values: `DENY`.
 * `create_and_update_threshold_alerts` - (Optional) Ability to create and update threshold alerts. Valid values: `DENY`.
 * `create_chat_agents` - (Optional) Ability to create chat agents. Valid values: `DENY`.
+* `create_dashboard_executive_summary_with_q` - (Optional) Ability to create executive summaries for dashboards with Amazon Q. Valid values: `DENY`.
 * `create_shared_folders` - (Optional) Ability to create shared folders. Valid values: `DENY`.
 * `create_spice_dataset` - (Optional) Ability to create a SPICE dataset. Valid values: `DENY`.
 * `dashboard` - (Optional) Ability to perform dashboard-related actions. Valid values: `DENY`.
@@ -61,6 +62,7 @@ The following arguments are optional:
 * `flow` - (Optional) Ability to perform flow-related actions. Valid values: `DENY`.
 * `include_content_in_scheduled_reports_email` - (Optional) Ability to include content in scheduled email reports. Valid values: `DENY`.
 * `knowledge_base` - (Optional) Ability to use knowledge bases to specify content from external applications. Valid values: `DENY`.
+* `manage_shared_folders` - (Optional) Ability to manage shared folders. Valid values: `DENY`.
 * `perform_flow_ui_task` - (Optional) Ability to use UI Agent step to perform tasks on public websites. Valid values: `DENY`.
 * `print_reports` - (Optional) Ability to print reports. Valid values: `DENY`.
 * `publish_without_approval` - (Optional) Ability to enable approvals for flow share. Valid values: `DENY`.
@@ -72,6 +74,7 @@ The following arguments are optional:
 * `share_datasets` - (Optional) Ability to share datasets. Valid values: `DENY`.
 * `space` - (Optional) Ability to perform space-related actions. Valid values: `DENY`.
 * `subscribe_dashboard_email_reports` - (Optional) Ability to subscribe to email reports. Valid values: `DENY`.
+* `topic` - (Optional) Ability to perform topic-related actions. Valid values: `DENY`.
 * `use_agent_web_search` - (Optional) Ability to use internet to enhance results in Chat Agents, Flows, and Quick Research. Valid values: `DENY`.
 * `use_bedrock_models` - (Optional) Ability to use Bedrock models for general knowledge step in flows. Valid values: `DENY`.
 * `view_account_spice_capacity` - (Optional) Ability to view account SPICE capacity. Valid values: `DENY`.
