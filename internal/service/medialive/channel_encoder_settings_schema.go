@@ -6827,6 +6827,13 @@ func flattenCaptionDescriptionsCaptionDestinationSettings(in *types.CaptionDesti
 		"webvtt_destination_settings":               flattenCaptionDescriptionsCaptionDestinationSettingsWebvttDestinationSettings(in.WebvttDestinationSettings),
 	}
 
+	// embedded_destination_settings has no exported fields, but a non-nil
+	// value must round-trip. SDKv2 TypeList MaxItems 1 treats an empty list
+	// as absent, so emit one empty element when the API value is present.
+	if in.EmbeddedDestinationSettings != nil {
+		m["embedded_destination_settings"] = []any{map[string]any{}}
+	}
+
 	return []any{m}
 }
 
