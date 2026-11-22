@@ -49,7 +49,7 @@ The following arguments are optional:
 * `create_and_update_themes` - (Optional) Ability to create and update themes. Valid values: `DENY`.
 * `create_and_update_threshold_alerts` - (Optional) Ability to create and update threshold alerts. Valid values: `DENY`.
 * `create_chat_agents` - (Optional) Ability to create chat agents. Valid values: `DENY`.
-* `create_dashboard_executive_summary_with_q` - (Optional) Ability to create executive summaries for dashboards with Amazon Q. Valid values: `DENY`.
+* `create_dashboard_executive_summary_with_q` - (Optional) Ability to create executive summaries for dashboards with Amazon Q in QuickSight. Valid values: `DENY`.
 * `create_shared_folders` - (Optional) Ability to create shared folders. Valid values: `DENY`.
 * `create_spice_dataset` - (Optional) Ability to create a SPICE dataset. Valid values: `DENY`.
 * `dashboard` - (Optional) Ability to perform dashboard-related actions. Valid values: `DENY`.
@@ -62,7 +62,7 @@ The following arguments are optional:
 * `flow` - (Optional) Ability to perform flow-related actions. Valid values: `DENY`.
 * `include_content_in_scheduled_reports_email` - (Optional) Ability to include content in scheduled email reports. Valid values: `DENY`.
 * `knowledge_base` - (Optional) Ability to use knowledge bases to specify content from external applications. Valid values: `DENY`.
-* `manage_shared_folders` - (Optional) Ability to manage shared folders. Valid values: `DENY`.
+* `manage_shared_folders` - (Optional) Ability to manage and share folders. Denying this does not prevent users from inheriting access to assets that others share with them through folder membership. Valid values: `DENY`.
 * `perform_flow_ui_task` - (Optional) Ability to use UI Agent step to perform tasks on public websites. Valid values: `DENY`.
 * `print_reports` - (Optional) Ability to print reports. Valid values: `DENY`.
 * `publish_without_approval` - (Optional) Ability to enable approvals for flow share. Valid values: `DENY`.
