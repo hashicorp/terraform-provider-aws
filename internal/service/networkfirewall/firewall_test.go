@@ -621,6 +621,7 @@ func TestAccNetworkFirewallFirewall_NATProxy2_serial(t *testing.T) {
 		"privateNATGateway":       testAccFirewall_NATProxy_privateNATGateway,
 		"customDomain":            testAccFirewall_NATProxy_customDomain,
 		"keepNATGateways":         testAccFirewall_NATProxy_keepNATGateways,
+		"mappingWithoutAddresses": testAccFirewall_NATProxy_mappingWithoutAddresses,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -1031,6 +1032,24 @@ func testAccFirewall_NATProxy_keepNATGateways(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallDeleteDetachedNATGateway(ctx, t, "aws_subnet.nat.0"),
 				),
+			},
+		},
+	})
+}
+
+func testAccFirewall_NATProxy_mappingWithoutAddresses(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFirewallConfig_natProxyMappingWithoutAddresses(rName),
+				ExpectError: regexache.MustCompile(`specify allocation_ids for a public NAT gateway or private_ips for a private NAT gateway`),
 			},
 		},
 	})
@@ -1610,6 +1629,27 @@ resource "aws_networkfirewall_firewall" "test" {
     subnet_id      = aws_subnet.nat[0].id
     allocation_ids = [aws_eip.test[0].allocation_id]
     private_ips    = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+
+  depends_on = [aws_route_table_association.nat]
+}
+`, rName))
+}
+
+func testAccFirewallConfig_natProxyMappingWithoutAddresses(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseNATProxy(rName, 0), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                           = %[1]q
+  firewall_policy_arn            = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                         = aws_vpc.test.id
+  delete_associated_nat_gateways = true
+
+  subnet_mapping {
+    subnet_id = aws_subnet.firewall[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id = aws_subnet.nat[0].id
   }
 
   depends_on = [aws_route_table_association.nat]

@@ -183,7 +183,7 @@ The `availability_zone_mapping` block supports the following arguments:
 The `nat_gateway_create_mapping` block supports the following arguments:
 
 * `allocation_ids` - (Optional) List of 1 to 8 Elastic IP address allocation IDs for a public NAT gateway. If not specified, Network Firewall creates a private NAT gateway.
-* `private_ips` - (Optional) List of 1 to 8 private IPv4 addresses of the NAT gateway in `subnet_id`. Required if `allocation_ids` is specified, with exactly one address for each allocation ID. The first address is the primary address.
+* `private_ips` - (Optional) List of 1 to 8 private IPv4 addresses of the NAT gateway in `subnet_id`. Required for a private NAT gateway, and if `allocation_ids` is specified, with exactly one address for each allocation ID. The first address is the primary address.
 * `subnet_id` - (Required) ID of the subnet where Network Firewall creates the NAT gateway. The subnet must be in the firewall's VPC, can't be one of the firewall endpoint subnets, and each mapping must be in a different Availability Zone. For a public NAT gateway, the subnet must have a route to an internet gateway.
 
 ### Proxy Settings

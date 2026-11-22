@@ -73,7 +73,8 @@ func resourceFirewall() *schema.Resource {
 			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
 				return diff.HasChanges("nat_gateway_create_mapping", "subnet_mapping")
 			}),
-			// A public NAT gateway needs one private IP address for each Elastic IP address.
+			// A public NAT gateway needs one private IP address for each Elastic IP address, and a private NAT gateway
+			// needs its private IP addresses. CreateFirewall only rejects these after the rest of the configuration is applied.
 			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
 				for i, v := range diff.Get("nat_gateway_create_mapping").([]any) {
 					tfMap, ok := v.(map[string]any)
@@ -85,7 +86,10 @@ func resourceFirewall() *schema.Resource {
 						continue
 					}
 
-					if a, p := len(tfMap["allocation_ids"].([]any)), len(tfMap["private_ips"].([]any)); a > 0 && a != p {
+					switch a, p := len(tfMap["allocation_ids"].([]any)), len(tfMap["private_ips"].([]any)); {
+					case a == 0 && p == 0:
+						return fmt.Errorf("nat_gateway_create_mapping.%d: specify allocation_ids for a public NAT gateway or private_ips for a private NAT gateway", i)
+					case a > 0 && a != p:
 						return fmt.Errorf("nat_gateway_create_mapping.%d: specify one private_ips address for each of the %d allocation_ids", i, a)
 					}
 				}
