@@ -148,7 +148,7 @@ flowchart TD
 
     subgraph CEY ["changelog-entries.yml"]
         direction TD
-        VAL["pull_request_target: opened / synchronize /\nready_for_review / reopened"]
+        VAL["pull_request: opened / synchronize /\nready_for_review / reopened /\nlabeled / unlabeled"]
 
         VAL --> SVC{Touches\nservice files?}
         SVC -- Yes --> NCN{has label\nno-changelog-needed?}
@@ -175,7 +175,7 @@ flowchart TD
         direction TD
         CONV["Auto-convert any legacy .changelog/*.txt\nfragments introduced by this PR\n(transitional — removed after migration)"]
         CONV --> BF["Backfill PullRequest key\ninto any fragment missing it"]
-        BF --> REGEN["changie merge --include-unreleased\nSort entries · Append footer\nCommit + push directly to main"]
+        BF --> REGEN["changie merge --include-unreleased\nSort Unreleased entries · Append footer\nCommit + push directly to main"]
         REGEN --> DONE([✅ CHANGELOG.md updated on main])
     end
 
@@ -184,7 +184,7 @@ flowchart TD
         MANUAL([Maintainer: workflow_dispatch])
         MANUAL --> FFV{final_for_version?}
 
-        FFV -- false\nunreleased refresh --> REGEN2["changie merge --include-unreleased\nSort entries · Append footer\nCommit + push directly to main"]
+        FFV -- false\nunreleased refresh --> REGEN2["changie merge --include-unreleased\nSort Unreleased entries · Append footer\nCommit + push directly to main"]
         REGEN2 --> DONE2([✅ CHANGELOG.md refreshed on main])
 
         FFV -- true\nrelease --> BATCH["changie batch <version>\nMoves unreleased fragments into\n.changes/<major_version_number>.x/<version>.md"]
