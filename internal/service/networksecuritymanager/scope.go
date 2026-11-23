@@ -95,8 +95,6 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"specialized_scope_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.SpecializedScopeType](),
 				Optional:   true,
@@ -104,6 +102,8 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"scope_configuration": schema.ListNestedBlock{
