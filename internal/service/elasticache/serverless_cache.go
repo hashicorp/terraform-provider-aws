@@ -312,6 +312,21 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					},
 				},
 			},
+			"integrations": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[integrationModel](ctx),
+				// Integrations can only be set at creation; AWS has no modify API for them.
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.RequiresReplace(),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"integration_type": schema.StringAttribute{
+							CustomType: fwtypes.StringEnumType[awstypes.IntegrationType](),
+							Required:   true,
+						},
+					},
+				},
+			},
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -724,6 +739,7 @@ type serverlessCacheResourceModel struct {
 	Engine                 types.String                                           `tfsdk:"engine"`
 	FullEngineVersion      types.String                                           `tfsdk:"full_engine_version"`
 	ID                     types.String                                           `tfsdk:"id"`
+	Integrations           fwtypes.SetNestedObjectValueOf[integrationModel]       `tfsdk:"integrations"`
 	KmsKeyID               types.String                                           `tfsdk:"kms_key_id"`
 	MajorEngineVersion     types.String                                           `tfsdk:"major_engine_version"`
 	NetworkType            fwtypes.StringEnum[awstypes.NetworkType]               `tfsdk:"network_type"`
@@ -769,4 +785,8 @@ type ecpuPerSecondModel struct {
 type endpointModel struct {
 	Address types.String `tfsdk:"address"`
 	Port    types.Int64  `tfsdk:"port"`
+}
+
+type integrationModel struct {
+	IntegrationType fwtypes.StringEnum[awstypes.IntegrationType] `tfsdk:"integration_type"`
 }

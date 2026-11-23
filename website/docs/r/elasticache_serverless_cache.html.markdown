@@ -124,6 +124,7 @@ The following arguments are optional:
 * `connection_type` - (Optional, Forces new resource) Connectivity option for the cache. Valid values are `vpc` (reachable only from within a VPC) and `public` (reachable over the internet, `valkey` only). Defaults to `vpc`. A `public` endpoint requires `engine` `valkey` with `major_engine_version` `9` or later, requires IAM authentication over TLS 1.3, and is created without `subnet_ids` or `security_group_ids`. These `public` requirements are enforced by AWS and are not validated by the provider, so an invalid combination fails at apply time with the AWS API error rather than during `plan`. This value cannot be changed after creation.
 * `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
+* `integrations` - (Optional) Set of integrations associated with the serverless cache. Integrations can only be set when the cache is created, so changing this forces a new resource. See [`integrations` Block](#integrations-block) for details.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
 * `major_engine_version` - (Optional) The version of the cache engine that will be used to create the serverless cache.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
@@ -156,6 +157,14 @@ The `ecpu_per_second` configuration block supports the following arguments:
 
 * `minimum` - The minimum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 * `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
+
+### `integrations` Block
+
+The `integrations` configuration block supports the following arguments:
+
+* `integration_type` - (Required) Type of integration associated with the serverless cache. Valid value: `dynamodb`.
+
+~> **Note:** Enabling the `dynamodb` integration requires `user_group_id` to reference a user group whose users all use IAM authentication, such as the system-managed `default.iam-user-group`.
 
 ## Attribute Reference
 
