@@ -66,11 +66,16 @@ This data source exports the following attributes in addition to the arguments a
 * `firewall_status` - Nested list of information about the current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
+            * `dns_name` - The proxy hostname of a NAT/Proxy firewall in the Availability Zone.
             * `endpoint_id` - The identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `status` - The current status of the firewall endpoint instantiation in the subnet.
             * `status_message` - It populates this with the reason for the error or failure and how to resolve it.  A FAILED status indicates a non-recoverable state, and a ERROR status indicates an issue that you can fix.
             * `subnet_id` - The unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - The Availability Zone where the subnet is configured.
+        * `nat_gateway_attachment` - Nested list of the NAT gateways that Network Firewall created for a NAT/Proxy firewall in the Availability Zone.
+            * `nat_gateway_id` - The ID of the NAT gateway.
+            * `status` - The status of the NAT gateway attachment.
+            * `status_message` - The reason that Network Firewall couldn't create or attach the NAT gateway, if it couldn't.
     * `capacity_usage_summary` - Aggregated count of all resources used by reference sets in a firewall.
         * `cidrs` - Capacity usage of CIDR blocks used by IP set references in a firewall.
             * `available_cidr_count` - Available number of CIDR blocks available for use by the IP set references in a firewall.
@@ -84,6 +89,16 @@ This data source exports the following attributes in addition to the arguments a
         * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.
 * `id` - ARN that identifies the firewall.
 * `name` - Descriptive name of the firewall.
+* `nat_gateway_create_mapping` - List of the NAT gateways attached to a NAT/Proxy firewall, one for each Availability Zone. Network Firewall doesn't return the mappings, so Terraform reads them from the NAT gateways, which requires the `ec2:DescribeNatGateways` permission.
+    * `allocation_ids` - Allocation IDs of the Elastic IP addresses associated with the NAT gateway, primary address first.
+    * `private_ips` - Private IPv4 addresses of the NAT gateway, primary address first.
+    * `subnet_id` - ID of the subnet that the NAT gateway is in.
+* `proxy_settings` - Proxy settings of a NAT/Proxy firewall.
+    * `certificate_arn` - ARN of the ACM certificate that the HTTPS proxy listener presents to clients.
+    * `domain_name` - Custom domain name that clients use to reach the proxy.
+    * `listener_property` - Set of proxy listeners.
+        * `port` - Port that the listener uses.
+        * `type` - Type of traffic that the listener handles.
 * `subnet_change_protection` - A flag indicating whether the firewall is protected against changes to the subnet associations.
 * `subnet_mapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.
     * `subnet_id` - The unique identifier for the subnet.
@@ -91,4 +106,5 @@ This data source exports the following attributes in addition to the arguments a
 * `update_token` - String token used when updating a firewall.
 * `transit_gateway_id` - The unique identifier of the transit gateway associated with this firewall.
 * `transit_gateway_owner_account_id` - The AWS account ID that owns the transit gateway.
+* `transparent_filtering_nat_scope` - How a NAT/Proxy firewall handles traffic that isn't sent to its proxy listener.
 * `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.

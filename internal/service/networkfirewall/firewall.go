@@ -6,23 +6,32 @@
 package networkfirewall
 
 import (
+	"cmp"
 	"context"
+	"errors"
+	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -31,6 +40,10 @@ import (
 
 // @SDKResource("aws_networkfirewall_firewall", name="Firewall")
 // @Tags(identifierAttribute="id")
+// @ArnIdentity
+// @CustomImport
+// @Testing(preIdentityVersion="v6.72.0")
+// @Testing(importIgnore="delete_associated_nat_gateways;update_token", plannableImportAction="NoOp")
 func resourceFirewall() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFirewallCreate,
@@ -39,7 +52,15 @@ func resourceFirewall() *schema.Resource {
 		DeleteWithoutTimeout: resourceFirewallDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, rd *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
+				if err := importer.Import(ctx, rd, meta); err != nil {
+					return nil, err
+				}
+
+				rd.Set("delete_associated_nat_gateways", false)
+
+				return []*schema.ResourceData{rd}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -50,8 +71,83 @@ func resourceFirewall() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ComputedIf("firewall_status", func(ctx context.Context, diff *schema.ResourceDiff, meta any) bool {
-				return diff.HasChange("subnet_mapping")
+				return diff.HasChanges("nat_gateway_create_mapping", "subnet_mapping")
 			}),
+			// A public NAT gateway needs one private IP address for each Elastic IP address, and a private NAT gateway
+			// needs its private IP addresses. CreateFirewall only rejects these after the rest of the configuration is applied.
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				for i, v := range diff.Get("nat_gateway_create_mapping").([]any) {
+					tfMap, ok := v.(map[string]any)
+					if !ok {
+						continue
+					}
+
+					if !diff.NewValueKnown(fmt.Sprintf("nat_gateway_create_mapping.%d.allocation_ids", i)) || !diff.NewValueKnown(fmt.Sprintf("nat_gateway_create_mapping.%d.private_ips", i)) {
+						continue
+					}
+
+					switch a, p := len(tfMap["allocation_ids"].([]any)), len(tfMap["private_ips"].([]any)); {
+					case a == 0 && p == 0:
+						return fmt.Errorf("nat_gateway_create_mapping.%d: specify allocation_ids for a public NAT gateway or private_ips for a private NAT gateway", i)
+					case a > 0 && a != p:
+						return fmt.Errorf("nat_gateway_create_mapping.%d: specify one private_ips address for each of the %d allocation_ids", i, a)
+					}
+				}
+
+				return nil
+			},
+			// A firewall's capability (routed or NAT/Proxy) and its NAT gateways' settings can't be changed after creation.
+			// A NAT gateway mapping can only be removed along with its Availability Zone's subnet_mapping.
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				// NAT gateway mappings can only be added together with the endpoint subnet for a new Availability Zone.
+				o, n := diff.GetChange("nat_gateway_create_mapping")
+				os, ns := natGatewayCreateMappingsSet(o), natGatewayCreateMappingsSet(n)
+				if os.Len() > 0 && os.Difference(ns).Len() == 0 && ns.Difference(os).Len() > 0 && !diff.HasChange("subnet_mapping") {
+					return errors.New("nat_gateway_create_mapping can only be added along with the subnet_mapping for a new Availability Zone")
+				}
+
+				return nil
+			},
+			func(ctx context.Context, diff *schema.ResourceDiff, meta any) error {
+				if diff.Id() == "" {
+					return nil
+				}
+
+				o, n := diff.GetChange("nat_gateway_create_mapping")
+				ol, nl := o.([]any), n.([]any)
+				if (len(ol) == 0) != (len(nl) == 0) {
+					return diff.ForceNew("nat_gateway_create_mapping")
+				}
+
+				os, ns := natGatewayCreateMappingsSet(o), natGatewayCreateMappingsSet(n)
+				if os.Difference(ns).Len() == 0 {
+					return nil
+				}
+				if o, n := diff.GetChange("subnet_mapping"); o.(*schema.Set).Difference(n.(*schema.Set)).Len() > 0 {
+					return nil
+				}
+
+				// ForceNew on a list of blocks only applies to a change in the number of blocks,
+				// so force a new resource on the changed attributes of each changed mapping.
+				for i, v := range nl {
+					if os.Contains(v) {
+						continue
+					}
+					for _, k := range []string{"allocation_ids", "private_ips", names.AttrSubnetID} {
+						if key := fmt.Sprintf("nat_gateway_create_mapping.%d.%s", i, k); diff.HasChange(key) {
+							if err := diff.ForceNew(key); err != nil {
+								return err
+							}
+						}
+					}
+				}
+
+				return nil
+			},
 		),
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -77,6 +173,11 @@ func resourceFirewall() *schema.Resource {
 							},
 						},
 					},
+				},
+				"delete_associated_nat_gateways": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
 				},
 				"delete_protection": {
 					Type:     schema.TypeBool,
@@ -120,6 +221,10 @@ func resourceFirewall() *schema.Resource {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
+													names.AttrDNSName: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 													"endpoint_id": {
 														Type:     schema.TypeString,
 														Computed: true,
@@ -134,6 +239,18 @@ func resourceFirewall() *schema.Resource {
 										names.AttrAvailabilityZone: {
 											Type:     schema.TypeString,
 											Computed: true,
+										},
+										"nat_gateway_attachment": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"nat_gateway_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
 										},
 									},
 								},
@@ -157,6 +274,56 @@ func resourceFirewall() *schema.Resource {
 					Type:     schema.TypeString,
 					Required: true,
 					ForceNew: true,
+				},
+				"nat_gateway_create_mapping": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ConflictsWith: []string{"availability_zone_mapping", names.AttrTransitGatewayID},
+					Elem:          natGatewayCreateMappingResource(),
+				},
+				"proxy_settings": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					Computed:     true,
+					MaxItems:     1,
+					RequiredWith: []string{"nat_gateway_create_mapping"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificateARN: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+								RequiredWith: []string{"proxy_settings.0.domain_name"},
+							},
+							names.AttrDomainName: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ForceNew:     true,
+								RequiredWith: []string{"proxy_settings.0.certificate_arn"},
+							},
+							"listener_property": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 2,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrPort: {
+											Type:         schema.TypeInt,
+											Required:     true,
+											ValidateFunc: validation.IsPortNumber,
+										},
+										names.AttrType: {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.ListenerPropertyType](),
+										},
+									},
+								},
+							},
+						},
+					},
 				},
 				"subnet_change_protection": {
 					Type:     schema.TypeBool,
@@ -191,6 +358,14 @@ func resourceFirewall() *schema.Resource {
 				"transit_gateway_owner_account_id": {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"transparent_filtering_nat_scope": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					RequiredWith:     []string{"nat_gateway_create_mapping"},
+					ValidateDiagFunc: enum.Validate[awstypes.TransparentFilteringNatScope](),
 				},
 				"update_token": {
 					Type:     schema.TypeString,
@@ -262,7 +437,32 @@ func resourceFirewallCreate(ctx context.Context, d *schema.ResourceData, meta an
 		input.VpcId = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateFirewall(ctx, &input)
+	// A NAT/Proxy firewall takes its VPC and endpoint subnets in VpcEndpoint, not at the top level.
+	if v := d.Get("nat_gateway_create_mapping").([]any); len(v) > 0 {
+		input.NatGatewayCreateMappings = expandNatGatewayCreateMappings(v)
+		input.VpcEndpoint = &awstypes.VpcEndpoint{
+			SubnetMappings: input.SubnetMappings,
+			VpcId:          input.VpcId,
+		}
+		input.SubnetMappings = nil
+		input.VpcId = nil
+
+		if v, ok := d.GetOk("proxy_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input.ProxySettings = expandProxySettings(v.([]any)[0].(map[string]any))
+		}
+
+		if v, ok := d.GetOk("transparent_filtering_nat_scope"); ok {
+			input.TransparentFilteringNatScope = awstypes.TransparentFilteringNatScope(v.(string))
+		}
+	}
+
+	// The name of a just-deleted firewall can stay reserved for a short time, e.g. on replacement.
+	const (
+		timeout = 5 * time.Minute
+	)
+	output, err := tfresource.RetryWhenIsAErrorMessageContains[*networkfirewall.CreateFirewallOutput, *awstypes.InvalidRequestException](ctx, timeout, func(ctx context.Context) (*networkfirewall.CreateFirewallOutput, error) {
+		return conn.CreateFirewall(ctx, &input)
+	}, "already exists")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Firewall (%s): %s", name, err)
@@ -298,6 +498,12 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
+	return resourceFirewallFlatten(ctx, d, meta.(*conns.AWSClient).EC2Client(ctx), output)
+}
+
+func resourceFirewallFlatten(ctx context.Context, d *schema.ResourceData, ec2Conn *ec2.Client, output *networkfirewall.DescribeFirewallOutput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	firewall := output.Firewall
 	d.Set(names.AttrARN, firewall.FirewallArn)
 	d.Set("availability_zone_change_protection", firewall.AvailabilityZoneChangeProtection)
@@ -314,14 +520,42 @@ func resourceFirewallRead(ctx context.Context, d *schema.ResourceData, meta any)
 		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
 	d.Set(names.AttrName, firewall.FirewallName)
+	// DescribeFirewall doesn't return the mappings, so rebuild them from the NAT gateways attached to the firewall.
+	natGatewayCreateMappings := firewall.NatGatewayCreateMappings
+	if natGatewayCreateMappings == nil {
+		var err error
+		natGatewayCreateMappings, err = findNATGatewayCreateMappings(ctx, ec2Conn, output.FirewallStatus)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s) NAT gateways: %s", d.Id(), err)
+		}
+	}
+	natGatewayCreateMappings = orderNATGatewayCreateMappings(natGatewayCreateMappings, d.Get("nat_gateway_create_mapping").([]any))
+	if err := d.Set("nat_gateway_create_mapping", flattenNatGatewayCreateMappings(natGatewayCreateMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting nat_gateway_create_mapping: %s", err)
+	}
+	if err := d.Set("proxy_settings", flattenProxySettings(firewall.ProxySettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting proxy_settings: %s", err)
+	}
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
-	if err := d.Set("subnet_mapping", flattenSubnetMappings(firewall.SubnetMappings)); err != nil {
+	// A NAT/Proxy firewall's VpcEndpoint keeps the subnets that it was created with,
+	// while the top-level SubnetMappings also has the ones associated later.
+	subnetMappings, vpcID := firewall.SubnetMappings, firewall.VpcId
+	if v := firewall.VpcEndpoint; v != nil {
+		if len(subnetMappings) == 0 {
+			subnetMappings = v.SubnetMappings
+		}
+		if vpcID == nil {
+			vpcID = v.VpcId
+		}
+	}
+	if err := d.Set("subnet_mapping", flattenSubnetMappings(subnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mapping: %s", err)
 	}
 	d.Set(names.AttrTransitGatewayID, firewall.TransitGatewayId)
 	d.Set("transit_gateway_owner_account_id", firewall.TransitGatewayOwnerAccountId)
+	d.Set("transparent_filtering_nat_scope", firewall.TransparentFilteringNatScope)
 	d.Set("update_token", output.UpdateToken)
-	d.Set(names.AttrVPCID, firewall.VpcId)
+	d.Set(names.AttrVPCID, vpcID)
 
 	setTagsOut(ctx, firewall.Tags)
 
@@ -333,6 +567,12 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	conn := meta.(*conns.AWSClient).NetworkFirewallClient(ctx)
 
 	updateToken := d.Get("update_token").(string)
+
+	var natGatewayMappingsToAdd []awstypes.NatGatewayCreateMapping
+	if d.HasChange("nat_gateway_create_mapping") {
+		o, n := d.GetChange("nat_gateway_create_mapping")
+		natGatewayMappingsToAdd = expandNatGatewayCreateMappings(natGatewayCreateMappingsSet(n).Difference(natGatewayCreateMappingsSet(o)).List())
+	}
 
 	if d.HasChange("delete_protection") {
 		input := networkfirewall.UpdateFirewallDeleteProtectionInput{
@@ -364,6 +604,24 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 
 		updateToken = aws.ToString(output.UpdateToken)
+	}
+
+	if d.HasChange("proxy_settings") {
+		if v, ok := d.GetOk("proxy_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := networkfirewall.UpdateProxySettingsInput{
+				FirewallArn:   aws.String(d.Id()),
+				ProxySettings: expandProxySettings(v.([]any)[0].(map[string]any)),
+				UpdateToken:   aws.String(updateToken),
+			}
+
+			output, err := conn.UpdateProxySettings(ctx, &input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Firewall (%s) proxy settings: %s", d.Id(), err)
+			}
+
+			updateToken = aws.ToString(output.UpdateToken)
+		}
 	}
 
 	if d.HasChange("enabled_analysis_types") {
@@ -517,9 +775,10 @@ func resourceFirewallUpdate(ctx context.Context, d *schema.ResourceData, meta an
 
 		if len(subnetsToAdd) > 0 {
 			input := networkfirewall.AssociateSubnetsInput{
-				FirewallArn:    aws.String(d.Id()),
-				SubnetMappings: subnetsToAdd,
-				UpdateToken:    aws.String(updateToken),
+				FirewallArn:              aws.String(d.Id()),
+				NatGatewayCreateMappings: natGatewayMappingsToAdd,
+				SubnetMappings:           subnetsToAdd,
+				UpdateToken:              aws.String(updateToken),
 			}
 
 			_, err := conn.AssociateSubnets(ctx, &input)
@@ -571,6 +830,10 @@ func resourceFirewallDelete(ctx context.Context, d *schema.ResourceData, meta an
 	input := networkfirewall.DeleteFirewallInput{
 		FirewallArn: aws.String(d.Id()),
 	}
+	// DeleteAssociatedNatGateways can't be set for a routed firewall, which has no proxy settings.
+	if len(d.Get("proxy_settings").([]any)) > 0 {
+		input.DeleteAssociatedNatGateways = d.Get("delete_associated_nat_gateways").(bool)
+	}
 	const (
 		timeout = 1 * time.Minute
 	)
@@ -621,6 +884,101 @@ func findFirewallByARN(ctx context.Context, conn *networkfirewall.Client, arn st
 	return findFirewall(ctx, conn, &input)
 }
 
+// findNATGatewayCreateMappings describes the NAT gateways that are attached to a NAT/Proxy firewall.
+// NAT gateways detached from removed Availability Zones aren't in the firewall status, so they're left out.
+func findNATGatewayCreateMappings(ctx context.Context, conn *ec2.Client, status *awstypes.FirewallStatus) ([]awstypes.NatGatewayCreateMapping, error) {
+	if status == nil {
+		return nil, nil
+	}
+
+	var natGatewayIDs []string
+	for _, syncState := range status.SyncStates {
+		for _, v := range syncState.NatGatewayAttachments {
+			natGatewayIDs = append(natGatewayIDs, aws.ToString(v.NatGatewayId))
+		}
+	}
+
+	if len(natGatewayIDs) == 0 {
+		return nil, nil
+	}
+
+	input := ec2.DescribeNatGatewaysInput{
+		NatGatewayIds: natGatewayIDs,
+	}
+	natGateways, err := tfec2.FindNATGateways(ctx, conn, &input)
+
+	if retry.NotFound(err) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	apiObjects := make([]awstypes.NatGatewayCreateMapping, 0, len(natGateways))
+	for _, natGateway := range natGateways {
+		apiObject := awstypes.NatGatewayCreateMapping{
+			SubnetId: natGateway.SubnetId,
+		}
+
+		// The primary address comes first.
+		addresses := slices.Clone(natGateway.NatGatewayAddresses)
+		slices.SortStableFunc(addresses, func(a, b ec2types.NatGatewayAddress) int {
+			switch ap, bp := aws.ToBool(a.IsPrimary), aws.ToBool(b.IsPrimary); {
+			case ap == bp:
+				return 0
+			case ap:
+				return -1
+			default:
+				return 1
+			}
+		})
+		for _, v := range addresses {
+			switch v.Status {
+			case ec2types.NatGatewayAddressStatusFailed, ec2types.NatGatewayAddressStatusDisassociating, ec2types.NatGatewayAddressStatusUnassigning:
+				continue
+			}
+
+			if v.AllocationId != nil {
+				apiObject.AllocationIds = append(apiObject.AllocationIds, aws.ToString(v.AllocationId))
+			}
+			apiObject.PrivateIps = append(apiObject.PrivateIps, aws.ToString(v.PrivateIp))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+// orderNATGatewayCreateMappings orders mappings as in tfList, by subnet ID, so that a list read back from
+// the NAT gateways doesn't differ from configuration only in order. Other mappings follow by subnet ID.
+func orderNATGatewayCreateMappings(apiObjects []awstypes.NatGatewayCreateMapping, tfList []any) []awstypes.NatGatewayCreateMapping {
+	index := make(map[string]int)
+	for i, v := range tfList {
+		if tfMap, ok := v.(map[string]any); ok {
+			index[tfMap[names.AttrSubnetID].(string)] = i
+		}
+	}
+
+	key := func(apiObject awstypes.NatGatewayCreateMapping) (int, string) {
+		subnetID := aws.ToString(apiObject.SubnetId)
+		if i, ok := index[subnetID]; ok {
+			return i, subnetID
+		}
+		return len(tfList), subnetID
+	}
+
+	apiObjects = slices.Clone(apiObjects)
+	slices.SortStableFunc(apiObjects, func(a, b awstypes.NatGatewayCreateMapping) int {
+		ai, as := key(a)
+		bi, bs := key(b)
+		return cmp.Or(cmp.Compare(ai, bi), cmp.Compare(as, bs))
+	})
+
+	return apiObjects
+}
+
 func statusFirewall(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findFirewallByARN(ctx, conn, arn)
@@ -634,6 +992,28 @@ func statusFirewall(conn *networkfirewall.Client, arn string) retry.StateRefresh
 		}
 
 		return output, string(output.FirewallStatus.Status), nil
+	}
+}
+
+// statusFirewallNATGatewayAttachments wraps statusFirewall and fails as soon as Network Firewall can't create
+// or attach a NAT/Proxy firewall's NAT gateway, since the firewall then never becomes READY.
+func statusFirewallNATGatewayAttachments(conn *networkfirewall.Client, arn string) retry.StateRefreshFunc {
+	refresh := statusFirewall(conn, arn)
+
+	return func(ctx context.Context) (any, string, error) {
+		outputRaw, status, err := refresh(ctx)
+
+		if output, ok := outputRaw.(*networkfirewall.DescribeFirewallOutput); ok && err == nil {
+			for az, syncState := range output.FirewallStatus.SyncStates {
+				for _, v := range syncState.NatGatewayAttachments {
+					if v.Status == awstypes.NatGatewayAttachmentStatusFailed {
+						return output, status, fmt.Errorf("NAT gateway (%s) in Availability Zone (%s): %s", aws.ToString(v.NatGatewayId), az, aws.ToString(v.StatusMessage))
+					}
+				}
+			}
+		}
+
+		return outputRaw, status, err
 	}
 }
 
@@ -661,7 +1041,7 @@ func waitFirewallCreated(ctx context.Context, conn *networkfirewall.Client, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
-		Refresh: statusFirewall(conn, arn),
+		Refresh: statusFirewallNATGatewayAttachments(conn, arn),
 		Timeout: timeout,
 	}
 
@@ -695,7 +1075,7 @@ func waitFirewallUpdated(ctx context.Context, conn *networkfirewall.Client, time
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.FirewallStatusValueProvisioning),
 		Target:  enum.Slice(awstypes.FirewallStatusValueReady),
-		Refresh: statusFirewall(conn, arn),
+		Refresh: statusFirewallNATGatewayAttachments(conn, arn),
 		Timeout: timeout,
 		// Delay added to account for Associate/DisassociateSubnet calls that return
 		// a READY status immediately after the method is called instead of immediately
@@ -793,6 +1173,7 @@ func flattenSyncStates(apiObject map[string]awstypes.SyncState) []any {
 		tfMap := map[string]any{
 			"attachment":               flattenAttachment(v.Attachment),
 			names.AttrAvailabilityZone: k,
+			"nat_gateway_attachment":   flattenNatGatewayAttachments(v.NatGatewayAttachments),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -807,11 +1188,176 @@ func flattenAttachment(apiObject *awstypes.Attachment) []any {
 	}
 
 	tfMap := map[string]any{
+		names.AttrDNSName:  aws.ToString(apiObject.DnsName),
 		"endpoint_id":      aws.ToString(apiObject.EndpointId),
 		names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
 	}
 
 	return []any{tfMap}
+}
+
+func flattenNatGatewayAttachments(apiObjects []awstypes.NatGatewayAttachment) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"nat_gateway_id": aws.ToString(apiObject.NatGatewayId),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+// natGatewayCreateMappingResource is a list element, not a set element, as a set holds an extra
+// empty element while its nested values are unknown during planning.
+// It uses Schema, not SchemaFunc: ResourceDiff.ForceNew marks the nested schema that it looks up,
+// and SchemaFunc returns a new map on each lookup, which drops the mark before the re-diff.
+func natGatewayCreateMappingResource() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{ // nosemgrep:ci.semgrep.pluginsdk.use-schema-func
+			"allocation_ids": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 8,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"private_ips": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 1,
+				MaxItems: 8,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+			},
+			names.AttrSubnetID: {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+		},
+	}
+}
+
+// natGatewayCreateMappingsSet compares NAT gateway mappings regardless of their order.
+func natGatewayCreateMappingsSet(v any) *schema.Set {
+	return schema.NewSet(schema.HashResource(natGatewayCreateMappingResource()), v.([]any))
+}
+
+func expandNatGatewayCreateMappings(tfList []any) []awstypes.NatGatewayCreateMapping {
+	apiObjects := make([]awstypes.NatGatewayCreateMapping, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		subnetID, ok := tfMap[names.AttrSubnetID].(string)
+		if !ok || subnetID == "" {
+			continue
+		}
+
+		apiObject := awstypes.NatGatewayCreateMapping{
+			SubnetId: aws.String(subnetID),
+		}
+
+		if v, ok := tfMap["allocation_ids"].([]any); ok && len(v) > 0 {
+			apiObject.AllocationIds = flex.ExpandStringValueList(v)
+		}
+
+		if v, ok := tfMap["private_ips"].([]any); ok && len(v) > 0 {
+			apiObject.PrivateIps = flex.ExpandStringValueList(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenNatGatewayCreateMappings(apiObjects []awstypes.NatGatewayCreateMapping) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			"allocation_ids":   apiObject.AllocationIds,
+			"private_ips":      apiObject.PrivateIps,
+			names.AttrSubnetID: aws.ToString(apiObject.SubnetId),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func expandProxySettings(tfMap map[string]any) *awstypes.ProxySettings {
+	apiObject := &awstypes.ProxySettings{}
+
+	if v, ok := tfMap[names.AttrCertificateARN].(string); ok && v != "" {
+		apiObject.CertificateArn = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrDomainName].(string); ok && v != "" {
+		apiObject.DomainName = aws.String(v)
+	}
+
+	if v, ok := tfMap["listener_property"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ListenerProperties = expandListenerProperties(v.List())
+	}
+
+	return apiObject
+}
+
+func expandListenerProperties(tfList []any) []awstypes.ListenerProperty {
+	apiObjects := make([]awstypes.ListenerProperty, 0, len(tfList))
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		apiObjects = append(apiObjects, awstypes.ListenerProperty{
+			Port: aws.Int32(int32(tfMap[names.AttrPort].(int))),
+			Type: awstypes.ListenerPropertyType(tfMap[names.AttrType].(string)),
+		})
+	}
+
+	return apiObjects
+}
+
+func flattenProxySettings(apiObject *awstypes.ProxySettings) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		names.AttrCertificateARN: aws.ToString(apiObject.CertificateArn),
+		names.AttrDomainName:     aws.ToString(apiObject.DomainName),
+		"listener_property":      flattenListenerProperties(apiObject.ListenerProperties),
+	}
+
+	return []any{tfMap}
+}
+
+func flattenListenerProperties(apiObjects []awstypes.ListenerProperty) []any {
+	tfList := make([]any, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]any{
+			names.AttrPort: aws.ToInt32(apiObject.Port),
+			names.AttrType: apiObject.Type,
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenSubnetMappings(apiObjects []awstypes.SubnetMapping) []any {

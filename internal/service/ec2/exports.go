@@ -11,6 +11,7 @@ var (
 	FindImageByID                                                           = findImageByID
 	FindInstanceByID                                                        = findInstanceByID
 	FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID                        = findIPAMPoolAllocationsByIPAMPoolIDAndResourceID
+	FindNATGateways                                                         = findNATGateways
 	FindNetworkInterfaces                                                   = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription          = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
 	FindSecurityGroupByDescriptionAndVPCID                                  = findSecurityGroupByDescriptionAndVPCID
@@ -31,6 +32,7 @@ var (
 	ResourceTransitGatewayConnectPeer                                       = resourceTransitGatewayConnectPeer
 	ResourceVPC                                                             = resourceVPC
 	VPCEndpointCreationTimeout                                              = vpcEndpointCreationTimeout
+	WaitNATGatewayDeleted                                                   = waitNATGatewayDeleted
 	WaitTransitGatewayAttachmentAccepted                                    = waitTransitGatewayAttachmentAccepted
 	WaitTransitGatewayAttachmentDeleted                                     = waitTransitGatewayAttachmentDeleted
 	WaitVPCEndpointAvailable                                                = waitVPCEndpointAvailable
