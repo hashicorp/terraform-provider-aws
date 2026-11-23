@@ -46,7 +46,7 @@ func TestAccAppStreamStack_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "9"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -173,7 +173,7 @@ func TestAccAppStreamStack_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feedback_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "redirect_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_connectors.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "8"),
+					resource.TestCheckResourceAttr(resourceName, "user_settings.#", "9"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
@@ -421,6 +421,55 @@ func TestAccAppStreamStack_streamingExperienceSettings_basic(t *testing.T) {
 	})
 }
 
+func TestAccAppStreamStack_webAuthnRedirection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stackOutput awstypes.Stack
+	resourceName := "aws_appstream_stack.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx, t),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_webAuthnRedirection(rName, true, `"chrome.exe", "msedge.exe"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.0.process_compatibility_list.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "web_authn_redirection.0.process_compatibility_list.*", "chrome.exe"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "web_authn_redirection.0.process_compatibility_list.*", "msedge.exe"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStackConfig_webAuthnRedirection(rName, false, `"firefox.exe"`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.0.process_compatibility_list.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "web_authn_redirection.0.process_compatibility_list.*", "firefox.exe"),
+				),
+			},
+			{
+				Config: testAccStackConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, t, resourceName, &stackOutput),
+					resource.TestCheckResourceAttr(resourceName, "web_authn_redirection.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckStackDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).AppStreamClient(ctx)
@@ -531,6 +580,11 @@ resource "aws_appstream_stack" "test" {
     permission = "ENABLED"
   }
 
+  user_settings {
+    action     = "SMART_CARD_REDIRECTION"
+    permission = "DISABLED"
+  }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -615,6 +669,11 @@ resource "aws_appstream_stack" "test" {
     permission = "ENABLED"
   }
 
+  user_settings {
+    action     = "SMART_CARD_REDIRECTION"
+    permission = "DISABLED"
+  }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -670,6 +729,11 @@ resource "aws_appstream_stack" "test" {
     permission = "ENABLED"
   }
 
+  user_settings {
+    action     = "SMART_CARD_REDIRECTION"
+    permission = "DISABLED"
+  }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -693,4 +757,17 @@ resource "aws_appstream_stack" "test" {
   }
 }
 `, name, preferredProtocol)
+}
+
+func testAccStackConfig_webAuthnRedirection(name string, enabled bool, processes string) string {
+	return fmt.Sprintf(`
+resource "aws_appstream_stack" "test" {
+  name = %[1]q
+
+  web_authn_redirection {
+    enabled                    = %[2]t
+    process_compatibility_list = [%[3]s]
+  }
+}
+`, name, enabled, processes)
 }

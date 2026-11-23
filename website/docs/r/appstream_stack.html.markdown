@@ -57,6 +57,11 @@ resource "aws_appstream_stack" "example" {
     permission = "ENABLED"
   }
 
+  user_settings {
+    action     = "SMART_CARD_REDIRECTION"
+    permission = "DISABLED"
+  }
+
   application_settings {
     enabled        = true
     settings_group = "SettingsGroup"
@@ -89,6 +94,7 @@ The following arguments are optional:
 * `streaming_experience_settings` - (Optional) Streaming protocol you want your stack to prefer. This can be UDP or TCP. Currently, UDP is only supported in the Windows native client. See [`streaming_experience_settings`](#streaming_experience_settings-block) below.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_settings` - (Optional) Configuration block for the actions that are enabled or disabled for users during their streaming sessions. If not provided, these settings are configured automatically by AWS. If provided, the terraform configuration should include a block for each configurable action. See [`user_settings`](#user_settings-block) below.
+* `web_authn_redirection` - (Optional) Configuration block for WebAuthn redirection between the streaming session and the user's local device. See [`web_authn_redirection`](#web_authn_redirection-block) below.
 
 ### `access_endpoints` Block
 
@@ -108,12 +114,17 @@ The following arguments are optional:
 
 ### `user_settings` Block
 
-* `action` - (Required) Action that is enabled or disabled. Valid values are `AUTO_TIME_ZONE_REDIRECTION`, `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, `DOMAIN_SMART_CARD_SIGNIN`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, or `PRINTING_TO_LOCAL_DEVICE`.
+* `action` - (Required) Action that is enabled or disabled. Valid values are `AUTO_TIME_ZONE_REDIRECTION`, `CLIPBOARD_COPY_FROM_LOCAL_DEVICE`, `CLIPBOARD_COPY_TO_LOCAL_DEVICE`, `DOMAIN_PASSWORD_SIGNIN`, `DOMAIN_SMART_CARD_SIGNIN`, `FILE_UPLOAD`, `FILE_DOWNLOAD`, `PRINTING_TO_LOCAL_DEVICE`, or `SMART_CARD_REDIRECTION`.
 * `permission` - (Required) Whether the action is enabled or disabled. Valid values are `ENABLED` or `DISABLED`.
 
 ### `streaming_experience_settings` Block
 
 * `preferred_protocol` - (Optional) Preferred protocol that you want to use while streaming your application. Valid values are `TCP` and `UDP`.
+
+### `web_authn_redirection` Block
+
+* `enabled` - (Required) Whether WebAuthn redirection is enabled for the stack.
+* `process_compatibility_list` - (Optional) Set of process executable names for which WebAuthn redirection is enabled, for example `chrome.exe`. Between 1 and 100 items. Applies to Windows fleets.
 
 ## Attribute Reference
 

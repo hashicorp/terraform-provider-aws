@@ -204,6 +204,29 @@ func resourceStack() *schema.Resource {
 						},
 					},
 				},
+				"web_authn_redirection": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrEnabled: {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
+							"process_compatibility_list": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 100,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.StringLenBetween(1, 260),
+								},
+							},
+						},
+					},
+				},
 			}
 		},
 
@@ -305,6 +328,10 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("web_authn_redirection"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.WebAuthnRedirection = expandWebAuthnRedirection(v.([]any)[0].(map[string]any))
+	}
+
 	outputRaw, err := tfresource.RetryWhenIsA[any, *awstypes.ResourceNotFoundException](ctx, stackOperationTimeout, func(ctx context.Context) (any, error) {
 		return conn.CreateStack(ctx, &input)
 	})
@@ -357,6 +384,9 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_settings: %s", err)
 	}
+	if err = d.Set("web_authn_redirection", flattenWebAuthnRedirection(stack.WebAuthnRedirection)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting web_authn_redirection: %s", err)
+	}
 
 	return diags
 }
@@ -404,6 +434,14 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 		if d.HasChange("user_settings") {
 			input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
+		}
+
+		if d.HasChange("web_authn_redirection") {
+			if v, ok := d.GetOk("web_authn_redirection"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.WebAuthnRedirection = expandWebAuthnRedirection(v.([]any)[0].(map[string]any))
+			} else {
+				input.AttributesToDelete = append(input.AttributesToDelete, awstypes.StackAttributeWebAuthnRedirection)
+			}
 		}
 
 		_, err := conn.UpdateStack(ctx, &input)
@@ -742,6 +780,31 @@ func flattenUserSettings(apiObjects []awstypes.UserSetting) []map[string]any {
 	}
 
 	return tfList
+}
+
+func expandWebAuthnRedirection(tfMap map[string]any) *awstypes.WebAuthnRedirection {
+	apiObject := &awstypes.WebAuthnRedirection{
+		Enabled: aws.Bool(tfMap[names.AttrEnabled].(bool)),
+	}
+
+	if v, ok := tfMap["process_compatibility_list"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.ProcessCompatibilityList = flex.ExpandStringValueSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenWebAuthnRedirection(apiObject *awstypes.WebAuthnRedirection) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []any{
+		map[string]any{
+			names.AttrEnabled:            aws.ToBool(apiObject.Enabled),
+			"process_compatibility_list": apiObject.ProcessCompatibilityList,
+		},
+	}
 }
 
 func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceData) bool {
