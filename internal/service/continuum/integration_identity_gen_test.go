@@ -45,7 +45,7 @@ func testAccContinuumIntegration_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccIntegrationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
@@ -139,7 +139,7 @@ func testAccContinuumIntegration_Identity_regionOverride(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccIntegrationPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,
