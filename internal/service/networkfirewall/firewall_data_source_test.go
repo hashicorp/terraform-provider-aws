@@ -266,7 +266,7 @@ func TestAccNetworkFirewallFirewallDataSource_igwFirewall(t *testing.T) {
 			{
 				Config: testAccFirewallDataSourceConfig_igwFirewall(vpcID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrARN, regexache.MustCompile(`:igw-firewall/`+vpcID+`$`)),
+					acctest.CheckResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "network-firewall", "igw-firewall/"+vpcID),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_type", "IGW_FIREWALL"),
 					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.0.enforcement_mode", "POLICY_CONTROLLED"),
