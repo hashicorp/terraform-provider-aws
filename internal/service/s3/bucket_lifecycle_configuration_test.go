@@ -4173,7 +4173,7 @@ func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.S3ServiceID),
-		CheckDestroy: acctest.CheckWithNamedProviders(testAccCheckBucketLifecycleConfigurationDestroyWithProvider(ctx), providers),
+		CheckDestroy: acctest.CheckWithNamedProviders(testAccCheckBucketLifecycleConfigurationDestroyWithProvider(ctx, t), providers),
 		Steps: []resource.TestStep{
 			{
 				// Set at the TestStep level as the configuration directory contains a provider block.
@@ -4187,7 +4187,7 @@ func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
 					"minioEndpoint":  config.StringVariable(minIOEndpoint),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketLifecycleConfigurationExistsWithProvider(ctx, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
+					testAccCheckBucketLifecycleConfigurationExistsWithProvider(ctx, t, resourceName, acctest.NamedProviderFunc(acctest.ProviderName, providers)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrBucket), "aws_s3_bucket.test", tfjsonpath.New(names.AttrBucket), compare.ValuesSame()),
@@ -4220,17 +4220,17 @@ func TestAccS3BucketLifecycleConfiguration_MinIO_basic(t *testing.T) {
 
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx, s, acctest.ProviderMeta(ctx, t))
+		return testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx, t, s, acctest.ProviderMeta(ctx, t))
 	}
 }
 
-func testAccCheckBucketLifecycleConfigurationDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
+func testAccCheckBucketLifecycleConfigurationDestroyWithProvider(ctx context.Context, t *testing.T) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		return testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx, s, provider.Meta().(*conns.AWSClient))
+		return testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx, t, s, provider.Meta().(*conns.AWSClient))
 	}
 }
 
-func testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx context.Context, s *terraform.State, meta *conns.AWSClient) error {
+func testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx context.Context, _ *testing.T, s *terraform.State, meta *conns.AWSClient) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_s3_bucket_lifecycle_configuration" {
 			continue
@@ -4264,17 +4264,17 @@ func testAccCheckBucketLifecycleConfigurationDestroyWithMeta(ctx context.Context
 
 func testAccCheckBucketLifecycleConfigurationExists(ctx context.Context, t *testing.T, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx, s, n, acctest.ProviderMeta(ctx, t))
+		return testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx, t, s, n, acctest.ProviderMeta(ctx, t))
 	}
 }
 
-func testAccCheckBucketLifecycleConfigurationExistsWithProvider(ctx context.Context, n string, providerF acctest.ProviderFunc) resource.TestCheckFunc {
+func testAccCheckBucketLifecycleConfigurationExistsWithProvider(ctx context.Context, t *testing.T, n string, providerF acctest.ProviderFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx, s, n, providerF().Meta().(*conns.AWSClient))
+		return testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx, t, s, n, providerF().Meta().(*conns.AWSClient))
 	}
 }
 
-func testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx context.Context, s *terraform.State, n string, meta *conns.AWSClient) error {
+func testAccCheckBucketLifecycleConfigurationExistsWithMeta(ctx context.Context, _ *testing.T, s *terraform.State, n string, meta *conns.AWSClient) error {
 	rs, ok := s.RootModule().Resources[n]
 	if !ok {
 		return fmt.Errorf("Not found: %s", n)
