@@ -1,0 +1,6 @@
+kind: enhancement
+custom:
+    Impact: resource/aws_cloudfront_multitenant_distribution
+    Body: Add `owner_account_id` argument to `vpc_origin_config` for cross-account
+        VPC origin support
+    PullRequest: 51252

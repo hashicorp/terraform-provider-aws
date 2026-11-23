@@ -2223,8 +2223,8 @@ func TestAccCloudFrontMultiTenantDistribution_vpcOriginConfigOwnerAccountID(t *t
 					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.vpc_origin_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "origin.0.vpc_origin_config.0.vpc_origin_id", "aws_cloudfront_vpc_origin.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "origin.0.vpc_origin_config.0.owner_account_id", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.vpc_origin_config.0.vpc_origin_id", "aws_cloudfront_vpc_origin.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.vpc_origin_config.0.owner_account_id", "data.aws_caller_identity.current", names.AttrAccountID),
 				),
 			},
 			{
