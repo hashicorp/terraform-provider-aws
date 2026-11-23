@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-23T22:26:27.000000+01:00
+custom:
+    Name: aws_route53profiles_associations
+    NewType: New Data Source
+    PullRequest: "51278"
