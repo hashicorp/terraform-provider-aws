@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-23T11:19:07.632124-05:00
+custom:
+    Body: Fixes error when resource disappears during listing
+    Impact: list-resource/aws_iam_group_policy_attachment
+    PullRequest: "51103"

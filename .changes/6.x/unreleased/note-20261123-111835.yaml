@@ -1,0 +1,6 @@
+kind: note
+time: 2026-11-23T11:18:35.703877-05:00
+custom:
+    Body: '`object_lock_retain_until_date` is now `Computed` because Amazon S3 assigns and advances the value for objects under an event hold. Removing the argument from configuration no longer plans a change.'
+    Impact: resource/aws_s3_object
+    PullRequest: "50220"

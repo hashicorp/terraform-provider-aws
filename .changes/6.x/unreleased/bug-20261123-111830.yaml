@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-23T11:18:30.085517-05:00
+custom:
+    Body: Fix import of a replicator with a `kafka_cluster.apache_kafka_cluster` block proposing to replace the replicator, caused by reading a `vpc_config` onto the `apache_kafka_cluster` entry
+    Impact: resource/aws_msk_replicator
+    PullRequest: "50071"

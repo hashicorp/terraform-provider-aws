@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-23T11:18:29.011521-05:00
+custom:
+    Body: Fix update failures for replications that identify a cluster by `replication_info_list.source_kafka_cluster_id` or `replication_info_list.target_kafka_cluster_id`, where an empty cluster ARN was sent instead of the cluster ID
+    Impact: resource/aws_msk_replicator
+    PullRequest: "50071"
