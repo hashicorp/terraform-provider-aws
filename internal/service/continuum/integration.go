@@ -296,6 +296,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
+	// CreateIntegration returns only the ID, ARN and creation time.
 	id := aws.ToString(output.IntegrationId)
 	integration, err := findIntegrationByID(ctx, conn, id)
 	if err != nil {
@@ -352,42 +353,55 @@ func (r *integrationResource) Update(ctx context.Context, request resource.Updat
 
 	id := plan.ID.ValueString()
 
+	diff, d := fwflex.Diff(ctx, plan, state)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	providerConfiguration, d := plan.ProviderConfiguration.ToPtr(ctx)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var (
+		integration     any
+		providerDetails awstypes.ProviderDetails
+	)
 	// Only the S3 role and external ID can change in place. Every other change forces replacement,
 	// except filling in GitHub or GitLab secrets after import, which needs no API call.
-	if !plan.ProviderConfiguration.Equal(state.ProviderConfiguration) {
-		providerConfiguration, d := plan.ProviderConfiguration.ToPtr(ctx)
-		smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if diff.HasChanges() && !providerConfiguration.S3.IsNull() {
+		var input continuum.UpdateIntegrationInput
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Integration")))
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		if !providerConfiguration.S3.IsNull() {
-			var input continuum.UpdateIntegrationInput
-			smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, plan, &input, fwflex.WithFieldNamePrefix("Integration")))
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			_, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
-				func(ctx context.Context) (*continuum.UpdateIntegrationOutput, error) {
-					return conn.UpdateIntegration(ctx, &input)
-				},
-				isRoleNotAssumable,
-			)
-			if err != nil {
-				smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
-				return
-			}
+		output, err := tfresource.RetryWhen(ctx, iamPropagationTimeout,
+			func(ctx context.Context) (*continuum.UpdateIntegrationOutput, error) {
+				return conn.UpdateIntegration(ctx, &input)
+			},
+			isRoleNotAssumable,
+		)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
+			return
 		}
+
+		integration, providerDetails = output, output.ProviderDetails
+	} else {
+		// Nothing changed in AWS, but computed values such as updated_at are unknown in the plan.
+		output, err := findIntegrationByID(ctx, conn, id)
+		if err != nil {
+			smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
+			return
+		}
+
+		integration, providerDetails = output, output.ProviderDetails
 	}
 
-	output, err := findIntegrationByID(ctx, conn, id)
-	if err != nil {
-		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
-		return
-	}
-
-	smerr.AddEnrich(ctx, &response.Diagnostics, plan.flatten(ctx, output, output.ProviderDetails))
+	smerr.AddEnrich(ctx, &response.Diagnostics, plan.flatten(ctx, integration, providerDetails))
 	if response.Diagnostics.HasError() {
 		return
 	}
