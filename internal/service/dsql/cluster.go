@@ -245,18 +245,23 @@ func (r *clusterResource) Update(ctx context.Context, request resource.UpdateReq
 
 	conn := r.Meta().DSQLClient(ctx)
 
-	if !new.DeletionProtectionEnabled.Equal(old.DeletionProtectionEnabled) ||
-		!new.KMSEncryptionKey.Equal(old.KMSEncryptionKey) ||
-		!new.MultiRegionProperties.Equal(old.MultiRegionProperties) {
+	diff, d := fwflex.Diff(ctx, new, old, fwflex.WithIgnoredField("ForceDestroy"))
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		id := fwflex.StringValueFromFramework(ctx, new.Identifier)
 		var input dsql.UpdateClusterInput
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input, diff.IgnoredFieldNamesOpts()...)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		// Additional fields.
 		input.ClientToken = aws.String(create.UniqueId(ctx))
+		input.Identifier = aws.String(id)
 
 		_, err := conn.UpdateCluster(ctx, &input)
 
