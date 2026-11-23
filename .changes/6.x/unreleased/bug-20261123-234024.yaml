@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T23:40:24.780858+05:30
-custom:
-    Body: Retry creation while the account is being onboarded to Network Security Manager
-    Impact: resource/aws_networksecuritymanager_scope
-    PullRequest: "51209"

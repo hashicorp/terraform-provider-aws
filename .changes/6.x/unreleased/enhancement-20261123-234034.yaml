@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T23:40:34.060942+05:30
-custom:
-    Body: Add `igw_firewall` attribute
-    Impact: data-source/aws_route
-    PullRequest: "51209"

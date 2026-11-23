@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T11:18:53.392399-05:00
-custom:
-    Body: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments
-    Impact: resource/aws_pinpointsmsvoicev2_protect_configuration
-    PullRequest: "50923"

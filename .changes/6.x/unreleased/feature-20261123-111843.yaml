@@ -1,6 +1,0 @@
-kind: feature
-time: 2026-11-23T11:18:43.837522-05:00
-custom:
-    Name: aws_cloudwatchomni_alert
-    NewType: New List Resource
-    PullRequest: "50679"

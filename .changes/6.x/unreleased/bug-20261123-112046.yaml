@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T11:20:46.628213-05:00
-custom:
-    Body: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments
-    Impact: resource/aws_dx_private_virtual_interface
-    PullRequest: "51072"

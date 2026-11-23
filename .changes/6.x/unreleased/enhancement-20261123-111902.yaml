@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T11:19:02.986747-05:00
-custom:
-    Body: Add resource identity support
-    Impact: resource/aws_identitystore_group_membership
-    PullRequest: "51082"

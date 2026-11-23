@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T11:18:52.126621-05:00
-custom:
-    Body: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes
-    Impact: resource/aws_fsx_s3_access_point_attachment
-    PullRequest: "50917"

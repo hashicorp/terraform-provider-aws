@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T23:40:25.809614+05:30
-custom:
-    Body: Add `firewall_type` argument and `igw_firewall_configuration` attribute
-    Impact: data-source/aws_networkfirewall_firewall
-    PullRequest: "51209"

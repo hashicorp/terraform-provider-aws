@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T11:18:26.488962-05:00
-custom:
-    Body: Add `replicate_source_db_cluster` attribute
-    Impact: data-source/aws_db_instance
-    PullRequest: "46542"
