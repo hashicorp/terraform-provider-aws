@@ -113,7 +113,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/dsql v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.72.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.341.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.350.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.66.6
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.47.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.102.1
@@ -195,11 +195,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaaserverless v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.53.5
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.31.5
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.77.1
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.82.0
 	github.com/aws/aws-sdk-go-v2/service/networkflowmonitor v1.19.5
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.21.5
-	github.com/aws/aws-sdk-go-v2/service/networksecuritymanager v1.0.6
+	github.com/aws/aws-sdk-go-v2/service/networksecuritymanager v1.1.0
 	github.com/aws/aws-sdk-go-v2/service/notifications v1.17.6
 	github.com/aws/aws-sdk-go-v2/service/notificationscontacts v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/oam v1.31.5
@@ -359,10 +359,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.5.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.8.12 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.5.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.22 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.25 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.11.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.13.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.14.12 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.20.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signin v1.10.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.43.5 // indirect

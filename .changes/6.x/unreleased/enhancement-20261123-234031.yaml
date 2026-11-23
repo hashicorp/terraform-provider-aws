@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T23:40:31.995626+05:30
+custom:
+    Body: Add `network_firewall_connectivity_type` attribute
+    Impact: data-source/aws_subnet
+    PullRequest: "51209"

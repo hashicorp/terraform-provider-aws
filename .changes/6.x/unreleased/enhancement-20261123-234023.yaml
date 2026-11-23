@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T23:40:23.751028+05:30
+custom:
+    Body: Add `IGW_FIREWALL` `firewall_type` value
+    Impact: resource/aws_networksecuritymanager_template
+    PullRequest: "51209"

@@ -146,6 +146,10 @@ func resourceDefaultSubnet() *schema.Resource {
 					Optional: true,
 					Default:  true,
 				},
+				"network_firewall_connectivity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,

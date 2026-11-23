@@ -75,6 +75,7 @@ func TestAccNetworkSecurityManagerPolicy_basic(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"igw_firewall_config": knownvalue.ListSizeExact(0),
 							"remediation_enabled": knownvalue.Bool(false),
 							"resources_clean_up":  knownvalue.Bool(true),
 							"waf_config":          knownvalue.ListSizeExact(0),
@@ -180,6 +181,7 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.PolicyFirewallTypeWaf)),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"igw_firewall_config": knownvalue.ListSizeExact(0),
 							"remediation_enabled": knownvalue.Bool(false),
 							"resources_clean_up":  knownvalue.Bool(true),
 							"waf_config": knownvalue.ListExact([]knownvalue.Check{
@@ -227,6 +229,140 @@ func TestAccNetworkSecurityManagerPolicy_waf(t *testing.T) {
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule"), knownvalue.ListSizeExact(2)),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(0).AtMapKey("rule_identifier"), rule1ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
 					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(1).AtMapKey("rule_identifier"), rule2ResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccNetworkSecurityManagerPolicy_igwFirewall(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_policy.test"
+	ruleResourceName := "aws_networksecuritymanager_rule.test"
+	scopeResourceName := "aws_networksecuritymanager_scope.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckPolicy(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/igw_firewall/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:               config.StringVariable(rName),
+					"default_subnet_connectivity": config.StringVariable(string(awstypes.DefaultSubnetConnectivityFlexible)),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("firewall_type"), tfknownvalue.StringExact(awstypes.PolicyFirewallTypeIgwFirewall)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"igw_firewall_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"default_subnet_connectivity":  tfknownvalue.StringExact(awstypes.DefaultSubnetConnectivityFlexible),
+									"subnet_connectivity_override": knownvalue.ListSizeExact(0),
+								}),
+							}),
+							"remediation_enabled": knownvalue.Bool(true),
+							"resources_clean_up":  knownvalue.Bool(true),
+							"waf_config":          knownvalue.ListSizeExact(0),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("template_or_rule"), knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("template_or_rule").AtSliceIndex(0).AtMapKey("rule_identifier"), ruleResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/igw_firewall/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:               config.StringVariable(rName),
+					"default_subnet_connectivity": config.StringVariable(string(awstypes.DefaultSubnetConnectivityOutboundOnly)),
+					"override_connectivity_type":  config.StringVariable(string(awstypes.SubnetConnectivityExclude)),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"igw_firewall_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"default_subnet_connectivity": tfknownvalue.StringExact(awstypes.DefaultSubnetConnectivityOutboundOnly),
+									"subnet_connectivity_override": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"connectivity_type": tfknownvalue.StringExact(awstypes.SubnetConnectivityExclude),
+											"scope_arn":         knownvalue.ListExact([]knownvalue.Check{checkScopeARN}),
+										}),
+									}),
+								}),
+							}),
+							"remediation_enabled": knownvalue.Bool(true),
+							"resources_clean_up":  knownvalue.Bool(true),
+							"waf_config":          knownvalue.ListSizeExact(0),
+						}),
+					})),
+					// The override must reference this test's specialized scope, not just any scope.
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New(names.AttrConfiguration).AtSliceIndex(0).AtMapKey("igw_firewall_config").AtSliceIndex(0).AtMapKey("subnet_connectivity_override").AtSliceIndex(0).AtMapKey("scope_arn").AtSliceIndex(0), scopeResourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/igw_firewall/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:               config.StringVariable(rName),
+					"default_subnet_connectivity": config.StringVariable(string(awstypes.DefaultSubnetConnectivityOutboundOnly)),
+					"override_connectivity_type":  config.StringVariable(string(awstypes.SubnetConnectivityExclude)),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Policy/igw_firewall/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:               config.StringVariable(rName),
+					"default_subnet_connectivity": config.StringVariable(string(awstypes.DefaultSubnetConnectivityBidirectional)),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPolicyExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"igw_firewall_config": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"default_subnet_connectivity":  tfknownvalue.StringExact(awstypes.DefaultSubnetConnectivityBidirectional),
+									"subnet_connectivity_override": knownvalue.ListSizeExact(0),
+								}),
+							}),
+							"remediation_enabled": knownvalue.Bool(true),
+							"resources_clean_up":  knownvalue.Bool(true),
+							"waf_config":          knownvalue.ListSizeExact(0),
+						}),
+					})),
 				},
 			},
 		},

@@ -137,6 +137,7 @@ func TestAccNetworkSecurityManagerPolicy_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrARN), checkPolicyARN),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrConfiguration), knownvalue.ListExact([]knownvalue.Check{
 							knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"igw_firewall_config": knownvalue.ListSizeExact(0),
 								"remediation_enabled": knownvalue.Bool(false),
 								"resources_clean_up":  knownvalue.Bool(true),
 								"waf_config":          knownvalue.ListSizeExact(0),
