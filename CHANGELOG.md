@@ -57,8 +57,8 @@ BUG FIXES:
 * resource/aws_msk_replicator: Fix update failures for replications that identify a cluster by `replication_info_list.source_kafka_cluster_id` or `replication_info_list.target_kafka_cluster_id`, where an empty cluster ARN was sent instead of the cluster ID ([#50071](https://github.com/hashicorp/terraform-provider-aws/issues/50071))
 * resource/aws_opensearch_inbound_connection_accepter: Fix `UnknownError` when deleting a connection that is still provisioning ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_opensearch_outbound_connection: Fix `UnknownError` when deleting a connection that is still validating or provisioning ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
-* resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
 * resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
 * resource/aws_s3_bucket: Send the configured `region` as the S3 `CreateBucket` `LocationConstraint` when using a custom S3 endpoint with a non-standard region string (e.g. Ceph, MinIO), fixing bucket creation failures against S3-compatible storage ([#49890](https://github.com/hashicorp/terraform-provider-aws/issues/49890))
 * resource/aws_sagemaker_endpoint: Prevent orphaned endpoints when the create waiter returns an error ([#50959](https://github.com/hashicorp/terraform-provider-aws/issues/50959))
 
@@ -1912,7 +1912,6 @@ BUG FIXES:
 * resource/aws_s3_bucket_lifecycle_configuration: Fix "Missing Resource Identity After Read" error when resource created with provider version < 6.34.0 is deleted outside Terraform ([#46674](https://github.com/hashicorp/terraform-provider-aws/issues/46674))
 * resource/aws_savingsplan_savingsplan: Properly set `savings_plan_offering_id` during read to prevent forced replacement following import ([#46959](https://github.com/hashicorp/terraform-provider-aws/issues/46959))
 * resource/aws_wafv2_web_acl: Fix `enable_machine_learning` in `aws_managed_rules_bot_control_rule_set` incorrectly defaulting to `false` instead of reflecting the AWS default of `true` ([#46682](https://github.com/hashicorp/terraform-provider-aws/issues/46682))
-
 ## 6.36.0 (March 11, 2026)
 
 NOTES:
