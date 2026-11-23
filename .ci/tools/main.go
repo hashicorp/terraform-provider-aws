@@ -15,6 +15,7 @@ import (
 	_ "github.com/katbyte/actionlint/cmd/actionlint"
 	_ "github.com/katbyte/tctest"
 	_ "github.com/katbyte/terrafmt"
+	_ "github.com/miniscruff/changie"
 	_ "github.com/pavius/impi/cmd/impi"
 	_ "github.com/terraform-linters/tflint"
 	_ "golang.org/x/tools/cmd/stringer"

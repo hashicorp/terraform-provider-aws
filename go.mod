@@ -299,7 +299,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/xray v1.46.1
 	github.com/aws/smithy-go v1.28.6
 	github.com/beevik/etree v1.8.1
-	github.com/cedar-policy/cedar-go v1.9.2
+	github.com/cedar-policy/cedar-go v1.9.3
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dlclark/regexp2 v1.12.0
 	github.com/gertd/go-pluralize v0.2.1
@@ -327,7 +327,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-log v0.11.0
 	github.com/hashicorp/terraform-plugin-mux v0.23.1
-	github.com/hashicorp/terraform-plugin-sdk/v2 v2.40.1
+	github.com/hashicorp/terraform-plugin-sdk/v2 v2.41.1
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/jaswdr/faker/v2 v2.10.0
 	github.com/jmespath/go-jmespath v0.4.0
@@ -380,7 +380,7 @@ require (
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-plugin v1.8.0 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.8 // indirect
-	github.com/hashicorp/hc-install v0.9.5 // indirect
+	github.com/hashicorp/hc-install v0.10.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.25.3 // indirect
 	github.com/hashicorp/terraform-registry-address v0.5.0 // indirect

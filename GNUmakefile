@@ -177,7 +177,7 @@ build: prereq-go fmt-check ## Build provider
 
 changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
-	@misspell -error -source text CHANGELOG.md .changelog
+	@misspell -error -source text CHANGELOG.md .changelog .changes
 
 ci: tools go-build gen-check acctest-lint copyright deps-check docs gh-workflow-lint golangci-lint govulncheck import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
@@ -1180,6 +1180,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install golang.org/x/vuln/cmd/govulncheck
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+	cd .ci/tools && $(GO_VER) install github.com/miniscruff/changie
 
 ts: testacc-short ## Alias to testacc-short
 
