@@ -1,0 +1,5 @@
+kind: feature
+time: 2026-11-23T20:19:56.402326+05:30
+custom:
+    Name: aws_continuum_integration
+    NewType: New Resource

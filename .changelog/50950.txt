@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_continuum_integration
-```
-
-```release-note:new-list-resource
-aws_continuum_integration
-```
