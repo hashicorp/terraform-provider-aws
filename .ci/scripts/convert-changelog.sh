@@ -48,6 +48,14 @@ fi
 
 ENTRY_COUNT=0
 
+# changie parses each --custom flag as a comma-separated list, so a value
+# containing a comma is split into an invalid "Key=Value" pair. Quote the
+# whole pair as a single CSV field (doubling any embedded quotes).
+custom() {
+    local pair="${1//\"/\"\"}"
+    printf '"%s"' "$pair"
+}
+
 # Parse the file and extract entries
 while IFS= read -r line; do
     if [[ "$line" =~ ^\`\`\`release-note:(.+)$ ]]; then
@@ -128,9 +136,9 @@ while IFS= read -r line; do
             changie new \
                 --interactive=false \
                 --kind "$KIND" \
-                --custom "NewType=$FEATURE_TYPE" \
-                --custom "Name=$NAME" \
-                --custom "PullRequest=$PR_NUMBER"
+                --custom "$(custom "NewType=$FEATURE_TYPE")" \
+                --custom "$(custom "Name=$NAME")" \
+                --custom "$(custom "PullRequest=$PR_NUMBER")"
         else
             # For other kinds (breaking-change, note, enhancement, bug)
             # Extract Impact (resource/data-source prefix) and Body (description) separately
@@ -141,9 +149,9 @@ while IFS= read -r line; do
                 changie new \
                     --interactive=false \
                     --kind "$KIND" \
-                    --custom "Impact=$IMPACT" \
-                    --custom "Body=$DESCRIPTION" \
-                    --custom "PullRequest=$PR_NUMBER"
+                    --custom "$(custom "Impact=$IMPACT")" \
+                    --custom "$(custom "Body=$DESCRIPTION")" \
+                    --custom "$(custom "PullRequest=$PR_NUMBER")"
             elif [[ "$BODY" =~ ^(provider):\ (.+)$ ]]; then
                 # Provider-level change without resource prefix (e.g., "provider: Description")
                 IMPACT="${BASH_REMATCH[1]}"
@@ -151,9 +159,9 @@ while IFS= read -r line; do
                 changie new \
                     --interactive=false \
                     --kind "$KIND" \
-                    --custom "Impact=$IMPACT" \
-                    --custom "Body=$DESCRIPTION" \
-                    --custom "PullRequest=$PR_NUMBER"
+                    --custom "$(custom "Impact=$IMPACT")" \
+                    --custom "$(custom "Body=$DESCRIPTION")" \
+                    --custom "$(custom "PullRequest=$PR_NUMBER")"
             else
                 # No Impact prefix - cannot create a valid fragment without an Impact value
                 echo "Error: Entry does not follow expected format (missing resource/data-source/provider prefix): $BODY"
