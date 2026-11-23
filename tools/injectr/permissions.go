@@ -7,8 +7,6 @@ import (
 	"cmp"
 	"fmt"
 	"maps"
-	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 	"time"
@@ -100,32 +98,15 @@ func addPermissions(f *FuncRef, index *OperationIndex, stats *PermissionStats) {
 	f.IAMPermissions = slices.Compact(perms)
 }
 
-// WritePermissionsMap writes m to path. It writes to a temporary file first,
-// so that an interrupted run never leaves a partial file at path.
+// WritePermissionsMap writes m to path, atomically, so that an interrupted run
+// never leaves a partial file at path.
 func WritePermissionsMap(path string, m *PermissionsMap) error {
 	b, err := m.encode()
 	if err != nil {
 		return err
 	}
 
-	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmp.Name()) // no-op after a successful rename
-
-	if _, err := tmp.Write(b); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
-		return err
-	}
-
-	return os.Rename(tmp.Name(), path)
+	return writeFileAtomic(path, b)
 }
 
 func printPermissionStats(stats PermissionStats) {

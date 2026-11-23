@@ -64,12 +64,22 @@ func LoadServiceRef(path string) (*ServiceRef, error) {
 		return nil, err
 	}
 
-	var ref ServiceRef
-	if err := json.Unmarshal(b, &ref); err != nil {
+	ref, err := parseServiceRef(b)
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
+
+	return ref, nil
+}
+
+// parseServiceRef decodes a service reference, which must name its service.
+func parseServiceRef(b []byte) (*ServiceRef, error) {
+	var ref ServiceRef
+	if err := json.Unmarshal(b, &ref); err != nil {
+		return nil, err
+	}
 	if ref.Name == "" {
-		return nil, fmt.Errorf("%s: missing service name", path)
+		return nil, errors.New("missing service name")
 	}
 
 	return &ref, nil
