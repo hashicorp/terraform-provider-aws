@@ -9,7 +9,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/continuum"
@@ -32,6 +31,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tflistplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/planmodifiers/listplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -126,7 +126,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 										},
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 39),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z]([0-9A-Za-z-]*[0-9A-Za-z])?$`), ""),
+											lazystringvalidator.RegexMatches(`^[0-9A-Za-z]([0-9A-Za-z-]*[0-9A-Za-z])?$`, ""),
 										},
 									},
 								},
@@ -156,7 +156,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 													},
 													Validators: []validator.String{
 														stringvalidator.LengthBetween(9, 2083),
-														stringvalidator.RegexMatches(regexache.MustCompile(`^https://`), "must start with https://"),
+														lazystringvalidator.RegexMatches(`^https://`, "must start with https://"),
 													},
 												},
 												names.AttrState: schema.StringAttribute{
@@ -250,7 +250,7 @@ func (r *integrationResource) Schema(ctx context.Context, _ resource.SchemaReque
 										Sensitive: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(2, 1224),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^[\w+=,.@:/-]+$`), ""),
+											lazystringvalidator.RegexMatches(`^[\w+=,.@:/-]+$`, ""),
 										},
 									},
 									names.AttrRoleARN: schema.StringAttribute{
