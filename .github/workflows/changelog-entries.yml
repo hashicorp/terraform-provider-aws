@@ -64,6 +64,11 @@ jobs:
 
   direct-edits:
     name: Direct CHANGELOG Edits
+    # Release PRs opened by the update-changelog workflow (final_for_version)
+    # regenerate CHANGELOG.md by design.
+    if: |
+      !(github.event.pull_request.user.login == 'terraform-aws-provider[bot]'
+        && startsWith(github.event.pull_request.head.ref, 'changelog-'))
     runs-on: ubuntu-latest
     steps:
       - name: Check File Changes
