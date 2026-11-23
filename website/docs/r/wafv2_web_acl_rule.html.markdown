@@ -569,6 +569,7 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 #### `managed_rule_group_statement` Block
 
+* `managed_rule_group_configs` - (Optional) Additional information that's used by a managed rule group. Supports the same arguments as the [`managed_rule_group_configs` block of `aws_wafv2_web_acl`](wafv2_web_acl.html#managed_rule_group_configs-block), including `aws_managed_rules_ai_security_rule_set`.
 * `name` - (Required) Name of the managed rule group.
 * `rule_action_override` - (Optional) Override actions for specific rules within the managed rule group. See [Rule Action Override](#rule_action_override-block) below.
 * `scope_down_statement` - (Optional) Additional statement to narrow the scope of requests that the managed rule group evaluates. See [Scope Down Statement](#scope_down_statement-block) below.

@@ -464,6 +464,7 @@ var managedRuleGroupConfigsBlock = tfsync.OnceValueCtx(func(ctx context.Context)
 			},
 			Blocks: map[string]schema.Block{
 				"aws_managed_rules_acfp_rule_set":        awsManagedRulesACFPRuleSetBlock(ctx),
+				"aws_managed_rules_ai_security_rule_set": awsManagedRulesAISecurityRuleSetBlock(ctx),
 				"aws_managed_rules_anti_ddos_rule_set":   awsManagedRulesAntiDDoSRuleSetBlock(ctx),
 				"aws_managed_rules_atp_rule_set":         awsManagedRulesATPRuleSetBlock(ctx),
 				"aws_managed_rules_bot_control_rule_set": awsManagedRulesBotControlRuleSetBlock(ctx),
@@ -595,6 +596,46 @@ var awsManagedRulesATPRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Contex
 			Blocks: map[string]schema.Block{
 				"request_inspection":  requestInspectionBlock(ctx),
 				"response_inspection": responseInspectionBlock(ctx),
+			},
+		},
+	}
+})
+
+var awsManagedRulesAISecurityRuleSetBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block { // nosempgrep:ci.aws-in-func-name
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAWSManagedRulesAISecurityRuleSetModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"bedrock_guardrails": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBedrockGuardrailsModel](ctx),
+					Validators: []validator.List{
+						listvalidator.IsRequired(),
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Blocks: map[string]schema.Block{
+							"disable":                      emptyBlock(ctx),
+							"protect_request_and_response": bedrockGuardrailsRoleBlock(ctx),
+							"protect_request_only":         bedrockGuardrailsRoleBlock(ctx),
+						},
+					},
+				},
+			},
+		},
+	}
+})
+
+var bedrockGuardrailsRoleBlock = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleBedrockGuardrailsRoleModel](ctx),
+		Validators: []validator.List{listvalidator.SizeAtMost(1)},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrRoleARN: schema.StringAttribute{
+					CustomType: fwtypes.ARNType,
+					Required:   true,
+				},
 			},
 		},
 	}

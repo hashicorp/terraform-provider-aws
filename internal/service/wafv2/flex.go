@@ -1463,6 +1463,9 @@ func expandManagedRuleGroupConfigs(tfList []any) []awstypes.ManagedRuleGroupConf
 		if v, ok := m["aws_managed_rules_acfp_rule_set"].([]any); ok && len(v) > 0 {
 			r.AWSManagedRulesACFPRuleSet = expandManagedRulesACFPRuleSet(v)
 		}
+		if v, ok := m["aws_managed_rules_ai_security_rule_set"].([]any); ok && len(v) > 0 {
+			r.AWSManagedRulesAISecurityRuleSet = expandManagedRulesAISecurityRuleSet(v)
+		}
 		if v, ok := m["aws_managed_rules_anti_ddos_rule_set"].([]any); ok && len(v) > 0 {
 			r.AWSManagedRulesAntiDDoSRuleSet = expandManagedRulesAntiDDoSRuleSet(v)
 		}
@@ -1599,6 +1602,49 @@ func expandManagedRulesACFPRuleSet(tfList []any) *awstypes.AWSManagedRulesACFPRu
 	}
 
 	return &out
+}
+
+func expandManagedRulesAISecurityRuleSet(tfList []any) *awstypes.AWSManagedRulesAISecurityRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+	out := awstypes.AWSManagedRulesAISecurityRuleSet{}
+
+	if v, ok := m["bedrock_guardrails"].([]any); ok && len(v) > 0 {
+		out.BedrockGuardrails = expandBedrockGuardrails(v)
+	}
+
+	return &out
+}
+
+func expandBedrockGuardrails(tfList []any) *awstypes.BedrockGuardrails {
+	out := &awstypes.BedrockGuardrails{}
+
+	// An empty block, e.g. `bedrock_guardrails {}`, is passed through as `{}`
+	// so that the service reports the missing setting.
+	if len(tfList) == 0 || tfList[0] == nil {
+		return out
+	}
+
+	m := tfList[0].(map[string]any)
+
+	if v, ok := m["disable"].([]any); ok && len(v) > 0 {
+		out.Disable = &awstypes.DisableBedrockGuardrails{}
+	}
+	if v, ok := m["protect_request_and_response"].([]any); ok && len(v) > 0 && v[0] != nil {
+		out.ProtectRequestAndResponse = &awstypes.BedrockGuardrailsRequestAndResponse{
+			RoleArn: aws.String(v[0].(map[string]any)[names.AttrRoleARN].(string)),
+		}
+	}
+	if v, ok := m["protect_request_only"].([]any); ok && len(v) > 0 && v[0] != nil {
+		out.ProtectRequestOnly = &awstypes.BedrockGuardrailsRequestOnly{
+			RoleArn: aws.String(v[0].(map[string]any)[names.AttrRoleARN].(string)),
+		}
+	}
+
+	return out
 }
 
 func expandManagedRulesAntiDDoSRuleSet(tfList []any) *awstypes.AWSManagedRulesAntiDDoSRuleSet {
@@ -3130,6 +3176,9 @@ func flattenManagedRuleGroupConfigs(c []awstypes.ManagedRuleGroupConfig) []any {
 		if config.AWSManagedRulesACFPRuleSet != nil {
 			m["aws_managed_rules_acfp_rule_set"] = flattenManagedRulesACFPRuleSet(config.AWSManagedRulesACFPRuleSet)
 		}
+		if config.AWSManagedRulesAISecurityRuleSet != nil {
+			m["aws_managed_rules_ai_security_rule_set"] = flattenManagedRulesAISecurityRuleSet(config.AWSManagedRulesAISecurityRuleSet)
+		}
 		if config.AWSManagedRulesAntiDDoSRuleSet != nil {
 			m["aws_managed_rules_anti_ddos_rule_set"] = flattenManagedRulesAntiDDoSRuleSet(config.AWSManagedRulesAntiDDoSRuleSet)
 		}
@@ -3257,6 +3306,42 @@ func flattenManagedRulesACFPRuleSet(apiObject *awstypes.AWSManagedRulesACFPRuleS
 	}
 	if apiObject.ResponseInspection != nil {
 		m["response_inspection"] = flattenResponseInspection(apiObject.ResponseInspection)
+	}
+
+	return []any{m}
+}
+
+func flattenManagedRulesAISecurityRuleSet(apiObject *awstypes.AWSManagedRulesAISecurityRuleSet) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		"bedrock_guardrails": flattenBedrockGuardrails(apiObject.BedrockGuardrails),
+	}
+
+	return []any{m}
+}
+
+func flattenBedrockGuardrails(apiObject *awstypes.BedrockGuardrails) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{}
+
+	if apiObject.Disable != nil {
+		m["disable"] = make([]map[string]any, 1)
+	}
+	if v := apiObject.ProtectRequestAndResponse; v != nil {
+		m["protect_request_and_response"] = []any{map[string]any{
+			names.AttrRoleARN: aws.ToString(v.RoleArn),
+		}}
+	}
+	if v := apiObject.ProtectRequestOnly; v != nil {
+		m["protect_request_only"] = []any{map[string]any{
+			names.AttrRoleARN: aws.ToString(v.RoleArn),
+		}}
 	}
 
 	return []any{m}

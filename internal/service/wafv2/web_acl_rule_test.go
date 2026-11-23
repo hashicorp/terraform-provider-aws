@@ -1110,6 +1110,94 @@ func TestAccWAFV2WebACLRule_invalidScopeDownLogicalStatementNesting(t *testing.T
 	}
 }
 
+func TestAccWAFV2WebACLRule_managedRuleGroupAISecurity(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+	roleResourceName := "aws_iam_role.test"
+	configPrefix := "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_ai_security_rule_set.0.bedrock_guardrails.0."
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, ""),
+				ExpectError: regexache.MustCompile(`Invalid Block|must have a configuration value`),
+			},
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, `bedrock_guardrails {
+            protect_request_only {
+              role_arn = "not-an-arn"
+            }
+          }`),
+				ExpectError: regexache.MustCompile(`Invalid ARN|invalid ARN`),
+			},
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, testAccWebACLAISecurityBedrockGuardrails("disable")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.name", "AWSManagedRulesAISecurityRuleSet"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.vendor_name", "AWS"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_ai_security_rule_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"disable.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_and_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_only.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, testAccWebACLAISecurityBedrockGuardrails("protect_request_only")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"disable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_and_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_only.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, configPrefix+"protect_request_only.0.role_arn", roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, testAccWebACLAISecurityBedrockGuardrails("protect_request_and_response")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"disable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_and_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_only.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, configPrefix+"protect_request_and_response.0.role_arn", roleResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+			{
+				Config: testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, testAccWebACLAISecurityBedrockGuardrails("disable")),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"disable.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_and_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, configPrefix+"protect_request_only.#", "0"),
+				),
+			},
+			{
+				Config:      testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, "bedrock_guardrails {}"),
+				ExpectError: regexache.MustCompile(`EXACTLY_ONE_CONDITION_REQUIRED`),
+			},
+		},
+	})
+}
+
 func TestWebACLRuleUpgradeResourceState_logicalStatementNesting(t *testing.T) {
 	t.Parallel()
 
@@ -3231,3 +3319,68 @@ const testAccWebACLRuleStateJSON_logicalStatementNesting = `{
     "rule_group_reference_statement": []
   }]
 }`
+
+func testAccWebACLRuleConfig_managedRuleGroupAISecurity(rName, bedrockGuardrails string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  override_action {
+    count {}
+  }
+
+  statement {
+    managed_rule_group_statement {
+      name        = "AWSManagedRulesAISecurityRuleSet"
+      vendor_name = "AWS"
+
+      managed_rule_group_configs {
+        aws_managed_rules_ai_security_rule_set {
+          %[2]s
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Service = "wafv2.amazonaws.com" }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+`, rName, bedrockGuardrails)
+}

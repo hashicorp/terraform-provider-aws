@@ -1384,6 +1384,27 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 						},
 					},
 				},
+				"aws_managed_rules_ai_security_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bedrock_guardrails": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"disable":                      emptySchema(),
+										"protect_request_and_response": managedRuleGroupConfigBedrockGuardrailsRoleSchema(),
+										"protect_request_only":         managedRuleGroupConfigBedrockGuardrailsRoleSchema(),
+									},
+								},
+							},
+						},
+					},
+				},
 				"aws_managed_rules_anti_ddos_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1567,6 +1588,23 @@ func ruleGroupReferenceStatementSchema() *schema.Schema {
 					ValidateFunc: verify.ValidARN,
 				},
 				"rule_action_override": ruleActionOverrideSchema(),
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigBedrockGuardrailsRoleSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				names.AttrRoleARN: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
 			},
 		},
 	}
