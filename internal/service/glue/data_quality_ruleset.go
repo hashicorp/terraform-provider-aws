@@ -75,7 +75,7 @@ func resourceDataQualityRuleset() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 65536),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_table": {
 					Type:     schema.TypeList,
 					Optional: true,

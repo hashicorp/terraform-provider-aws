@@ -2,6 +2,8 @@
 
 NOTES:
 
+* provider: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* provider: Warn when `tags` is set in data source configurations that don't filter by tags. The value was never used. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
 * resource/aws_s3_object: `object_lock_retain_until_date` is now `Computed` because Amazon S3 assigns and advances the value for objects under an event hold. Removing the argument from configuration no longer plans a change. ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 
 FEATURES:
@@ -9,6 +11,7 @@ FEATURES:
 * **New List Resource:** `aws_cloudwatchomni_alert` ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
 * **New List Resource:** `aws_cloudwatchomni_organization_access_grant` ([#50660](https://github.com/hashicorp/terraform-provider-aws/issues/50660))
 * **New List Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+* **New List Resource:** `aws_identitystore_group_membership` ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
 * **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
 * **New List Resource:** `aws_ssoadmin_managed_policy_attachment` ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
 * **New Resource:** `aws_cloudwatchomni_alert` ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
@@ -21,6 +24,7 @@ ENHANCEMENTS:
 
 * data-source/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` attributes ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
+* resource/aws_identitystore_group_membership: Add resource identity support ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
 * resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
 * resource/aws_s3_bucket_object_lock_configuration: Add `rule.default_retention.default_event_hold` configuration block ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` arguments ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
@@ -29,6 +33,11 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_acm_certificate: Fixes evenutal consistency error when filtering by `tags`. ([#51101](https://github.com/hashicorp/terraform-provider-aws/issues/51101))
+* data-source/aws_vpc_ipam_pools: Return every pool instead of collapsing pools with identical tags into one ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* list-resource/aws_iam_group_policy_attachment: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
+* list-resource/aws_iam_instance_profile: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
+* list-resource/aws_iam_user: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
 * resource/aws_cloudwatchomni_access_profile: Fix deletion failing with `AccessDeniedException` when the parent space no longer exists ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
 * resource/aws_dx_hosted_private_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
 * resource/aws_dx_hosted_transit_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))

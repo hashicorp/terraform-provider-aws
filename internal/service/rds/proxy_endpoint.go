@@ -76,7 +76,7 @@ func resourceProxyEndpoint() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_role": {
 					Type:             schema.TypeString,
 					Optional:         true,

@@ -58,7 +58,7 @@ func resourceDedicatedIPPool() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.ScalingMode](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

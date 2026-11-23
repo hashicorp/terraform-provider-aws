@@ -84,7 +84,7 @@ func resourceDataSet() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.DataSetUseAs](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 

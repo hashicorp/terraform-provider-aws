@@ -110,7 +110,7 @@ func resourceNetworkProfile() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.NetworkProfileType](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

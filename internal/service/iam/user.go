@@ -72,7 +72,7 @@ func resourceUser() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 2048),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				/*
 					The UniqueID could be used as the Id(), but none of the API
 					calls allow specifying a user by the UniqueID: they require the
@@ -162,8 +162,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 		return sdkdiag.AppendErrorf(diags, "reading IAM User (%s): waiting for valid ARN: %s", d.Id(), err)
 	}
 
-	resourceUserFlatten(user, d)
-	setTagsOut(ctx, user.Tags)
+	resourceUserFlatten(ctx, user, d)
 
 	return diags
 }
@@ -752,7 +751,7 @@ func retryCreateUser(ctx context.Context, conn *iam.Client, input *iam.CreateUse
 	return output, err
 }
 
-func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
+func resourceUserFlatten(ctx context.Context, user *awstypes.User, d *schema.ResourceData) {
 	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrName, user.UserName)
 	d.Set(names.AttrPath, user.Path)
@@ -762,4 +761,5 @@ func resourceUserFlatten(user *awstypes.User, d *schema.ResourceData) {
 		d.Set("permissions_boundary", nil)
 	}
 	d.Set("unique_id", user.UserId)
+	setTagsOut(ctx, user.Tags)
 }

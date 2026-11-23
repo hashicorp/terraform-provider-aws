@@ -473,7 +473,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 						ForceNew: true,
 					},
 					names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
-					names.AttrTagsAll: tftags.TagsSchemaComputed(),
+					names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 					names.AttrThroughput: {
 						Type:             schema.TypeInt,
 						Optional:         true,
@@ -963,7 +963,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 						ForceNew: true,
 					},
 					names.AttrTags:    tagsSchemaConflictsWith([]string{"volume_tags"}),
-					names.AttrTagsAll: tftags.TagsSchemaComputed(),
+					names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 					names.AttrThroughput: {
 						Type:             schema.TypeInt,
 						Optional:         true,
@@ -1100,7 +1100,7 @@ func resourceInstanceSchema() map[string]*schema.Schema {
 			ForceNew: true,
 		},
 		names.AttrTags:    tftags.TagsSchema(),
-		names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 		"tenancy": {
 			Type:             schema.TypeString,
 			Optional:         true,

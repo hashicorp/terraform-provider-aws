@@ -128,7 +128,7 @@ func resourcePipe() *schema.Resource {
 				},
 				"target_parameters": targetParametersSchema(),
 				names.AttrTags:      tftags.TagsSchema(),
-				names.AttrTagsAll:   tftags.TagsSchemaComputed(),
+				names.AttrTagsAll:   tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

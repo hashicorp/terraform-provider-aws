@@ -505,7 +505,7 @@ func resourceFunction() *schema.Resource {
 					ConflictsWith: []string{"image_uri"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tenancy_config": {
 					Type:     schema.TypeList,
 					MaxItems: 1,

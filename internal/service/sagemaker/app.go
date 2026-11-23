@@ -112,7 +112,7 @@ func resourceApp() *schema.Resource {
 					ExactlyOneOf: []string{"space_name", "user_profile_name"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_profile_name": {
 					Type:         schema.TypeString,
 					ForceNew:     true,

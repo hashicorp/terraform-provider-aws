@@ -170,7 +170,7 @@ func resourceStateMachine() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tracing_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,

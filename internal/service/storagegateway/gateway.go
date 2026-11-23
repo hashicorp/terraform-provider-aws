@@ -261,7 +261,7 @@ func resourceGateway() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.SMBSecurityStrategy](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tape_drive_type": {
 					Type:         schema.TypeString,
 					Optional:     true,

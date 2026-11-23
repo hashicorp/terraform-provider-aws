@@ -211,7 +211,7 @@ func resourceNFSFileShare() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(squash_Values(), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vpc_endpoint_dns_name": {
 					Type:     schema.TypeString,
 					Optional: true,

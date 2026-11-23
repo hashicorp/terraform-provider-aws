@@ -92,7 +92,7 @@ func dataSourceTransitGateway() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_cidr_blocks": {
 					Type:     schema.TypeList,
 					Computed: true,

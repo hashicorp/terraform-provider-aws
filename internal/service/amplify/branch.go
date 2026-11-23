@@ -163,7 +163,7 @@ func resourceBranch() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"ttl": {
 					Type:     schema.TypeString,
 					Optional: true,

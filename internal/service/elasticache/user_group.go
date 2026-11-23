@@ -59,7 +59,7 @@ func resourceUserGroup() *schema.Resource {
 					DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_group_id": {
 					Type:      schema.TypeString,
 					Required:  true,

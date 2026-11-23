@@ -541,7 +541,7 @@ func resourceListenerRule() *schema.Resource {
 					ValidateFunc: validListenerRulePriority,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transform": {
 					Type:     schema.TypeSet,
 					Optional: true,

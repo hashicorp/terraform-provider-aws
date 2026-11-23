@@ -180,7 +180,7 @@ func resourceInfrastructureConfiguration() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 1024),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"terminate_instance_on_failure": {
 					Type:     schema.TypeBool,
 					Optional: true,

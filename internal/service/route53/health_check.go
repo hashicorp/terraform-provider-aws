@@ -168,7 +168,7 @@ func resourceHealthCheck() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 255),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTriggers: {
 					Type:     schema.TypeMap,
 					Optional: true,

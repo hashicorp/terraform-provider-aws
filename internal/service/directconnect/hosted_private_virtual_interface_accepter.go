@@ -64,7 +64,7 @@ func resourceHostedPrivateVirtualInterfaceAccepter() *schema.Resource {
 					ValidateFunc: validation.IntAtLeast(0),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"virtual_interface_id": {
 					Type:     schema.TypeString,
 					Required: true,
