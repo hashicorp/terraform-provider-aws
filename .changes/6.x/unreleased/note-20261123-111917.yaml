@@ -1,0 +1,6 @@
+kind: note
+time: 2026-11-23T11:19:17.811224-05:00
+custom:
+    Body: Warn when `kms_key_id` is configured. The value has no effect, and a future version of the provider will reject it.
+    Impact: data-source/aws_location_geofence_collection
+    PullRequest: "51170"

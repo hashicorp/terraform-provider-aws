@@ -1,0 +1,6 @@
+kind: note
+time: 2026-11-23T11:19:15.603297-05:00
+custom:
+    Body: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it.
+    Impact: resource/aws_kinesis_stream
+    PullRequest: "51170"

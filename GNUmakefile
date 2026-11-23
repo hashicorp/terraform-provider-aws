@@ -432,9 +432,11 @@ gen-check: gen ## [CI] Provider Checks / go_generate
 	@git diff origin/$(BASE_REF) --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
-generate-changelog: ## Generate changelog
-	@echo "make: Generating changelog..."
-	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
+generate-changelog: ## Legacy target. CHANGELOG generation is now handled by GitHub Actions workflows; see docs/changelog-process.md
+	@echo "make: generate-changelog is deprecated"
+	@echo "make: CHANGELOG generation is now handled by GitHub Actions workflows"
+	@echo "make: See docs/changelog-process.md for current process"
+	@exit 1
 
 gh-workflow-lint: ## [CI] Workflow Linting / actionlint
 	@echo "make: Workflow Linting / actionlint..."
@@ -532,7 +534,7 @@ modern-fix-core: fix-core ## Legacy alias to fix-core
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
-	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment|update-changelog).yml' || true); \
 	if [ -n "$$disallowed_files" ]; then \
 		echo "Error: 'pull_request_target' found in disallowed files:"; \
 		echo "$$disallowed_files"; \
