@@ -71,7 +71,7 @@ kinds:
     label: "Resource, Data Source, Ephemeral Resource, Function, List Resource, Action"
     skipBody: true
     changeFormat: |-
-      {{- printf "* **%s**: `%s`" .Custom.NewType .Custom.Name }}
+      {{- printf "* **%s:** `%s`" .Custom.NewType .Custom.Name }}
       {{- with .Custom.PullRequest }}
       {{- printf " ([#%s](https://github.com/hashicorp/terraform-provider-aws/issues/%s))" . . -}}
       {{ end }}
