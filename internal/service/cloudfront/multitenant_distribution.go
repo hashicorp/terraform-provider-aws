@@ -484,6 +484,10 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 										Optional:   true,
 										CustomType: fwtypes.StringEnumType[awstypes.IpAddressType](),
 									},
+									"origin_http_version": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.OriginHttpVersion](),
+									},
 									"origin_keepalive_timeout": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
@@ -545,6 +549,10 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
+									"origin_http_version": schema.StringAttribute{
+										Optional:   true,
+										CustomType: fwtypes.StringEnumType[awstypes.OriginHttpVersion](),
+									},
 									"origin_keepalive_timeout": schema.Int32Attribute{
 										Optional: true,
 										Computed: true,
@@ -1127,6 +1135,7 @@ type customOriginConfigModel struct {
 	HTTPPort               types.Int32                                                  `tfsdk:"http_port"`
 	HTTPSPort              types.Int32                                                  `tfsdk:"https_port"`
 	IPAddressType          fwtypes.StringEnum[awstypes.IpAddressType]                   `tfsdk:"ip_address_type"`
+	OriginHTTPVersion      fwtypes.StringEnum[awstypes.OriginHttpVersion]               `tfsdk:"origin_http_version"`
 	OriginKeepaliveTimeout types.Int32                                                  `tfsdk:"origin_keepalive_timeout"`
 	OriginMtlsConfig       fwtypes.ListNestedObjectValueOf[originMtlsConfigModel]       `tfsdk:"origin_mtls_config" autoflex:",omitempty"`
 	OriginReadTimeout      types.Int32                                                  `tfsdk:"origin_read_timeout"`
@@ -1144,9 +1153,10 @@ type originShieldModel struct {
 }
 
 type vpcOriginConfigModel struct {
-	OriginKeepaliveTimeout types.Int32  `tfsdk:"origin_keepalive_timeout"`
-	OriginReadTimeout      types.Int32  `tfsdk:"origin_read_timeout"`
-	VpcOriginID            types.String `tfsdk:"vpc_origin_id"`
+	OriginHTTPVersion      fwtypes.StringEnum[awstypes.OriginHttpVersion] `tfsdk:"origin_http_version"`
+	OriginKeepaliveTimeout types.Int32                                    `tfsdk:"origin_keepalive_timeout"`
+	OriginReadTimeout      types.Int32                                    `tfsdk:"origin_read_timeout"`
+	VpcOriginID            types.String                                   `tfsdk:"vpc_origin_id"`
 }
 
 type originGroupModel struct {

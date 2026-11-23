@@ -194,6 +194,7 @@ func TestAccCloudFrontDistribution_customOrigin(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.ip_address_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_http_version", ""),
 				),
 			},
 			{
@@ -2003,6 +2004,142 @@ func TestAccCloudFrontDistribution_cacheTagConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_customOriginOriginHTTPVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_customOriginOriginHTTPVersion(rName, string(awstypes.OriginHttpVersionHttp2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_origin_config.#":                     "1",
+						"custom_origin_config.0.origin_http_version": string(awstypes.OriginHttpVersionHttp2),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_customOriginOriginHTTPVersion(rName, string(awstypes.OriginHttpVersionHttp11)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_origin_config.#":                     "1",
+						"custom_origin_config.0.origin_http_version": string(awstypes.OriginHttpVersionHttp11),
+					}),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_customOriginOriginHTTPVersion(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_origin_config.#":                     "1",
+						"custom_origin_config.0.origin_http_version": "",
+					}),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_customOriginOriginHTTPVersion(rName, string(awstypes.OriginHttpVersionHttp2)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"custom_origin_config.#":                     "1",
+						"custom_origin_config.0.origin_http_version": string(awstypes.OriginHttpVersionHttp2),
+					}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontDistribution_vpcOriginConfigOriginHTTPVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_vpcOriginConfigOriginHTTPVersion(rName, string(awstypes.OriginHttpVersionHttp2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"vpc_origin_config.#":                     "1",
+						"vpc_origin_config.0.origin_http_version": string(awstypes.OriginHttpVersionHttp2),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+			{
+				Config: testAccDistributionConfig_vpcOriginConfigOriginHTTPVersion(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "origin.*", map[string]string{
+						"vpc_origin_config.#":                     "1",
+						"vpc_origin_config.0.origin_http_version": "",
+					}),
 				),
 			},
 		},
@@ -5824,4 +5961,104 @@ resource "aws_cloudfront_distribution" "test" {
   }
 }
 `, enabled, retainOnDelete, cacheTagConfigHeaderName)
+}
+
+func testAccDistributionConfig_customOriginOriginHTTPVersion(rName, originHTTPVersion string) string {
+	return fmt.Sprintf(`
+locals {
+  origin_http_version = %[2]q
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+  comment          = %[1]q
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_http_version    = local.origin_http_version != "" ? local.origin_http_version : null
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, rName, originHTTPVersion)
+}
+
+func testAccDistributionConfig_vpcOriginConfigOriginHTTPVersion(rName, originHTTPVersion string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), fmt.Sprintf(`
+locals {
+  origin_http_version = %[1]q
+}
+
+resource "aws_cloudfront_distribution" "test" {
+  enabled          = false
+  retain_on_delete = false
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    vpc_origin_config {
+      origin_http_version = local.origin_http_version != "" ? local.origin_http_version : null
+      vpc_origin_id       = aws_cloudfront_vpc_origin.test.id
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+`, originHTTPVersion))
 }
