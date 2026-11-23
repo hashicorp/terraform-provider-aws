@@ -17,7 +17,7 @@ require (
 	github.com/katbyte/actionlint v1.7.13
 	github.com/katbyte/tctest v1.3.5
 	github.com/katbyte/terrafmt v1.0.1
-	github.com/miniscruff/changie v1.25.2
+	github.com/miniscruff/changie v1.26.0
 	github.com/pavius/impi v0.0.3
 	github.com/terraform-linters/tflint v0.66.0
 	golang.org/x/tools v0.53.0
