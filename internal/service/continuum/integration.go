@@ -44,7 +44,7 @@ const (
 
 // @FrameworkResource("aws_continuum_integration", name="Integration")
 // @IdentityAttribute("id")
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccIntegrationPreCheck")
 // @Testing(serialize=true)
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="provider_configuration.0.s3.0.external_id")
@@ -303,7 +303,7 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, plan.flatten(ctx, integration))
+	smerr.AddEnrich(ctx, &response.Diagnostics, plan.flatten(ctx, integration, integration.ProviderDetails))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -332,7 +332,7 @@ func (r *integrationResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, state.flatten(ctx, output))
+	smerr.AddEnrich(ctx, &response.Diagnostics, state.flatten(ctx, output, output.ProviderDetails))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -387,7 +387,7 @@ func (r *integrationResource) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, plan.flatten(ctx, output))
+	smerr.AddEnrich(ctx, &response.Diagnostics, plan.flatten(ctx, output, output.ProviderDetails))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -454,9 +454,10 @@ type integrationResourceModel struct {
 	UpdatedAt             timetypes.RFC3339                                           `tfsdk:"updated_at"`
 }
 
-// flatten updates the model from GetIntegration. The service returns provider details in place of the
-// provider configuration and never returns secrets, so the prior secret values are kept.
-func (m *integrationResourceModel) flatten(ctx context.Context, output *continuum.GetIntegrationOutput) diag.Diagnostics {
+// flatten updates the model from a GetIntegration output or a ListIntegrations item. The service returns
+// provider details in place of the provider configuration and never returns secrets, so the prior secret
+// values are kept.
+func (m *integrationResourceModel) flatten(ctx context.Context, integration any, providerDetails awstypes.ProviderDetails) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	prior, d := m.ProviderConfiguration.ToPtr(ctx)
@@ -465,12 +466,12 @@ func (m *integrationResourceModel) flatten(ctx context.Context, output *continuu
 		return diags
 	}
 
-	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output, m, fwflex.WithFieldNamePrefix("Integration")))
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, integration, m, fwflex.WithFieldNamePrefix("Integration")))
 	if diags.HasError() {
 		return diags
 	}
 
-	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, output.ProviderDetails, &m.ProviderConfiguration))
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, providerDetails, &m.ProviderConfiguration))
 	if diags.HasError() {
 		return diags
 	}
