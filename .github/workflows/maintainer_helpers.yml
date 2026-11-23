@@ -243,7 +243,7 @@ jobs:
               - 'internal/service/**/*.go'
               - '!internal/service/**/*_test.go'
             changie_fragments:
-              - added:'${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
+              - added: '${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
 
       - name: Format Missing Fragment File List
         id: format-files
