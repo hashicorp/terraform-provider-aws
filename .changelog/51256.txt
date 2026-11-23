@@ -1,7 +1,0 @@
-```release-note:enhancement
-resource/aws_bedrockagentcore_agent_runtime: Add `filesystem_configuration.s3_bucket_mount` argument
-```
-
-```release-note:enhancement
-resource/aws_bedrockagentcore_harness: Add `environment.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` argument
-```

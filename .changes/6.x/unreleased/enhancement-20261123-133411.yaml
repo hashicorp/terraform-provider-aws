@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T13:34:11.008237+01:00
+custom:
+    Body: Add `environment.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` argument
+    Impact: resource/aws_bedrockagentcore_harness
+    PullRequest: "51256"
