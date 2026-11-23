@@ -36,3 +36,13 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the queue.
 * `url` - URL of the queue.
 * `tags` - Map of tags for the resource.
+
+## IAM Permissions
+
+The following permissions are required to read this data source.
+
+### Read (`plan`)
+
+- `sqs:GetQueueAttributes`
+- `sqs:GetQueueUrl`
+- `sqs:ListQueueTags`

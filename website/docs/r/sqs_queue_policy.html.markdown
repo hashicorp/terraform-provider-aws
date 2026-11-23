@@ -133,3 +133,16 @@ Using `terraform import`, import SQS Queue Policies using the queue URL. For exa
 ```console
 % terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
+
+## IAM Permissions
+
+The following permissions are required to manage this resource.
+
+### Read (`plan`)
+
+- `sqs:GetQueueAttributes`
+
+### Write (`apply`)
+
+- `sqs:GetQueueAttributes`
+- `sqs:SetQueueAttributes`

@@ -178,3 +178,22 @@ Using `terraform import`, import SQS Queues using the queue `url`. For example:
 ```console
 % terraform import aws_sqs_queue.example https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
+
+## IAM Permissions
+
+The following permissions are required to manage this resource.
+
+### Read (`plan`)
+
+- `sqs:GetQueueAttributes`
+- `sqs:ListQueueTags`
+
+### Write (`apply`)
+
+- `sqs:CreateQueue`
+- `sqs:DeleteQueue`
+- `sqs:GetQueueAttributes`
+- `sqs:ListQueueTags`
+- `sqs:SetQueueAttributes`
+- `sqs:TagQueue`
+- `sqs:UntagQueue`
