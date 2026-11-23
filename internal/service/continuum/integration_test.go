@@ -28,7 +28,7 @@ func testAccIntegration_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccIntegrationPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
@@ -59,7 +59,7 @@ func testAccIntegration_disappears(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccIntegrationPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
@@ -88,7 +88,7 @@ func testAccIntegration_updateRole(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccIntegrationPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
@@ -117,7 +117,7 @@ func testAccIntegration_updateExternalID(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.Test(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccIntegrationPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ContinuumServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
@@ -140,6 +140,20 @@ func testAccIntegration_updateExternalID(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccIntegrationPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).ContinuumClient(ctx)
+
+	input := continuum.ListIntegrationsInput{}
+	_, err := conn.ListIntegrations(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 
 func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, v *continuum.GetIntegrationOutput) resource.TestCheckFunc {
