@@ -10,6 +10,10 @@ on:
       - synchronize
       - ready_for_review
       - reopened
+      # Re-run when labels change so adding or removing `no-changelog-needed`
+      # takes effect without a new push.
+      - labeled
+      - unlabeled
 
 permissions:
   pull-requests: read
