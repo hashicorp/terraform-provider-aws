@@ -170,7 +170,7 @@ func TestWaitTagsPropagated(t *testing.T) {
 				ctx = tftags.NewContext(ctx, nil, testcase.ignoreConfig, nil)
 			}
 
-			err := waitTagsPropagated(ctx, conn, "arn:aws:elasticache:us-west-2:123456789012:cluster:test", tftags.New(ctx, testcase.tags))
+			err := waitTagsPropagated(ctx, conn, "test-resource", tftags.New(ctx, testcase.tags))
 			if testcase.wantError {
 				if !errors.Is(err, context.DeadlineExceeded) {
 					t.Errorf("expected deadline while user tags differ, got %v", err)
