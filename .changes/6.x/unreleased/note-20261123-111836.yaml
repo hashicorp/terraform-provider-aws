@@ -1,6 +1,0 @@
-kind: note
-time: 2026-11-23T11:18:36.951478-05:00
-custom:
-    Body: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it.
-    Impact: provider
-    PullRequest: "50497"

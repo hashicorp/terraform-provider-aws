@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T11:18:58.237587-05:00
-custom:
-    Body: Accepts `<service>.amazonaws.com.cn` as service principal.
-    Impact: resource/aws_kms_grant
-    PullRequest: "50946"

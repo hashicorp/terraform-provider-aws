@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T11:18:44.910072-05:00
-custom:
-    Body: Fix deletion failing with `AccessDeniedException` when the parent space no longer exists
-    Impact: resource/aws_cloudwatchomni_access_profile
-    PullRequest: "50679"

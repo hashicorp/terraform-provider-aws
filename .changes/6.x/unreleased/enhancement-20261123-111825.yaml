@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T11:18:25.409479-05:00
-custom:
-    Body: Add `replicate_source_db_cluster` argument to create a read replica from a Multi-AZ DB cluster
-    Impact: resource/aws_db_instance
-    PullRequest: "46542"

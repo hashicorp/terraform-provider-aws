@@ -1,6 +1,0 @@
-kind: feature
-time: 2026-11-23T11:18:49.780891-05:00
-custom:
-    Name: aws_pinpointsmsvoicev2_protect_configuration_association
-    NewType: New Resource
-    PullRequest: "50915"

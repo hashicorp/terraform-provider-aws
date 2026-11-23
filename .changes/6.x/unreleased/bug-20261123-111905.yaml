@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T11:19:05.313834-05:00
-custom:
-    Body: Fixes evenutal consistency error when filtering by `tags`.
-    Impact: data-source/aws_acm_certificate
-    PullRequest: "51101"

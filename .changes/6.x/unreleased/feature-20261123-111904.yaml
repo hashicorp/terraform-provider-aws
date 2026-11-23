@@ -1,6 +1,0 @@
-kind: feature
-time: 2026-11-23T11:19:04.045618-05:00
-custom:
-    Name: aws_identitystore_group_membership
-    NewType: New List Resource
-    PullRequest: "51082"

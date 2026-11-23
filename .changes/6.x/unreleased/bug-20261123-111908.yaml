@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T11:19:08.724334-05:00
-custom:
-    Body: Fixes error when resource disappears during listing
-    Impact: list-resource/aws_iam_user
-    PullRequest: "51103"

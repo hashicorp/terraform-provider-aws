@@ -1,6 +1,0 @@
-kind: bug
-time: 2026-11-23T11:19:06.553208-05:00
-custom:
-    Body: Fixes error when resource disappears during listing
-    Impact: list-resource/aws_iam_instance_profile
-    PullRequest: "51103"

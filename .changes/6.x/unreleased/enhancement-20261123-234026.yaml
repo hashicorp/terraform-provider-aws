@@ -1,6 +1,0 @@
-kind: enhancement
-time: 2026-11-23T23:40:26.844369+05:30
-custom:
-    Body: Add `network_firewall_association` attribute
-    Impact: resource/aws_vpc
-    PullRequest: "51209"
