@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add `association_config.request_body.application_load_balancer` argument
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Support `KB_8` for `association_config.request_body.*.default_size_inspection_limit` (accepted by AWS only for `application_load_balancer`)
+```

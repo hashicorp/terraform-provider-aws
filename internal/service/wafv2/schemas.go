@@ -625,11 +625,12 @@ var requestBodySchema = sync.OnceValue(func() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"api_gateway":              requestBodyAssociatedResourceTypeSchema(),
-				"app_runner_service":       requestBodyAssociatedResourceTypeSchema(),
-				"cloudfront":               requestBodyAssociatedResourceTypeSchema(),
-				"cognito_user_pool":        requestBodyAssociatedResourceTypeSchema(),
-				"verified_access_instance": requestBodyAssociatedResourceTypeSchema(),
+				"api_gateway":               requestBodyAssociatedResourceTypeSchema(),
+				"app_runner_service":        requestBodyAssociatedResourceTypeSchema(),
+				"application_load_balancer": requestBodyAssociatedResourceTypeSchema(),
+				"cloudfront":                requestBodyAssociatedResourceTypeSchema(),
+				"cognito_user_pool":         requestBodyAssociatedResourceTypeSchema(),
+				"verified_access_instance":  requestBodyAssociatedResourceTypeSchema(),
 			},
 		},
 	}
