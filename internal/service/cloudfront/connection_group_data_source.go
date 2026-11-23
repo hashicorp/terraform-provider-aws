@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +39,7 @@ type connectionGroupDataSource struct {
 	framework.DataSourceWithModel[connectionGroupDataSourceModel]
 }
 
-func (d *connectionGroupDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *connectionGroupDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"anycast_ip_list_id": schema.StringAttribute{
@@ -75,7 +76,8 @@ func (d *connectionGroupDataSource) Schema(_ context.Context, _ datasource.Schem
 			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags:    tftags.TagsAttributeComputedOnly(),
+			"viewer_fallback": framework.DataSourceComputedListOfObjectAttribute[viewerFallbackModel](ctx),
 		},
 	}
 }
@@ -131,18 +133,19 @@ func (d *connectionGroupDataSource) Read(ctx context.Context, request datasource
 }
 
 type connectionGroupDataSourceModel struct {
-	AnycastIPListID  types.String      `tfsdk:"anycast_ip_list_id"`
-	ARN              types.String      `tfsdk:"arn"`
-	Enabled          types.Bool        `tfsdk:"enabled"`
-	ETag             types.String      `tfsdk:"etag"`
-	ID               types.String      `tfsdk:"id"`
-	IPv6Enabled      types.Bool        `tfsdk:"ipv6_enabled"`
-	IsDefault        types.Bool        `tfsdk:"is_default"`
-	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
-	Name             types.String      `tfsdk:"name"`
-	RoutingEndpoint  types.String      `tfsdk:"routing_endpoint"`
-	Status           types.String      `tfsdk:"status"`
-	Tags             tftags.Map        `tfsdk:"tags"`
+	AnycastIPListID  types.String                                         `tfsdk:"anycast_ip_list_id"`
+	ARN              types.String                                         `tfsdk:"arn"`
+	Enabled          types.Bool                                           `tfsdk:"enabled"`
+	ETag             types.String                                         `tfsdk:"etag"`
+	ID               types.String                                         `tfsdk:"id"`
+	IPv6Enabled      types.Bool                                           `tfsdk:"ipv6_enabled"`
+	IsDefault        types.Bool                                           `tfsdk:"is_default"`
+	LastModifiedTime timetypes.RFC3339                                    `tfsdk:"last_modified_time"`
+	Name             types.String                                         `tfsdk:"name"`
+	RoutingEndpoint  types.String                                         `tfsdk:"routing_endpoint"`
+	Status           types.String                                         `tfsdk:"status"`
+	Tags             tftags.Map                                           `tfsdk:"tags"`
+	ViewerFallback   fwtypes.ListNestedObjectValueOf[viewerFallbackModel] `tfsdk:"viewer_fallback"`
 }
 
 func (d *connectionGroupDataSource) ConfigValidators(_ context.Context) []datasource.ConfigValidator {

@@ -15,16 +15,19 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -114,26 +117,44 @@ func (r *connectionGroupResource) Schema(ctx context.Context, req resource.Schem
 				UpdateDescription: "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Default is 90 minutes.",
 				DeleteDescription: "A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as \"30s\" or \"2h45m\". Valid time units are \"s\" (seconds), \"m\" (minutes), \"h\" (hours). Default is 90 minutes.",
 			}),
+			"viewer_fallback": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[viewerFallbackModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"distribution_id": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
 
 type connectionGroupResourceModel struct {
-	AnycastIPListID   types.String      `tfsdk:"anycast_ip_list_id"`
-	ARN               types.String      `tfsdk:"arn"`
-	Enabled           types.Bool        `tfsdk:"enabled"`
-	ETag              types.String      `tfsdk:"etag"`
-	ID                types.String      `tfsdk:"id"`
-	IPv6Enabled       types.Bool        `tfsdk:"ipv6_enabled"`
-	IsDefault         types.Bool        `tfsdk:"is_default"`
-	LastModifiedTime  timetypes.RFC3339 `tfsdk:"last_modified_time"`
-	Name              types.String      `tfsdk:"name"`
-	RoutingEndpoint   types.String      `tfsdk:"routing_endpoint"`
-	Status            types.String      `tfsdk:"status"`
-	Timeouts          timeouts.Value    `tfsdk:"timeouts"`
-	WaitForDeployment types.Bool        `tfsdk:"wait_for_deployment"`
-	Tags              tftags.Map        `tfsdk:"tags"`
-	TagsAll           tftags.Map        `tfsdk:"tags_all"`
+	AnycastIPListID   types.String                                         `tfsdk:"anycast_ip_list_id"`
+	ARN               types.String                                         `tfsdk:"arn"`
+	Enabled           types.Bool                                           `tfsdk:"enabled"`
+	ETag              types.String                                         `tfsdk:"etag"`
+	ID                types.String                                         `tfsdk:"id"`
+	IPv6Enabled       types.Bool                                           `tfsdk:"ipv6_enabled"`
+	IsDefault         types.Bool                                           `tfsdk:"is_default"`
+	LastModifiedTime  timetypes.RFC3339                                    `tfsdk:"last_modified_time"`
+	Name              types.String                                         `tfsdk:"name"`
+	RoutingEndpoint   types.String                                         `tfsdk:"routing_endpoint"`
+	Status            types.String                                         `tfsdk:"status"`
+	Timeouts          timeouts.Value                                       `tfsdk:"timeouts"`
+	ViewerFallback    fwtypes.ListNestedObjectValueOf[viewerFallbackModel] `tfsdk:"viewer_fallback"`
+	WaitForDeployment types.Bool                                           `tfsdk:"wait_for_deployment"`
+	Tags              tftags.Map                                           `tfsdk:"tags"`
+	TagsAll           tftags.Map                                           `tfsdk:"tags_all"`
+}
+
+type viewerFallbackModel struct {
+	DistributionID types.String `tfsdk:"distribution_id"`
 }
 
 func (r *connectionGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -238,7 +259,7 @@ func (r *connectionGroupResource) Update(ctx context.Context, req resource.Updat
 	var updateOutput *cloudfront.UpdateConnectionGroupOutput
 
 	// Remove tags from main update condition since they're handled separately
-	if !new.AnycastIPListID.Equal(old.AnycastIPListID) || !new.IPv6Enabled.Equal(old.IPv6Enabled) || !new.Enabled.Equal(old.Enabled) {
+	if !new.AnycastIPListID.Equal(old.AnycastIPListID) || !new.IPv6Enabled.Equal(old.IPv6Enabled) || !new.Enabled.Equal(old.Enabled) || !new.ViewerFallback.Equal(old.ViewerFallback) {
 		input := &cloudfront.UpdateConnectionGroupInput{}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if resp.Diagnostics.HasError() {
