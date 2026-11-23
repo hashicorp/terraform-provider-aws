@@ -172,7 +172,7 @@ func TestAccS3BucketLifecycleConfiguration_Identity_disappearsAfterUpgrade(t *te
 				ExpectNonEmptyPlan: true,
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction("aws_s3_bucket_lifecycle_configuration.test", plancheck.ResourceActionCreate),
+						plancheck.ExpectResourceAction("aws_s3_bucket_lifecycle_configuration.test", plancheck.ResourceActionNoop),
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction("aws_s3_bucket_lifecycle_configuration.test", plancheck.ResourceActionCreate),
