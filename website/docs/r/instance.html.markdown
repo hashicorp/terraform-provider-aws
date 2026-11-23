@@ -299,7 +299,7 @@ For more information, see the documentation on [Optimizing CPU options](https://
 
 The `credit_specification` block supports the following:
 
-* `cpu_credits` - (Optional) Credit option for CPU usage. Valid values include `standard` or `unlimited`. T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+* `cpu_credits` - (Optional) Credit option for CPU usage. Valid values include `standard` or `unlimited`. T3, T3a, T4g, T8i, and T9g instances are launched as unlimited by default. T2 instances are launched as standard by default.
 
 ### EBS, Ephemeral, and Root Block Devices
 
