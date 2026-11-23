@@ -49,6 +49,7 @@ func TestAccRoute53ProfilesAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatusMessage),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "100"),
 				),
 			},
 			{
@@ -104,6 +105,169 @@ func TestAccRoute53ProfilesAssociation_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ProfilesAssociation_priority(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var association awstypes.ProfileAssociation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_route53profiles_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53Profiles)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationConfig_priority(rName, 200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName, &association),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "200"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAssociationConfig_priority(rName, 300),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName, &association),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ProfileStatusComplete)),
+				),
+			},
+			{
+				Config: testAccAssociationConfig_name(rName, rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "300"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ProfilesAssociation_nameUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var association awstypes.ProfileAssociation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rNameUpdated := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_route53profiles_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53Profiles)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationConfig_name(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName, &association),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+				),
+			},
+			{
+				Config: testAccAssociationConfig_name(rName, rNameUpdated),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName, &association),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53ProfilesAssociation_multipleProfiles(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var association1, association2 awstypes.ProfileAssociation
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName1 := "aws_route53profiles_association.test1"
+	resourceName2 := "aws_route53profiles_association.test2"
+	vpcName := "aws_vpc.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Route53Profiles)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ProfilesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAssociationConfig_multipleProfiles(rName, 100, 200),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName1, &association1),
+					testAccCheckAssociationExists(ctx, t, resourceName2, &association2),
+					resource.TestCheckResourceAttrPair(resourceName1, names.AttrResourceID, vpcName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName2, names.AttrResourceID, vpcName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPriority, "200"),
+				),
+			},
+			{
+				Config: testAccAssociationConfig_multipleProfiles(rName, 100, 300),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName1, plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction(resourceName2, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAssociationExists(ctx, t, resourceName1, &association1),
+					testAccCheckAssociationExists(ctx, t, resourceName2, &association2),
+					resource.TestCheckResourceAttr(resourceName1, names.AttrPriority, "100"),
+					resource.TestCheckResourceAttr(resourceName2, names.AttrPriority, "300"),
+				),
+			},
+			{
+				ResourceName:      resourceName2,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -256,4 +420,71 @@ resource "aws_route53profiles_association" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAssociationConfig_priority(rName string, priority int) string {
+	return fmt.Sprintf(`
+resource "aws_route53profiles_profile" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_route53profiles_association" "test" {
+  name        = %[1]q
+  profile_id  = aws_route53profiles_profile.test.id
+  resource_id = aws_vpc.test.id
+  priority    = %[2]d
+}
+`, rName, priority)
+}
+
+func testAccAssociationConfig_name(rName, associationName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53profiles_profile" "test" {
+  name = %[1]q
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_route53profiles_association" "test" {
+  name        = %[2]q
+  profile_id  = aws_route53profiles_profile.test.id
+  resource_id = aws_vpc.test.id
+}
+`, rName, associationName)
+}
+
+func testAccAssociationConfig_multipleProfiles(rName string, priority1, priority2 int) string {
+	return fmt.Sprintf(`
+resource "aws_route53profiles_profile" "test1" {
+  name = "%[1]s-1"
+}
+
+resource "aws_route53profiles_profile" "test2" {
+  name = "%[1]s-2"
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_route53profiles_association" "test1" {
+  name        = "%[1]s-1"
+  profile_id  = aws_route53profiles_profile.test1.id
+  resource_id = aws_vpc.test.id
+  priority    = %[2]d
+}
+
+resource "aws_route53profiles_association" "test2" {
+  name        = "%[1]s-2"
+  profile_id  = aws_route53profiles_profile.test2.id
+  resource_id = aws_vpc.test.id
+  priority    = %[3]d
+}
+`, rName, priority1, priority2)
 }

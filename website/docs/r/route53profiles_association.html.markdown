@@ -20,7 +20,7 @@ resource "aws_route53profiles_profile" "example" {
 }
 
 resource "aws_vpc" "example" {
-  cidr = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 }
 
 resource "aws_route53profiles_association" "example" {
@@ -34,21 +34,52 @@ resource "aws_route53profiles_association" "example" {
 }
 ```
 
+### Multiple Profiles on the same VPC
+
+```terraform
+resource "aws_route53profiles_profile" "security" {
+  name = "security"
+}
+
+resource "aws_route53profiles_profile" "network" {
+  name = "network"
+}
+
+resource "aws_route53profiles_association" "security" {
+  name        = "security-dns-firewall"
+  profile_id  = aws_route53profiles_profile.security.id
+  resource_id = aws_vpc.example.id
+  priority    = 100
+}
+
+resource "aws_route53profiles_association" "network" {
+  name        = "network-dns"
+  profile_id  = aws_route53profiles_profile.network.id
+  resource_id = aws_vpc.example.id
+  priority    = 200
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the Profile Association. Must match a regex of `(?!^[0-9]+$)([a-zA-Z0-9\\-_' ']+)`.
+* `priority` - (Optional) Priority of the Profile Association, from `100` to `9900`. VPC Resolver evaluates a VPC's Profiles from the lowest value. Must be unique per VPC. Defaults to `100` for a VPC's first association and is required for any further one, so set it on every association when a VPC has more than one.
 * `profile_id` - (Required) ID of the profile associated with the VPC.
 * `resource_id` - (Required) Resource ID of the VPC the profile to be associated with.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+~> **NOTE:** Changing `name` or `priority` updates the association in place and waits for status `COMPLETE`. Only the account that created the association can update it. Removing `priority` keeps the current value. Priorities are unique per VPC, so swapping two associations' priorities takes two applies, with an unused value in between.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the Profile Association.
 * `id` - ID of the Profile Association.
+* `owner_id` - AWS account ID of the Profile Association owner.
 * `status` - Status of the Profile Association.
 * `status_message` - Status message of the Profile Association.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -58,7 +89,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
-* `update` - (Default `5m`)
+* `update` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import
