@@ -291,17 +291,28 @@ The `claim_match_value` block supports the following:
 
 ### `filesystem_configuration` Block
 
-Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
+Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point`.
 
-* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point-block) below.
-* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point-block) below.
-* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage-block) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`efs_access_point`](#efs_access_point-block) below.
+* `s3_bucket_mount` - (Optional) Amazon S3 bucket to mount, using Mountpoint for Amazon S3. Requires `platform_version` `V2`. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_bucket_mount`](#s3_bucket_mount-block) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`s3_files_access_point`](#s3_files_access_point-block) below.
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`session_storage`](#session_storage-block) below.
 
 ### `session_storage` Block
 
 The `session_storage` block supports the following:
 
 * `mount_path` - (Required) Mount path for the session storage filesystem inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `s3_bucket_mount` Block
+
+The `s3_bucket_mount` block supports the following:
+
+* `bucket` - (Required) Name of the Amazon S3 bucket to mount. Can be a general purpose bucket or a directory bucket.
+* `mount_path` - (Required) Mount path for the S3 bucket inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+* `prefix` - (Optional) Key prefix to mount. Only objects under this prefix are visible at the mount path. Include `{runtimeSessionId}` (for example, `sessions/{runtimeSessionId}/`) to give each session its own prefix. If omitted, the whole bucket is mounted.
+* `s3_bucket_owner` - (Optional) AWS account ID that must own the bucket. If omitted, the bucket must be owned by the account that owns the agent runtime.
+* `s3_bucket_region` - (Optional) AWS Region of the bucket. If omitted, the bucket must be in the same Region as the agent runtime.
 
 ### `s3_files_access_point` Block
 

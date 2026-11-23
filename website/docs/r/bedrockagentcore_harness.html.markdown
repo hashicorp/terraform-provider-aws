@@ -338,11 +338,12 @@ The `config` block supports exactly one of the following:
 
 ### `environment.agentcore_runtime_environment.filesystem_configuration` Block
 
-Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point`.
+Each `filesystem_configuration` block describes a single filesystem to mount into the agent runtime. The list can contain up to 5 entries. Each block must specify exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point`.
 
-* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block](#environmentagentcore_runtime_environmentfilesystem_configurationefs_access_point-block) below.
-* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block](#environmentagentcore_runtime_environmentfilesystem_configurations3_files_access_point-block) below.
-* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.session_storage` Block](#environmentagentcore_runtime_environmentfilesystem_configurationsession_storage-block) below.
+* `efs_access_point` - (Optional) Amazon EFS access point to mount as shared file storage. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block](#environmentagentcore_runtime_environmentfilesystem_configurationefs_access_point-block) below.
+* `s3_bucket_mount` - (Optional) Amazon S3 bucket to mount, using Mountpoint for Amazon S3. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` Block](#environmentagentcore_runtime_environmentfilesystem_configurations3_bucket_mount-block) below.
+* `s3_files_access_point` - (Optional) Amazon S3 Files access point to mount as shared file storage. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block](#environmentagentcore_runtime_environmentfilesystem_configurations3_files_access_point-block) below.
+* `session_storage` - (Optional) Session storage filesystem providing persistent storage across agent runtime session invocations. Exactly one of `session_storage`, `s3_bucket_mount`, `s3_files_access_point`, or `efs_access_point` must be specified. See [`environment.agentcore_runtime_environment.filesystem_configuration.session_storage` Block](#environmentagentcore_runtime_environmentfilesystem_configurationsession_storage-block) below.
 
 ### `environment.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block
 
@@ -350,6 +351,16 @@ The `efs_access_point` block supports the following:
 
 * `access_point_arn` - (Required) ARN of the Amazon EFS access point to mount into the agent runtime.
 * `mount_path` - (Required) Mount path for the EFS access point inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+
+### `environment.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` Block
+
+The `s3_bucket_mount` block supports the following:
+
+* `bucket` - (Required) Name of the Amazon S3 bucket to mount. Can be a general purpose bucket or a directory bucket.
+* `mount_path` - (Required) Mount path for the S3 bucket inside the agent runtime. Must be under `/mnt` with exactly one subdirectory level (for example, `/mnt/data`).
+* `prefix` - (Optional) Key prefix to mount. Only objects under this prefix are visible at the mount path. Include `{runtimeSessionId}` (for example, `sessions/{runtimeSessionId}/`) to give each session its own prefix. If omitted, the whole bucket is mounted.
+* `s3_bucket_owner` - (Optional) AWS account ID that must own the bucket. If omitted, the bucket must be owned by the account that owns the agent runtime.
+* `s3_bucket_region` - (Optional) AWS Region of the bucket. If omitted, the bucket must be in the same Region as the agent runtime.
 
 ### `environment.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block
 
@@ -548,6 +559,7 @@ The `environment_actual.agentcore_runtime_environment` block exports the followi
 The `environment_actual.agentcore_runtime_environment.filesystem_configuration` block exports the following attributes:
 
 * `efs_access_point` - Amazon EFS access point mounted as shared file storage. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.efs_access_point` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurationefs_access_point-block) below.
+* `s3_bucket_mount` - Amazon S3 bucket mounted using Mountpoint for Amazon S3. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurations3_bucket_mount-block) below.
 * `s3_files_access_point` - Amazon S3 Files access point mounted as shared file storage. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurations3_files_access_point-block) below.
 * `session_storage` - Session storage filesystem. See [`environment_actual.agentcore_runtime_environment.filesystem_configuration.session_storage` Block](#environment_actualagentcore_runtime_environmentfilesystem_configurationsession_storage-block) below.
 
@@ -557,6 +569,16 @@ The `environment_actual.agentcore_runtime_environment.filesystem_configuration.e
 
 * `access_point_arn` - ARN of the Amazon EFS access point mounted into the agent runtime.
 * `mount_path` - Mount path for the EFS access point inside the agent runtime.
+
+### `environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` Block
+
+The `environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_bucket_mount` block exports the following attributes:
+
+* `bucket` - Name of the Amazon S3 bucket mounted into the agent runtime.
+* `mount_path` - Mount path for the S3 bucket inside the agent runtime.
+* `prefix` - Key prefix mounted.
+* `s3_bucket_owner` - AWS account ID that must own the bucket.
+* `s3_bucket_region` - AWS Region of the bucket.
 
 ### `environment_actual.agentcore_runtime_environment.filesystem_configuration.s3_files_access_point` Block
 
