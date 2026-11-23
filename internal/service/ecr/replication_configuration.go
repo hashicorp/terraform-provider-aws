@@ -53,6 +53,19 @@ func resourceReplicationConfiguration() *schema.Resource {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"delete_replication": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													names.AttrEnabled: {
+														Type:     schema.TypeBool,
+														Required: true,
+													},
+												},
+											},
+										},
 										names.AttrDestination: {
 											Type:     schema.TypeList,
 											Required: true,
@@ -217,6 +230,7 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []any) []t
 	for _, rule := range data {
 		ec := rule.(map[string]any)
 		config := types.ReplicationRule{
+			DeleteReplication: expandReplicationConfigurationReplicationConfigurationRulesDeleteReplication(ec["delete_replication"].([]any)),
 			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec[names.AttrDestination].([]any)),
 			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]any)),
 		}
@@ -235,6 +249,7 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.Rep
 
 	for _, apiObject := range ec {
 		tfMap := map[string]any{
+			"delete_replication":  flattenReplicationConfigurationReplicationConfigurationRulesDeleteReplication(apiObject.DeleteReplication),
 			names.AttrDestination: flattenReplicationConfigurationReplicationConfigurationRulesDestinations(apiObject.Destinations),
 			"repository_filter":   flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(apiObject.RepositoryFilters),
 		}
@@ -243,6 +258,30 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []types.Rep
 	}
 
 	return tfList
+}
+
+func expandReplicationConfigurationReplicationConfigurationRulesDeleteReplication(data []any) *types.DeleteReplication {
+	if len(data) == 0 || data[0] == nil {
+		return nil
+	}
+
+	ec := data[0].(map[string]any)
+
+	return &types.DeleteReplication{
+		Enabled: ec[names.AttrEnabled].(bool),
+	}
+}
+
+func flattenReplicationConfigurationReplicationConfigurationRulesDeleteReplication(apiObject *types.DeleteReplication) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []any{
+		map[string]any{
+			names.AttrEnabled: apiObject.Enabled,
+		},
+	}
 }
 
 func expandReplicationConfigurationReplicationConfigurationRulesDestinations(data []any) []types.ReplicationDestination {
