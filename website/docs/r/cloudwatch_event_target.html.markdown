@@ -22,24 +22,17 @@ Provides an EventBridge Target resource.
 
 ### Kinesis Usage
 
+EventBridge needs an IAM role with permission to put records into the Kinesis stream.
+
 ```terraform
-resource "aws_cloudwatch_event_target" "yada" {
-  target_id = "Yada"
-  rule      = aws_cloudwatch_event_rule.console.name
-  arn       = aws_kinesis_stream.test_stream.arn
-
-  run_command_targets {
-    key    = "tag:Name"
-    values = ["FooBar"]
-  }
-
-  run_command_targets {
-    key    = "InstanceIds"
-    values = ["i-162058cd308bffec2"]
-  }
+resource "aws_cloudwatch_event_target" "example" {
+  target_id = "example-target"
+  rule      = aws_cloudwatch_event_rule.example.name
+  arn       = aws_kinesis_stream.example.arn
+  role_arn  = aws_iam_role.event_bus_invoke_kinesis.arn
 }
 
-resource "aws_cloudwatch_event_rule" "console" {
+resource "aws_cloudwatch_event_rule" "example" {
   name        = "capture-ec2-scaling-events"
   description = "Capture all EC2 scaling events"
 
@@ -57,12 +50,43 @@ resource "aws_cloudwatch_event_rule" "console" {
   })
 }
 
-resource "aws_kinesis_stream" "test_stream" {
-  name = "terraform-kinesis-test"
+resource "aws_kinesis_stream" "example" {
+  name = "terraform-kinesis-example"
 
   stream_mode_details {
     stream_mode = "ON_DEMAND"
   }
+}
+
+data "aws_iam_policy_document" "event_bus_invoke_kinesis_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "event_bus_invoke_kinesis" {
+  name               = "event-bus-invoke-kinesis"
+  assume_role_policy = data.aws_iam_policy_document.event_bus_invoke_kinesis_trust.json
+}
+
+data "aws_iam_policy_document" "event_bus_invoke_kinesis" {
+  statement {
+    effect    = "Allow"
+    actions   = ["kinesis:PutRecord", "kinesis:PutRecords"]
+    resources = [aws_kinesis_stream.example.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "event_bus_invoke_kinesis" {
+  name   = "event-bus-invoke-kinesis"
+  role   = aws_iam_role.event_bus_invoke_kinesis.id
+  policy = data.aws_iam_policy_document.event_bus_invoke_kinesis.json
 }
 ```
 

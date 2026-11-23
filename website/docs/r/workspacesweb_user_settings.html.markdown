@@ -92,37 +92,42 @@ resource "aws_workspacesweb_user_settings" "example" {
 
 The following arguments are required:
 
-* `copy_allowed` - (Required) Specifies whether the user can copy text from the streaming session to the local device. Valid values are `Enabled` or `Disabled`.
-* `download_allowed` - (Required) Specifies whether the user can download files from the streaming session to the local device. Valid values are `Enabled` or `Disabled`.
-* `paste_allowed` - (Required) Specifies whether the user can paste text from the local device to the streaming session. Valid values are `Enabled` or `Disabled`.
-* `print_allowed` - (Required) Specifies whether the user can print to the local device. Valid values are `Enabled` or `Disabled`.
-* `upload_allowed` - (Required) Specifies whether the user can upload files from the local device to the streaming session. Valid values are `Enabled` or `Disabled`.
+* `copy_allowed` - (Required) Whether the user can copy text from the streaming session to the local device. Valid values are `Enabled` or `Disabled`.
+* `download_allowed` - (Required) Whether the user can download files from the streaming session to the local device. Valid values are `Enabled` or `Disabled`.
+* `paste_allowed` - (Required) Whether the user can paste text from the local device to the streaming session. Valid values are `Enabled` or `Disabled`.
+* `print_allowed` - (Required) Whether the user can print to the local device. Valid values are `Enabled` or `Disabled`.
+* `upload_allowed` - (Required) Whether the user can upload files from the local device to the streaming session. Valid values are `Enabled` or `Disabled`.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `additional_encryption_context` - (Optional) Additional encryption context for the user settings.
-* `associated_portal_arns` - (Optional) List of web portal ARNs to associate with the user settings.
 * `cookie_synchronization_configuration` - (Optional) Configuration that specifies which cookies should be synchronized from the end user's local browser to the remote browser. Detailed below.
 * `customer_managed_key` - (Optional) ARN of the customer managed KMS key.
-* `deep_link_allowed` - (Optional) Specifies whether the user can use deep links that open automatically when connecting to a session. Valid values are `Enabled` or `Disabled`.
+* `deep_link_allowed` - (Optional) Whether the user can use deep links that open automatically when connecting to a session. Valid values are `Enabled` or `Disabled`.
 * `disconnect_timeout_in_minutes` - (Optional) Amount of time that a streaming session remains active after users disconnect. Value must be between 1 and 600 minutes.
 * `idle_disconnect_timeout_in_minutes` - (Optional) Amount of time that users can be idle before they are disconnected from their streaming session. Value must be between 0 and 60 minutes.
-* `toolbar_configuration` - (Optional) Configuration of the toolbar. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `toolbar_configuration` - (Optional) Configuration of the toolbar. Detailed below.
 
-### cookie_synchronization_configuration
+### `cookie_synchronization_configuration` Block
 
-* `allowlist` - (Required) List of cookie specifications that are allowed to be synchronized to the remote browser.
-    * `domain` - (Required) Domain of the cookie.
-    * `name` - (Optional) Name of the cookie.
-    * `path` - (Optional) Path of the cookie.
-* `blocklist` - (Optional) List of cookie specifications that are blocked from being synchronized to the remote browser.
-    * `domain` - (Required) Domain of the cookie.
-    * `name` - (Optional) Name of the cookie.
-    * `path` - (Optional) Path of the cookie.
+* `allowlist` - (Required) List of cookie specifications that are allowed to be synchronized to the remote browser. See [`allowlist` Block](#allowlist-block) below.
+* `blocklist` - (Optional) List of cookie specifications that are blocked from being synchronized to the remote browser. See [`blocklist` Block](#blocklist-block) below.
 
-### toolbar_configuration
+### `allowlist` Block
+
+* `domain` - (Required) Domain of the cookie.
+* `name` - (Optional) Name of the cookie.
+* `path` - (Optional) Path of the cookie.
+
+### `blocklist` Block
+
+* `domain` - (Required) Domain of the cookie.
+* `name` - (Optional) Name of the cookie.
+* `path` - (Optional) Path of the cookie.
+
+### `toolbar_configuration` Block
 
 * `hidden_toolbar_items` - (Optional) List of toolbar items to be hidden.
 * `max_display_resolution` - (Optional) Maximum display resolution that is allowed for the session.
@@ -133,8 +138,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `user_settings_arn` - ARN of the user settings resource.
+* `associated_portal_arns` - List of web portal ARNs associated with the user settings.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `user_settings_arn` - ARN of the user settings resource.
 
 ## Import
 

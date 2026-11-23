@@ -107,6 +107,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `clean-go-cache-trim` | Trim Go build cache to manageable size |  |  |  |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
 | `clean-tidy`<sup>D</sup> | Clean up tidy |  |  | `GO_VER` |
+| `convert-changelog` | Convert `go-changelog` fragment to Changie format |  |  | `FILE` |
 | `copyright` | Copyright Checks / headers check | ✔️ |  |  |
 | `copyright-fix` | Fix copyright headers |  |  |  |
 | _default_ | = `build` |  |  | `GO_VER` |
@@ -118,7 +119,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-lint-fix` | Fix documentation linter findings |  | ✔️ |  |
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
-| `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
 | `fix` | Apply `go fix` (all packages, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-check` | Go Fix Check / go fix | ✔️ |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
@@ -132,7 +132,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `gen`<sup>D</sup> | Run Go generators (all provider-wide, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `SVC_DIR` |
 | `gen-check`<sup>D</sup> | Provider Checks / go_generate | ✔️ |  |  |
 | `gen-raw` | Run all Go generators (without Go version check) |  |  | `GO_VER` |
-| `generate-changelog` | Generate changelog |  |  | `CURDIR` |
+| `generate-changelog` | [DEPRECATED] Generate changelog; use Changie workflows instead |  | ✔️ |  |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
 | `go-fix-check-shard` | Go Fix Check / go fix for a specific shard | ✔️ |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS` |

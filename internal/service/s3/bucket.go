@@ -789,9 +789,9 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta any)
 	}
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
-	if region != endpoints.UsEast1RegionID {
+	if locationConstraint := c.S3BucketLocationConstraint(ctx); locationConstraint != "" {
 		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
-			LocationConstraint: types.BucketLocationConstraint(region),
+			LocationConstraint: locationConstraint,
 		}
 	}
 

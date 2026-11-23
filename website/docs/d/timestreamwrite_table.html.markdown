@@ -35,7 +35,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN that uniquely identifies the table.
 * `creation_time` - Time that table was created.
-* `database_name` - Name of database.
 * `last_updated_time` - Last time table was updated.
 * `magnetic_store_write_properties` - Object containing the following attributes to describe magnetic store writes.
     * `enable_magnetic_store_writes` - Flag that is set based on if magnetic store writes are enabled.
@@ -45,7 +44,6 @@ This data source exports the following attributes in addition to the arguments a
             * `encryption_option` - Encryption option for S3 location.
             * `kms_key_id` - AWS KMS key ID for S3 location with AWS managed key.
             * `object_key_prefix` - Object key prefix for S3 location.
-* `name` - Name of the table.
 * `retention_properties` - Object containing the following attributes to describe the retention duration for the memory and magnetic stores.
     * `magnetic_store_retention_period_in_days` - Duration in days in which the data must be stored in magnetic store.
     * `memory_store_retention_period_in_hours` - Duration in hours in which the data must be stored in memory store.

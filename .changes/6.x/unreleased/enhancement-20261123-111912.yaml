@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T11:19:12.167523-05:00
+custom:
+    Body: Increase default `timeouts` values to `15m`
+    Impact: resource/aws_opensearch_outbound_connection
+    PullRequest: "51130"

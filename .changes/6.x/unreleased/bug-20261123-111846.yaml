@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-23T11:18:46.166112-05:00
+custom:
+    Body: Fix destroy of a Global Datastore secondary timing out when the primary in another Region has the same replication group ID
+    Impact: resource/aws_elasticache_replication_group
+    PullRequest: "50882"

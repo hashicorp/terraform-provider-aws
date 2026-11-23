@@ -70,7 +70,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the endpoint.
 * `availability_zone` - AWS availability zone where this endpoint is located.
 * `failure_reason` - Reason for a current failure in this endpoint.
-* `name` - Name of the new endpoint.
 * `private_address` - Private IP address to access the endpoint within a VPC, if this endpoint is created within one.
 * `public_address` - Public IP address used by this endpoint. The PublicAddress field is present only when you create a non-VPC endpoint.
 * `status` - Current status of this endpoint.

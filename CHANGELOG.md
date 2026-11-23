@@ -2,8 +2,12 @@
 
 NOTES:
 
+* data-source/aws_location_geofence_collection: Warn when `kms_key_id` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
 * provider: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
 * provider: Warn when `tags` is set in data source configurations that don't filter by tags. The value was never used. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* resource/aws_kinesis_firehose_delivery_stream: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* resource/aws_kinesis_stream: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* resource/aws_rds_cluster: Warn when `cluster_members` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
 * resource/aws_s3_object: `object_lock_retain_until_date` is now `Computed` because Amazon S3 assigns and advances the value for objects under an event hold. Removing the argument from configuration no longer plans a change. ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 
 FEATURES:
@@ -22,9 +26,13 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_db_instance: Add `replicate_source_db_cluster` attribute ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
 * data-source/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` attributes ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
+* resource/aws_db_instance: Add `replicate_source_db_cluster` argument to create a read replica from a Multi-AZ DB cluster ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
 * resource/aws_identitystore_group_membership: Add resource identity support ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
+* resource/aws_opensearch_inbound_connection_accepter: Increase default `timeouts` values to `15m` ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
+* resource/aws_opensearch_outbound_connection: Increase default `timeouts` values to `15m` ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
 * resource/aws_s3_bucket_object_lock_configuration: Add `rule.default_retention.default_event_hold` configuration block ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` arguments ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
@@ -47,8 +55,11 @@ BUG FIXES:
 * resource/aws_kms_grant: Accepts `<service>.amazonaws.com.cn` as service principal. ([#50946](https://github.com/hashicorp/terraform-provider-aws/issues/50946))
 * resource/aws_msk_replicator: Fix import of a replicator with a `kafka_cluster.apache_kafka_cluster` block proposing to replace the replicator, caused by reading a `vpc_config` onto the `apache_kafka_cluster` entry ([#50071](https://github.com/hashicorp/terraform-provider-aws/issues/50071))
 * resource/aws_msk_replicator: Fix update failures for replications that identify a cluster by `replication_info_list.source_kafka_cluster_id` or `replication_info_list.target_kafka_cluster_id`, where an empty cluster ARN was sent instead of the cluster ID ([#50071](https://github.com/hashicorp/terraform-provider-aws/issues/50071))
+* resource/aws_opensearch_inbound_connection_accepter: Fix `UnknownError` when deleting a connection that is still provisioning ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
+* resource/aws_opensearch_outbound_connection: Fix `UnknownError` when deleting a connection that is still validating or provisioning ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
 * resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_s3_bucket: Send the configured `region` as the S3 `CreateBucket` `LocationConstraint` when using a custom S3 endpoint with a non-standard region string (e.g. Ceph, MinIO), fixing bucket creation failures against S3-compatible storage ([#49890](https://github.com/hashicorp/terraform-provider-aws/issues/49890))
 * resource/aws_sagemaker_endpoint: Prevent orphaned endpoints when the create waiter returns an error ([#50959](https://github.com/hashicorp/terraform-provider-aws/issues/50959))
 
 ## 6.73.0 (November 11, 2026)

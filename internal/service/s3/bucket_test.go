@@ -56,6 +56,10 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func checkBucketARN(name string) knownvalue.Check {
+	return tfknownvalue.GlobalARNNoAccountIDExact("s3", name)
+}
+
 func TestAccS3Bucket_Basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
@@ -70,50 +74,70 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "acceleration_status", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, t, resourceName, "bucket_domain_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_namespace", "global"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "bucket_region", region),
-					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
-					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": "1",
-						names.AttrType:  "CanonicalUser",
-						names.AttrURI:   "",
-					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, hostedZoneID),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "website.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "website_domain"),
-					resource.TestCheckNoResourceAttr(resourceName, "website_endpoint"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("acceleration_status"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("acl"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkBucketARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceGlobal)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_region"), knownvalue.StringExact(region)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_regional_domain_name"), knownvalue.StringExact(testAccBucketRegionalDomainName(rName, region))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cors_rule"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("grant"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrID: knownvalue.NotNull(),
+						names.AttrPermissions: knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(types.PermissionFullControl),
+						}),
+						names.AttrType: tfknownvalue.StringExact(types.TypeCanonicalUser),
+						names.AttrURI:  knownvalue.StringExact(""),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrHostedZoneID), knownvalue.StringExact(hostedZoneID)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lifecycle_rule"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("object_lock_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("object_lock_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replication_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("request_payer"), tfknownvalue.StringExact(types.PayerBucketOwner)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("server_side_encryption_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrRule: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"apply_server_side_encryption_by_default": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"kms_master_key_id": knownvalue.StringExact(""),
+								"sse_algorithm":     tfknownvalue.StringExact(types.ServerSideEncryptionAes256),
+							})}),
+							"bucket_key_enabled": knownvalue.Bool(false),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("versioning"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(false),
+						"mfa_delete":      knownvalue.Bool(false),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("website"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("website_domain"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("website_endpoint"), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,

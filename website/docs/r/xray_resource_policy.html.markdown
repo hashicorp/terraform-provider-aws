@@ -40,7 +40,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `last_updated_time` - When the policy was last updated, in Unix time seconds.
-* `policy_revision_id` - Returns the current policy revision ID for this policy name.
 
 ## Import
 

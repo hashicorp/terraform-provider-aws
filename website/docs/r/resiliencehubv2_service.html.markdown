@@ -12,6 +12,8 @@ Terraform resource for managing an AWS Resilience Hub V2 Service.
 
 A service is the primary building block in Resilience Hub. It comprises AWS resources, code, and observability that together deliver a specific capability. Services can be associated with a resilience policy and a permission model for resource discovery.
 
+~> **NOTE:** The IAM role named in `permission_model.invoker_role_name` must already exist in the account before the service is created.
+
 ## Example Usage
 
 ### Basic Usage

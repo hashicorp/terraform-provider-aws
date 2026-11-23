@@ -87,8 +87,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN specifying the stream (same as `id`).
 * `id` - Unique stream ID.
-* `name` - Unique stream name.
-* `shard_count` - Count of shards for this stream.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

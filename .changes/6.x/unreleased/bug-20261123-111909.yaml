@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-23T11:19:09.977921-05:00
+custom:
+    Body: Fix `UnknownError` when deleting a connection that is still validating or provisioning
+    Impact: resource/aws_opensearch_outbound_connection
+    PullRequest: "51130"

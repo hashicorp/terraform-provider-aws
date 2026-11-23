@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-23T11:18:41.47826-05:00
+custom:
+    Name: aws_cloudwatchomni_organization_access_grant
+    NewType: New List Resource
+    PullRequest: "50660"
