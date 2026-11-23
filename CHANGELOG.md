@@ -27,10 +27,12 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_db_instance: Add `replicate_source_db_cluster` attribute ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
+* data-source/aws_lambda_function: Add `accelerator_config` attribute ([#51048](https://github.com/hashicorp/terraform-provider-aws/issues/51048))
 * data-source/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` attributes ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_db_instance: Add `replicate_source_db_cluster` argument to create a read replica from a Multi-AZ DB cluster ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
 * resource/aws_identitystore_group_membership: Add resource identity support ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
+* resource/aws_lambda_function: Add `accelerator_config` argument ([#51048](https://github.com/hashicorp/terraform-provider-aws/issues/51048))
 * resource/aws_opensearch_inbound_connection_accepter: Increase default `timeouts` values to `15m` ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_opensearch_outbound_connection: Increase default `timeouts` values to `15m` ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
