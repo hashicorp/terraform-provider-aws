@@ -1,0 +1,6 @@
+kind: note
+time: 2026-11-23T11:18:38.026549-05:00
+custom:
+    Body: Warn when `tags` is set in data source configurations that don't filter by tags. The value was never used. A future version of the provider will reject it.
+    Impact: provider
+    PullRequest: "50497"

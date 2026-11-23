@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-23T11:19:01.805462-05:00
+custom:
+    Name: aws_ssoadmin_managed_policy_attachment
+    NewType: New List Resource
+    PullRequest: "50965"
