@@ -68,6 +68,10 @@ This data source exports the following attributes in addition to the arguments a
 * `ipv6_cidr_block` - (**Deprecated** use `ipv6_cidr_block_associations` instead) IPv6 CIDR block.
 * `ipv6_cidr_block_associations` - Information about the IPv6 CIDR blocks associated with the VPC. See [`ipv6_cidr_block_associations` Block](#ipv6_cidr_block_associations-block) below.
 * `main_route_table_id` - ID of the main route table associated with this VPC.
+* `network_firewall_association` - Automated Internet Firewall that AWS Network Security Manager manages for the VPC. Empty if the VPC doesn't have one.
+    * `firewall_arn` - ARN of the firewall.
+    * `firewall_mode` - Mode of the firewall: `enforce` or `monitor`.
+    * `firewall_onboarding_status` - Status of the firewall for the VPC: `active`, `pending` or `disabling`.
 * `owner_id` - ID of the AWS account that owns the VPC.
 
 ### `cidr_block_associations` Block

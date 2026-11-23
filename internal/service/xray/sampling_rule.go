@@ -97,7 +97,7 @@ func resourceSamplingRule() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 64),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"url_path": {
 					Type:         schema.TypeString,
 					Required:     true,

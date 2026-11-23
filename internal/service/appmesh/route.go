@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appmesh"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appmesh/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -85,7 +85,7 @@ func resourceRoute() *schema.Resource {
 				},
 				"spec":            resourceRouteSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"virtual_router_name": {
 					Type:         schema.TypeString,
 					Required:     true,
@@ -251,7 +251,7 @@ func resourceRouteSpecSchema() *schema.Schema {
 								names.AttrPrefix: {
 									Type:         schema.TypeString,
 									Optional:     true,
-									ValidateFunc: validation.StringMatch(regexache.MustCompile(`^/`), "must start with /"),
+									ValidateFunc: lazyvalidation.StringMatch(`^/`, "must start with /"),
 								},
 								"query_parameter": {
 									Type:     schema.TypeSet,

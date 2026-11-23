@@ -71,7 +71,7 @@ func resourceAggregateAuthorization() *schema.Resource {
 					Deprecated:   "region is deprecated. Use authorized_aws_region instead.",
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

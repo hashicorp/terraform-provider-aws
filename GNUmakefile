@@ -177,11 +177,11 @@ build: prereq-go fmt-check ## Build provider
 
 changelog-misspell: ## [CI] CHANGELOG Misspell / misspell
 	@echo "make: CHANGELOG Misspell / misspell..."
-	@misspell -error -source text CHANGELOG.md .changelog
+	@misspell -error -source text CHANGELOG.md .changelog .changes
 
-ci: tools go-build gen-check acctest-lint copyright deps-check docs examples-tflint gh-workflow-lint golangci-lint govulncheck import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
+ci: tools go-build gen-check acctest-lint copyright deps-check docs gh-workflow-lint golangci-lint govulncheck import-lint makefile-lint provider-lint provider-markdown-lint semgrep shellcheck skaff-check-compile sweeper-check swissshepherd test website yamllint ## [CI] Run all CI checks (requires docker)
 
-ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell examples-tflint gh-workflow-lint golangci-lint1 govulncheck import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
+ci-quick: tools go-build testacc-lint copyright deps-check docs-misspell gh-workflow-lint golangci-lint1 govulncheck import-lint makefile-lint provider-lint semgrep-code-quality semgrep-constants semgrep-naming semgrep-naming-cae shellcheck website-misspell website-terrafmt yamllint ## [CI] Run quicker CI checks (no docker)
 
 clean: clean-make-tests clean-go clean-tidy build tools ## Clean up Go cache, tidy and re-install tools
 	@echo "make: Clean complete"
@@ -292,6 +292,9 @@ clean-tidy: prereq-go ## Clean up tidy
 	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
+convert-changelog: ## Convert go-changelog fragment to Changie format
+	@.ci/scripts/convert-changelog.sh $(FILE)
+
 copyright: ## [CI] Copyright Checks / headers check
 	@echo "make: Copyright Checks / headers check..."
 	@which copyplop > /dev/null || go install github.com/YakDriver/copyplop
@@ -351,13 +354,6 @@ docs-markdown-lint: ## [CI] Documentation Checks / markdown-lint
 docs-misspell: ## [CI] Documentation Checks / misspell
 	@echo "make: Documentation Checks / misspell..."
 	@misspell -error -source text docs/*.md docs/*/*.md
-
-examples-tflint: tflint-init tflint-opa-tests ## [CI] Examples Checks / tflint
-	@echo "make: Examples Checks / tflint..."
-	TFLINT_OPA_POLICY_DIR="$(PWD)/.ci/opa-policies" \
-	TFLINT_CONFIG="$(PWD)/.ci/.tflint.hcl" ; \
-	tflint --config="$$TFLINT_CONFIG" --chdir=./examples --recursive \
-		--disable-rule=terraform_typed_variables
 
 fix: prereq-go ## Apply go fix (all packages, or scoped to a service with PKG/K)
 	@echo "make: Applying go fix..."
@@ -436,9 +432,11 @@ gen-check: gen ## [CI] Provider Checks / go_generate
 	@git diff origin/$(BASE_REF) --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
-generate-changelog: ## Generate changelog
-	@echo "make: Generating changelog..."
-	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
+generate-changelog: ## Legacy target. CHANGELOG generation is now handled by GitHub Actions workflows; see docs/changelog-process.md
+	@echo "make: generate-changelog is deprecated"
+	@echo "make: CHANGELOG generation is now handled by GitHub Actions workflows"
+	@echo "make: See docs/changelog-process.md for current process"
+	@exit 1
 
 gh-workflow-lint: ## [CI] Workflow Linting / actionlint
 	@echo "make: Workflow Linting / actionlint..."
@@ -536,7 +534,7 @@ modern-fix-core: fix-core ## Legacy alias to fix-core
 
 pr-target-check: ## [CI] Check for pull request target
 	@echo "make: Checking for pull request target..."
-	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment).yml' || true); \
+	@disallowed_files=$$(grep -rl 'pull_request_target' ./.github/workflows/*.yml | grep -vE './.github/workflows/(maintainer_helpers|triage|closed_items|community_note|readiness_comment|update-changelog).yml' || true); \
 	if [ -n "$$disallowed_files" ]; then \
 		echo "Error: 'pull_request_target' found in disallowed files:"; \
 		echo "$$disallowed_files"; \
@@ -1184,6 +1182,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install golang.org/x/tools/cmd/stringer
 	cd .ci/tools && $(GO_VER) install golang.org/x/vuln/cmd/govulncheck
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+	cd .ci/tools && $(GO_VER) install github.com/miniscruff/changie
 
 ts: testacc-short ## Alias to testacc-short
 
@@ -1352,6 +1351,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	clean-go-cache-trim \
 	clean-make-tests \
 	clean-tidy \
+	convert-changelog \
 	copyright \
 	copyright-fix \
 	default \
@@ -1363,7 +1363,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 	docs-lint-fix \
 	docs-markdown-lint \
 	docs-misspell \
-	examples-tflint \
 	fix \
 	fix-check \
 	fix-constants \

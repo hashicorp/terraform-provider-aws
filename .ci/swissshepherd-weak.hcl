@@ -274,6 +274,12 @@ check "schema_docs" {
   nested_object_attributes = true
   allow_inline_read_only   = true
 
+  # Data source `tags` is Optional+Computed in the schema whether the data
+  # source filters on it or only returns it. Document a filter under Argument
+  # Reference and an output under Attribute Reference. Remove once output-only
+  # `tags` is Computed-only in the schema (#50581).
+  allow_either_section = ["data_source/tags"]
+
   block_heading_styles = [
     "`{Parent}` `{Block}` Block",
     "`{Path}` Block",
@@ -670,16 +676,6 @@ check "schema_docs" {
     "data_source/aws_subnets",
     "data_source/aws_synthetics_runtime_version",
     "data_source/aws_synthetics_runtime_versions",
-    "data_source/aws_waf_subscribed_rule_group",
-    "data_source/aws_wafregional_subscribed_rule_group",
-    "data_source/aws_wafv2_ip_set",
-    "data_source/aws_wafv2_regex_pattern_set",
-    "data_source/aws_wafv2_rule_group",
-    "data_source/aws_wafv2_web_acl",
-    "data_source/aws_workspaces_bundle",
-    "data_source/aws_workspaces_directory",
-    "data_source/aws_workspaces_image",
-    "data_source/aws_workspaces_workspace",
     "resource/aws_accessanalyzer_analyzer",
     "resource/aws_accessanalyzer_archive_rule",
     "resource/aws_account_alternate_contact",
@@ -1578,56 +1574,6 @@ check "schema_docs" {
     "resource/aws_synthetics_canary",
     "resource/aws_synthetics_group_association",
     "resource/aws_synthetics_group",
-    "resource/aws_waf_byte_match_set",
-    "resource/aws_waf_geo_match_set",
-    "resource/aws_waf_ipset",
-    "resource/aws_waf_rate_based_rule",
-    "resource/aws_waf_regex_match_set",
-    "resource/aws_waf_regex_pattern_set",
-    "resource/aws_waf_rule_group",
-    "resource/aws_waf_rule",
-    "resource/aws_waf_size_constraint_set",
-    "resource/aws_waf_sql_injection_match_set",
-    "resource/aws_waf_web_acl",
-    "resource/aws_waf_xss_match_set",
-    "resource/aws_wafregional_byte_match_set",
-    "resource/aws_wafregional_ipset",
-    "resource/aws_wafregional_rate_based_rule",
-    "resource/aws_wafregional_regex_match_set",
-    "resource/aws_wafregional_regex_pattern_set",
-    "resource/aws_wafregional_rule_group",
-    "resource/aws_wafregional_rule",
-    "resource/aws_wafregional_size_constraint_set",
-    "resource/aws_wafregional_sql_injection_match_set",
-    "resource/aws_wafregional_web_acl_association",
-    "resource/aws_wafregional_web_acl",
-    "resource/aws_wafregional_xss_match_set",
-    "resource/aws_wafv2_api_key",
-    "resource/aws_wafv2_ip_set",
-    "resource/aws_wafv2_regex_pattern_set",
-    "resource/aws_wafv2_web_acl_association",
-    "resource/aws_wafv2_web_acl_logging_configuration",
-    "resource/aws_wafv2_web_acl_rule_group_association",
-    "resource/aws_wafv2_web_acl_rule",
-    "resource/aws_workmail_group",
-    "resource/aws_workmail_organization",
-    "resource/aws_workmail_user",
-    "resource/aws_workspaces_connection_alias",
-    "resource/aws_workspaces_directory",
-    "resource/aws_workspaces_ip_group",
-    "resource/aws_workspaces_workspace",
-    "resource/aws_workspacesweb_browser_settings",
-    "resource/aws_workspacesweb_data_protection_settings",
-    "resource/aws_workspacesweb_identity_provider",
-    "resource/aws_workspacesweb_ip_access_settings",
-    "resource/aws_workspacesweb_network_settings",
-    "resource/aws_workspacesweb_session_logger",
-    "resource/aws_workspacesweb_trust_store_association",
-    "resource/aws_workspacesweb_trust_store",
-    "resource/aws_workspacesweb_user_access_logging_settings_association",
-    "resource/aws_workspacesweb_user_access_logging_settings",
-    "resource/aws_workspacesweb_user_settings_association",
-    "resource/aws_workspacesweb_user_settings",
   ]
 
   # These mirror reuse graphs, not trees: QuickSight analysis/dashboard/template
@@ -1642,6 +1588,7 @@ check "schema_docs" {
       "resource/aws_quicksight_template",
       "resource/aws_wafv2_rule_group",
       "resource/aws_wafv2_web_acl",
+      "resource/aws_wafv2_web_acl_rule",
     ]
     coverage = false
   }

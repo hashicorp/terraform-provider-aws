@@ -10,7 +10,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
@@ -38,6 +37,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -75,7 +75,7 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z _.:/=+\-@]*$`), ""),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z _.:/=+\-@]*$`, ""),
 				},
 			},
 			"is_published": schema.BoolAttribute{
@@ -89,8 +89,15 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 128),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z _.:/=+\-@]*$`), ""),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z][0-9A-Za-z _.:/=+\-@]*$`, ""),
 				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"specialized_scope_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SpecializedScopeType](),
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -345,7 +352,9 @@ func (r *scopeResource) Create(ctx context.Context, req resource.CreateRequest, 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateScope(ctx, &input)
+	out, err := retryWhenOnboarding(ctx, func(ctx context.Context) (*networksecuritymanager.CreateScopeOutput, error) {
+		return conn.CreateScope(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
@@ -585,13 +594,14 @@ func (r *scopeResource) flatten(ctx context.Context, out *networksecuritymanager
 
 type scopeResourceModel struct {
 	framework.WithRegionModel
-	ARN                types.String                                             `tfsdk:"arn"`
-	Description        types.String                                             `tfsdk:"description"`
-	IsPublished        types.Bool                                               `tfsdk:"is_published"`
-	Name               types.String                                             `tfsdk:"name"`
-	ScopeConfiguration fwtypes.ListNestedObjectValueOf[scopeConfigurationModel] `tfsdk:"scope_configuration"`
-	Tags               tftags.Map                                               `tfsdk:"tags"`
-	TagsAll            tftags.Map                                               `tfsdk:"tags_all"`
+	ARN                  types.String                                             `tfsdk:"arn"`
+	Description          types.String                                             `tfsdk:"description"`
+	IsPublished          types.Bool                                               `tfsdk:"is_published"`
+	Name                 types.String                                             `tfsdk:"name"`
+	ScopeConfiguration   fwtypes.ListNestedObjectValueOf[scopeConfigurationModel] `tfsdk:"scope_configuration"`
+	SpecializedScopeType fwtypes.StringEnum[awstypes.SpecializedScopeType]        `tfsdk:"specialized_scope_type"`
+	Tags                 tftags.Map                                               `tfsdk:"tags"`
+	TagsAll              tftags.Map                                               `tfsdk:"tags_all"`
 }
 
 type scopeConfigurationModel struct {

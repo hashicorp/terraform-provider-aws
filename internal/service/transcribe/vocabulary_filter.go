@@ -66,7 +66,7 @@ func ResourceVocabularyFilter() *schema.Resource {
 					Elem:         &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vocabulary_filter_file_uri": {
 					Type:         schema.TypeString,
 					Optional:     true,

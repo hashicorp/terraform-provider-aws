@@ -88,7 +88,6 @@ Exactly one of `desired_instances` or `desired_sessions` must be set, based on t
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the AppStream fleet.
-* `compute_capacity` - Capacity status for a fleet.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the fleet was created.
 * `id` - Unique identifier (ID) of the AppStream fleet.
 * `state` - State of the fleet. Can be `STARTING`, `RUNNING`, `STOPPING` or `STOPPED`

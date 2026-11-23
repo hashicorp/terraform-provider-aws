@@ -104,7 +104,7 @@ func resourceLocationObjectStorage() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 4096),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrURI: {
 					Type:     schema.TypeString,
 					Computed: true,

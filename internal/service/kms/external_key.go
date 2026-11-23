@@ -115,7 +115,7 @@ func resourceExternalKey() *schema.Resource {
 				},
 				names.AttrPolicy:  sdkv2.IAMPolicyDocumentSchemaOptionalComputed(),
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"valid_to": {
 					Type:         schema.TypeString,
 					Optional:     true,

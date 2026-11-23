@@ -8,7 +8,6 @@ package bedrockagentcore
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -60,7 +60,7 @@ func (r *workloadIdentityResource) Schema(ctx context.Context, request resource.
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 255),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_.-]+$`), ""),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9_.-]+$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

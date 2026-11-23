@@ -151,7 +151,7 @@ This resource supports the following arguments:
 * `tunnel1_phase2_encryption_algorithms` - (Optional) List of one or more encryption algorithms that are permitted for the first VPN tunnel for phase 2 IKE negotiations. Valid values are `AES128 | AES256 | AES128-GCM-16 | AES256-GCM-16`.
 * `tunnel1_phase2_integrity_algorithms` - (Optional) List of one or more integrity algorithms that are permitted for the first VPN tunnel for phase 2 IKE negotiations. Valid values are `SHA1 | SHA2-256 | SHA2-384 | SHA2-512`.
 * `tunnel1_phase2_lifetime_seconds` - (Optional, Default `3600`) Lifetime for phase 2 of the IKE negotiation for the first VPN tunnel, in seconds. Valid value is between `900` and `3600`.
-* `tunnel1_preshared_key` - (Optional) Preshared key of the first VPN tunnel. The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_).
+* `tunnel1_preshared_key` - (Optional) Preshared key of the first VPN tunnel. The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_). If `preshared_key_storage` is set to `SecretsManager`, this returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel1_rekey_fuzz_percentage` - (Optional, Default `100`) Percentage of the rekey window for the first VPN tunnel (determined by `tunnel1_rekey_margin_time_seconds`) during which the rekey time is randomly selected. Valid value is between `0` and `100`.
 * `tunnel1_rekey_margin_time_seconds` - (Optional, Default `540`) Margin time, in seconds, before the phase 2 lifetime expires, during which the AWS side of the first VPN connection performs an IKE rekey. The exact time of the rekey is randomly selected based on the value for `tunnel1_rekey_fuzz_percentage`. Valid value is between `60` and half of `tunnel1_phase2_lifetime_seconds`.
 * `tunnel1_replay_window_size` - (Optional, Default `1024`) Number of packets in an IKE replay window for the first VPN tunnel. Valid value is between `64` and `2048`.
@@ -171,12 +171,12 @@ This resource supports the following arguments:
 * `tunnel2_phase2_encryption_algorithms` - (Optional) List of one or more encryption algorithms that are permitted for the second VPN tunnel for phase 2 IKE negotiations. Valid values are `AES128 | AES256 | AES128-GCM-16 | AES256-GCM-16`.
 * `tunnel2_phase2_integrity_algorithms` - (Optional) List of one or more integrity algorithms that are permitted for the second VPN tunnel for phase 2 IKE negotiations. Valid values are `SHA1 | SHA2-256 | SHA2-384 | SHA2-512`.
 * `tunnel2_phase2_lifetime_seconds` - (Optional, Default `3600`) Lifetime for phase 2 of the IKE negotiation for the second VPN tunnel, in seconds. Valid value is between `900` and `3600`.
-* `tunnel2_preshared_key` - (Optional) Preshared key of the second VPN tunnel. The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_).
+* `tunnel2_preshared_key` - (Optional) Preshared key of the second VPN tunnel. The preshared key must be between 8 and 64 characters in length and cannot start with zero(0). Allowed characters are alphanumeric characters, periods(.) and underscores(_). If `preshared_key_storage` is set to `SecretsManager`, this returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel2_rekey_fuzz_percentage` - (Optional, Default `100`) Percentage of the rekey window for the second VPN tunnel (determined by `tunnel2_rekey_margin_time_seconds`) during which the rekey time is randomly selected. Valid value is between `0` and `100`.
 * `tunnel2_rekey_margin_time_seconds` - (Optional, Default `540`) Margin time, in seconds, before the phase 2 lifetime expires, during which the AWS side of the second VPN connection performs an IKE rekey. The exact time of the rekey is randomly selected based on the value for `tunnel2_rekey_fuzz_percentage`. Valid value is between `60` and half of `tunnel2_phase2_lifetime_seconds`.
 * `tunnel2_replay_window_size` - (Optional, Default `1024`) Number of packets in an IKE replay window for the second VPN tunnel. Valid value is between `64` and `2048`.
 * `tunnel2_startup_action` - (Optional, Default `add`) Action to take when the establishing the tunnel for the second VPN connection. By default, your customer gateway device must initiate the IKE negotiation and bring up the tunnel. Specify start for AWS to initiate the IKE negotiation. Valid values are `add | start`.
-* `tunnel_bandwidth` - (Optional, Default `standard`) Desired bandwidth specification for the VPN tunnel. Valid values are `standard | large`. `standard` supports up to 1.25 Gbps per tunnel, while `large` supports up to 5 Gbps per tunnel. Not supported when `vpn_gateway_id` is specified, or `enable_acceleration` is `true`.
+* `tunnel_bandwidth` - (Optional, Default `standard`) Desired bandwidth specification for the VPN tunnel. Valid values are `standard | large`. `standard` supports up to 1.25 Gbps per tunnel, while `large` supports up to 5 Gbps per tunnel. Not supported when `vpn_gateway_id` is specified, or `enable_acceleration` is `true`. In-place updates are supported in the regions described in the [AWS documentation](https://docs.aws.amazon.com/vpn/latest/s2svpn/modify-vpn-connection-options.html#modify-vpn-connection-options-tunnel-bandwidth). In regions where modifying tunnel bandwidth is not supported, changing this option requires first deleting the resource and then creating a new one.
 * `tunnel_inside_ip_version` - (Optional, Default `ipv4`) Indicate whether the VPN tunnels process IPv4 or IPv6 traffic. Valid values are `ipv4 | ipv6`. `ipv6` Supports only EC2 Transit Gateway.
 * `type` - (Required) Type of VPN connection. The only type AWS supports at this time is "ipsec.1".
 * `vpn_concentrator_id` - (Optional) ID of the VPN concentrator to associate with the VPN connection.
@@ -213,27 +213,22 @@ This resource exports the following attributes in addition to the arguments abov
 * `core_network_arn` - ARN of the core network.
 * `core_network_attachment_arn` - ARN of the core network attachment.
 * `customer_gateway_configuration` - Configuration information for the VPN connection's customer gateway (in the native XML format).
-* `customer_gateway_id` - ID of the customer gateway to which the connection is attached.
 * `id` - Amazon-assigned ID of the VPN connection.
 * `preshared_key_arn` - ARN of the Secrets Manager secret storing the pre-shared key(s) for the VPN connection. Note that even if it returns a valid Secrets Manager ARN, the pre-shared key(s) will not be stored in Secrets Manager unless the `preshared_key_storage` argument is set to `SecretsManager`.
 * `routes` - Static routes associated with the VPN connection. Detailed below.
-* `static_routes_only` - Whether the VPN connection uses static routes exclusively.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `transit_gateway_attachment_id` - When associated with an EC2 Transit Gateway (`transit_gateway_id` argument), the attachment ID. See also the [`aws_ec2_tag` resource](/docs/providers/aws/r/ec2_tag.html) for tagging the EC2 Transit Gateway VPN Attachment.
 * `tunnel1_address` - Public IP address of the first VPN tunnel.
 * `tunnel1_bgp_asn` - BGP ASN number of the first VPN tunnel.
 * `tunnel1_bgp_holdtime` - BGP holdtime of the first VPN tunnel.
 * `tunnel1_cgw_inside_address` - RFC 6890 link-local address of the first VPN tunnel (Customer Gateway Side).
-* `tunnel1_preshared_key` - Preshared key of the first VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel1_vgw_inside_address` - RFC 6890 link-local address of the first VPN tunnel (VPN Gateway Side).
 * `tunnel2_address` - Public IP address of the second VPN tunnel.
 * `tunnel2_bgp_asn` - BGP ASN number of the second VPN tunnel.
 * `tunnel2_bgp_holdtime` - BGP holdtime of the second VPN tunnel.
 * `tunnel2_cgw_inside_address` - RFC 6890 link-local address of the second VPN tunnel (Customer Gateway Side).
-* `tunnel2_preshared_key` - Preshared key of the second VPN tunnel. If `preshared_key_storage` is set to `SecretsManager`, it returns strings indicating the keys are redacted and the actual values are stored in Secrets Manager.
 * `tunnel2_vgw_inside_address` - RFC 6890 link-local address of the second VPN tunnel (VPN Gateway Side).
 * `vgw_telemetry` - Telemetry for the VPN tunnels. Detailed below.
-* `vpn_gateway_id` - ID of the virtual private gateway to which the connection is attached.
 
 ### `routes` Block
 

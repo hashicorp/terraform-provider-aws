@@ -95,7 +95,7 @@ func resourceCachediSCSIVolume() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTargetARN: {
 					Type:     schema.TypeString,
 					Computed: true,

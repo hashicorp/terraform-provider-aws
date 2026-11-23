@@ -8,7 +8,6 @@ package ecrpublic
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecrpublic/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -48,7 +48,7 @@ func (d *dataSourceImages) Schema(ctx context.Context, _ datasource.SchemaReques
 				Description: "AWS account ID associated with the public registry that contains the repository. If not specified, the default public registry is assumed.",
 				Optional:    true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]{12}$`), "must be a 12-digit AWS account ID"),
+					lazystringvalidator.RegexMatches(`^[0-9]{12}$`, "must be a 12-digit AWS account ID"),
 				},
 			},
 			"images": framework.DataSourceComputedListOfObjectAttribute[imageItemModel](ctx),

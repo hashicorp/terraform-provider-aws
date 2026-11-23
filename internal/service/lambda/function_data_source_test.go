@@ -5,7 +5,6 @@ package lambda_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -304,16 +303,15 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lambda_function.test"
 	resourceName := "aws_lambda_function.test"
-
-	imageLatestID := os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccImageLatestPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFunctionDataSourceConfig_image(rName, imageLatestID),
+				Config: testAccFunctionDataSourceConfig_image(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "code_signing_config_arn", resourceName, "code_signing_config_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_uri", resourceName, "image_uri"),
@@ -468,10 +466,28 @@ func TestAccLambdaFunctionDataSource_capacityProvider(t *testing.T) {
 	})
 }
 
-func testAccImageLatestPreCheck(t *testing.T) {
-	if os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "" {
-		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID env var must be set for Lambda Function Data Source Image Support acceptance tests.")
-	}
+func TestAccLambdaFunctionDataSource_acceleratorConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_acceleratorConfig(rName, imageURI),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "accelerator_config.#", resourceName, "accelerator_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "accelerator_config.0.accelerator_memory_size", resourceName, "accelerator_config.0.accelerator_memory_size"),
+				),
+			},
+		},
+	})
 }
 
 func testAccFunctionDataSourceConfig_base(rName string) string {
@@ -967,6 +983,59 @@ data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
 }
 `, rName))
+}
+
+func testAccFunctionDataSourceConfig_acceleratorConfig(rName, imageURI string) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+
+resource "aws_lambda_function" "test" {
+  image_uri     = %[2]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.test.arn
+    }
+  }
+
+  accelerator_config {
+    accelerator_memory_size = 24
+  }
+}
+
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  instance_requirements {
+    architectures          = ["x86_64"]
+    allowed_instance_types = ["g6.xlarge"]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName, imageURI))
 }
 
 func testAccFunctionDataSourceConfig_durableConfig(rName string) string {

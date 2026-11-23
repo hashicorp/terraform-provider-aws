@@ -38,7 +38,7 @@ resource "aws_networksecuritymanager_template" "example" {
 
 The following arguments are required:
 
-* `firewall_type` - (Required, Forces new resource) Firewall type of the template. Valid values: `WAF`.
+* `firewall_type` - (Required, Forces new resource) Firewall type of the template. Valid values: `WAF`, `IGW_FIREWALL`.
 * `name` - (Required, Forces new resource) Name of the template.
 * `rule_arns` - (Required) Ordered list of ARNs of the rules to associate with the template. Specify 1 to 50 rules. Each rule can be associated only once.
 

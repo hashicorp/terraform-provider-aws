@@ -36,7 +36,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `backup_vault_arn` - ARN of the vault.
-* `backup_vault_name` - Name of the vault.
 
 ## Import
 

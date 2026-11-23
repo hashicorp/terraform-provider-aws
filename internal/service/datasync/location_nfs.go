@@ -104,7 +104,7 @@ func resourceLocationNFS() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrURI: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -157,11 +157,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	serverHostName, err := globalIDFromLocationURI(uri)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	subdirectory, err := subdirectoryFromLocationURI(uri)
+	serverHostName, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

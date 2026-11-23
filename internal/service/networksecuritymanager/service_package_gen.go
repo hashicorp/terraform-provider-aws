@@ -28,6 +28,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newAdminAccountResource,
+			TypeName: "aws_networksecuritymanager_admin_account",
+			Name:     "Admin Account",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName("admin_account_id", true, names.AttrAccountID)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newDeploymentResource,
 			TypeName: "aws_networksecuritymanager_deployment",
 			Name:     "Deployment",
@@ -87,6 +97,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAdminAccountResourceAsListResource,
+			TypeName: "aws_networksecuritymanager_admin_account",
+			Name:     "Admin Account",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttributeWithMappedName("admin_account_id", true, names.AttrAccountID)),
+		},
 		{
 			Factory:  newDeploymentResourceAsListResource,
 			TypeName: "aws_networksecuritymanager_deployment",

@@ -59,7 +59,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `allocated_storage` - Allocated storage size in gigabytes (GB).
 * `availability_zones` - List of EC2 Availability Zones that instances in the DB cluster snapshot can be restored in.
-* `db_cluster_identifier` - DB cluster identifier of the DB cluster that this DB cluster snapshot was created from.
 * `db_cluster_snapshot_arn` - ARN for the DB Cluster Snapshot.
 * `engine` - Name of the database engine.
 * `engine_version` - Version of the database engine for this DB cluster snapshot.
@@ -71,5 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `source_db_cluster_snapshot_arn` - DB Cluster Snapshot ARN that the DB Cluster Snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `status` - Status of this DB Cluster Snapshot.
 * `storage_encrypted` - Whether the DB cluster snapshot is encrypted.
-* `tags` - Map of tags for the resource.
 * `vpc_id` - VPC ID associated with the DB cluster snapshot.

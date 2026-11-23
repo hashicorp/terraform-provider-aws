@@ -239,7 +239,7 @@ func resourceEndpoint() *schema.Resource {
 					ValidateFunc: validName,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
@@ -276,6 +276,9 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta an
 		if err != nil {
 			return tfresource.NonRetryableError(fmt.Errorf("creating SageMaker AI Endpoint (%s): %w", name, err))
 		}
+
+		// Save ID so that a failed non-retryable wait failure leaves a tainted resource rather than an orphan.
+		d.SetId(name)
 
 		_, err = waitEndpointInService(ctx, conn, name)
 

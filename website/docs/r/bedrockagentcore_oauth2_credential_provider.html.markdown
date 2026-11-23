@@ -275,6 +275,14 @@ Exactly one of the following provider configuration blocks must be specified:
 
 * `kms_key_arn` - (Required) ARN of the AWS KMS key used to sign the JWT.
 
+### `authorization_server_metadata` Block
+
+* `authorization_endpoint` - (Read-Only) OAuth2 authorization endpoint URL.
+* `issuer` - (Read-Only) OAuth2 authorization server issuer identifier.
+* `response_types` - (Read-Only) Set of OAuth2 response types supported by the authorization server.
+* `token_endpoint` - (Read-Only) OAuth2 token endpoint URL.
+* `token_endpoint_auth_methods` - (Read-Only) List of authentication methods supported by the token endpoint.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -294,7 +302,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.atlassian_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.github_oauth2_provider_config` Block
@@ -303,7 +311,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.github_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.google_oauth2_provider_config` Block
@@ -312,7 +320,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.google_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.included_oauth2_provider_config` Block
@@ -321,7 +329,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.included_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.linkedin_oauth2_provider_config` Block
@@ -330,7 +338,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.linkedin_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.microsoft_oauth2_provider_config` Block
@@ -339,7 +347,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.microsoft_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.salesforce_oauth2_provider_config` Block
@@ -348,7 +356,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.salesforce_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
 
 ### `oauth2_provider_config.slack_oauth2_provider_config` Block
@@ -357,16 +365,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### `oauth2_provider_config.slack_oauth2_provider_config.oauth_discovery` Block
 
-* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) below.
+* `authorization_server_metadata` - OAuth2 authorization server metadata resolved by the service. See [`authorization_server_metadata` Block](#authorization_server_metadata-block) above.
 * `discovery_url` - OpenID Connect discovery URL resolved by the service.
-
-### `authorization_server_metadata` Block
-
-* `authorization_endpoint` - OAuth2 authorization endpoint URL.
-* `issuer` - OAuth2 authorization server issuer identifier.
-* `response_types` - Set of OAuth2 response types supported by the authorization server.
-* `token_endpoint` - OAuth2 token endpoint URL.
-* `token_endpoint_auth_methods` - List of authentication methods supported by the token endpoint.
 
 ## Timeouts
 
