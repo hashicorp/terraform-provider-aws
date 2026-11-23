@@ -22,6 +22,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newAssociationsDataSource,
+			TypeName: "aws_route53profiles_associations",
+			Name:     "Associations",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
 			Factory:  newProfileDataSource,
 			TypeName: "aws_route53profiles_profile",
 			Name:     "Profile",
