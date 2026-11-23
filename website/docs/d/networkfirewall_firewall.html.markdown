@@ -54,7 +54,7 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - ARN of the firewall.
-* `firewall_type` - (Optional) Type of the firewall. Valid values: `FIREWALL`, `IGW_FIREWALL`. When looking up a firewall by `name` only, set to `IGW_FIREWALL` to find an internet gateway firewall. Defaults to `FIREWALL` for a lookup by name.
+* `firewall_type` - (Optional) Type of the firewall. Valid values: `FIREWALL`, `IGW_FIREWALL`. Set to `IGW_FIREWALL` to look up an internet gateway firewall by `name` or `arn`. When `arn` is supplied, the type must match its resource type. Defaults to `FIREWALL`.
 * `name` - Descriptive name of the firewall.
 
 One or more of `arn` and `name` is required.
