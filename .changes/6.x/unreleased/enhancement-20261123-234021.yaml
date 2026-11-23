@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T23:40:21.673112+05:30
+custom:
+    Body: Add `specialized_scope_type` argument and `AWS::EC2::Subnet` and `AWS::EC2::VPC` `resource_type` values
+    Impact: resource/aws_networksecuritymanager_scope
+    PullRequest: "51209"
