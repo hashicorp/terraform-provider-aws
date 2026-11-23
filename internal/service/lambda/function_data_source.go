@@ -31,6 +31,18 @@ func dataSourceFunction() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
+				"accelerator_config": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accelerator_memory_size": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+						},
+					},
+				},
 				"architectures": {
 					Type:     schema.TypeList,
 					Computed: true,
@@ -380,6 +392,9 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta an
 	unqualifiedARN := strings.TrimSuffix(functionARN, qualifierSuffix)
 
 	d.SetId(functionName)
+	if err := d.Set("accelerator_config", flattenAcceleratorConfig(function.AcceleratorConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting accelerator_config: %s", err)
+	}
 	d.Set("architectures", function.Architectures)
 	d.Set(names.AttrARN, unqualifiedARN)
 	if err := d.Set("capacity_provider_config", flattenCapacityProviderConfig(function.CapacityProviderConfig)); err != nil {
