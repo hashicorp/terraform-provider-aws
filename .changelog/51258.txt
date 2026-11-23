@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_dsql_cluster: Fix `ValidationException: Aurora DSQL can't update the cluster. Cluster isn't in the PENDING_SETUP state` error when updating `deletion_protection_enabled` or `kms_encryption_key` on peered multi-Region clusters
+```
