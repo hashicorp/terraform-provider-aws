@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T09:39:41.549708+01:00
+custom:
+    Body: 'Fix `ValidationException: Core Network ... cannot be deleted due to existing resource associations of type ec2:vpc-flow-log` errors when deleting a core network shortly after its flow logs'
+    Impact: resource/aws_networkmanager_core_network
+    PullRequest: "51023"
