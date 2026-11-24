@@ -33,21 +33,16 @@ resource "aws_waf_size_constraint_set" "size_constraint_set" {
 This resource supports the following arguments:
 
 * `name` - (Required) Name or description of the Size Constraint Set.
-* `size_constraints` - (Optional) Parts of web requests that you want to inspect the size of.
+* `size_constraints` - (Optional) Parts of web requests that you want to inspect the size of. See [`size_constraints` Block](#size_constraints-block) below for details.
 
-### `size_constraints`
+### `size_constraints` Block
 
-#### Arguments
-
-* `field_to_match` - (Required) Parameter that specifies where in a web request to look for the size constraint.
 * `comparison_operator` - (Required) Type of comparison you want to perform, such as `EQ`, `NE`, `LT`, or `GT`. Please refer to the [documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_wafRegional_SizeConstraint.html) for a complete list of supported values.
+* `field_to_match` - (Required) Parameter that specifies where in a web request to look for the size constraint. See [`field_to_match` Block](#field_to_match-block) below for details.
 * `size` - (Required) Size in bytes that you want to compare against the size of the specified `field_to_match`. Valid values for `size` are between 0 and 21474836480 bytes (0 and 20 GB).
-* `text_transformation` - (Required) Parameter is used to eliminate unusual formatting that attackers may use in web requests to bypass AWS WAF. When a transformation is specified, AWS WAF performs the transformation on the `field_to_match` before inspecting the request for a match. Some examples of supported transformations are `CMD_LINE`, `HTML_ENTITY_DECODE`, and `NONE`. You can find a complete list of supported values in the [AWS WAF API Reference](http://docs.aws.amazon.com/waf/latest/APIReference/API_SizeConstraint.html#WAF-Type-SizeConstraint-TextTransformation).
-  **Note:** If you choose `BODY` as the `type`, you must also choose `NONE` because CloudFront only forwards the first 8192 bytes for inspection.
+* `text_transformation` - (Required) Parameter is used to eliminate unusual formatting that attackers may use in web requests to bypass AWS WAF. When a transformation is specified, AWS WAF performs the transformation on the `field_to_match` before inspecting the request for a match. Some examples of supported transformations are `CMD_LINE`, `HTML_ENTITY_DECODE`, and `NONE`. You can find a complete list of supported values in the [AWS WAF API Reference](http://docs.aws.amazon.com/waf/latest/APIReference/API_SizeConstraint.html#WAF-Type-SizeConstraint-TextTransformation). **Note:** If you choose `BODY` as the `type`, you must also choose `NONE` because CloudFront only forwards the first 8192 bytes for inspection.
 
-### `field_to_match`
-
-#### Arguments
+### `field_to_match` Block
 
 * `data` - (Optional) When the `type` is `HEADER`, specify the name of the header that you want to search using the `data` field, for example, `User-Agent` or `Referer`. If the `type` is any other value, you can omit this field.
 * `type` - (Required) Part of the web request that you want AWS WAF to search for a specified string. For example, `HEADER`, `METHOD`, or `BODY`. See the [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html) for all supported values.
@@ -56,8 +51,8 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ID of the WAF Size Constraint Set.
 * `arn` - ARN.
+* `id` - ID of the WAF Size Constraint Set.
 
 ## Import
 

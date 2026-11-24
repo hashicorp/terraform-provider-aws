@@ -16,8 +16,11 @@ Terraform resource for managing an AWS WorkSpaces Web User Access Logging Settin
 
 ```terraform
 resource "aws_kinesis_stream" "example" {
-  name        = "amazon-workspaces-web-example-stream"
-  shard_count = 1
+  name = "amazon-workspaces-web-example-stream"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 resource "aws_workspacesweb_user_access_logging_settings" "example" {
@@ -29,8 +32,11 @@ resource "aws_workspacesweb_user_access_logging_settings" "example" {
 
 ```terraform
 resource "aws_kinesis_stream" "example" {
-  name        = "example-stream"
-  shard_count = 1
+  name = "example-stream"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 
 resource "aws_workspacesweb_user_access_logging_settings" "example" {
@@ -58,8 +64,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `associated_portal_arns` - List of web portal ARNs that this user access logging settings resource is associated with.
-* `user_access_logging_settings_arn` - ARN of the user access logging settings resource.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `user_access_logging_settings_arn` - ARN of the user access logging settings resource.
 
 ## Import
 

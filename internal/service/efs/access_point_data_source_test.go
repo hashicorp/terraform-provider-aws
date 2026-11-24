@@ -4,17 +4,19 @@
 package efs_test
 
 import (
-	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	dataSourceName := "data.aws_efs_access_point.test"
 	resourceName := "aws_efs_access_point.test"
 
@@ -24,40 +26,16 @@ func TestAccEFSAccessPointDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccessPointDataSourceConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
-					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwnerID, resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttrPair(dataSourceName, "posix_user", resourceName, "posix_user"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "root_directory", resourceName, "root_directory"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.#", resourceName, "tags.#"),
-				),
+				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/data.basic/"),
+				ConfigVariables: config.Variables{},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrID), resourceName, tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrOwnerID), resourceName, tfjsonpath.New(names.AttrOwnerID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("posix_user"), resourceName, tfjsonpath.New("posix_user"), compare.ValuesSame()),
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New("root_directory"), resourceName, tfjsonpath.New("root_directory"), compare.ValuesSame()),
+				},
 			},
 		},
 	})
-}
-
-func testAccAccessPointDataSourceConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_access_point" "test" {
-  file_system_id = aws_efs_file_system.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_efs_access_point" "test" {
-  access_point_id = aws_efs_access_point.test.id
-}
-`, rName)
 }

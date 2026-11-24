@@ -49,7 +49,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `kms_key_details` - (Optional) An object describing the KMS key to asssociate. Block is documented below.
+* `kms_key_details` - (Optional) An object describing the KMS key to associate. Block is documented below.
 
 ### repository
 
@@ -61,7 +61,7 @@ This configuration block supports the following:
 * `name` - (Required) The name of the third party source repository.
 * `owner` - (Required) The username for the account that owns the repository.
 
-### codecommit
+### `codecommit`
 
 * `name` - (Required) The name of the AWS CodeCommit repository.
 

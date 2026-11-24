@@ -94,7 +94,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `key_value_store_associations` - (Optional) Configuration block for key value store associations. See [`key_value_store_associations`](#key_value_store_associations) below.
+* `key_value_store_associations` - (Optional) Configuration block for key value store associations. See [`key_value_store_associations`](#key_value_store_association) below.
 * `publish` - (Optional) Whether to publish the function to the `LIVE` stage after creation or update. Defaults to `false`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

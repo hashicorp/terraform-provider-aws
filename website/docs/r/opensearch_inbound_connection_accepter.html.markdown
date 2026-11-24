@@ -49,15 +49,15 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the connection to accept.
+* `id` - The ID of the connection to accept.
 * `connection_status` - Status of the connection request.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5m`)
-* `delete` - (Default `5m`)
+* `create` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

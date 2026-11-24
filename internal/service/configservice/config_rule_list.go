@@ -36,14 +36,6 @@ type configRuleListResource struct {
 func (l *configRuleListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().ConfigServiceClient(ctx)
 
-	var query listConfigRuleModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		var input configservice.DescribeConfigRulesInput
 		for item, err := range listConfigRules(ctx, conn, &input) {
@@ -84,10 +76,6 @@ func (l *configRuleListResource) List(ctx context.Context, request list.ListRequ
 			}
 		}
 	}
-}
-
-type listConfigRuleModel struct {
-	framework.WithRegionModel
 }
 
 func listConfigRules(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigRulesInput) iter.Seq2[awstypes.ConfigRule, error] {

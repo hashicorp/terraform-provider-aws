@@ -32,7 +32,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 |---|---|
 | [go-conventions](./.agents/skills/go-conventions/SKILL.md) | Fundamental Go conventions for the provider. Load before writing or editing any Go file in `internal/**`. |
 | [breaking-changes](./.agents/skills/breaking-changes/SKILL.md) | Review a PR for possible breaking changes. |
-| [changelog](./.agents/skills/changelog/SKILL.md) | Add a `.changelog/<PR_NUMBER>.txt` entry from a PR URL, commit, and push (with confirmation). |
+| [changelog](./.copilot/skills/changelog/SKILL.md) | Add a Changie change fragment (`.changes/<major>.x/unreleased/*.yaml`) for a PR, commit, and push (with confirmation). |
 | [fixdocs](./.agents/skills/fixdocs/SKILL.md) | Fix end user documentation with `swissshepherd`. |
 | [new-list-resource](./.agents/skills/new-list-resource/SKILL.md) | Implement a new list resource. |
 | [resource-identity](./.agents/skills/resource-identity/SKILL.md) | Add resource identity to a resource. |
@@ -58,7 +58,7 @@ Skills are loaded from `./.agents/skills`. Each skill supplies step-by-step inst
 
 ```
 terraform-provider-aws/
-├── .changelog/             # CHANGELOG entries
+├── .changes/               # CHANGELOG fragments (Changie) and per-version CHANGELOGs
 ├── internal/
 │   ├── acctest/            # Acceptance test helpers
 │   ├── backoff/            # Low-level backoff loop implementation
@@ -182,11 +182,11 @@ When you help prepare a PR, disclose the AI's role in the description and add `�
 
 ### Commits, CHANGELOG, and docs
 - Keep each commit small, atomic, and single-purpose; the message describes the change.
-- Add a `.changelog/` entry for new features, bug fixes, and enhancements.
+- Add a Changie change fragment (`changie new`) for new features, bug fixes, and enhancements. See `docs/changelog-process.md`.
 - New features require new documentation; `./docs/end-user-documentation.md` is authoritative.
 
 ## Boundaries
-- Never edit `CHANGELOG.md` directly — use `.changelog/` entries.
+- Never edit `CHANGELOG.md` directly — add a Changie fragment. Never add `.changelog/*.txt` files; CI rejects them.
 - Never edit generated files by hand — modify the generator or annotations, then run `make gen PKG=<service>` or `make gen` (provider level).
 - Do not modify `go.mod`/`go.sum` without running `go mod tidy`.
 - Do not add new external dependencies without explicit approval.

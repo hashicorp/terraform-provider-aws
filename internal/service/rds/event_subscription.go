@@ -101,7 +101,7 @@ func resourceEventSubscription() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.SourceType](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

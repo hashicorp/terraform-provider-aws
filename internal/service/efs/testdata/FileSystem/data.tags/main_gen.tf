@@ -1,0 +1,18 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+# tflint-ignore: terraform_unused_declarations
+data "aws_efs_file_system" "test" {
+  file_system_id = aws_efs_file_system.test.id
+}
+resource "aws_efs_file_system" "test" {
+
+  tags = var.resource_tags
+}
+
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
+}

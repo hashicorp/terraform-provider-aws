@@ -85,7 +85,7 @@ With V2 of the AWS Go SDK, the retrier is extended directly in client constructi
 ```go
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*s3_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+	cfg := *config["aws_sdkv2_config"].(*aws_sdkv2.Config)
 
 	return s3_sdkv2.NewFromConfig(cfg,
 		s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),

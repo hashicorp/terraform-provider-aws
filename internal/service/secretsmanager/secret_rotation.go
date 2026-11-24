@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -104,14 +104,14 @@ func resourceSecretRotation() *schema.Resource {
 							names.AttrDuration: {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9h]+`), ""),
+								ValidateFunc: lazyvalidation.StringMatch(`[0-9h]+`, ""),
 							},
 							names.AttrScheduleExpression: {
 								Type:          schema.TypeString,
 								Optional:      true,
 								ConflictsWith: []string{"rotation_rules.0.automatically_after_days"},
 								ExactlyOneOf:  []string{"rotation_rules.0.automatically_after_days", "rotation_rules.0.schedule_expression"},
-								ValidateFunc:  validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`), ""),
+								ValidateFunc:  lazyvalidation.StringMatch(`[0-9A-Za-z\(\)#\?\*\-\/, ]+`, ""),
 							},
 						},
 					},

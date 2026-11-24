@@ -225,7 +225,7 @@ func resourceImageRecipe() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_data_base64": {
 					Type:     schema.TypeString,
 					Optional: true,

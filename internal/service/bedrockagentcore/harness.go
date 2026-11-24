@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -46,6 +45,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -96,6 +96,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"environment_variables": schema.MapAttribute{
 				CustomType: fwtypes.MapOfStringType,
 				Optional:   true,
+				Computed:   true,
 				Sensitive:  true,
 			},
 			names.AttrExecutionRoleARN: schema.StringAttribute{
@@ -109,10 +110,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`),
-						`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 40 characters.`,
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`, `Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 40 characters.`),
 				},
 			},
 			"max_iterations": schema.Int32Attribute{
@@ -146,7 +144,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 			"truncation": framework.ResourceOptionalComputedSingleNestedObjectAttribute[harnessTruncationConfigurationModel](ctx),
 		},
 		Blocks: map[string]schema.Block{
-			"authorizer_configuration": authorizerConfigurationSchema(ctx),
+			"authorizer_configuration": authorizerConfigurationBlock(ctx),
 			names.AttrEnvironment: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[harnessEnvironmentProviderModel](ctx),
 				Validators: []validator.List{
@@ -201,7 +199,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"filesystem_configuration": filesystemConfigurationSchema(ctx),
+									"filesystem_configuration": filesystemConfigurationBlock(ctx),
 									names.AttrNetworkConfiguration: schema.ListNestedBlock{
 										CustomType: fwtypes.NewListNestedObjectTypeOf[networkConfigurationModel](ctx),
 										Validators: []validator.List{
@@ -623,7 +621,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(8),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^https://[^#@]+$`), "must be an HTTPS URL"),
+											lazystringvalidator.RegexMatches(`^https://[^#@]+$`, "must be an HTTPS URL"),
 										},
 									},
 								},
@@ -1089,6 +1087,9 @@ func (r *harnessResource) Update(ctx context.Context, request resource.UpdateReq
 		if response.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		// Copy computed attributes during tag-only updates
+		plan.EnvironmentVariables = state.EnvironmentVariables
 	}
 
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &plan))
@@ -1115,7 +1116,13 @@ func (r *harnessResource) deleteSync(ctx context.Context, harnessID string, time
 		HarnessId: aws.String(harnessID),
 	}
 	_, err := conn.DeleteHarness(ctx, &input)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	// Deletion of a non-existent harness triggers an AccessDeniedException.
+	//
+	//   AccessDeniedException: User: <redacted> is not authorized to perform: bedrock-agentcore:DeleteHarness"
+	//
+	// The standard ResourceNotFoundException handling is retained in case
+	// this behavior changes in the future.
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 		return nil
 	}
 	if err != nil {

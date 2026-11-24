@@ -81,6 +81,9 @@ This resource exports the following attributes in addition to the arguments abov
 ~> **NOTE:** Only the arguments that are configured (one of the above) will be exported as an attribute once the resource is created.
 
 * `id` - Route identifier computed from the routing table identifier and route destination.
+* `igw_firewall` - Automated Internet Firewall that inspects traffic for the route. Only set for routes that target an internet gateway or egress-only internet gateway in a VPC that has a firewall. The route target stays the gateway.
+    * `firewall_arn` - ARN of the firewall.
+    * `status` - Status of the firewall: `active`, `pending` or `disabling`.
 * `instance_id` - Identifier of an EC2 instance.
 * `instance_owner_id` - The AWS account ID of the owner of the EC2 instance.
 * `origin` - How the route was created - `CreateRouteTable`, `CreateRoute` or `EnableVgwRoutePropagation`.

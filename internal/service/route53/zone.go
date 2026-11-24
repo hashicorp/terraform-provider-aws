@@ -99,7 +99,7 @@ func resourceZone() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vpc": {
 					Type:          schema.TypeSet,
 					Optional:      true,

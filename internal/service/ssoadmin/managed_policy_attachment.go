@@ -27,15 +27,17 @@ import (
 )
 
 // @SDKResource("aws_ssoadmin_managed_policy_attachment", name="Managed Policy Attachment")
+// @IdentityAttribute("instance_arn")
+// @IdentityAttribute("permission_set_arn")
+// @IdentityAttribute("managed_policy_arn")
+// @ImportIDHandler("managedPolicyAttachmentImportID")
+// @Testing(preCheckWithRegion="acctest.PreCheckSSOAdminInstancesWithRegion")
+// @Testing(preIdentityVersion="v6.73.0")
 func resourceManagedPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceManagedPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceManagedPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceManagedPolicyAttachmentDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -100,7 +102,7 @@ func resourceManagedPolicyAttachmentCreate(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "attaching Managed Policy (%s) to SSO Permission Set (%s): %s", managedPolicyARN, permissionSetARN, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s,%s", managedPolicyARN, permissionSetARN, instanceARN))
+	d.SetId(managedPolicyAttachmentCreateResourceID(managedPolicyARN, permissionSetARN, instanceARN))
 
 	// Provision ALL accounts after attaching the managed policy.
 	if err := provisionPermissionSet(ctx, conn, permissionSetARN, instanceARN, d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -131,12 +133,31 @@ func resourceManagedPolicyAttachmentRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading SSO Managed Policy Attachment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_arn", instanceARN)
-	d.Set("managed_policy_arn", policy.Arn)
-	d.Set("managed_policy_name", policy.Name)
-	d.Set("permission_set_arn", permissionSetARN)
+	if err := resourceManagedPolicyAttachmentFlatten(d, policy, instanceARN, permissionSetARN); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	return diags
+}
+
+func resourceManagedPolicyAttachmentFlatten(d *schema.ResourceData, policy *awstypes.AttachedManagedPolicy, instanceARN, permissionSetARN string) error {
+	if err := d.Set("instance_arn", instanceARN); err != nil {
+		return fmt.Errorf("setting instance_arn: %w", err)
+	}
+
+	if err := d.Set("managed_policy_arn", policy.Arn); err != nil {
+		return fmt.Errorf("setting managed_policy_arn: %w", err)
+	}
+
+	if err := d.Set("managed_policy_name", policy.Name); err != nil {
+		return fmt.Errorf("setting managed_policy_name: %w", err)
+	}
+
+	if err := d.Set("permission_set_arn", permissionSetARN); err != nil {
+		return fmt.Errorf("setting permission_set_arn: %w", err)
+	}
+
+	return nil
 }
 
 func resourceManagedPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -178,6 +199,35 @@ func ParseManagedPolicyAttachmentID(id string) (string, string, string, error) {
 		return "", "", "", fmt.Errorf("parsing ID: expected MANAGED_POLICY_ARN,PERMISSION_SET_ARN,INSTANCE_ARN")
 	}
 	return idParts[0], idParts[1], idParts[2], nil
+}
+
+func managedPolicyAttachmentCreateResourceID(managedPolicyARN, permissionSetARN, instanceARN string) string {
+	return fmt.Sprintf("%s,%s,%s", managedPolicyARN, permissionSetARN, instanceARN)
+}
+
+type managedPolicyAttachmentImportID struct{}
+
+func (managedPolicyAttachmentImportID) Create(d *schema.ResourceData) string {
+	return managedPolicyAttachmentCreateResourceID(
+		d.Get("managed_policy_arn").(string),
+		d.Get("permission_set_arn").(string),
+		d.Get("instance_arn").(string),
+	)
+}
+
+func (managedPolicyAttachmentImportID) Parse(id string) (string, map[string]any, error) {
+	managedPolicyARN, permissionSetARN, instanceARN, err := ParseManagedPolicyAttachmentID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"instance_arn":       instanceARN,
+		"managed_policy_arn": managedPolicyARN,
+		"permission_set_arn": permissionSetARN,
+	}
+
+	return id, result, nil
 }
 
 func findManagedPolicyByThreePartKey(ctx context.Context, conn *ssoadmin.Client, managedPolicyARN, permissionSetARN, instanceARN string) (*awstypes.AttachedManagedPolicy, error) {

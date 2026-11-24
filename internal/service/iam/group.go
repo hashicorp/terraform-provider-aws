@@ -10,32 +10,31 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_group", name="Group")
+// @IdentityAttribute("name")
+// @MutableIdentity
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Group")
+// @Testing(preIdentityVersion="v6.64.0")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
 		UpdateWithoutTimeout: resourceGroupUpdate,
 		DeleteWithoutTimeout: resourceGroupDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -44,12 +43,9 @@ func resourceGroup() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrName: {
-					Type:     schema.TypeString,
-					Required: true,
-					ValidateFunc: validation.StringMatch(
-						regexache.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
-						"must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs",
-					),
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z=,.@\-_+]+$`, "must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs"),
 				},
 				names.AttrPath: {
 					Type:     schema.TypeString,
@@ -118,12 +114,16 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta any) di
 		return sdkdiag.AppendErrorf(diags, "reading IAM Group (%s): %s", d.Id(), err)
 	}
 
+	resourceGroupFlatten(group, d)
+
+	return diags
+}
+
+func resourceGroupFlatten(group *awstypes.Group, d *schema.ResourceData) {
 	d.Set(names.AttrARN, group.Arn)
 	d.Set(names.AttrName, group.GroupName)
 	d.Set(names.AttrPath, group.Path)
 	d.Set("unique_id", group.GroupId)
-
-	return diags
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -70,7 +71,7 @@ func ResourceVocabulary() *schema.Resource {
 					Elem:         &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vocabulary_file_uri": {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -204,8 +205,7 @@ func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	_, err := conn.DeleteVocabulary(ctx, &input)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return diags
 	}
 
@@ -306,8 +306,7 @@ func FindVocabularyByName(ctx context.Context, conn *transcribe.Client, id strin
 
 	out, err := conn.GetVocabulary(ctx, in)
 
-	var badRequestException *types.BadRequestException
-	if errors.As(err, &badRequestException) {
+	if errs.IsA[*types.BadRequestException](err) {
 		return nil, &retry.NotFoundError{
 			LastError: err,
 		}

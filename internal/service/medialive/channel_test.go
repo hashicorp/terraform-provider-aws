@@ -78,6 +78,54 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 	})
 }
 
+func TestAccMediaLiveChannel_thumbnailConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var channel medialive.DescribeChannelOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_medialive_channel.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccChannelsPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckChannelDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccChannelConfig_thumbnailConfiguration(rName, "AUTO"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
+					resource.TestCheckResourceAttrSet(resourceName, "channel_id"),
+					resource.TestCheckResourceAttr(resourceName, "channel_class", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.thumbnail_configuration.0.state", "AUTO"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_channel"},
+			},
+			{
+				Config: testAccChannelConfig_thumbnailConfiguration(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckChannelExists(ctx, t, resourceName, &channel),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.thumbnail_configuration.0.state", "DISABLED"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccMediaLiveChannel_captionDescriptions(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1113,6 +1161,91 @@ resource "aws_medialive_channel" "test" {
   }
 }
 `, rName))
+}
+
+func testAccChannelConfig_thumbnailConfiguration(rName, state string) string {
+	return acctest.ConfigCompose(
+		testAccChannelConfig_base(rName),
+		testAccChannelConfig_baseS3(rName),
+		testAccChannelConfig_baseMultiplex(rName),
+		fmt.Sprintf(`
+resource "aws_medialive_channel" "test" {
+  name          = %[1]q
+  channel_class = "STANDARD"
+  role_arn      = aws_iam_role.test.arn
+
+  input_specification {
+    codec            = "AVC"
+    input_resolution = "HD"
+    maximum_bitrate  = "MAX_20_MBPS"
+  }
+
+  input_attachments {
+    input_attachment_name = "example-input1"
+    input_id              = aws_medialive_input.test.id
+  }
+
+  destinations {
+    id = %[1]q
+
+    settings {
+      url = "s3://${aws_s3_bucket.test1.id}/test1"
+    }
+
+    settings {
+      url = "s3://${aws_s3_bucket.test2.id}/test2"
+    }
+  }
+
+  encoder_settings {
+    timecode_config {
+      source = "EMBEDDED"
+    }
+
+    audio_descriptions {
+      audio_selector_name = %[1]q
+      name                = %[1]q
+    }
+
+    video_descriptions {
+      name = "test-video-name"
+    }
+
+    thumbnail_configuration {
+      state = %[2]q
+    }
+
+    output_groups {
+      output_group_settings {
+        archive_group_settings {
+          destination {
+            destination_ref_id = %[1]q
+          }
+        }
+      }
+
+      outputs {
+        output_name             = "test-output-name"
+        video_description_name  = "test-video-name"
+        audio_description_names = [%[1]q]
+        output_settings {
+          archive_output_settings {
+            name_modifier = "_1"
+            extension     = "m2ts"
+            container_settings {
+              m2ts_settings {
+                audio_buffer_model = "ATSC"
+                buffer_model       = "MULTIPLEX"
+                rate_mode          = "CBR"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, state))
 }
 
 func testAccChannelConfig_udpOutputSettings(rName string) string {

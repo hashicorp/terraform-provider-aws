@@ -39,7 +39,7 @@ const (
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
 // @Tags(identifierAttribute="arn")
-// @Testing(altRegionProvider=true)
+// @Testing(altRegionTfVars=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -95,8 +95,8 @@ func resourceTableReplica() *schema.Resource {
 					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
 				},
-				names.AttrTags:    tftags.TagsSchema(),         // direct to replica
-				names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
+				names.AttrTags:    tftags.TagsSchema(),                                         // direct to replica
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(), // direct to replica
 			}
 		},
 	}
@@ -156,6 +156,10 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 				return tfresource.RetryableError(err)
 			}
 			if errs.IsA[*awstypes.ResourceInUseException](err) {
+				return tfresource.RetryableError(err)
+			}
+			// Race condition when re-creating resource
+			if tfawserr.ErrMessageContains(err, errCodeValidationException, "because one or more replicas already existed as tables") {
 				return tfresource.RetryableError(err)
 			}
 

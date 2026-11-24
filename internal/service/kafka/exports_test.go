@@ -8,6 +8,7 @@ var (
 	ResourceCluster                      = resourceCluster
 	ResourceClusterPolicy                = resourceClusterPolicy
 	ResourceConfiguration                = resourceConfiguration
+	ResourceChannel                      = newChannelResource
 	ResourceReplicator                   = resourceReplicator
 	ResourceSCRAMSecretAssociation       = resourceSCRAMSecretAssociation
 	ResourceSingleSCRAMSecretAssociation = newSingleSCRAMSecretAssociationResource
@@ -15,6 +16,7 @@ var (
 	ResourceTopic                        = newTopicResource
 	ResourceVPCConnection                = resourceVPCConnection
 
+	FindChannelByTwoPartKey                      = findChannelByTwoPartKey
 	FindClusterByARN                             = findClusterByARN
 	FindClusterPolicyByARN                       = findClusterPolicyByARN
 	FindConfigurationByARN                       = findConfigurationByARN
@@ -36,5 +38,15 @@ var (
 	FlattenApacheKafkaCluster               = flattenApacheKafkaCluster               // nosemgrep:ci.kafka-in-var-name
 	FlattenKafkaClusterClientAuthentication = flattenKafkaClusterClientAuthentication // nosemgrep:ci.kafka-in-var-name
 	FlattenKafkaClusterEncryptionInTransit  = flattenKafkaClusterEncryptionInTransit  // nosemgrep:ci.kafka-in-var-name
-	KafkaClusterIdentifier                  = kafkaClusterIdentifier                  // nosemgrep:ci.kafka-in-var-name
+	FlattenKafkaClusterDescriptions         = flattenKafkaClusterDescriptions         // nosemgrep:ci.kafka-in-var-name
+	FlattenReplicationInfoDescription       = flattenReplicationInfoDescription
+	KafkaClusterIdentifier                  = kafkaClusterIdentifier // nosemgrep:ci.kafka-in-var-name
+	NewUpdateReplicationInfoInput           = newUpdateReplicationInfoInput
+
+	ExpandConsumerGroupReplication       = expandConsumerGroupReplication
+	ExpandConsumerGroupReplicationUpdate = expandConsumerGroupReplicationUpdate
+	ExpandKafkaClusters                  = expandKafkaClusters // nosemgrep:ci.kafka-in-var-name
+	ExpandReplicationInfo                = expandReplicationInfo
+	ExpandTopicReplication               = expandTopicReplication
+	ExpandTopicReplicationUpdate         = expandTopicReplicationUpdate
 )

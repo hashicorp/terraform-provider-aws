@@ -9,7 +9,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -54,8 +54,6 @@ const (
 )
 
 func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
-
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
@@ -64,7 +62,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
-					stringvalidator.RegexMatches(collectionRegex, "must conform to: ^[a-zA-Z0-9_.\\-]+$"),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_.\-]+$`, "must conform to: ^[a-zA-Z0-9_.\\-]+$"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

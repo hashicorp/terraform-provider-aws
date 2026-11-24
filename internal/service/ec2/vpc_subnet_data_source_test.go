@@ -51,6 +51,8 @@ func TestAccVPCSubnetDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "enable_resource_name_dns_a_record_on_launch", snResourceName, "enable_resource_name_dns_a_record_on_launch"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "ipv6_native", snResourceName, "ipv6_native"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "map_customer_owned_ip_on_launch", snResourceName, "map_customer_owned_ip_on_launch"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "network_firewall_connectivity_type", ""),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "network_firewall_connectivity_type", snResourceName, "network_firewall_connectivity_type"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, names.AttrOutpostARN, snResourceName, names.AttrOutpostARN),
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, names.AttrID, snResourceName, names.AttrID),

@@ -80,7 +80,7 @@ func resourceActivity() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 80),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

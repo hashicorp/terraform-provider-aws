@@ -8,12 +8,11 @@ package ses
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,7 +30,7 @@ func dataSourceDomainIdentity() *schema.Resource {
 				names.AttrDomain: {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
+					ValidateFunc: lazyvalidation.StringDoesNotMatch(`\.$`, "cannot end with a period"),
 				},
 				"verification_token": {
 					Type:     schema.TypeString,

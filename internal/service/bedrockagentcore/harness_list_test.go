@@ -153,7 +153,7 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 							}),
 						})),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_artifact"), knownvalue.ListSizeExact(0)),
-						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_variables"), knownvalue.Null()),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("environment_variables"), knownvalue.MapSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_name"), knownvalue.StringExact(rName+"_0")),

@@ -42,10 +42,10 @@ resource "aws_waf_web_acl" "acl" {
 
 This data source supports the following arguments:
 
-* `name` - (Optional) Name of the WAF rule group.
-* `metric_name` - (Optional) Name of the WAF rule group.
-
 At least one of `name` or `metric_name` must be configured.
+
+* `metric_name` - (Optional) Name of the WAF rule group.
+* `name` - (Optional) Name of the WAF rule group.
 
 ## Attribute Reference
 

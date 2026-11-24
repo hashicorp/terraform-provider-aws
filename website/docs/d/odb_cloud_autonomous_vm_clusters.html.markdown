@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 ### `cloud_autonomous_vm_clusters` Block
 
 * `arn` - ARN for the Exadata infrastructure.
-* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.
+* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure ID associated with this cloud autonomous VM cluster.
 * `display_name` - Display name of the Autonomous VM cluster.
 * `id` - Unique identifier of the cloud autonomous vm cluster.
 * `oci_resource_anchor_name` - Name of the OCI resource anchor associated with this Autonomous VM cluster.

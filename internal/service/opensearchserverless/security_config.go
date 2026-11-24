@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -33,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/framework/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -111,7 +111,7 @@ func (r *securityConfigResource) Schema(ctx context.Context, req resource.Schema
 							Optional:    true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 64),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`), "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
+								lazystringvalidator.RegexMatches(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`, "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
 								stringvalidator.AtLeastOneOf(
 									path.MatchRelative().AtParent().AtName("group_attribute"),
 									path.MatchRelative().AtParent().AtName("user_attribute"),
@@ -123,7 +123,7 @@ func (r *securityConfigResource) Schema(ctx context.Context, req resource.Schema
 							Optional:    true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 64),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`), "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
+								lazystringvalidator.RegexMatches(`^[A-Za-z][A-Za-z0-9_.:/=+\-@]*$`, "must start with a letter and contain only letters, numbers, and the following characters: _ . : / = + - @"),
 								stringvalidator.AtLeastOneOf(
 									path.MatchRelative().AtParent().AtName("group_attribute"),
 									path.MatchRelative().AtParent().AtName("user_attribute"),

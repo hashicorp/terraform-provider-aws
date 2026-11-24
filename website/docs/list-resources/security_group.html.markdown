@@ -78,7 +78,7 @@ This list resource supports the following arguments:
 * `group_ids` - (Optional) List of security group IDs to filter results. If specified, only security groups with the provided IDs will be returned.
 * `region` - (Optional) Region to query. Defaults to provider region.
 
-### filter Configuration Block
+### `filter` Block
 
 The `filter` block supports the following:
 

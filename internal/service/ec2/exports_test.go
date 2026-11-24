@@ -10,6 +10,7 @@ var (
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
 	ResourceAvailabilityZoneGroup                         = resourceAvailabilityZoneGroup
+	ResourceCapacityManager                               = newCapacityManagerResource
 	ResourceCapacityReservation                           = resourceCapacityReservation
 	ResourceCarrierGateway                                = resourceCarrierGateway
 	ResourceClientVPNAuthorizationRule                    = resourceClientVPNAuthorizationRule
@@ -104,6 +105,7 @@ var (
 	ResourceTransitGatewayMeteringPolicyEntry             = newTransitGatewayMeteringPolicyEntryResource
 	ResourceTransitGatewayPolicyTable                     = resourceTransitGatewayPolicyTable
 	ResourceTransitGatewayPolicyTableAssociation          = resourceTransitGatewayPolicyTableAssociation
+	ResourceTransitGatewayPolicyTableEntry                = newTransitGatewayPolicyTableEntryResource
 	ResourceTransitGatewayPrefixListReference             = resourceTransitGatewayPrefixListReference
 	ResourceTransitGatewayRoute                           = resourceTransitGatewayRoute
 	ResourceTransitGatewayRouteTable                      = resourceTransitGatewayRouteTable
@@ -154,6 +156,7 @@ var (
 	ExpandIPPerms                                               = expandIPPerms
 	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
+	FindCapacityManagerAttributes                               = findCapacityManagerAttributes
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
 	FindClientVPNAuthorizationRuleByThreePartKey                = findClientVPNAuthorizationRuleByThreePartKey
@@ -255,6 +258,7 @@ var (
 	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
 	FindTransitGatewayPolicyTableAssociationByTwoPartKey        = findTransitGatewayPolicyTableAssociationByTwoPartKey
 	FindTransitGatewayPolicyTableByID                           = findTransitGatewayPolicyTableByID
+	FindTransitGatewayPolicyTableEntryByTwoPartKey              = findTransitGatewayPolicyTableEntryByTwoPartKey
 	FindTransitGatewayPrefixListReferenceByTwoPartKey           = findTransitGatewayPrefixListReferenceByTwoPartKey
 	FindTransitGatewayRouteTableAssociationByTwoPartKey         = findTransitGatewayRouteTableAssociationByTwoPartKey
 	FindTransitGatewayRouteTableByID                            = findTransitGatewayRouteTableByID
@@ -289,6 +293,7 @@ var (
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
+	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions
 	FlowLogStateUpgradeV0                                       = flowLogStateUpgradeV0
 	IPAMServicePrincipal                                        = ipamServicePrincipal
 	InstanceMigrateState                                        = instanceMigrateState

@@ -31,10 +31,10 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `alias` - Prometheus workspace alias.
 * `arn` - ARN of the Prometheus workspace.
 * `created_date` - Creation date of the Prometheus workspace.
-* `prometheus_endpoint` - Endpoint of the Prometheus workspace.
-* `alias` - Prometheus workspace alias.
 * `kms_key_arn` - ARN of the KMS key used to encrypt data in the Prometheus workspace.
+* `prometheus_endpoint` - Endpoint of the Prometheus workspace.
 * `status` - Status of the Prometheus workspace.
 * `tags` - Tags assigned to the resource.

@@ -5,25 +5,24 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/action"
 	"github.com/hashicorp/terraform-plugin-framework/action/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/actionwait"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwactions "github.com/hashicorp/terraform-provider-aws/internal/framework/actions"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -59,10 +58,7 @@ func (a *stopInstanceAction) Schema(ctx context.Context, req action.SchemaReques
 				Description: "The ID of the EC2 instance to stop",
 				Required:    true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^i-[0-9a-f]{8,17}$`),
-						"must be a valid EC2 instance ID (e.g., i-1234567890abcdef0)",
-					),
+					lazystringvalidator.RegexMatches(`^i-[0-9a-f]{8,17}$`, "must be a valid EC2 instance ID (e.g., i-1234567890abcdef0)"),
 				},
 			},
 			"force": schema.BoolAttribute{
@@ -199,14 +195,12 @@ func (a *stopInstanceAction) Invoke(ctx context.Context, req action.InvokeReques
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
-		var unexpectedErr *actionwait.UnexpectedStateError
-		if errors.As(err, &timeoutErr) {
+		if errs.IsA[*actionwait.TimeoutError](err) {
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for Instance to Stop",
 				fmt.Sprintf("EC2 instance %s did not stop within %s: %s", instanceID, timeout, err),
 			)
-		} else if errors.As(err, &unexpectedErr) {
+		} else if errs.IsA[*actionwait.UnexpectedStateError](err) {
 			resp.Diagnostics.AddError(
 				"Unexpected Instance State",
 				fmt.Sprintf("EC2 instance %s entered unexpected state while stopping: %s", instanceID, err),

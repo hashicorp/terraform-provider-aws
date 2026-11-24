@@ -178,14 +178,14 @@ resource "aws_wafregional_web_acl_association" "association" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `web_acl_id` - (Required) The ID of the WAF Regional WebACL to create an association.
 * `resource_arn` - (Required) ARN of the resource to associate with. For example, an Application Load Balancer or API Gateway Stage.
+* `web_acl_id` - (Required) ID of the WAF Regional WebACL to create an association.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the association
+* `id` - ID of the association.
 
 ## Timeouts
 
