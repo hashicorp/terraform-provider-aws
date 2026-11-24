@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:36:28.751875-05:00
+custom:
+  Body: Add `association_config.challenge_javascript_sdk_injection` argument
+  Impact: resource/aws_wafv2_web_acl
+  PullRequest: "50739"
