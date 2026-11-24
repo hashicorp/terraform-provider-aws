@@ -1,0 +1,7 @@
+kind: enhancement
+time: 2026-11-24T16:00:00.000000-05:00
+custom:
+    Body: Add `tip_configuration` argument to support trusted identity propagation
+    Impact: |-
+        resource/aws_rolesanywhere_profile
+    PullRequest: "51354"
