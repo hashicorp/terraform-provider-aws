@@ -54,6 +54,8 @@ resource "aws_route53_record" "dev-ns" {
 
 ~> **NOTE:** Private zones require at least one VPC association at all times.
 
+~> **NOTE:** A hosted zone that has [record set protections](route53_record_set_protection.html) can't be deleted. `force_destroy` doesn't remove protections, by design: destroying the zone fails until they are removed.
+
 ```terraform
 resource "aws_vpc" "primary" {
   cidr_block           = "10.6.0.0/16"

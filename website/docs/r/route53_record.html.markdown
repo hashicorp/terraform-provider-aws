@@ -10,6 +10,8 @@ description: |-
 
 Provides a Route53 record resource.
 
+~> **NOTE:** Route 53 rejects any change to a record whose name and type have a [record set protection](route53_record_set_protection.html), with an `InvalidChangeBatch` error. To change a protected record, remove the protection, change the record, and then add the protection back, in separate applies.
+
 ## Example Usage
 
 ### Simple Routing Policy
