@@ -24,9 +24,9 @@ resource "aws_networkmanager_attachment_routing_policy_label" "example" {
 
 The following arguments are required:
 
-* `attachment_id` - (Required, Forces new resource) The ID of the attachment to apply the routing policy label to.
-* `core_network_id` - (Required, Forces new resource) The ID of the core network containing the attachment.
-* `routing_policy_label` - (Required, Forces new resource) The routing policy label to apply to the attachment.
+* `attachment_id` - (Required, Forces new resource) ID of the attachment to apply the routing policy label to.
+* `core_network_id` - (Required, Forces new resource) ID of the core network containing the attachment.
+* `routing_policy_label` - (Required, Forces new resource) Routing policy label to apply to the attachment.
 
 ## Attribute Reference
 
