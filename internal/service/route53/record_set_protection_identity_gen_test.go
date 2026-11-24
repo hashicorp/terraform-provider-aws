@@ -27,7 +27,6 @@ func TestAccRoute53RecordSetProtection_Identity_basic(t *testing.T) {
 
 	var v awstypes.ResourceRecordSetProtection
 	resourceName := "aws_route53_record_set_protection.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	zoneName := acctest.RandomDomain(t)
 	recordName := zoneName.RandomSubdomain(t)
 
@@ -44,9 +43,8 @@ func TestAccRoute53RecordSetProtection_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RecordSetProtection/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"recordName":    config.StringVariable(recordName.String()),
-					"zoneName":      config.StringVariable(zoneName.String()),
+					"recordName": config.StringVariable(recordName.String()),
+					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRecordSetProtectionExists(ctx, t, resourceName, &v),
@@ -68,9 +66,8 @@ func TestAccRoute53RecordSetProtection_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RecordSetProtection/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"recordName":    config.StringVariable(recordName.String()),
-					"zoneName":      config.StringVariable(zoneName.String()),
+					"recordName": config.StringVariable(recordName.String()),
+					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				ImportStateKind:                      resource.ImportCommandWithID,
 				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "zone_id", "record_name", "record_type"),
@@ -84,9 +81,8 @@ func TestAccRoute53RecordSetProtection_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RecordSetProtection/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"recordName":    config.StringVariable(recordName.String()),
-					"zoneName":      config.StringVariable(zoneName.String()),
+					"recordName": config.StringVariable(recordName.String()),
+					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -105,9 +101,8 @@ func TestAccRoute53RecordSetProtection_Identity_basic(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/RecordSetProtection/basic/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
-					"recordName":    config.StringVariable(recordName.String()),
-					"zoneName":      config.StringVariable(zoneName.String()),
+					"recordName": config.StringVariable(recordName.String()),
+					"zoneName":   config.StringVariable(zoneName.String()),
 				},
 				ResourceName:    resourceName,
 				ImportState:     true,

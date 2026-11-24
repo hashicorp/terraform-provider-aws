@@ -39,6 +39,7 @@ import (
 // @ImportIDHandler("recordSetProtectionImportID")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(subdomainTfVar="zoneName;recordName")
+// @Testing(generator=false)
 // @Testing(importStateIdAttributes="zone_id;record_name;record_type", importStateIdAttributesSep="flex.ResourceIdSeparator")
 // @Testing(plannableImportAction="NoOp")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/route53/types;awstypes;awstypes.ResourceRecordSetProtection")

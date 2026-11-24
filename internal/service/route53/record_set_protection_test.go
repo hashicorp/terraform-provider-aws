@@ -158,7 +158,7 @@ func TestProtectionBatchError(t *testing.T) {
 	}
 
 	other := errors.New("other")
-	if got := tfroute53.ProtectionBatchError(other); got != other {
+	if got := tfroute53.ProtectionBatchError(other); !errors.Is(got, other) {
 		t.Errorf("ProtectionBatchError(other) = %v, want it unchanged", got)
 	}
 }

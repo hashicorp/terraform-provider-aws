@@ -11,11 +11,6 @@ resource "aws_route53_zone" "test" {
   name = var.zoneName
 }
 
-variable "rName" {
-  description = "Name for resource"
-  type        = string
-  nullable    = false
-}
 variable "recordName" {
   type     = string
   nullable = false
