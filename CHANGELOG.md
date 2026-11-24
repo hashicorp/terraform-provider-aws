@@ -1,5 +1,10 @@
 ## 6.75.0 (Unreleased)
 
+FEATURES:
+
+* **New List Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+
 BUG FIXES:
 
 * provider: Ignore AWS system tags when waiting for tag updates to propagate ([#51238](https://github.com/hashicorp/terraform-provider-aws/issues/51238))

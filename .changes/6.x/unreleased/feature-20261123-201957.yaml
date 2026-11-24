@@ -1,5 +1,6 @@
 kind: feature
 time: 2026-11-23T20:19:57.439641+05:30
 custom:
-    Name: aws_continuum_integration
-    NewType: New List Resource
+  Name: aws_continuum_integration
+  NewType: New List Resource
+  PullRequest: "50950"
