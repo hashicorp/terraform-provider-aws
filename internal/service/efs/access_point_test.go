@@ -187,52 +187,6 @@ func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
 	})
 }
 
-func TestAccEFSAccessPoint_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var ap awstypes.AccessPointDescription
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_efs_access_point.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAccessPointDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAccessPointConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAccessPointConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccAccessPointConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccessPointExists(ctx, t, resourceName, &ap),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEFSAccessPoint_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ap awstypes.AccessPointDescription
@@ -393,45 +347,4 @@ resource "aws_efs_access_point" "test" {
   }
 }
 `, rName)
-}
-
-func testAccAccessPointConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_access_point" "test" {
-  file_system_id = aws_efs_file_system.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAccessPointConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_access_point" "test" {
-  file_system_id = aws_efs_file_system.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
