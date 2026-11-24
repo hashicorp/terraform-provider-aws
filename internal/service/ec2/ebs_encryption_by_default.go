@@ -140,10 +140,10 @@ func resourceEBSEncryptionByDefaultV0() *schema.Resource {
 // It converts the legacy ID (generated UUID or "default") to the regional identity format.
 func ebsEncryptionByDefaultStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
 	// Upgrade the ID from legacy format to regional format.
-	if id, ok := rawState["id"].(string); ok && id != "" {
+	if id, ok := rawState[names.AttrID].(string); ok && id != "" {
 		// If the ID is not a region, replace it with the current region.
 		if !inttypes.IsAWSRegion(id) {
-			rawState["id"] = meta.(*conns.AWSClient).Region(ctx)
+			rawState[names.AttrID] = meta.(*conns.AWSClient).Region(ctx)
 		}
 	}
 
