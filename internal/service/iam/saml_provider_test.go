@@ -207,7 +207,7 @@ func TestAccIAMSAMLProvider_identityCenterInstance(t *testing.T) {
 				Config: testAccSAMLProviderConfig_contextProvider(rName, idpEntityId, "subject", "user"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, t, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
 				),
 			},
 			{
@@ -228,7 +228,7 @@ func TestAccIAMSAMLProvider_identityCenterInstance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
 				),
 			},
 		},
