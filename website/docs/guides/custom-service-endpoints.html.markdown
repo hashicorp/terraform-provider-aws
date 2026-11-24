@@ -95,6 +95,7 @@ provider "aws" {
 |Amplify|`amplify`|`AWS_ENDPOINT_URL_AMPLIFY`|`amplify`|
 |API Gateway|`apigateway`|`AWS_ENDPOINT_URL_API_GATEWAY`|`api_gateway`|
 |API Gateway V2|`apigatewayv2`|`AWS_ENDPOINT_URL_APIGATEWAYV2`|`apigatewayv2`|
+|API Portal|`apiportal`|`AWS_ENDPOINT_URL_APIPORTAL`|`apiportal`|
 |Application Auto Scaling|`appautoscaling`(or `applicationautoscaling`)|`AWS_ENDPOINT_URL_APPLICATION_AUTO_SCALING`|`application_auto_scaling`|
 |AppConfig|`appconfig`|`AWS_ENDPOINT_URL_APPCONFIG`|`appconfig`|
 |AppFabric|`appfabric`|`AWS_ENDPOINT_URL_APPFABRIC`|`appfabric`|

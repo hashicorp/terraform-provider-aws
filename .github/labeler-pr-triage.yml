@@ -202,6 +202,12 @@ service/apigatewayv2:
           - any-glob-to-any-file:
               - 'internal/service/apigatewayv2/**/*'
               - 'website/**/apigatewayv2_*'
+service/apiportal:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/apiportal/**/*'
+              - 'website/**/apiportal_*'
 service/appautoscaling:
   - any:
       - changed-files:

@@ -659,6 +659,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)APIGatewayV2"
     severity: WARNING
+  - id: apiportal-in-func-name
+    languages:
+      - go
+    message: Do not use "APIPortal" in func name inside apiportal package
+    paths:
+      include:
+        - "/internal/service/apiportal"
+      exclude:
+        - "/internal/service/apiportal/list_pages_gen.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)APIPortal"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T)
+    severity: WARNING
+  - id: apiportal-in-test-name
+    languages:
+      - go
+    message: Include "APIPortal" in test name
+    paths:
+      include:
+        - "/internal/service/apiportal/*_test.go"
+    patterns:
+      - pattern: func $NAME( ... )
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccAPIPortal"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: apiportal-in-const-name
+    languages:
+      - go
+    message: Do not use "APIPortal" in const name inside apiportal package
+    paths:
+      include:
+        - "/internal/service/apiportal"
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)APIPortal"
+    severity: WARNING
+  - id: apiportal-in-var-name
+    languages:
+      - go
+    message: Do not use "APIPortal" in var name inside apiportal package
+    paths:
+      include:
+        - "/internal/service/apiportal"
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)APIPortal"
+    severity: WARNING
   - id: appautoscaling-in-func-name
     languages:
       - go
@@ -4819,51 +4880,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccConfigService"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - "/internal/service/configservice"
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - "/internal/service/configservice"
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: connect-in-func-name
-    languages:
-      - go
-    message: Do not use "Connect" in func name inside connect package
-    paths:
-      include:
-        - "/internal/service/connect"
-      exclude:
-        - "/internal/service/connect/list_pages_gen.go"
-    patterns:
-      - pattern: func $NAME( ... )
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-      - focus-metavariable: $NAME
-      - pattern-not: func $NAME($T *testing.T)
     severity: WARNING

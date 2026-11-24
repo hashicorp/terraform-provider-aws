@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/apiportal"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
@@ -306,6 +307,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		amplify.ServicePackage(ctx),
 		apigateway.ServicePackage(ctx),
 		apigatewayv2.ServicePackage(ctx),
+		apiportal.ServicePackage(ctx),
 		appautoscaling.ServicePackage(ctx),
 		appconfig.ServicePackage(ctx),
 		appfabric.ServicePackage(ctx),

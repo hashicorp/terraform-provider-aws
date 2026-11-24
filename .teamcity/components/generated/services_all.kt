@@ -14,6 +14,7 @@ val services = mapOf(
     "amplify" to ServiceSpec("Amplify"),
     "apigateway" to ServiceSpec("API Gateway", vpcLock = true),
     "apigatewayv2" to ServiceSpec("API Gateway V2", vpcLock = true, parallelismOverride = 10),
+    "apiportal" to ServiceSpec("API Portal"),
     "appautoscaling" to ServiceSpec("Application Auto Scaling", vpcLock = true),
     "appconfig" to ServiceSpec("AppConfig"),
     "appfabric" to ServiceSpec("AppFabric", regionOverride = "us-east-1"),

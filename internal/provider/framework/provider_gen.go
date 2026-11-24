@@ -93,6 +93,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// apiportal
+
+				"apiportal": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// appautoscaling
 
 				"appautoscaling": schema.StringAttribute{
