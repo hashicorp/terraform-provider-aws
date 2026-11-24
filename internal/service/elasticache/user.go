@@ -240,6 +240,12 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta any) dia
 	if aws.ToString(user.Status) != userStatusActive {
 		user, err = waitUserUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead), 0)
 
+		if !d.IsNewResource() && retry.NotFound(err) {
+			log.Printf("[WARN] ElastiCache User (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ElastiCache User (%s): %s", d.Id(), err)
 		}
