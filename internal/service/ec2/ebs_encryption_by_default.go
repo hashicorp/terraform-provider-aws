@@ -13,12 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @CustomImport
 // @SingletonIdentity
 // @Testing(preIdentityVersion="v6.73.0", generator=false)
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
@@ -29,17 +27,12 @@ func resourceEBSEncryptionByDefault() *schema.Resource {
 		UpdateWithoutTimeout: resourceEBSEncryptionByDefaultUpdate,
 		DeleteWithoutTimeout: resourceEBSEncryptionByDefaultDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: func(ctx context.Context, d *schema.ResourceData, meta any) ([]*schema.ResourceData, error) {
-				if id := d.Id(); id != "" && !inttypes.IsAWSRegion(id) {
-					d.SetId(meta.(*conns.AWSClient).Region(ctx))
-				}
-
-				if err := importer.Import(ctx, d, meta); err != nil {
-					return nil, err
-				}
-
-				return []*schema.ResourceData{d}, nil
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceEBSEncryptionByDefaultV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ebsEncryptionByDefaultStateUpgradeV0,
+				Version: 0,
 			},
 		},
 
@@ -126,4 +119,33 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 
 func resourceEBSEncryptionByDefaultFlatten(resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
 	return d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
+}
+
+// resourceEBSEncryptionByDefaultV0 returns the previous schema (v0) for state upgrading.
+func resourceEBSEncryptionByDefaultV0() *schema.Resource {
+	return &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrEnabled: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
+		},
+	}
+}
+
+// ebsEncryptionByDefaultStateUpgradeV0 upgrades the state from v0 (pre-identity) to v1 (identity).
+// It converts the legacy ID (generated UUID or "default") to the regional identity format.
+func ebsEncryptionByDefaultStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
+	// Upgrade the ID from legacy format to regional format.
+	if id, ok := rawState["id"].(string); ok && id != "" {
+		// If the ID is not a region, replace it with the current region.
+		if !inttypes.IsAWSRegion(id) {
+			rawState["id"] = meta.(*conns.AWSClient).Region(ctx)
+		}
+	}
+
+	return rawState, nil
 }
