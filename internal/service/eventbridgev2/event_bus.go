@@ -162,6 +162,7 @@ func (r *eventBusResource) Create(ctx context.Context, req resource.CreateReques
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn))
 		return
 	}
 
