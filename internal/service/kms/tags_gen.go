@@ -182,6 +182,8 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 			return false, smarterr.NewError(err)
 		}
 
+		output = output.IgnoreSystem(names.KMS)
+
 		if inContext, ok := tftags.FromContext(ctx); ok {
 			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)
