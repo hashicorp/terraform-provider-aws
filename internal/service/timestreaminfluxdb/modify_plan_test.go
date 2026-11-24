@@ -8,9 +8,13 @@ import (
 	"maps"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -308,4 +312,71 @@ func TestDBClusterModifyPlan_restore(t *testing.T) {
 			wantError: true,
 		},
 	})
+}
+
+func TestRestoreBlockRemovalRequiresReplace(t *testing.T) {
+	t.Parallel()
+
+	for name, factory := range map[string]func(context.Context) (resource.ResourceWithConfigure, error){
+		"db_instance": newDBInstanceResource,
+		"db_cluster":  newDBClusterResource,
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx := t.Context()
+
+			r, err := factory(ctx)
+			if err != nil {
+				t.Fatalf("creating resource: %s", err)
+			}
+
+			var schemaResp resource.SchemaResponse
+			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+			s := schemaResp.Schema
+			s.Attributes[names.AttrRegion] = schema.StringAttribute{Optional: true, Computed: true}
+
+			block := s.Blocks["restore"].(schema.ListNestedBlock)
+			stateRestore := testModifyPlanRestoreValue(ctx, s, "backup-1")
+			stateValue := testListValue(ctx, t, block, stateRestore)
+			planValue := testListValue(ctx, t, block, tftypes.NewValue(stateRestore.Type(), nil))
+
+			state := testModifyPlanObjectValue(ctx, s, map[string]tftypes.Value{"restore": stateRestore})
+			req := planmodifier.ListRequest{
+				Path:        path.Root("restore"),
+				StateValue:  stateValue,
+				PlanValue:   planValue,
+				ConfigValue: planValue,
+				State:       tfsdk.State{Schema: s, Raw: state},
+				Plan:        tfsdk.Plan{Schema: s, Raw: testModifyPlanObjectValue(ctx, s, nil)},
+			}
+
+			var requiresReplace bool
+			for _, m := range block.PlanModifiers {
+				resp := planmodifier.ListResponse{PlanValue: req.PlanValue}
+				m.PlanModifyList(ctx, req, &resp)
+				requiresReplace = requiresReplace || resp.RequiresReplace
+			}
+
+			if !requiresReplace {
+				t.Error("removing the restore block does not require replacement")
+			}
+		})
+	}
+}
+
+func testListValue(ctx context.Context, t *testing.T, block schema.ListNestedBlock, v tftypes.Value) types.List {
+	t.Helper()
+
+	value, err := block.CustomType.ValueFromTerraform(ctx, v)
+	if err != nil {
+		t.Fatalf("building list value: %s", err)
+	}
+
+	list, diags := value.(basetypes.ListValuable).ToListValue(ctx)
+	if diags.HasError() {
+		t.Fatalf("converting list value: %s", diags)
+	}
+
+	return list
 }

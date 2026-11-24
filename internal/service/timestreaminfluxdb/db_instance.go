@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -395,10 +396,14 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"restore": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[restoreModel](ctx),
+				// Nested plan modifiers don't run for a removed element, so removing the block needs its own replacement trigger.
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				Description: `Restore the DB instance from an existing backup instead of creating a new one. This block can only be set at creation time.`,
+				Description: `Restore the DB instance from an existing backup instead of creating a new one. Adding, changing, or removing this block forces replacement.`,
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"restore_mode": schema.StringAttribute{
