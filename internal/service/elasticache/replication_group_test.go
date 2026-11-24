@@ -578,6 +578,52 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_notificationTopicARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_notificationTopicARN(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttrPair(resourceName, "notification_topic_arn", "aws_sns_topic.test.0", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+			{
+				Config: testAccReplicationGroupConfig_notificationTopicARN(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, t, resourceName, &rg),
+					resource.TestCheckResourceAttrPair(resourceName, "notification_topic_arn", "aws_sns_topic.test.1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -5423,6 +5469,25 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately    = true
 }
 `, rName)
+}
+
+func testAccReplicationGroupConfig_notificationTopicARN(rName string, topicIndex int) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  count = 2
+
+  name = "%[1]s-${count.index}"
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id   = %[1]q
+  description            = "test description"
+  node_type              = "cache.t3.small"
+  port                   = 6379
+  apply_immediately      = true
+  notification_topic_arn = aws_sns_topic.test[%[2]d].arn
+}
+`, rName, topicIndex)
 }
 
 func testAccReplicationGroupConfig_updatedMaintenanceWindow(rName string) string {
