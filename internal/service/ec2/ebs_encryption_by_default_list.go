@@ -53,13 +53,6 @@ func (l *ebsEncryptionByDefaultListResource) List(ctx context.Context, request l
 		rd.SetId(region)
 		rd.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
 
-		if request.IncludeResource {
-			if err := resourceEBSEncryptionByDefaultFlatten(resp, rd); err != nil {
-				yield(fwdiag.NewListResultErrorDiagnostic(fmt.Errorf("including EBS Encryption By Default: %w", err)))
-				return
-			}
-		}
-
 		state := "disabled"
 		if aws.ToBool(resp.EbsEncryptionByDefault) {
 			state = names.AttrEnabled
