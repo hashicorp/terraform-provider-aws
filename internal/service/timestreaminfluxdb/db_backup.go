@@ -259,7 +259,7 @@ func (r *dbBackupResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &plan))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -289,7 +289,7 @@ func (r *dbBackupResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, output, &state))
+	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &state))
 	if resp.Diagnostics.HasError() {
 		return
 	}
