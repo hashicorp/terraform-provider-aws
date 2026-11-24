@@ -25,6 +25,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newRecordSetProtectionsDataSource,
+			TypeName: "aws_route53_record_set_protections",
+			Name:     "Record Set Protections",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newRecordsDataSource,
 			TypeName: "aws_route53_records",
 			Name:     "Records",

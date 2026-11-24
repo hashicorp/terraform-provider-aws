@@ -1,0 +1,5 @@
+kind: feature
+time: 2026-11-24T19:00:00.000000+01:00
+custom:
+    Name: aws_route53_record_set_protections
+    NewType: New Data Source
