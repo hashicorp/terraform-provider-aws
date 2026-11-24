@@ -46,6 +46,8 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 	})
 }
 
+/*
+** TODO Non-existant etc.
 func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_efs_file_system.test"
@@ -76,7 +78,8 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 			},
 		},
 	})
-}
+}**
+*/
 
 func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 	ctx := acctest.Context(t)

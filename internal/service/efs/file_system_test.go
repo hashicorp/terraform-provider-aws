@@ -195,6 +195,8 @@ func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 	})
 }
 
+/*
+** TODO Max tags & paged tags tests.
 func TestAccEFSFileSystem_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc awstypes.FileSystemDescription
@@ -257,6 +259,8 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 		},
 	})
 }
+**
+*/
 
 func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
