@@ -34,6 +34,9 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 		"Identity": {
 			"serial": testAccEC2EBSEBSEncryptionByDefault_identitySerial,
 		},
+		"Upgrade": {
+			"v6_74_0": testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
@@ -117,11 +120,11 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, t *testing.T, n str
 	}
 }
 
-func TestAccEC2EBSEncryptionByDefault_v6_74_0_upgrade(t *testing.T) {
+func testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ebs_encryption_by_default.test"
 
-	acctest.ParallelTest(ctx, t, resource.TestCase{
+	acctest.Test(ctx, t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
 		CheckDestroy: testAccCheckEBSEncryptionByDefaultDestroy(ctx, t),
