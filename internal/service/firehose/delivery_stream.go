@@ -1799,6 +1799,10 @@ func retryDeliveryStreamOp(ctx context.Context, f func(context.Context) (any, er
 			if errs.IsAErrorMessageContains[*types.InvalidArgumentException](err, "Firehose is unable to assume role") {
 				return true, err
 			}
+			// InvalidArgumentException: The security token included in the request is invalid. Ensure that the provided IAM role associated with firehose is not deleted.
+			if errs.IsAErrorMessageContains[*types.InvalidArgumentException](err, "Ensure that the provided IAM role associated with firehose is not deleted") {
+				return true, err
+			}
 			return false, err
 		},
 	)
