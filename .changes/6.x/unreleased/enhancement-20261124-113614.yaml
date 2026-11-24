@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:36:14.896988-05:00
+custom:
+  Body: Add `aws_managed_rules_ai_security_rule_set` to `managed_rule_group.managed_rule_group_configs`
+  Impact: resource/aws_wafv2_web_acl_rule_group_association
+  PullRequest: "51211"
