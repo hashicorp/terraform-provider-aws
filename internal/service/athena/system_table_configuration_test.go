@@ -165,7 +165,6 @@ func testAccSystemTableConfiguration_kmsKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSystemTableConfigurationConfig_kmsKeyARN(fmt.Sprintf("arn:%s:kms:%s:123456789012:alias/example", acctest.Partition(), acctest.Region())),
-				PlanOnly:    true,
 				ExpectError: regexache.MustCompile(`not\s+an\s+alias\s+ARN`),
 			},
 			{

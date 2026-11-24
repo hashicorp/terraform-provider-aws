@@ -7,11 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/service/athena"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/athena/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -56,8 +55,6 @@ const (
 	retainedSystemTable    = `the S3 Tables table "query_executions" in namespace "` + systemTablesNamespace + `" of table bucket "` + systemTablesBucketName + `"`
 )
 
-var kmsKeyARNRegex = regexache.MustCompile(`^arn:aws[a-z-]*:kms:[a-z0-9-]+:\d{12}:key/(mrk-)?[0-9a-f-]+$`)
-
 func (r *systemTableConfigurationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	tableNameType := fwtypes.StringEnumType[awstypes.SystemTableName]()
 
@@ -68,7 +65,7 @@ func (r *systemTableConfigurationResource) Schema(ctx context.Context, request r
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(kmsKeyARNRegex, "must be a KMS key ARN, not an alias ARN. Athena stores the key that an alias points to, not the alias"),
+					lazystringvalidator.RegexMatches(`^arn:aws[a-z-]*:kms:[a-z0-9-]+:\d{12}:key/(mrk-)?[0-9a-f-]+$`, "must be a KMS key ARN, not an alias ARN. Athena stores the key that an alias points to, not the alias"),
 				},
 			},
 			names.AttrTableName: schema.StringAttribute{
