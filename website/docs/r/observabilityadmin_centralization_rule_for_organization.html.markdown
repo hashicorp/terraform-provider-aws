@@ -167,76 +167,73 @@ resource "aws_observabilityadmin_centralization_rule_for_organization" "metrics"
 
 This resource supports the following arguments:
 
-* `rule_name` - (Required) Name of the centralization rule. Must be unique within the organization.
-* `rule` - (Required) Configuration block for the centralization rule. See [`rule`](#rule) below.
-
-The following arguments are optional:
-
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `rule` - (Required) Configuration block for the centralization rule. See [`rule` Block](#rule-block) below.
+* `rule_name` - (Required) Name of the centralization rule. Must be unique within the organization.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### rule
+### `rule` Block
 
-* `destination` - (Required) Configuration block for the destination where telemetry will be centralized. See [`destination`](#destination) below.
-* `source` - (Required) Configuration block for the source of logs to be centralized. See [`source`](#source) below.
+* `destination` - (Required) Configuration block for the destination where telemetry will be centralized. See [`destination` Block](#destination-block) below.
+* `source` - (Required) Configuration block for the source of logs to be centralized. See [`source` Block](#source-block) below.
 
-### destination
+### `destination` Block
 
 * `account` - (Required) AWS account ID where telemetry will be centralized.
+* `destination_logs_configuration` - (Optional) Configuration block for destination logs settings. See [`destination_logs_configuration` Block](#destination_logs_configuration-block) below.
+* `destination_metrics_configuration` - (Optional) Configuration block for destination metrics settings. See [`destination_metrics_configuration` Block](#destination_metrics_configuration-block) below.
 * `region` - (Required) AWS region where telemetry will be centralized.
-* `destination_logs_configuration` - (Optional) Configuration block for destination logs settings. See [`destination_logs_configuration`](#destination_logs_configuration) below.
-* `destination_metrics_configuration` - (Optional) Configuration block for destination metrics settings. See [`destination_metrics_configuration`](#destination_metrics_configuration) below.
 
-#### destination_logs_configuration
+#### `destination_logs_configuration` Block
 
-* `backup_configuration` - (Optional) Configuration block for backup settings. See [`backup_configuration`](#backup_configuration) below.
-* `log_group_name_configuration` - (Optional) Configuration block for a naming pattern for destination log groups created during centralization. See [`log_group_name_configuration`](#log_group_name_configuration) below.
-* `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration`](#logs_encryption_configuration) below.
-* `tag_propagation_configuration` - (Optional) Configuration block for propagating source resource tags to centralized destination log groups. See [`tag_propagation_configuration`](#tag_propagation_configuration) below.
+* `backup_configuration` - (Optional) Configuration block for backup settings. See [`destination_logs_configuration.backup_configuration` Block](#destination_logs_configurationbackup_configuration-block) below.
+* `log_group_name_configuration` - (Optional) Configuration block for a naming pattern for destination log groups created during centralization. See [`log_group_name_configuration` Block](#log_group_name_configuration-block) below.
+* `logs_encryption_configuration` - (Optional) Configuration block for logs encryption settings. See [`logs_encryption_configuration` Block](#logs_encryption_configuration-block) below.
+* `tag_propagation_configuration` - (Optional) Configuration block for propagating source resource tags to centralized destination log groups. See [`tag_propagation_configuration` Block](#tag_propagation_configuration-block) below.
 
-#### backup_configuration
+#### `destination_logs_configuration.backup_configuration` Block
 
-* `region` - (Required) AWS region for backup storage.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for backup encryption.
+* `region` - (Optional) AWS region for backup storage.
 
-#### log_group_name_configuration
+#### `log_group_name_configuration` Block
 
 * `log_group_name_pattern` - (Required) Pattern used for generating destination log group names during centralization. The pattern can contain static text and dynamic variables that are replaced with source attributes. For supported dynamic variables, see the [AWS documentation](https://docs.aws.amazon.com/cloudwatch/latest/observabilityadmin/API_LogGroupNameConfiguration.html). Note that `$` used in dynamic variables must be escaped as `$$` in Terraform configuration.
 
-#### logs_encryption_configuration
+#### `logs_encryption_configuration` Block
 
-* `encryption_strategy` - (Required) Encryption strategy for logs. Valid values: `AWS_OWNED`, `CUSTOMER_MANAGED`.
 * `encryption_conflict_resolution_strategy` - (Optional) Strategy for resolving encryption conflicts. Valid values: `ALLOW`, `SKIP`.
-* `encryption_scope` - (Optional) Determines which newly created destination log groups are encrypted with `kms_key_arn` when `encryption_strategy` is `CUSTOMER_MANAGED`. Valid values: `ENCRYPTED_SOURCE_ONLY` (default), `NEW_DESTINATION_LOG_GROUPS`. Not valid when `encryption_strategy` is `AWS_OWNED`.
+* `encryption_scope` - (Optional) Scope controlling which newly created destination log groups are encrypted with `kms_key_arn` when `encryption_strategy` is `CUSTOMER_MANAGED`. Valid values: `ENCRYPTED_SOURCE_ONLY` (default), `NEW_DESTINATION_LOG_GROUPS`. Not valid when `encryption_strategy` is `AWS_OWNED`.
+* `encryption_strategy` - (Required) Encryption strategy for logs. Valid values: `AWS_OWNED`, `CUSTOMER_MANAGED`.
 * `kms_key_arn` - (Optional) ARN of the KMS key to use for encryption when `encryption_strategy` is `CUSTOMER_MANAGED`.
 
-#### tag_propagation_configuration
+#### `tag_propagation_configuration` Block
 
 * `destination_role_arn` - (Required) ARN of the IAM role that the service assumes to propagate source resource tags to centralized destination log groups.
 * `tag_conflict_resolution_strategy` - (Optional) Strategy for resolving tag conflicts when propagating tags to destination log groups. Valid values: `IN_SYNC`, `ADD_ONLY`, `UPDATE_SYNC`.
 
-#### destination_metrics_configuration
+#### `destination_metrics_configuration` Block
 
-* `backup_configuration` - (Optional) Configuration block for metrics backup settings. See [`destination_metrics_backup_configuration`](#destination_metrics_backup_configuration) below.
+* `backup_configuration` - (Optional) Configuration block for metrics backup settings. See [`destination_metrics_configuration.backup_configuration` Block](#destination_metrics_configurationbackup_configuration-block) below.
 
-#### destination_metrics_backup_configuration
+#### `destination_metrics_configuration.backup_configuration` Block
 
 * `region` - (Required) AWS region for metrics backup destination.
 
-### source
+### `source` Block
 
 * `regions` - (Required) Set of AWS regions from which to centralize telemetry. Must contain at least one region.
 * `scope` - (Required) Scope defining which resources to include. Use organization ID format: `OrganizationId = 'o-example123456'`.
-* `source_logs_configuration` - (Optional) Configuration block for source logs settings. See [`source_logs_configuration`](#source_logs_configuration) below.
-* `source_metrics_configuration` - (Optional) Configuration block for source metrics settings. See [`source_metrics_configuration`](#source_metrics_configuration) below.
+* `source_logs_configuration` - (Optional) Configuration block for source logs settings. See [`source_logs_configuration` Block](#source_logs_configuration-block) below.
+* `source_metrics_configuration` - (Optional) Configuration block for source metrics settings. See [`source_metrics_configuration` Block](#source_metrics_configuration-block) below.
 
-#### source_logs_configuration
+#### `source_logs_configuration` Block
 
-* `encrypted_log_group_strategy` - (Required) Strategy for handling encrypted log groups. Valid values: `ALLOW`, `SKIP`.
 * `data_source_selection_criteria` - (Optional) Criteria for selecting data sources. Uses the same filter expression format as `log_group_selection_criteria`, but operates on Data Source Name and Data Source Type operands. When both `log_group_selection_criteria` and `data_source_selection_criteria` are specified, a log event must match both criteria to be centralized. Must be between 1 and 2000 characters.
+* `encrypted_log_group_strategy` - (Required) Strategy for handling encrypted log groups. Valid values: `ALLOW`, `SKIP`.
 * `log_group_selection_criteria` - (Optional) Criteria for selecting log groups. Use `*` for all log groups or OAM filter syntax like `LogGroupName LIKE '/aws/lambda%'`. Must be between 1 and 2000 characters.
 
-#### source_metrics_configuration
+#### `source_metrics_configuration` Block
 
 * `metrics_selection_criteria` - (Required) Filter expression that selects which source metrics to centralize. Currently, only `*` (all metrics) is supported.
 
@@ -245,8 +242,8 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `rule_arn` - ARN of the centralization rule.
-* `tag_propagation_status` - Health status of tag propagation for the rule (for example, `Healthy` or `Unhealthy`). Independent of the overall rule health.
 * `tag_propagation_failure_reason` - Reason tag propagation is unhealthy, when applicable (for example, `RoleNotAssumable` or `RoleLacksPermissions`).
+* `tag_propagation_status` - Health status of tag propagation for the rule (for example, `Healthy` or `Unhealthy`). Independent of the overall rule health.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts

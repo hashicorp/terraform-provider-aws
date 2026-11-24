@@ -42,9 +42,9 @@ data "aws_outposts_assets" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - (Required) Outpost ARN.
 * `host_id_filter` - (Optional) Filters by list of Host IDs of a Dedicated Host.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `status_id_filter` - (Optional) Filters by list of state status. Valid values: "ACTIVE", "RETIRING".
 
 ## Attribute Reference

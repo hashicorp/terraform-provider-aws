@@ -42,15 +42,15 @@ resource "aws_opensearch_inbound_connection_accepter" "foo" {
 
 This resource supports the following arguments:
 
+* `connection_id` - (Required, Forces new resource) ID of the connection to accept.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the connection to accept.
 * `connection_status` - Status of the connection request.
+* `id` - ID of the connection to accept.
 
 ## Timeouts
 
