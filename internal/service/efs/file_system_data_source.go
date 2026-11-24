@@ -25,6 +25,7 @@ import (
 // @SDKDataSource("aws_efs_file_system", name="File System")
 // @Tags
 // @Testing(tagsIdentifierAttribute="id")
+// @Testing(generator=false)
 func dataSourceFileSystem() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFileSystemRead,

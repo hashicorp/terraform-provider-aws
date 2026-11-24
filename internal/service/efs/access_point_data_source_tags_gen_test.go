@@ -26,7 +26,6 @@ func TestAccEFSAccessPointDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -39,7 +38,6 @@ func TestAccEFSAccessPointDataSource_tags(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtKey1: config.StringVariable(acctest.CtValue1),
 					}),
@@ -58,7 +56,6 @@ func TestAccEFSAccessPointDataSource_Tags_nullMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -71,7 +68,6 @@ func TestAccEFSAccessPointDataSource_Tags_nullMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -86,7 +82,6 @@ func TestAccEFSAccessPointDataSource_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -99,7 +94,6 @@ func TestAccEFSAccessPointDataSource_Tags_emptyMap(t *testing.T) {
 			{
 				ConfigDirectory: config.StaticDirectory("testdata/AccessPoint/data.tags/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -114,7 +108,6 @@ func TestAccEFSAccessPointDataSource_Tags_DefaultTags_nonOverlapping(t *testing.
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -127,7 +120,6 @@ func TestAccEFSAccessPointDataSource_Tags_DefaultTags_nonOverlapping(t *testing.
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AccessPoint/data.tags_defaults/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -150,7 +142,6 @@ func TestAccEFSAccessPointDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -163,7 +154,6 @@ func TestAccEFSAccessPointDataSource_Tags_IgnoreTags_Overlap_defaultTag(t *testi
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AccessPoint/data.tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtProviderKey1: config.StringVariable(acctest.CtProviderValue1),
 					}),
@@ -192,7 +182,6 @@ func TestAccEFSAccessPointDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *test
 	ctx := acctest.Context(t)
 
 	dataSourceName := "data.aws_efs_access_point.test"
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
@@ -205,7 +194,6 @@ func TestAccEFSAccessPointDataSource_Tags_IgnoreTags_Overlap_resourceTag(t *test
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				ConfigDirectory:          config.StaticDirectory("testdata/AccessPoint/data.tags_ignore/"),
 				ConfigVariables: config.Variables{
-					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
 						acctest.CtResourceKey1: config.StringVariable(acctest.CtResourceValue1),
 					}),

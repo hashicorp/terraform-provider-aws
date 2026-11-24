@@ -21,6 +21,7 @@ import (
 // @SDKDataSource("aws_efs_access_point", name="Access Point")
 // @Tags
 // @Testing(tagsIdentifierAttribute="id")
+// @Testing(generator=false)
 func dataSourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessPointRead,
