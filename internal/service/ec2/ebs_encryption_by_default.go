@@ -13,12 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SingletonIdentity
-// @Testing(preIdentityVersion="v6.73.0", generator=false)
+// @Testing(preIdentityVersion="v6.74.0", generator=false)
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
 func resourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
@@ -139,13 +138,11 @@ func resourceEBSEncryptionByDefaultV0() *schema.Resource {
 // ebsEncryptionByDefaultStateUpgradeV0 upgrades the state from v0 (pre-identity) to v1 (identity).
 // It converts the legacy ID (generated UUID or "default") to the regional identity format.
 func ebsEncryptionByDefaultStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
-	// Upgrade the ID from legacy format to regional format.
-	if id, ok := rawState[names.AttrID].(string); ok && id != "" {
-		// If the ID is not a region, replace it with the current region.
-		if !inttypes.IsAWSRegion(id) {
-			rawState[names.AttrID] = meta.(*conns.AWSClient).Region(ctx)
-		}
+	if rawState == nil {
+		rawState = map[string]any{}
 	}
+
+	rawState[names.AttrID] = meta.(*conns.AWSClient).Region(ctx)
 
 	return rawState, nil
 }

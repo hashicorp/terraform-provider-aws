@@ -216,7 +216,7 @@ func testAccEC2EBSEBSEncryptionByDefault_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.73.0
+// Resource Identity was added after v6.74.0
 func testAccEC2EBSEBSEncryptionByDefault_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -232,7 +232,7 @@ func testAccEC2EBSEBSEncryptionByDefault_Identity_ExistingResource_basic(t *test
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/basic_v6.73.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/basic_v6.74.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEBSEncryptionByDefaultExists(ctx, t, resourceName),
@@ -266,7 +266,7 @@ func testAccEC2EBSEBSEncryptionByDefault_Identity_ExistingResource_basic(t *test
 	})
 }
 
-// Resource Identity was added after v6.73.0
+// Resource Identity was added after v6.74.0
 func testAccEC2EBSEBSEncryptionByDefault_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -287,7 +287,7 @@ func testAccEC2EBSEBSEncryptionByDefault_Identity_ExistingResource_noRefreshNoCh
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/basic_v6.73.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/EBSEncryptionByDefault/basic_v6.74.0/"),
 				ConfigVariables: config.Variables{},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEBSEncryptionByDefaultExists(ctx, t, resourceName),
