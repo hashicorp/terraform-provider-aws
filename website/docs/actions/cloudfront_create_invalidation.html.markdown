@@ -59,6 +59,27 @@ action "aws_cloudfront_create_invalidation" "assets" {
 }
 ```
 
+### Invalidate by Cache Tag
+
+Entries that start with `#` invalidate every cached object tagged with that cache tag. The distribution must have `cache_tag_config` set. Tags and paths can be mixed in one request.
+
+```terraform
+resource "aws_cloudfront_distribution" "example" {
+  # ... other configuration ...
+
+  cache_tag_config {
+    header_name = "x-amz-meta-cache-tag"
+  }
+}
+
+action "aws_cloudfront_create_invalidation" "brand" {
+  config {
+    distribution_id = aws_cloudfront_distribution.example.id
+    paths           = ["#brand:example", "#category:tv", "/index.html"]
+  }
+}
+```
+
 ### With Custom Caller Reference
 
 ```terraform
@@ -129,5 +150,5 @@ This action supports the following arguments:
 
 * `caller_reference` - (Optional) Unique identifier for the invalidation request. If not provided, one will be generated automatically. Maximum length of 128 characters.
 * `distribution_id` - (Required) ID of the CloudFront distribution to invalidate cache for. Must be a valid CloudFront distribution ID (e.g., E1GHKQ2EXAMPLE).
-* `paths` - (Required) List of file paths or patterns to invalidate. Use `/*` to invalidate all files. Supports specific files (`/index.html`), directory wildcards (`/images/*`), or all files (`/*`). Maximum of 3000 paths per invalidation request. Note: The first 1,000 invalidation paths per month are free, additional paths are charged per path.
+* `paths` - (Required) List of file paths, patterns, or cache tags to invalidate. Use `/*` to invalidate all files. Supports specific files (`/index.html`), directory wildcards (`/images/*`), all files (`/*`), or cache tags prefixed with `#` (`#product:electronics`, up to 256 visible ASCII characters with no spaces or commas, requires `cache_tag_config` on the distribution). Maximum of 3000 paths per invalidation request. Note: The first 1,000 invalidation paths per month are free, additional paths are charged per path.
 * `timeout` - (Optional) Timeout in seconds to wait for the invalidation to complete. Defaults to 900 seconds (15 minutes). Must be between 60 and 3600 seconds. Invalidation requests typically take 5-15 minutes to process.

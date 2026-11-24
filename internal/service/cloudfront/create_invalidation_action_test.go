@@ -6,9 +6,11 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,6 +43,54 @@ func TestAccCloudFrontCreateInvalidationAction_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
 					testAccCheckInvalidationExists(ctx, t, &distribution, []string{"/*"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontCreateInvalidationAction_cacheTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	maxLengthTag := "#" + strings.Repeat("t", 256)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_14_0),
+		},
+		CheckDestroy: testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccCreateInvalidationActionConfig_pathsOnly(`["#product,electronics"]`),
+				ExpectError: regexache.MustCompile(`must start with '/', be '\*', or be a cache tag`),
+			},
+			{
+				Config:      testAccCreateInvalidationActionConfig_pathsOnly(`["#product electronics"]`),
+				ExpectError: regexache.MustCompile(`must start with '/', be '\*', or be a cache tag`),
+			},
+			{
+				Config:      testAccCreateInvalidationActionConfig_pathsOnly(`["#"]`),
+				ExpectError: regexache.MustCompile(`must start with '/', be '\*', or be a cache tag`),
+			},
+			{
+				Config:      testAccCreateInvalidationActionConfig_pathsOnly(fmt.Sprintf(`[%q]`, maxLengthTag+"t")),
+				ExpectError: regexache.MustCompile(`must start with '/', be '\*', or be a cache tag`),
+			},
+			{
+				Config: testAccCreateInvalidationActionConfig_cacheTag(rName, maxLengthTag),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_tag_config.0.header_name", "x-amz-meta-cache-tag"),
+					testAccCheckInvalidationExists(ctx, t, &distribution, []string{"#product:electronics", maxLengthTag, "/index.html"}),
 				),
 			},
 		},
@@ -203,4 +253,90 @@ resource "terraform_data" "trigger" {
   }
 }
 `, rName)
+}
+
+func testAccCreateInvalidationActionConfig_pathsOnly(paths string) string {
+	return fmt.Sprintf(`
+action "aws_cloudfront_create_invalidation" "test" {
+  config {
+    distribution_id = "E1EXAMPLE"
+    paths           = %[1]s
+  }
+}
+`, paths)
+}
+
+func testAccCreateInvalidationActionConfig_cacheTag(rName, maxLengthTag string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  enabled             = true
+  wait_for_deployment = false
+
+  cache_tag_config {
+    header_name = "x-amz-meta-cache-tag"
+  }
+
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+
+    forwarded_values {
+      query_string = false
+
+      cookies {
+        forward = "none"
+      }
+    }
+
+    min_ttl     = 0
+    default_ttl = 0
+    max_ttl     = 0
+  }
+
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+action "aws_cloudfront_create_invalidation" "test" {
+  config {
+    distribution_id = aws_cloudfront_distribution.test.id
+    paths           = ["#product:electronics", "%[2]s", "/index.html"]
+  }
+}
+
+resource "terraform_data" "trigger" {
+  input = "trigger"
+  lifecycle {
+    action_trigger {
+      events  = [before_create, before_update]
+      actions = [action.aws_cloudfront_create_invalidation.test]
+    }
+  }
+}
+`, rName, maxLengthTag)
 }
