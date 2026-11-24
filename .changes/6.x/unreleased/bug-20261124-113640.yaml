@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T11:36:40.710044-05:00
+custom:
+  Body: Fix perpetual diff for a rule with `field_to_match.uri_fragment` that omits `fallback_behavior` and a `custom_response` that omits `custom_response_body_key`
+  Impact: resource/aws_wafv2_rule_group
+  PullRequest: "50509"

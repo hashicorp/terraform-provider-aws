@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T11:36:37.621398-05:00
+custom:
+  Body: Fix `byte_match_statement` search strings that are not valid UTF-8 being rewritten with U+FFFD replacement characters on the next update
+  Impact: resource/aws_wafv2_rule_group
+  PullRequest: "50509"
