@@ -1,0 +1,8 @@
+kind: enhancement
+time: 2026-11-24T14:03:18.848656-05:00
+custom:
+    Body: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission
+    Impact: |-
+        resource/aws_efs_file_system
+        data-source/aws_efs_file_system
+    PullRequest: "49938"
