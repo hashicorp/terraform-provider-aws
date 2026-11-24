@@ -5,9 +5,17 @@ FEATURES:
 * **New List Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
 * **New Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
 
+ENHANCEMENTS:
+
+* data-source/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+
 BUG FIXES:
 
+* data-source/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
 * provider: Ignore AWS system tags when waiting for tag updates to propagate ([#51238](https://github.com/hashicorp/terraform-provider-aws/issues/51238))
+* resource/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_s3_bucket: Fall back to S3 list and update tagging APIs if the corresponding S3 Control APIs fail with `AccessDenied` (e.g. Ceph Object Gateway)
 
 ## 6.74.0 (November 23, 2026)
 
