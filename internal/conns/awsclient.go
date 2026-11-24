@@ -358,10 +358,14 @@ func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType apig
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (c *AWSClient) CloudFrontDistributionHostedZoneID(ctx context.Context) string {
-	if c.Partition(ctx) == endpoints.AwsCnPartitionID {
+	switch c.Partition(ctx) {
+	case endpoints.AwsCnPartitionID:
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
+	case endpoints.AwsEuscPartitionID:
+		return "Z02010231DDS20FNRTLEC" // See https://docs.aws.eu/esc/latest/userguide/route53.html
+	default:
+		return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
 	}
-	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
 }
 
 // DefaultKMSKeyPolicy returns the default policy for KMS keys in the configured AWS partition.

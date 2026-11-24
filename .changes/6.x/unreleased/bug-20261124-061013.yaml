@@ -1,0 +1,7 @@
+kind: bug
+time: 2026-11-24T06:10:13.782795791Z
+custom:
+    Body: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition
+    Impact: |-
+        resource/aws_cloudfront_distribution
+        data-source/aws_cloudfront_distribution
