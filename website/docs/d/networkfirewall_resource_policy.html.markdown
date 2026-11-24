@@ -30,4 +30,4 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ARN that identifies the resource policy.
-* `policy` - The [policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy) for the resource.
+* `policy` - [Policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_resource_policy) for the resource.
