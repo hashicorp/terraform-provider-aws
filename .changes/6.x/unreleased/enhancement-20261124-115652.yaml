@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:56:52.392864-05:00
+custom:
+    Body: Add `db_backup_configuration` and `restore` configuration blocks
+    Impact: resource/aws_timestreaminfluxdb_db_instance
+    PullRequest: "50126"
