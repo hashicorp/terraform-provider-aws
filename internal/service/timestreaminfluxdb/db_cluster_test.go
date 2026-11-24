@@ -1576,6 +1576,7 @@ func TestAccTimestreamInfluxDBDBCluster_restore(t *testing.T) {
 					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "restore.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "restore.0.source_db_backup_id", "aws_timestreaminfluxdb_db_backup.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "restored_from_db_backup_id", "aws_timestreaminfluxdb_db_backup.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, "db_instance_type"),
 				),
 			},
@@ -1592,19 +1593,43 @@ func TestAccTimestreamInfluxDBDBCluster_restore(t *testing.T) {
 					},
 				},
 			},
+			{
+				// Removing the restore block after creation is a no-op on the AWS side.
+				Config: testAccDBClusterConfig_restoreRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "restore.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "restored_from_db_backup_id", "aws_timestreaminfluxdb_db_backup.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.large"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
 
+const testAccDBClusterConfig_restoreBlock = `
+  restore {
+    source_db_backup_id = aws_timestreaminfluxdb_db_backup.test.id
+  }`
+
 func testAccDBClusterConfig_restore(rName string) string {
-	return testAccDBClusterConfig_restoreDBInstanceType(rName, "")
+	return testAccDBClusterConfig_restoreArguments(rName, testAccDBClusterConfig_restoreBlock)
 }
 
 func testAccDBClusterConfig_restoreUpdated(rName string) string {
-	return testAccDBClusterConfig_restoreDBInstanceType(rName, `db_instance_type = "db.influx.large"`)
+	return testAccDBClusterConfig_restoreArguments(rName, `db_instance_type = "db.influx.large"`+"\n"+testAccDBClusterConfig_restoreBlock)
 }
 
-func testAccDBClusterConfig_restoreDBInstanceType(rName, dbInstanceType string) string {
+func testAccDBClusterConfig_restoreRemoved(rName string) string {
+	return testAccDBClusterConfig_restoreArguments(rName, `db_instance_type = "db.influx.large"`)
+}
+
+func testAccDBClusterConfig_restoreArguments(rName, arguments string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
 # InfluxDB V2.
 resource "aws_timestreaminfluxdb_db_cluster" "source" {
@@ -1630,10 +1655,6 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   vpc_security_group_ids = [aws_security_group.test.id]
 
   %[2]s
-
-  restore {
-    source_db_backup_id = aws_timestreaminfluxdb_db_backup.test.id
-  }
 }
-`, rName, dbInstanceType))
+`, rName, arguments))
 }

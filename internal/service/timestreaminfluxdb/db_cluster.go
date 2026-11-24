@@ -8,6 +8,7 @@ package timestreaminfluxdb
 import (
 	"context"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -28,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -273,6 +273,13 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: `The endpoint used to connect to the Timestream for InfluxDB cluster for 
 					read-only operations.`,
 			},
+			"restored_from_db_backup_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The identifier of the backup that the DB cluster was restored from. Retained after the restore block is removed.`,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrUsername: schema.StringAttribute{
@@ -428,14 +435,10 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"restore": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[restoreModel](ctx),
-				// Nested plan modifiers don't run for a removed element, so removing the block needs its own replacement trigger.
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				Description: `Restore the DB cluster from an existing backup instead of creating a new one. Adding, changing, or removing this block forces replacement.`,
+				Description: `Restore the DB cluster from an existing backup instead of creating a new one. This block can only be set at creation time.`,
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"restore_mode": schema.StringAttribute{
@@ -529,6 +532,15 @@ func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateReque
 
 	state := plan
 	state.ID = fwflex.StringValueToFramework(ctx, clusterID)
+	state.RestoredFromDBBackupID = types.StringNull()
+	if !plan.Restore.IsNull() {
+		restore, d := plan.Restore.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.RestoredFromDBBackupID = restore.SourceDBBackupID
+	}
 
 	output, err := waitDBClusterCreated(ctx, conn, clusterID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
@@ -635,7 +647,8 @@ func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateReque
 
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, plan, state)
+	// Removing the restore block after creation is a no-op.
+	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("Restore"), fwflex.WithIgnoredField("RestoredFromDBBackupID"))
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -786,6 +799,12 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 				)
 			}
 		}
+		return
+	}
+
+	removed, diags := isRestoreRemoved(ctx, req.State, data.Bucket, data.Organization, data.Password, data.Username)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() || removed {
 		return
 	}
 
@@ -1016,6 +1035,7 @@ type dbClusterResourceModel struct {
 	PubliclyAccessible            types.Bool                                                     `tfsdk:"publicly_accessible"`
 	ReaderEndpoint                types.String                                                   `tfsdk:"reader_endpoint"`
 	Restore                       fwtypes.ListNestedObjectValueOf[restoreModel]                  `tfsdk:"restore"`
+	RestoredFromDBBackupID        types.String                                                   `tfsdk:"restored_from_db_backup_id"`
 	Tags                          tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                       tftags.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value                                                 `tfsdk:"timeouts"`
@@ -1112,6 +1132,23 @@ func isCreatingFromRestore(ctx context.Context, state tfsdk.State, configRestore
 	}
 
 	return !configRestore.Equal(stateRestore), diags
+}
+
+// isRestoreRemoved reports whether the resource was restored from a backup and its restore block has since been removed.
+// Removing the block is a no-op, unless any of the initial InfluxDB arguments are now set: that means a normal create
+// (they force replacement), so the usual required-argument checks apply.
+func isRestoreRemoved(ctx context.Context, state tfsdk.State, initialArgs ...attr.Value) (bool, diag.Diagnostics) {
+	if state.Raw.IsNull() {
+		return false, nil
+	}
+
+	var restoredFrom types.String
+	diags := state.GetAttribute(ctx, path.Root("restored_from_db_backup_id"), &restoredFrom)
+	if diags.HasError() || restoredFrom.IsNull() {
+		return false, diags
+	}
+
+	return !slices.ContainsFunc(initialArgs, func(v attr.Value) bool { return !v.IsNull() }), diags
 }
 
 func isNullOrUnknownValue(val attr.Value) bool {

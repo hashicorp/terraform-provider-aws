@@ -8,13 +8,9 @@ import (
 	"maps"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -314,69 +310,79 @@ func TestDBClusterModifyPlan_restore(t *testing.T) {
 	})
 }
 
-func TestRestoreBlockRemovalRequiresReplace(t *testing.T) {
-	t.Parallel()
+func testModifyPlanRestoredState(restoreConfig map[string]tftypes.Value) map[string]tftypes.Value {
+	state := maps.Clone(restoreConfig)
+	state["restored_from_db_backup_id"] = tftypes.NewValue(tftypes.String, "backup-1")
 
-	for name, factory := range map[string]func(context.Context) (resource.ResourceWithConfigure, error){
-		"db_instance": newDBInstanceResource,
-		"db_cluster":  newDBClusterResource,
-	} {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			ctx := t.Context()
-
-			r, err := factory(ctx)
-			if err != nil {
-				t.Fatalf("creating resource: %s", err)
-			}
-
-			var schemaResp resource.SchemaResponse
-			r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
-			s := schemaResp.Schema
-			s.Attributes[names.AttrRegion] = schema.StringAttribute{Optional: true, Computed: true}
-
-			block := s.Blocks["restore"].(schema.ListNestedBlock)
-			stateRestore := testModifyPlanRestoreValue(ctx, s, "backup-1")
-			stateValue := testListValue(ctx, t, block, stateRestore)
-			planValue := testListValue(ctx, t, block, tftypes.NewValue(stateRestore.Type(), nil))
-
-			state := testModifyPlanObjectValue(ctx, s, map[string]tftypes.Value{"restore": stateRestore})
-			req := planmodifier.ListRequest{
-				Path:        path.Root("restore"),
-				StateValue:  stateValue,
-				PlanValue:   planValue,
-				ConfigValue: planValue,
-				State:       tfsdk.State{Schema: s, Raw: state},
-				Plan:        tfsdk.Plan{Schema: s, Raw: testModifyPlanObjectValue(ctx, s, nil)},
-			}
-
-			var requiresReplace bool
-			for _, m := range block.PlanModifiers {
-				resp := planmodifier.ListResponse{PlanValue: req.PlanValue}
-				m.PlanModifyList(ctx, req, &resp)
-				requiresReplace = requiresReplace || resp.RequiresReplace
-			}
-
-			if !requiresReplace {
-				t.Error("removing the restore block does not require replacement")
-			}
-		})
-	}
+	return state
 }
 
-func testListValue(ctx context.Context, t *testing.T, block schema.ListNestedBlock, v tftypes.Value) types.List {
-	t.Helper()
+func testModifyPlanRemovedRestoreConfig(restoreConfig map[string]tftypes.Value, overrides map[string]tftypes.Value) map[string]tftypes.Value {
+	config := maps.Clone(restoreConfig)
+	delete(config, "restore")
+	maps.Copy(config, overrides)
 
-	value, err := block.CustomType.ValueFromTerraform(ctx, v)
-	if err != nil {
-		t.Fatalf("building list value: %s", err)
-	}
+	return config
+}
 
-	list, diags := value.(basetypes.ListValuable).ToListValue(ctx)
-	if diags.HasError() {
-		t.Fatalf("converting list value: %s", diags)
-	}
+func TestDBInstanceModifyPlan_restoreRemoved(t *testing.T) {
+	t.Parallel()
 
-	return list
+	ctx := t.Context()
+	restoreConfig := testModifyPlanRestoreConfig(ctx, t, newDBInstanceResource, "backup-1", nil)
+
+	runModifyPlanTests(t, newDBInstanceResource, map[string]modifyPlanTestCase{
+		"removed": {
+			config: testModifyPlanRemovedRestoreConfig(restoreConfig, nil),
+			state:  testModifyPlanRestoredState(restoreConfig),
+		},
+		"removed with update": {
+			config: testModifyPlanRemovedRestoreConfig(restoreConfig, map[string]tftypes.Value{
+				"db_instance_type": tftypes.NewValue(tftypes.String, "db.influx.large"),
+			}),
+			state: testModifyPlanRestoredState(restoreConfig),
+		},
+		"removed with partial create arguments": {
+			config: testModifyPlanRemovedRestoreConfig(restoreConfig, map[string]tftypes.Value{
+				names.AttrBucket: tftypes.NewValue(tftypes.String, "initial"),
+			}),
+			state:     testModifyPlanRestoredState(restoreConfig),
+			wantError: true,
+		},
+		"removed with all create arguments": {
+			config: testDBInstanceModifyPlanConfig(nil),
+			state:  testModifyPlanRestoredState(restoreConfig),
+		},
+		"never restored": {
+			config:    testModifyPlanRemovedRestoreConfig(restoreConfig, nil),
+			state:     testModifyPlanRemovedRestoreConfig(restoreConfig, nil),
+			wantError: true,
+		},
+	})
+}
+
+func TestDBClusterModifyPlan_restoreRemoved(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	restoreConfig := testModifyPlanRestoreConfig(ctx, t, newDBClusterResource, "backup-1", nil)
+
+	runModifyPlanTests(t, newDBClusterResource, map[string]modifyPlanTestCase{
+		"removed": {
+			config: testModifyPlanRemovedRestoreConfig(restoreConfig, nil),
+			state:  testModifyPlanRestoredState(restoreConfig),
+		},
+		"removed with partial create arguments": {
+			config: testModifyPlanRemovedRestoreConfig(restoreConfig, map[string]tftypes.Value{
+				names.AttrPassword: tftypes.NewValue(tftypes.String, "testpassword"),
+			}),
+			state:     testModifyPlanRestoredState(restoreConfig),
+			wantError: true,
+		},
+		"never restored": {
+			config:    testModifyPlanRemovedRestoreConfig(restoreConfig, nil),
+			state:     testModifyPlanRemovedRestoreConfig(restoreConfig, nil),
+			wantError: true,
+		},
+	})
 }

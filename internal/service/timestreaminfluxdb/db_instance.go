@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -246,6 +245,13 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
+			"restored_from_db_backup_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The identifier of the backup that the DB instance was restored from. Retained after the restore block is removed.`,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrUsername: schema.StringAttribute{
@@ -396,14 +402,10 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"restore": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[restoreModel](ctx),
-				// Nested plan modifiers don't run for a removed element, so removing the block needs its own replacement trigger.
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				Description: `Restore the DB instance from an existing backup instead of creating a new one. Adding, changing, or removing this block forces replacement.`,
+				Description: `Restore the DB instance from an existing backup instead of creating a new one. This block can only be set at creation time.`,
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"restore_mode": schema.StringAttribute{
@@ -492,6 +494,12 @@ func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.Modify
 	}
 
 	if !isRestore {
+		removed, diags := isRestoreRemoved(ctx, req.State, config.Bucket, config.Organization, config.Password, config.Username)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() || removed {
+			return
+		}
+
 		for _, f := range requiredUnlessRestore {
 			// Unknown values (e.g. from other resources' attributes) are resolved before apply.
 			if f.val.IsNull() {
@@ -582,6 +590,15 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	state := plan
 	state.ID = fwflex.StringValueToFramework(ctx, instanceID)
+	state.RestoredFromDBBackupID = types.StringNull()
+	if !plan.Restore.IsNull() {
+		restore, d := plan.Restore.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		state.RestoredFromDBBackupID = restore.SourceDBBackupID
+	}
 
 	output, err := waitDBInstanceCreated(ctx, conn, instanceID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
@@ -694,7 +711,7 @@ func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
-	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("SecondaryAvailabilityZone"))
+	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("SecondaryAvailabilityZone"), fwflex.WithIgnoredField("Restore"), fwflex.WithIgnoredField("RestoredFromDBBackupID"))
 	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -888,6 +905,7 @@ type dbInstanceResourceModel struct {
 	Port                          types.Int32                                                    `tfsdk:"port"`
 	PubliclyAccessible            types.Bool                                                     `tfsdk:"publicly_accessible"`
 	Restore                       fwtypes.ListNestedObjectValueOf[restoreModel]                  `tfsdk:"restore"`
+	RestoredFromDBBackupID        types.String                                                   `tfsdk:"restored_from_db_backup_id"`
 	SecondaryAvailabilityZone     types.String                                                   `tfsdk:"secondary_availability_zone"`
 	Tags                          tftags.Map                                                     `tfsdk:"tags"`
 	TagsAll                       tftags.Map                                                     `tfsdk:"tags_all"`
