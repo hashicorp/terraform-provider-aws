@@ -120,33 +120,38 @@ jobs:
           }
           EOF
 
-      # GitHub runs bash with 'set -eo pipefail'; disable pipefail so the error
-      # output is captured instead of ending the step.
+      # Success is Terraform's exit code. On failure, report the JSON error
+      # diagnostics, or stderr and the last JSON lines if there are none (for
+      # example, a crash before any diagnostics are written).
       - name: Initialize
         env:
           ELAPSED: ${{ needs.registry-ingest.outputs.elapsed }}
           OS: ${{ matrix.os }}
         run: |
-          set +o pipefail
           SECONDS=$ELAPSED
           while :; do
-            ERROR=$(terraform init -upgrade -json | jq --slurp '.[] | select(.diagnostic.severity == "error")')
-            if [[ -z "$ERROR" ]]; then
+            RC=0
+            terraform init -upgrade -input=false -json > init.json 2> init.err || RC=$?
+            if (( RC == 0 )); then
               echo "Initialization on \`${OS}\` succeeded." >> "$GITHUB_STEP_SUMMARY"
               break
             fi
             if (( SECONDS / 60 >= TIMEOUT_MINUTES )); then
+              ERROR=$(jq -rR 'fromjson? | select(.diagnostic.severity == "error") | .["@message"] + "\n\n" + (.diagnostic.detail // "")' init.json || true)
+              if [[ -z "$ERROR" ]]; then
+                ERROR=$(printf 'terraform init exited %s with no error diagnostics.\n\nstderr:\n%s\n\nLast output:\n%s' "$RC" "$(cat init.err)" "$(tail -n 20 init.json)")
+              fi
               {
                 echo "Initialization on \`${OS}\` failed after ${TIMEOUT_MINUTES} minutes:"
                 echo
                 echo '```console'
-                jq --raw-output '.["@message"] + "\n\n" + .diagnostic.detail' <<< "$ERROR"
+                echo "$ERROR"
                 echo '```'
               } >> "$GITHUB_STEP_SUMMARY"
-              echo "::error::Initialization on ${OS} failed"
+              echo "::error::Initialization on ${OS} failed (exit ${RC})"
               exit 1
             fi
-            echo "Initialization failed, retrying in 60s..."
+            echo "Initialization failed (exit ${RC}), retrying in 60s..."
             sleep 60
           done
 
