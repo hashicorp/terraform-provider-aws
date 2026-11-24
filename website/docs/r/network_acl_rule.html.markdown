@@ -41,18 +41,18 @@ resource "aws_network_acl_rule" "bar" {
 
 This resource supports the following arguments:
 
+* `cidr_block` - (Optional) Network range to allow or deny, in CIDR notation (for example 172.16.0.0/24 ).
+* `egress` - (Optional, bool) Whether this is an egress rule (rule is applied to traffic leaving the subnet). Default `false`.
+* `from_port` - (Optional) From port to match.
+* `icmp_code` - (Optional) ICMP protocol: The ICMP code. Required if specifying ICMP for the protocol. E.g., -1
+* `icmp_type` - (Optional) ICMP protocol: The ICMP type. Required if specifying ICMP for the protocol. E.g., -1
+* `ipv6_cidr_block` - (Optional) IPv6 CIDR block to allow or deny.
+* `network_acl_id` - (Required) ID of the network ACL.
+* `protocol` - (Required) Protocol. A value of -1 means all protocols.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `network_acl_id` - (Required) The ID of the network ACL.
-* `rule_number` - (Required) The rule number for the entry (for example, 100). ACL entries are processed in ascending order by rule number.
-* `egress` - (Optional, bool) Indicates whether this is an egress rule (rule is applied to traffic leaving the subnet). Default `false`.
-* `protocol` - (Required) The protocol. A value of -1 means all protocols.
-* `rule_action` - (Required) Indicates whether to allow or deny the traffic that matches the rule. Accepted values: `allow` | `deny`
-* `cidr_block` - (Optional) The network range to allow or deny, in CIDR notation (for example 172.16.0.0/24 ).
-* `ipv6_cidr_block` - (Optional) The IPv6 CIDR block to allow or deny.
-* `from_port` - (Optional) The from port to match.
-* `to_port` - (Optional) The to port to match.
-* `icmp_type` - (Optional) ICMP protocol: The ICMP type. Required if specifying ICMP for the protocolE.g., -1
-* `icmp_code` - (Optional) ICMP protocol: The ICMP code. Required if specifying ICMP for the protocolE.g., -1
+* `rule_action` - (Required) Whether to allow or deny the traffic that matches the rule. Accepted values: `allow` | `deny`
+* `rule_number` - (Required) Rule number for the entry (for example, 100). ACL entries are processed in ascending order by rule number.
+* `to_port` - (Optional) To port to match.
 
 ~> **NOTE:** If the value of `protocol` is `-1` or `all`, the `from_port` and `to_port` values will be ignored and the rule will apply to all ports.
 
@@ -64,7 +64,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the network ACL Rule
+* `id` - ID of the network ACL Rule
 
 ## Import
 
