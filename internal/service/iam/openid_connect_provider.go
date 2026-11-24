@@ -7,6 +7,7 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,6 +52,17 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 						Type:         schema.TypeString,
 						ValidateFunc: validation.StringLenBetween(1, 255),
 					},
+				},
+				"context_provider": contextProviderSchema(),
+				"identity_center_instance_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					RequiredWith: []string{"context_provider"},
+				},
+				"identity_store_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
@@ -82,6 +95,14 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
 		Tags:         getTagsIn(ctx),
 		Url:          aws.String(d.Get(names.AttrURL).(string)),
+	}
+
+	if v, ok := d.GetOk("context_provider"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ContextProvider = expandContextProvider(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("identity_center_instance_arn"); ok {
+		input.IdentityCenterInstanceArn = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("thumbprint_list"); ok {
@@ -145,6 +166,9 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 func resourceOpenIDConnectProviderFlatten(ctx context.Context, provider *iam.GetOpenIDConnectProviderOutput, d *schema.ResourceData) {
 	d.Set(names.AttrARN, d.Id())
 	d.Set("client_id_list", provider.ClientIDList)
+	d.Set("context_provider", flattenContextProvider(provider.ContextProvider))
+	d.Set("identity_center_instance_arn", provider.IdentityCenterInstanceArn)
+	d.Set("identity_store_arn", provider.IdentityStoreArn)
 	d.Set("thumbprint_list", provider.ThumbprintList)
 	d.Set(names.AttrURL, provider.Url)
 
@@ -208,7 +232,68 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
+	// UpdateOpenIDConnectProvider can change either the context provider or the
+	// IAM Identity Center association in one request, not both, and the context
+	// provider can only be removed after the association has been removed.
+	contextProviderChanged := d.HasChange("context_provider")
+	identityCenterChanged := d.HasChange("identity_center_instance_arn")
+	removingIdentityCenter := identityCenterChanged && d.Get("identity_center_instance_arn").(string) == ""
+
+	if contextProviderChanged && !removingIdentityCenter {
+		if err := updateOpenIDConnectProviderContextProvider(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if identityCenterChanged {
+		if err := updateOpenIDConnectProviderIdentityCenterInstance(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if contextProviderChanged && removingIdentityCenter {
+		if err := updateOpenIDConnectProviderContextProvider(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
+}
+
+func updateOpenIDConnectProviderContextProvider(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	input := &iam.UpdateOpenIDConnectProviderInput{
+		OpenIDConnectProviderArn: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("context_provider"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ContextProvider = expandContextProvider(v.([]any)[0].(map[string]any))
+	} else {
+		input.RemoveContextProvider = true
+	}
+
+	if _, err := conn.UpdateOpenIDConnectProvider(ctx, input); err != nil {
+		return fmt.Errorf("updating IAM OIDC Provider (%s) context provider: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func updateOpenIDConnectProviderIdentityCenterInstance(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	input := &iam.UpdateOpenIDConnectProviderInput{
+		OpenIDConnectProviderArn: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("identity_center_instance_arn"); ok {
+		input.IdentityCenterInstanceArn = aws.String(v.(string))
+	} else {
+		input.RemoveIdentityCenterInstance = true
+	}
+
+	if _, err := conn.UpdateOpenIDConnectProvider(ctx, input); err != nil {
+		return fmt.Errorf("updating IAM OIDC Provider (%s) IAM Identity Center instance: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
