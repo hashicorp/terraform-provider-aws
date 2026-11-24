@@ -1833,9 +1833,10 @@ func (m webACLRuleScopeDownStatementModel) Expand(ctx context.Context) (result a
 }
 
 type webACLRuleRegexPatternSetReferenceStatementModel struct {
-	ARN                 types.String                                                  `tfsdk:"arn"`
-	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
-	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+	ARN                         types.String                                                          `tfsdk:"arn"`
+	FieldToMatch                fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]          `tfsdk:"field_to_match"`
+	PreParseTextTransformations fwtypes.ListNestedObjectValueOf[webACLRulePreParseTextTransformModel] `tfsdk:"pre_parse_text_transformation"`
+	TextTransformations         fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel]         `tfsdk:"text_transformation"`
 }
 
 type webACLRuleRateBasedStatementCustomKeyModel struct {
@@ -2034,34 +2035,39 @@ func (m webACLRuleRateBasedStatementModel) Expand(ctx context.Context) (result a
 }
 
 type webACLRuleByteMatchStatementModel struct {
-	SearchString         types.String                                                  `tfsdk:"search_string"`
-	PositionalConstraint fwtypes.StringEnum[awstypes.PositionalConstraint]             `tfsdk:"positional_constraint"`
-	FieldToMatch         fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
-	TextTransformations  fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+	SearchString                types.String                                                          `tfsdk:"search_string"`
+	PositionalConstraint        fwtypes.StringEnum[awstypes.PositionalConstraint]                     `tfsdk:"positional_constraint"`
+	FieldToMatch                fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]          `tfsdk:"field_to_match"`
+	PreParseTextTransformations fwtypes.ListNestedObjectValueOf[webACLRulePreParseTextTransformModel] `tfsdk:"pre_parse_text_transformation"`
+	TextTransformations         fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel]         `tfsdk:"text_transformation"`
 }
 
 type webACLRuleSqliMatchStatementModel struct {
-	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
-	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
-	SensitivityLevel    fwtypes.StringEnum[awstypes.SensitivityLevel]                 `tfsdk:"sensitivity_level"`
+	FieldToMatch                fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]          `tfsdk:"field_to_match"`
+	PreParseTextTransformations fwtypes.ListNestedObjectValueOf[webACLRulePreParseTextTransformModel] `tfsdk:"pre_parse_text_transformation"`
+	TextTransformations         fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel]         `tfsdk:"text_transformation"`
+	SensitivityLevel            fwtypes.StringEnum[awstypes.SensitivityLevel]                         `tfsdk:"sensitivity_level"`
 }
 
 type webACLRuleXssMatchStatementModel struct {
-	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
-	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+	FieldToMatch                fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]          `tfsdk:"field_to_match"`
+	PreParseTextTransformations fwtypes.ListNestedObjectValueOf[webACLRulePreParseTextTransformModel] `tfsdk:"pre_parse_text_transformation"`
+	TextTransformations         fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel]         `tfsdk:"text_transformation"`
 }
 
 type webACLRuleSizeConstraintStatementModel struct {
-	ComparisonOperator  fwtypes.StringEnum[awstypes.ComparisonOperator]               `tfsdk:"comparison_operator"`
-	Size                types.Int64                                                   `tfsdk:"size"`
-	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
-	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+	ComparisonOperator          fwtypes.StringEnum[awstypes.ComparisonOperator]                       `tfsdk:"comparison_operator"`
+	Size                        types.Int64                                                           `tfsdk:"size"`
+	FieldToMatch                fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]          `tfsdk:"field_to_match"`
+	PreParseTextTransformations fwtypes.ListNestedObjectValueOf[webACLRulePreParseTextTransformModel] `tfsdk:"pre_parse_text_transformation"`
+	TextTransformations         fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel]         `tfsdk:"text_transformation"`
 }
 
 type webACLRuleRegexMatchStatementModel struct {
-	RegexString         types.String                                                  `tfsdk:"regex_string"`
-	FieldToMatch        fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]  `tfsdk:"field_to_match"`
-	TextTransformations fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel] `tfsdk:"text_transformation"`
+	RegexString                 types.String                                                          `tfsdk:"regex_string"`
+	FieldToMatch                fwtypes.ListNestedObjectValueOf[webACLRuleFieldToMatchModel]          `tfsdk:"field_to_match"`
+	PreParseTextTransformations fwtypes.ListNestedObjectValueOf[webACLRulePreParseTextTransformModel] `tfsdk:"pre_parse_text_transformation"`
+	TextTransformations         fwtypes.ListNestedObjectValueOf[webACLRuleTextTransformModel]         `tfsdk:"text_transformation"`
 }
 
 type webACLRuleLabelMatchStatementModel struct {
@@ -2238,6 +2244,11 @@ type webACLRuleSingleHeaderModel struct {
 
 type webACLRuleSingleQueryArgumentModel struct {
 	Name types.String `tfsdk:"name"`
+}
+
+type webACLRulePreParseTextTransformModel struct {
+	Priority types.Int32                                                 `tfsdk:"priority"`
+	Type     fwtypes.StringEnum[awstypes.PreParseTextTransformationType] `tfsdk:"type"`
 }
 
 type webACLRuleTextTransformModel struct {

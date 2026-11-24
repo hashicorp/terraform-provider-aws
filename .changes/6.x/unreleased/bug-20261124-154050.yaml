@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T15:40:50.651938-05:00
+custom:
+  Body: Fix updates silently removing pre-parse text transformations that the rule already has in AWS
+  Impact: resource/aws_wafv2_web_acl_rule
+  PullRequest: "51345"

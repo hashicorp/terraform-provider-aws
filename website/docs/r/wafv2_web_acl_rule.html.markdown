@@ -538,6 +538,7 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field_to_match-block) below.
 * `positional_constraint` - (Required) Area within the portion of the web request that you want WAF to search for `search_string`. Valid values: `EXACTLY`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CONTAINS_WORD`.
+* `pre_parse_text_transformation` - (Optional) Text transformations that AWS WAF applies to the raw query string before it parses the query arguments. Valid only when `field_to_match` is `single_query_argument` or `all_query_arguments`. See [Pre-Parse Text Transformation](#pre_parse_text_transformation-block) below.
 * `search_string` - (Required) String value to search for within the request (1-200 characters).
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text_transformation-block) below.
 
@@ -585,6 +586,7 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 * `comparison_operator` - (Required) Operator to use to compare the request part to the size setting. Valid values: `EQ`, `NE`, `LE`, `LT`, `GE`, `GT`.
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field_to_match-block) below.
+* `pre_parse_text_transformation` - (Optional) Text transformations that AWS WAF applies to the raw query string before it parses the query arguments. Valid only when `field_to_match` is `single_query_argument` or `all_query_arguments`. See [Pre-Parse Text Transformation](#pre_parse_text_transformation-block) below.
 * `size` - (Required) Size, in bytes, to compare to the request part, after any transformations.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text_transformation-block) below.
 
@@ -592,6 +594,7 @@ Combines multiple statements using logical OR. At least one nested statement mus
 
 * `arn` - (Required) ARN of the regex pattern set to reference.
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field_to_match-block) below.
+* `pre_parse_text_transformation` - (Optional) Text transformations that AWS WAF applies to the raw query string before it parses the query arguments. Valid only when `field_to_match` is `single_query_argument` or `all_query_arguments`. See [Pre-Parse Text Transformation](#pre_parse_text_transformation-block) below.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text_transformation-block) below.
 
 #### `rate_based_statement` Block
@@ -606,18 +609,21 @@ Combines multiple statements using logical OR. At least one nested statement mus
 #### `regex_match_statement` Block
 
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field_to_match-block) below.
+* `pre_parse_text_transformation` - (Optional) Text transformations that AWS WAF applies to the raw query string before it parses the query arguments. Valid only when `field_to_match` is `single_query_argument` or `all_query_arguments`. See [Pre-Parse Text Transformation](#pre_parse_text_transformation-block) below.
 * `regex_string` - (Required) Regular expression pattern to match against the web request component.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text_transformation-block) below.
 
 #### SQL Injection Match Statement
 
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field_to_match-block) below.
+* `pre_parse_text_transformation` - (Optional) Text transformations that AWS WAF applies to the raw query string before it parses the query arguments. Valid only when `field_to_match` is `single_query_argument` or `all_query_arguments`. See [Pre-Parse Text Transformation](#pre_parse_text_transformation-block) below.
 * `sensitivity_level` - (Optional) Sensitivity level for detecting SQL injection attacks. Valid values: `HIGH`, `LOW`. Defaults to `LOW`. `HIGH` detects more attacks but might generate more false positives.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text_transformation-block) below.
 
 #### Cross-Site Scripting Match Statement
 
 * `field_to_match` - (Required) Part of the web request that you want WAF to inspect. See [Field to Match](#field_to_match-block) below.
+* `pre_parse_text_transformation` - (Optional) Text transformations that AWS WAF applies to the raw query string before it parses the query arguments. Valid only when `field_to_match` is `single_query_argument` or `all_query_arguments`. See [Pre-Parse Text Transformation](#pre_parse_text_transformation-block) below.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection. See [Text Transformation](#text_transformation-block) below.
 
 ### `override_action` Block
@@ -738,10 +744,17 @@ Exactly one of the following must be specified:
 
 * `fallback_behavior` - (Optional) How to handle requests with a URI fragment that is too large to inspect. Valid values: `MATCH`, `NO_MATCH`.
 
+### `pre_parse_text_transformation` Block
+
+Pre-parse text transformations normalize the raw query string before AWS WAF parses it into individual query arguments, and AWS WAF applies them before any `text_transformation`. You can specify up to 10 per rule statement.
+
+* `priority` - (Required) Relative processing order for multiple pre-parse transformations (0-based).
+* `type` - (Required) Pre-parse transformation to apply. Valid values: `NONE`, `URL_DECODE`, `URL_DECODE_UNI`, `COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA`, `REPLACE_SEMICOLONS_WITH_AMPERSANDS`.
+
 ### `text_transformation` Block
 
 * `priority` - (Required) Relative processing order for multiple transformations (0-based).
-* `type` - (Required) Transformation to apply. Valid values: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`, `BASE64_DECODE`, `HEX_DECODE`, `MD5`, `REPLACE_COMMENTS`, `ESCAPE_SEQ_DECODE`, `SQL_HEX_DECODE`, `CSS_DECODE`, `JS_DECODE`, `NORMALIZE_PATH`, `NORMALIZE_PATH_WIN`, `REMOVE_NULLS`, `REPLACE_NULLS`, `BASE64_DECODE_EXT`, `URL_DECODE_UNI`, `UTF8_TO_UNICODE`.
+* `type` - (Required) Transformation to apply. Valid values: `NONE`, `COMPRESS_WHITE_SPACE`, `HTML_ENTITY_DECODE`, `LOWERCASE`, `CMD_LINE`, `URL_DECODE`, `BASE64_DECODE`, `HEX_DECODE`, `MD5`, `REPLACE_COMMENTS`, `ESCAPE_SEQ_DECODE`, `SQL_HEX_DECODE`, `CSS_DECODE`, `JS_DECODE`, `NORMALIZE_PATH`, `NORMALIZE_PATH_WIN`, `REMOVE_NULLS`, `REPLACE_NULLS`, `BASE64_DECODE_EXT`, `URL_DECODE_UNI`, `UTF8_TO_UNICODE`, `REMOVE_WHITESPACE`, `TRIM`, `TRIM_LEFT`, `TRIM_RIGHT`, `REMOVE_COMMENTS_CHAR`, `UPPERCASE`, `CMD_LINE_WIN`, `CMD_LINE_UNIX`, `JS_DECODE_EXT`, `SHA256`.
 
 ### `rule_action_override` Block
 
