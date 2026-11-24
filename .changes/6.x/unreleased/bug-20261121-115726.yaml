@@ -1,6 +1,6 @@
 kind: bug
 time: 2026-11-21T11:57:26.143-05:00
 custom:
-    Body: Fix `Incompatible Types` error when `challenge_config` is set
-    Impact: resource/aws_wafv2_web_acl_rule
-    PullRequest: "51217"
+  Body: Fix `Incompatible Types` error when `challenge_config` is set
+  Impact: resource/aws_wafv2_web_acl_rule
+  PullRequest: "51217"
