@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_networkfirewall_rule_group: Preserve the configured order of stateful `rule_option` blocks and their `settings`
+```
