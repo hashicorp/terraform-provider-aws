@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:16:33.831694+01:00
+custom:
+    Body: Add `multipath_resilience_status` attribute and `allow_multipath_resilience` to the `accepter` and `requester` maps
+    Impact: data-source/aws_vpc_peering_connection
+    PullRequest: "51088"
