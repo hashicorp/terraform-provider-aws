@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:35:45.780393-05:00
+custom:
+  Body: Add `vpc_origin_endpoint_config.ip_address_type` argument
+  Impact: resource/aws_cloudfront_vpc_origin
+  PullRequest: "50516"
