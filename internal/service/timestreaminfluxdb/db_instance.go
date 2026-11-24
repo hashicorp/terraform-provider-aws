@@ -465,7 +465,11 @@ func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.Modify
 		return
 	}
 
-	isRestore := !config.Restore.IsNull() && !config.Restore.IsUnknown()
+	if config.Restore.IsUnknown() {
+		return
+	}
+
+	isRestore := !config.Restore.IsNull()
 
 	// Arguments that are required for a normal create but are inherited from the backup on restore.
 	requiredUnlessRestore := []struct {
@@ -484,7 +488,8 @@ func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.Modify
 
 	if !isRestore {
 		for _, f := range requiredUnlessRestore {
-			if isNullOrUnknownValue(f.val) {
+			// Unknown values (e.g. from other resources' attributes) are resolved before apply.
+			if f.val.IsNull() {
 				resp.Diagnostics.AddAttributeError(
 					path.Root(f.path),
 					"Missing Required Argument",

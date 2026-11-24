@@ -741,8 +741,12 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		return
 	}
 
+	if data.Restore.IsUnknown() {
+		return
+	}
+
 	// When restoring, configuration is inherited from the backup, so skip the V2/V3 enforcement.
-	if !data.Restore.IsNull() && !data.Restore.IsUnknown() {
+	if !data.Restore.IsNull() {
 		inheritedFromBackup := []struct {
 			val  attr.Value
 			path string
@@ -777,7 +781,8 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		{data.VPCSubnetIDs, "vpc_subnet_ids"},
 	}
 	for _, f := range alwaysRequired {
-		if isNullOrUnknownValue(f.val) {
+		// Unknown values (e.g. from other resources' attributes) are resolved before apply.
+		if f.val.IsNull() {
 			resp.Diagnostics.AddAttributeError(
 				path.Root(f.path),
 				"Missing Required Argument",
@@ -824,7 +829,7 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		}
 	} else {
 		for _, v := range v2Fields {
-			if isNullOrUnknownValue(v.val) {
+			if v.val.IsNull() {
 				if rootAttributeName := v.path; rootAttributeName == "deployment_type" {
 					resp.Plan.SetAttribute(ctx, path.Root(rootAttributeName), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
 				} else {
