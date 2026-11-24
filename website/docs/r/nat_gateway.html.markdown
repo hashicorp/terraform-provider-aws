@@ -117,26 +117,26 @@ resource "aws_nat_gateway" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `allocation_id` - (Optional, zonal NAT gateways only) The Allocation ID of the Elastic IP address for the NAT Gateway. Required when `connectivity_type` is set to `public` and `availability_mode` is set to `zonal`. When `availability_mode` is set to `regional`, this must not be set; instead, use the `availability_zone_address` block to specify EIPs for each AZ.
-* `availability_mode` - (Optional) Specifies whether to create a zonal (single-AZ) or regional (multi-AZ) NAT gateway. Valid values are `zonal` and `regional`. Defaults to `zonal`.
-* `availability_zone_address` - (Optional, regional NAT gateways only) Repeatable configuration block for the Elastic IP addresses (EIPs) and availability zones for the regional NAT gateway. When not specified, the regional NAT gateway will automatically expand to new AZs and associate EIPs upon detection of an elastic network interface (auto mode). When specified, auto-expansion is disabled (manual mode). See [`availability_zone_address`](#availability_zone_address) below for details.
+* `allocation_id` - (Optional, zonal NAT gateways only) Allocation ID of the Elastic IP address for the NAT Gateway. Required when `connectivity_type` is set to `public` and `availability_mode` is set to `zonal`. When `availability_mode` is set to `regional`, this must not be set; instead, use the `availability_zone_address` block to specify EIPs for each AZ.
+* `availability_mode` - (Optional) Whether to create a zonal (single-AZ) or regional (multi-AZ) NAT gateway. Valid values are `zonal` and `regional`. Defaults to `zonal`.
+* `availability_zone_address` - (Optional, regional NAT gateways only) Repeatable configuration block for the Elastic IP addresses (EIPs) and availability zones for the regional NAT gateway. When not specified, the regional NAT gateway will automatically expand to new AZs and associate EIPs upon detection of an elastic network interface (auto mode). When specified, auto-expansion is disabled (manual mode). See [`availability_zone_address`](#availability_zone_address-block) below for details.
 * `connectivity_type` - (Optional) Connectivity type for the NAT Gateway. Valid values are `private` and `public`. When `availability_mode` is set to `regional`, this must be set to `public`. Defaults to `public`.
-* `private_ip` - (Optional, zonal NAT gateways only) The private IPv4 address to assign to the NAT Gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
-* `subnet_id` - (Optional, zonal NAT gateways only) The Subnet ID of the subnet in which to place the NAT Gateway. Required when `availability_mode` is set to `zonal`. Must not be set when `availability_mode` is set to `regional`.
-* `secondary_allocation_ids` - (Optional, zonal NAT gateways only) A list of secondary allocation EIP IDs for this NAT Gateway. To remove all secondary allocations an empty list should be specified.
-* `secondary_private_ip_address_count` - (Optional, zonal and private NAT gateways only) The number of secondary private IPv4 addresses you want to assign to the NAT Gateway.
-* `secondary_private_ip_addresses` - (Optional, zonal NAT gateways only) A list of secondary private IPv4 addresses to assign to the NAT Gateway. To remove all secondary private addresses an empty list should be specified.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `private_ip` - (Optional, zonal NAT gateways only) Private IPv4 address to assign to the NAT Gateway. If you don't provide an address, a private IPv4 address will be automatically assigned.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `secondary_allocation_ids` - (Optional, zonal NAT gateways only) List of secondary allocation EIP IDs for this NAT Gateway. To remove all secondary allocations an empty list should be specified.
+* `secondary_private_ip_address_count` - (Optional, zonal and private NAT gateways only) Number of secondary private IPv4 addresses you want to assign to the NAT Gateway.
+* `secondary_private_ip_addresses` - (Optional, zonal NAT gateways only) List of secondary private IPv4 addresses to assign to the NAT Gateway. To remove all secondary private addresses an empty list should be specified.
+* `subnet_id` - (Optional, zonal NAT gateways only) Subnet ID of the subnet in which to place the NAT Gateway. Required when `availability_mode` is set to `zonal`. Must not be set when `availability_mode` is set to `regional`.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_id` - (Optional, regional NAT gateways only) VPC ID where this NAT Gateway will be created. Required when `availability_mode` is set to `regional`.
 
-### `availability_zone_address`
+### `availability_zone_address` Block
 
 ~> **NOTE:** Once `availability_zone_address` blocks are specified (i.e., when using manual mode), removing `availability_zone_address` triggers recreation of the regional NAT Gateway in auto mode. Conversely, when operating in auto mode (i.e., without specifying `availability_zone_address`), adding these blocks triggers resource recreation to create a manual-mode regional NAT Gateway.
 
 ~> **NOTE:** Moving an `allocation_id` from one availability zone to another within `availability_zone_address` is not supported, because newly added EIPs are associated first, and only then are removed EIPs disassociated. To move it, remove the `allocation_id` from the source availability zone and apply the configuration. Then add it to the destination availability zone and apply again.
 
-* `allocation_ids` - (Required) List of allocation IDs of the Elastic IP addresses (EIPs) to be used for handling outbound NAT traffic in this specific Availability Zone.
+* `allocation_ids` - (Optional) List of allocation IDs of the Elastic IP addresses (EIPs) to be used for handling outbound NAT traffic in this specific Availability Zone.
 * `availability_zone` - (Optional) Availability Zone (e.g. `us-west-2a`) where this specific NAT gateway configuration will be active. Exactly one of `availability_zone` or `availability_zone_id` must be specified.
 * `availability_zone_id` - (Optional) Availability Zone ID (e.g. `usw2-az2`) where this specific NAT gateway configuration will be active. Exactly one of `availability_zone` or `availability_zone_id` must be specified.
 
@@ -144,12 +144,12 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `association_id` - (zonal NAT gateways only) The association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.
-* `auto_provision_zones` - (regional NAT gateways only) Indicates whether AWS automatically manages AZ coverage.
-* `auto_scaling_ips` - (regional NAT gateways only) Indicates whether AWS automatically allocates additional Elastic IP addresses (EIPs) in an AZ when the NAT gateway needs more ports due to increased concurrent connections to a single destination from that AZ.
-* `id` - The ID of the NAT Gateway.
-* `network_interface_id` - (zonal NAT gateways only) The ID of the network interface associated with the NAT Gateway.
-* `public_ip` - (zonal NAT gateways only) The Elastic IP address associated with the NAT Gateway.
+* `association_id` - (zonal NAT gateways only) Association ID of the Elastic IP address that's associated with the NAT Gateway. Only available when `connectivity_type` is `public`.
+* `auto_provision_zones` - (regional NAT gateways only) Whether AWS automatically manages AZ coverage.
+* `auto_scaling_ips` - (regional NAT gateways only) Whether AWS automatically allocates additional Elastic IP addresses (EIPs) in an AZ when the NAT gateway needs more ports due to increased concurrent connections to a single destination from that AZ.
+* `id` - ID of the NAT Gateway.
+* `network_interface_id` - (zonal NAT gateways only) ID of the network interface associated with the NAT Gateway.
+* `public_ip` - (zonal NAT gateways only) Elastic IP address associated with the NAT Gateway.
 * `regional_nat_gateway_address` - (regional NAT gateways only) Repeatable blocks for information about the IP addresses and network interface associated with the regional NAT gateway.
     * `allocation_id` - Allocation ID of the Elastic IP address.
     * `association_id` - Association ID of the Elastic IP address.
@@ -158,8 +158,9 @@ This resource exports the following attributes in addition to the arguments abov
     * `network_interface_id` - ID of the network interface.
     * `public_ip` - Public IP address.
     * `status` - Status of the NAT gateway address.
+* `regional_nat_gateway_auto_mode` - (regional NAT gateways only) Internal attribute used to trigger recreation when the regional NAT gateway switches between auto and manual mode.
 * `route_table_id` - (regional NAT gateways only) ID of the automatically created route table.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
