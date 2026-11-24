@@ -382,7 +382,7 @@ func TestAccIAMOpenIDConnectProvider_identityCenterInstance(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_contextProvider(rString, "sub", "user"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
 				),
 			},
 			{
@@ -403,7 +403,7 @@ func TestAccIAMOpenIDConnectProvider_identityCenterInstance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "identity_center_instance_arn"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
 				),
 			},
 		},
