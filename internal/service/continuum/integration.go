@@ -298,6 +298,12 @@ func (r *integrationResource) Create(ctx context.Context, request resource.Creat
 
 	// CreateIntegration returns only the ID, ARN and creation time.
 	id := aws.ToString(output.IntegrationId)
+
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root(names.AttrID), id))
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	integration, err := findIntegrationByID(ctx, conn, id)
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)

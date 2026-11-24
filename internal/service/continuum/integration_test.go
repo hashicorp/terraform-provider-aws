@@ -178,13 +178,13 @@ func testAccCheckIntegrationExists(ctx context.Context, t *testing.T, n string, 
 
 func testAccCheckIntegrationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).ContinuumClient(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_continuum_integration" {
 				continue
 			}
 
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).ContinuumClient(ctx)
 			_, err := tfcontinuum.FindIntegrationByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
 				continue
