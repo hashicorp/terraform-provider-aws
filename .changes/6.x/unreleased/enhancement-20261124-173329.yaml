@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T17:33:29.313263-05:00
+custom:
+  Body: Add `waf` argument
+  Impact: resource/aws_lightsail_distribution
+  PullRequest: "51348"

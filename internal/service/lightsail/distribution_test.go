@@ -42,6 +42,10 @@ func TestAccLightsailDistribution_serial(t *testing.T) {
 			"ip_address_type":         testAccDistribution_ipAddressType,
 			"tags":                    testAccDistribution_tags,
 			"keyOnlyTags":             testAccDistribution_keyOnlyTags,
+			"waf":                     testAccDistribution_waf,
+			"waf_rule_configs":        testAccDistribution_wafRuleConfigs,
+			"waf_bundle_upgrade":      testAccDistribution_wafBundleUpgrade,
+			"waf_bundle_downgrade":    testAccDistribution_wafBundleDowngrade,
 		},
 	}
 
@@ -104,6 +108,7 @@ func testAccDistribution_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceType),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "0"),
 				),
 			},
 			{
@@ -983,4 +988,385 @@ resource "aws_lightsail_distribution" "test" {
   }
 }
 `, rName, IpAddressType))
+}
+
+func testAccDistribution_waf(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccDistributionConfig_wafInvalidPath(rName, bucketName),
+				ExpectError: regexache.MustCompile(`must start with a forward slash`),
+			},
+			{
+				Config: testAccDistributionConfig_waf2(rName, bucketName, "AWSManagedRulesCommonRuleSet", "AWSManagedRulesKnownBadInputsRuleSet"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "medium_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName:         "AWSManagedRulesCommonRuleSet",
+						"acfp_config.#":        "0",
+						"atp_config.#":         "0",
+						"bot_control_config.#": "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName: "AWSManagedRulesKnownBadInputsRuleSet",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_waf1(rName, bucketName, "AWSManagedRulesAnonymousIpList"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName: "AWSManagedRulesAnonymousIpList",
+					}),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_wafNoRules(rName, bucketName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "0"),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_wafNone(rName, bucketName, "medium_1_0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "0"),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_waf1(rName, bucketName, "AWSManagedRulesCommonRuleSet"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName: "AWSManagedRulesCommonRuleSet",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccDistribution_wafRuleConfigs(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_wafRuleConfigs(rName, bucketName, "COMMON", "JSON", "401"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "large_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName:                         "AWSManagedRulesACFPRuleSet",
+						"acfp_config.#":                        "1",
+						"acfp_config.0.creation_path":          "/signup/submit",
+						"acfp_config.0.payload_type":           "JSON",
+						"acfp_config.0.registration_page_path": "/signup",
+						"acfp_config.0.response_inspection.#":  "0",
+						"atp_config.#":                         "0",
+						"bot_control_config.#":                 "0",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName:                                       "AWSManagedRulesATPRuleSet",
+						"atp_config.#":                                       "1",
+						"atp_config.0.login_path":                            "/login",
+						"atp_config.0.password_field":                        "/password",
+						"atp_config.0.payload_type":                          "JSON",
+						"atp_config.0.username_field":                        "/username",
+						"atp_config.0.response_inspection.#":                 "1",
+						"atp_config.0.response_inspection.0.failure_codes.#": "1",
+						"atp_config.0.response_inspection.0.success_codes.#": "1",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "waf.0.rule.*.atp_config.0.response_inspection.0.failure_codes.*", "401"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "waf.0.rule.*.atp_config.0.response_inspection.0.success_codes.*", "200"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName:                          "AWSManagedRulesBotControlRuleSet",
+						"bot_control_config.#":                  "1",
+						"bot_control_config.0.inspection_level": "COMMON",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDistributionConfig_wafRuleConfigs(rName, bucketName, "TARGETED", "FORM_ENCODED", "403"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName:              "AWSManagedRulesATPRuleSet",
+						"atp_config.0.payload_type": "FORM_ENCODED",
+					}),
+					resource.TestCheckTypeSetElemAttr(resourceName, "waf.0.rule.*.atp_config.0.response_inspection.0.failure_codes.*", "403"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "waf.0.rule.*", map[string]string{
+						names.AttrName:                          "AWSManagedRulesBotControlRuleSet",
+						"bot_control_config.0.inspection_level": "TARGETED",
+					}),
+				),
+			},
+		},
+	})
+}
+
+// Changes the bundle and enables WAF in one apply. The bundle must change first,
+// because small_1_0 does not support WAF.
+func testAccDistribution_wafBundleUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_wafNone(rName, bucketName, "small_1_0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "0"),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_waf1(rName, bucketName, "AWSManagedRulesCommonRuleSet"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "medium_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "waf.0.rule.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+// Changes the bundle and disables WAF in one apply. WAF must be disabled first,
+// because small_1_0 does not support WAF.
+func testAccDistribution_wafBundleDowngrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_distribution.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckRegion(t, string(types.RegionNameUsEast1))
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionConfig_waf1(rName, bucketName, "AWSManagedRulesCommonRuleSet"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "medium_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "1"),
+				),
+			},
+			{
+				Config: testAccDistributionConfig_wafNone(rName, bucketName, "small_1_0"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "small_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "waf.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDistributionConfig_wafBase(rName, bucketName, bundleID, waf string) string {
+	return acctest.ConfigCompose(
+		testAccDistributionConfig_base(bucketName),
+		fmt.Sprintf(`
+resource "aws_lightsail_distribution" "test" {
+  name      = %[1]q
+  bundle_id = %[2]q
+  origin {
+    name        = aws_lightsail_bucket.test.name
+    region_name = aws_lightsail_bucket.test.region
+  }
+  default_cache_behavior {
+    behavior = "cache"
+  }
+  cache_behavior_settings {
+    allowed_http_methods = "GET,HEAD,OPTIONS,PUT,PATCH,POST,DELETE"
+    cached_http_methods  = "GET,HEAD"
+    default_ttl          = 86400
+    maximum_ttl          = 31536000
+    minimum_ttl          = 0
+    forwarded_cookies {
+      option = "none"
+    }
+    forwarded_headers {
+      option = "default"
+    }
+    forwarded_query_strings {
+      option = false
+    }
+  }
+%[3]s
+}
+`, rName, bundleID, waf))
+}
+
+func testAccDistributionConfig_wafNone(rName, bucketName, bundleID string) string {
+	return testAccDistributionConfig_wafBase(rName, bucketName, bundleID, "")
+}
+
+func testAccDistributionConfig_wafNoRules(rName, bucketName string) string {
+	return testAccDistributionConfig_wafBase(rName, bucketName, "medium_1_0", `
+  waf {}
+`)
+}
+
+func testAccDistributionConfig_waf1(rName, bucketName, rule1 string) string {
+	return testAccDistributionConfig_wafBase(rName, bucketName, "medium_1_0", fmt.Sprintf(`
+  waf {
+    rule {
+      name = %[1]q
+    }
+  }
+`, rule1))
+}
+
+func testAccDistributionConfig_waf2(rName, bucketName, rule1, rule2 string) string {
+	return testAccDistributionConfig_wafBase(rName, bucketName, "medium_1_0", fmt.Sprintf(`
+  waf {
+    rule {
+      name = %[1]q
+    }
+    rule {
+      name = %[2]q
+    }
+  }
+`, rule1, rule2))
+}
+
+func testAccDistributionConfig_wafInvalidPath(rName, bucketName string) string {
+	return testAccDistributionConfig_wafBase(rName, bucketName, "large_1_0", `
+  waf {
+    rule {
+      name = "AWSManagedRulesATPRuleSet"
+      atp_config {
+        login_path     = "login"
+        password_field = "/password"
+        payload_type   = "JSON"
+        username_field = "/username"
+      }
+    }
+  }
+`)
+}
+
+func testAccDistributionConfig_wafRuleConfigs(rName, bucketName, inspectionLevel, payloadType, failureCode string) string {
+	return testAccDistributionConfig_wafBase(rName, bucketName, "large_1_0", fmt.Sprintf(`
+  waf {
+    rule {
+      name = "AWSManagedRulesACFPRuleSet"
+      acfp_config {
+        creation_path          = "/signup/submit"
+        payload_type           = "JSON"
+        registration_page_path = "/signup"
+      }
+    }
+    rule {
+      name = "AWSManagedRulesATPRuleSet"
+      atp_config {
+        login_path     = "/login"
+        password_field = "/password"
+        payload_type   = %[2]q
+        username_field = "/username"
+        response_inspection {
+          failure_codes = [%[3]s]
+          success_codes = [200]
+        }
+      }
+    }
+    rule {
+      name = "AWSManagedRulesBotControlRuleSet"
+      bot_control_config {
+        inspection_level = %[1]q
+      }
+    }
+  }
+`, inspectionLevel, payloadType, failureCode))
 }

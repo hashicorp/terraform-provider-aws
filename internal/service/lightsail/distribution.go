@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -319,6 +320,110 @@ func ResourceDistribution() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+				"waf": {
+					Type:        schema.TypeList,
+					Optional:    true,
+					MaxItems:    1,
+					Description: "Web Application Firewall (WAF) configuration of the distribution. WAF is enabled while this block is present.",
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrRule: {
+								Type:        schema.TypeSet,
+								Optional:    true,
+								Description: "WAF rule groups to enable for the distribution.",
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"acfp_config": {
+											Type:        schema.TypeList,
+											Optional:    true,
+											MaxItems:    1,
+											Description: "Configuration of the account creation fraud prevention rule group.",
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"creation_path": {
+														Type:         schema.TypeString,
+														Required:     true,
+														Description:  "Path of the endpoint that accepts completed account creation forms.",
+														ValidateFunc: validWAFPath,
+													},
+													"payload_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														Description:      "Content type of the request body of account creation requests.",
+														ValidateDiagFunc: enum.Validate[types.WafPayloadTypeEnum](),
+													},
+													"registration_page_path": {
+														Type:         schema.TypeString,
+														Required:     true,
+														Description:  "Path of the page that displays the account creation form.",
+														ValidateFunc: validWAFPath,
+													},
+													"response_inspection": wafResponseInspectionSchema(),
+												},
+											},
+										},
+										"atp_config": {
+											Type:        schema.TypeList,
+											Optional:    true,
+											MaxItems:    1,
+											Description: "Configuration of the account takeover prevention rule group.",
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"login_path": {
+														Type:         schema.TypeString,
+														Required:     true,
+														Description:  "Path of the login endpoint of the application.",
+														ValidateFunc: validWAFPath,
+													},
+													"password_field": {
+														Type:         schema.TypeString,
+														Required:     true,
+														Description:  "Name of the field in the request body that contains the password.",
+														ValidateFunc: validation.StringLenBetween(1, 512),
+													},
+													"payload_type": {
+														Type:             schema.TypeString,
+														Required:         true,
+														Description:      "Content type of the request body of login requests.",
+														ValidateDiagFunc: enum.Validate[types.WafPayloadTypeEnum](),
+													},
+													"response_inspection": wafResponseInspectionSchema(),
+													"username_field": {
+														Type:         schema.TypeString,
+														Required:     true,
+														Description:  "Name of the field in the request body that contains the username.",
+														ValidateFunc: validation.StringLenBetween(1, 512),
+													},
+												},
+											},
+										},
+										"bot_control_config": {
+											Type:        schema.TypeList,
+											Optional:    true,
+											MaxItems:    1,
+											Description: "Configuration of the bot control rule group.",
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"inspection_level": {
+														Type:             schema.TypeString,
+														Required:         true,
+														Description:      "Inspection level of the bot control rule group.",
+														ValidateDiagFunc: enum.Validate[types.WafInspectionLevelEnum](),
+													},
+												},
+											},
+										},
+										names.AttrName: {
+											Type:        schema.TypeString,
+											Required:    true,
+											Description: "Name of the WAF rule group, for example `AWSManagedRulesCommonRuleSet`.",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -355,6 +460,10 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("certificate_name"); ok {
 		in.CertificateName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("waf"); ok && len(v.([]any)) > 0 {
+		in.EnableWaf, in.WafRules = expandWAF(v.([]any))
 	}
 
 	out, err := conn.CreateDistribution(ctx, in)
@@ -450,6 +559,9 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrResourceType, out.ResourceType)
 	d.Set(names.AttrStatus, out.Status)
 	d.Set("support_code", out.SupportCode)
+	if err := d.Set("waf", flattenWAFConfig(out.Waf)); err != nil {
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionSetting, ResNameDistribution, d.Id(), err)
+	}
 
 	setTagsOut(ctx, out.Tags)
 
@@ -507,6 +619,27 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		bundleUpdate = true
 	}
 
+	// WAF is available only on some bundles, and a bundle change silently drops
+	// the rule groups that the new bundle doesn't support. When WAF stays enabled,
+	// change the bundle first and then send the WAF configuration again, so that
+	// unsupported rule groups are reported instead of dropped. When WAF is being
+	// disabled, disable it before the bundle change.
+	wafEnabled := len(d.Get("waf").([]any)) > 0
+	bundleFirst := bundleUpdate && wafEnabled
+
+	if d.HasChange("waf") || bundleFirst {
+		in.EnableWaf, in.WafRules = expandWAF(d.Get("waf").([]any))
+		update = true
+	}
+
+	if bundleFirst {
+		diags = append(diags, updateDistributionBundle(ctx, conn, d, bundleIn)...)
+		if diags.HasError() {
+			return diags
+		}
+		bundleUpdate = false
+	}
+
 	if d.HasChange(names.AttrIPAddressType) {
 		out, err := conn.SetIpAddressType(ctx, &lightsail.SetIpAddressTypeInput{
 			ResourceName:  aws.String(d.Id()),
@@ -540,20 +673,29 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if bundleUpdate {
-		log.Printf("[DEBUG] Updating Lightsail Distribution Bundle (%s): %#v", d.Id(), in)
-		out, err := conn.UpdateDistributionBundle(ctx, bundleIn)
-		if err != nil {
-			return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
-		}
-
-		diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeUpdateDistributionBundle, ResNameDistribution, d.Id())
-
-		if diag != nil {
-			return diag
+		diags = append(diags, updateDistributionBundle(ctx, conn, d, bundleIn)...)
+		if diags.HasError() {
+			return diags
 		}
 	}
 
 	return append(diags, resourceDistributionRead(ctx, d, meta)...)
+}
+
+func updateDistributionBundle(ctx context.Context, conn *lightsail.Client, d *schema.ResourceData, in *lightsail.UpdateDistributionBundleInput) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	log.Printf("[DEBUG] Updating Lightsail Distribution Bundle (%s): %#v", d.Id(), in)
+	out, err := conn.UpdateDistributionBundle(ctx, in)
+	if err != nil {
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionUpdating, ResNameDistribution, d.Id(), err)
+	}
+
+	if diag := expandOperation(ctx, conn, *out.Operation, types.OperationTypeUpdateDistributionBundle, ResNameDistribution, d.Id()); diag != nil {
+		return diag
+	}
+
+	return diags
 }
 
 func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -1041,4 +1183,175 @@ func flattenOriginProtocolPolicyEnumValues(t []types.OriginProtocolPolicyEnum) [
 	}
 
 	return out
+}
+
+var validWAFPath = validation.All(
+	validation.StringLenBetween(1, 256),
+	lazyvalidation.StringMatch(`^/`, "must start with a forward slash (/)"),
+)
+
+func wafResponseInspectionSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:        schema.TypeList,
+		Optional:    true,
+		MaxItems:    1,
+		Description: "HTTP status codes that the application returns for successful and failed attempts.",
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"failure_codes": {
+					Type:        schema.TypeSet,
+					Required:    true,
+					MinItems:    1,
+					MaxItems:    10,
+					Description: "HTTP status codes that indicate a failed attempt.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeInt,
+						ValidateFunc: validation.IntBetween(0, 999),
+					},
+				},
+				"success_codes": {
+					Type:        schema.TypeSet,
+					Required:    true,
+					MinItems:    1,
+					MaxItems:    10,
+					Description: "HTTP status codes that indicate a successful attempt.",
+					Elem: &schema.Schema{
+						Type:         schema.TypeInt,
+						ValidateFunc: validation.IntBetween(0, 999),
+					},
+				},
+			},
+		},
+	}
+}
+
+// expandWAF returns the EnableWaf and WafRules values for a waf block.
+// An absent block disables WAF. A present block enables WAF and sends the
+// complete rule group list, empty included, because the API replaces it.
+func expandWAF(tfList []any) (*bool, []types.WafRule) {
+	if len(tfList) == 0 {
+		return aws.Bool(false), nil
+	}
+
+	apiObjects := []types.WafRule{}
+
+	if tfMap, ok := tfList[0].(map[string]any); ok {
+		if v, ok := tfMap[names.AttrRule].(*schema.Set); ok {
+			for _, tfMapRaw := range v.List() {
+				tfMap, ok := tfMapRaw.(map[string]any)
+				if !ok {
+					continue
+				}
+
+				apiObjects = append(apiObjects, expandWAFRule(tfMap))
+			}
+		}
+	}
+
+	return aws.Bool(true), apiObjects
+}
+
+func expandWAFRule(tfMap map[string]any) types.WafRule {
+	apiObject := types.WafRule{
+		Name: aws.String(tfMap[names.AttrName].(string)),
+	}
+
+	if v, ok := tfMap["acfp_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+		apiObject.AcfpConfig = &types.WafAcfpConfig{
+			CreationPath:         aws.String(tfMap["creation_path"].(string)),
+			PayloadType:          types.WafPayloadTypeEnum(tfMap["payload_type"].(string)),
+			RegistrationPagePath: aws.String(tfMap["registration_page_path"].(string)),
+			ResponseInspection:   expandWAFResponseInspection(tfMap["response_inspection"].([]any)),
+		}
+	}
+
+	if v, ok := tfMap["atp_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+		apiObject.AtpConfig = &types.WafAtpConfig{
+			LoginPath:          aws.String(tfMap["login_path"].(string)),
+			PasswordField:      aws.String(tfMap["password_field"].(string)),
+			PayloadType:        types.WafPayloadTypeEnum(tfMap["payload_type"].(string)),
+			ResponseInspection: expandWAFResponseInspection(tfMap["response_inspection"].([]any)),
+			UsernameField:      aws.String(tfMap["username_field"].(string)),
+		}
+	}
+
+	if v, ok := tfMap["bot_control_config"].([]any); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]any)
+		apiObject.BotControlConfig = &types.WafBotControlConfig{
+			InspectionLevel: types.WafInspectionLevelEnum(tfMap["inspection_level"].(string)),
+		}
+	}
+
+	return apiObject
+}
+
+func expandWAFResponseInspection(tfList []any) *types.WafResponseInspection {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]any)
+
+	return &types.WafResponseInspection{
+		FailureCodes: flex.ExpandInt32ValueSet(tfMap["failure_codes"].(*schema.Set)),
+		SuccessCodes: flex.ExpandInt32ValueSet(tfMap["success_codes"].(*schema.Set)),
+	}
+}
+
+func flattenWAFConfig(apiObject *types.WafConfig) []any {
+	if apiObject == nil || !aws.ToBool(apiObject.IsWafEnabled) {
+		return nil
+	}
+
+	tfList := make([]any, 0, len(apiObject.WafRules))
+
+	for _, apiObject := range apiObject.WafRules {
+		tfMap := map[string]any{
+			names.AttrName: aws.ToString(apiObject.Name),
+		}
+
+		if v := apiObject.AcfpConfig; v != nil {
+			tfMap["acfp_config"] = []any{map[string]any{
+				"creation_path":          aws.ToString(v.CreationPath),
+				"payload_type":           v.PayloadType,
+				"registration_page_path": aws.ToString(v.RegistrationPagePath),
+				"response_inspection":    flattenWAFResponseInspection(v.ResponseInspection),
+			}}
+		}
+
+		if v := apiObject.AtpConfig; v != nil {
+			tfMap["atp_config"] = []any{map[string]any{
+				"login_path":          aws.ToString(v.LoginPath),
+				"password_field":      aws.ToString(v.PasswordField),
+				"payload_type":        v.PayloadType,
+				"response_inspection": flattenWAFResponseInspection(v.ResponseInspection),
+				"username_field":      aws.ToString(v.UsernameField),
+			}}
+		}
+
+		if v := apiObject.BotControlConfig; v != nil {
+			tfMap["bot_control_config"] = []any{map[string]any{
+				"inspection_level": v.InspectionLevel,
+			}}
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return []any{map[string]any{
+		names.AttrRule: tfList,
+	}}
+}
+
+func flattenWAFResponseInspection(apiObject *types.WafResponseInspection) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []any{map[string]any{
+		"failure_codes": flex.FlattenInt32ValueSet(apiObject.FailureCodes),
+		"success_codes": flex.FlattenInt32ValueSet(apiObject.SuccessCodes),
+	}}
 }
