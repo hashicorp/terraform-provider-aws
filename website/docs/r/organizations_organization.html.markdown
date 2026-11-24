@@ -48,7 +48,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `joined_timestamp` - Date the account became a part of the organization.
     * `name` - Name of the account.
     * `state` - State of the account.
-    * `status` - (**Deprecated** use `state` instead) Status of the account.
+    * `status` - Status of the account.
 * `arn` - ARN of the organization.
 * `id` - Identifier of the organization.
 * `master_account_arn` - ARN of the master account.
@@ -63,14 +63,14 @@ This resource exports the following attributes in addition to the arguments abov
     * `joined_timestamp` - Date the account became a part of the organization.
     * `name` - Name of the account.
     * `state` - State of the account.
-    * `status` - (**Deprecated** use `state` instead) Status of the account.
+    * `status` - Status of the account.
 * `roots` - List of organization roots. All elements have these attributes:
     * `arn` - ARN of the root.
     * `id` - Identifier of the root.
     * `name` - Name of the root.
     * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
-        * `name` - Name of the policy type.
         * `status` - Status of the policy type as it relates to the associated root.
+        * `type` - Type of the policy.
 
 ## Import
 
