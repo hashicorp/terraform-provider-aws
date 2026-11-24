@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T11:36:09.339657-05:00
+custom:
+  Body: Fix `Invalid address to set` error on Read when `association_config.request_body` has an `AGENTCORE_GATEWAY` entry
+  Impact: resource/aws_wafv2_web_acl
+  PullRequest: "51214"
