@@ -59,7 +59,6 @@ This data source exports the following attributes in addition to the arguments a
 * `creation_time` - Time that the SVM was created.
 * `endpoints` - Endpoints that are used to access data or to manage the SVM using the NetApp ONTAP CLI, REST API, or NetApp CloudManager. See [`endpoints` Block](#endpoints-block) below.
 * `file_system_id` - Identifier of the file system (e.g. `fs-12345678`).
-* `id` - SVM's system generated unique ID.
 * `lifecycle_status` - SVM's lifecycle status.
 * `lifecycle_transition_reason` - Reason why the SVM lifecycle state changed. See [`lifecycle_transition_reason` Block](#lifecycle_transition_reason-block) below.
 * `name` - Name of the SVM, if provisioned.

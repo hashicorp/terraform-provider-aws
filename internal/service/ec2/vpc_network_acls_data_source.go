@@ -36,7 +36,7 @@ func dataSourceNetworkACLs() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Optional: true,

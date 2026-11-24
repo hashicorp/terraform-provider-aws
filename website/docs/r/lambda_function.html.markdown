@@ -220,8 +220,25 @@ resource "aws_lambda_function" "example" {
     local_mount_path = "/mnt/data"
   }
 
-  # Ensure EFS is ready before Lambda creation
-  depends_on = [aws_efs_mount_target.example]
+  # Mount targets must be available and the execution role must have VPC
+  # permissions before the function is created.
+  depends_on = [
+    aws_efs_mount_target.example,
+    aws_iam_role_policy_attachment.vpc_access,
+  ]
+}
+
+data "aws_partition" "current" {}
+
+# Execution role permissions for VPC networking and EFS access
+resource "aws_iam_role_policy_attachment" "vpc_access" {
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+}
+
+resource "aws_iam_role_policy_attachment" "efs_access" {
+  role       = aws_iam_role.example.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonElasticFileSystemClientReadWriteAccess"
 }
 ```
 
@@ -710,6 +727,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `accelerator_config` - (Optional) Configuration block for accelerator (GPU) resource requirements. Requires a `capacity_provider_config` that points to an accelerator (GPU) Capacity Provider. Adding or removing `accelerator_config` forces a new function; modifying `accelerator_memory_size` on an existing function is updated in place. [See below](#accelerator_config-block).
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
 * `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-block).
 * `code_sha256` - (Optional) Base64-encoded representation the source code package file. Use this argument to trigger updates when the function source code changes. For OCI, this value is relayed directly from the image digest. For zip files, this value is the Base64 encoded SHA-256 hash of the `.zip` file. Layers are not included in the calculation. To trigger updates using a non-standard hashing algorithm, use the `source_code_hash` argument instead.
@@ -724,7 +742,7 @@ The following arguments are optional:
 * `handler` - (Optional) Function entry point in your code. Required if `package_type` is `Zip`.
 * `image_config` - (Optional) Container image configuration values. [See below](#image_config-block).
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Conflicts with `filename` and `s3_bucket`. One of `filename`, `image_uri`, or `s3_bucket` must be specified.
-* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt environment variables. If not provided when environment variables are in use, AWS Lambda uses a default service key. If provided when environment variables are not in use, the AWS Lambda API does not save this configuration.
+* `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt environment variables. If not configured, Lambda uses an AWS owned key or an AWS managed key.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function.
 * `logging_config` - (Optional) Configuration block for advanced logging settings. [See below](#logging_config-block).
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Valid value between 128 MB to 32,768 MB (32 GB), in 1 MB increments. Defaults to 128.
@@ -747,8 +765,12 @@ The following arguments are optional:
 * `tenancy_config` - (Optional) Configuration block for Tenancy. [See below](#tenancy_config-block).
 * `timeout` - (Optional) Amount of time your Lambda Function has to run in seconds. Defaults to 3. Valid between 1 and 900.
 * `tracing_config` - (Optional) Configuration block for X-Ray tracing. [See below](#tracing_config-block).
-* `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 5 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
+* `use_resource_timeout_for_propagation` - (Optional) Whether to apply resource level timeout values while retrying eventually consistent API operations. By default the provider uses a 10 minute timeout to allow for propagation in the Lambda service. When set to `true`, this default value is replaced with the configurable [resource timeouts](#timeouts). Increased timeout values may be useful in highly active accounts, or regions where propagation delays are inconsistent.
 * `vpc_config` - (Optional) Configuration block for VPC. [See below](#vpc_config-block).
+
+### `accelerator_config` Block
+
+* `accelerator_memory_size` - (Required) Minimum accelerator (GPU) memory per execution environment, in GiB. The system provisions instances with at least this amount of accelerator memory. Valid values are `3`, `6`, `12`, `16`, `24`, and `48`.
 
 ### `capacity_provider_config` Block
 

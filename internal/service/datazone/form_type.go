@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -33,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,7 +89,7 @@ func (r *formTypeResource) Schema(ctx context.Context, req resource.SchemaReques
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "^dzd[-_][a-zA-Z0-9_-]{1,36}$"),
+					lazystringvalidator.RegexMatches(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`, "^dzd[-_][a-zA-Z0-9_-]{1,36}$"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -120,7 +120,7 @@ func (r *formTypeResource) Schema(ctx context.Context, req resource.SchemaReques
 			"owning_project_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "^[a-zA-Z0-9_-]{1,36}$"),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_-]{1,36}$`, "^[a-zA-Z0-9_-]{1,36}$"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

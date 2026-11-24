@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mailmanager"
@@ -33,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -92,7 +92,7 @@ func (r *trafficPolicyResource) Schema(ctx context.Context, _ resource.SchemaReq
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_-]+$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9_-]+$`, "must contain only alphanumeric characters, underscores, and hyphens"),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -218,7 +218,7 @@ func analysisAttributes() map[string]schema.Attribute {
 			Required: true,
 			Validators: []validator.String{
 				stringvalidator.LengthBetween(1, 256),
-				stringvalidator.RegexMatches(regexache.MustCompile(`^(addon\.)?[\sa-zA-Z0-9_]+$`), "must contain only spaces, alphanumeric characters, and underscores, optionally prefixed by addon."),
+				lazystringvalidator.RegexMatches(`^(addon\.)?[\sa-zA-Z0-9_]+$`, "must contain only spaces, alphanumeric characters, and underscores, optionally prefixed by addon."),
 			},
 		},
 	}

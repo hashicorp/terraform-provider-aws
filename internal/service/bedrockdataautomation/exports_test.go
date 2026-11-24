@@ -6,8 +6,10 @@ package bedrockdataautomation
 // Exports for use in tests only.
 var (
 	ResourceBlueprint = newBlueprintResource
+	ResourceLibrary   = newLibraryResource
 	ResourceProject   = newProjectResource
 
 	FindBlueprintByARN = findBlueprintByARN
+	FindLibraryByARN   = findLibraryByARN
 	FindProjectByARN   = findProjectByARN
 )

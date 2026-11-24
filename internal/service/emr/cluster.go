@@ -764,7 +764,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc: validation.IntBetween(1, 256),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"termination_protection": {
 					Type:     schema.TypeBool,
 					Optional: true,

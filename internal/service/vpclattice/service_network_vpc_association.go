@@ -109,7 +109,7 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vpc_identifier": {
 					Type:     schema.TypeString,
 					Required: true,

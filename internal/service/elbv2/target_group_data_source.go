@@ -171,7 +171,7 @@ func dataSourceTargetGroup() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				"target_type": {
 					Type:     schema.TypeString,
 					Computed: true,

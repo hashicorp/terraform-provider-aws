@@ -56,7 +56,6 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID or ARN of the service network or service for which the policy is created.
-* `policy` - Auth policy. The policy string in JSON must not contain newlines or blank lines.
 
 ## Timeouts
 

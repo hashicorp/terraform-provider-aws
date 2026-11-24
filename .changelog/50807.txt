@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_networksecuritymanager_rule: Fix the first apply of more than one rule in an account that has never used AWS Network Security Manager failing with `ConflictException: Account or org is already onboarded`
+```

@@ -61,6 +61,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * `BASE_REF` - (Default: `main`) Origin reference to use for Git `diff` comparison, as in `origin/BASE_REF`.
 * `CURDIR` - (Default: Value of `$PWD`) Root path to use for `/.ci/scripts/`.
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
+* `GOVULNCHECK_ARGS` - (Default: ``) govulncheck arguments.
 * `K` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `PKG` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set.
 * `P` - (Default: `20`) Number of concurrent acceptance tests to run. Assigns a value to `ACCTEST_PARALLELISM` overridding any value set.
 * `PKG` - (Default: _None_) Name of the service package you want to use, such as `ec2`, `iam`, or `lambda`, limiting Go processing to that package and dependencies. Equivalent to `K` variable. Assigns values to `PKG_NAME`, `SVC_DIR`, and `TEST` overridding any values set. When neither `PKG` nor `K` is set, `PKG` is auto-detected from `T` (see the `T` variable).
@@ -106,6 +107,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `clean-go-cache-trim` | Trim Go build cache to manageable size |  |  |  |
 | `clean-make-tests` | Clean up artifacts from make tests |  |  |  |
 | `clean-tidy`<sup>D</sup> | Clean up tidy |  |  | `GO_VER` |
+| `convert-changelog` | Convert `go-changelog` fragment to Changie format |  |  | `FILE` |
 | `copyright` | Copyright Checks / headers check | ✔️ |  |  |
 | `copyright-fix` | Fix copyright headers |  |  |  |
 | _default_ | = `build` |  |  | `GO_VER` |
@@ -117,7 +119,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `docs-lint-fix` | Fix documentation linter findings |  | ✔️ |  |
 | `docs-markdown-lint` | Documentation Checks / markdown-lint | ✔️ |  |  |
 | `docs-misspell` | Documentation Checks / misspell | ✔️ |  |  |
-| `examples-tflint` | Examples Checks / tflint | ✔️ |  |  |
 | `fix` | Apply `go fix` (all packages, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-check` | Go Fix Check / go fix | ✔️ |  | `GO_VER`, `K`, `PKG`, `TEST` |
 | `fix-constants`<sup>M</sup> | Use Semgrep to fix constants |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
@@ -131,7 +132,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `gen`<sup>D</sup> | Run Go generators (all provider-wide, or scoped to a service with `PKG`/`K`) |  |  | `GO_VER`, `K`, `PKG`, `SVC_DIR` |
 | `gen-check`<sup>D</sup> | Provider Checks / go_generate | ✔️ |  |  |
 | `gen-raw` | Run all Go generators (without Go version check) |  |  | `GO_VER` |
-| `generate-changelog` | Generate changelog |  |  | `CURDIR` |
+| `generate-changelog` | [DEPRECATED] Generate changelog; use Changie workflows instead |  | ✔️ |  |
 | `gh-workflow-lint` | Workflow Linting / actionlint | ✔️ |  |  |
 | `go-build` | Provider Checks / go-build | ✔️ |  |  |
 | `go-fix-check-shard` | Go Fix Check / go fix for a specific shard | ✔️ |  | `GO_VER`, `SHARD`, `TOTAL_SHARDS` |
@@ -141,6 +142,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `golangci-lint3` | golangci-lint Checks / 3 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint4` | golangci-lint Checks / 4 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
 | `golangci-lint5` | golangci-lint Checks / 5 of 5 | ✔️ |  | `K`, `PKG`, `TEST` |
+| `govulncheck` | Run govulncheck |  |  |  |
 | `help` | Display help |  |  |  |
 | `import-lint` | Provider Checks / import-lint | ✔️ |  | `K`, `PKG`, `TEST` |
 | `install`<sup>M</sup> | = `build` |  |  | `GO_VER` |

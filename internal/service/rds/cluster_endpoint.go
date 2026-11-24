@@ -83,7 +83,7 @@ func resourceClusterEndpoint() *schema.Resource {
 					ConflictsWith: []string{"excluded_members"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

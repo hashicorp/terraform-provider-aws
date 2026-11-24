@@ -24,11 +24,6 @@ documentation:
               - '**/*.md'
               - 'docs/**/*'
               - 'website/**/*'
-examples:
-  - any:
-      - changed-files:
-          - any-glob-to-any-file:
-              - 'examples/**/*'
 flex:
   - any:
       - changed-files:
@@ -670,6 +665,12 @@ service/connectparticipant:
           - any-glob-to-any-file:
               - 'internal/service/connectparticipant/**/*'
               - 'website/**/connectparticipant_*'
+service/continuum:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/continuum/**/*'
+              - 'website/**/continuum_*'
 service/controltower:
   - any:
       - changed-files:

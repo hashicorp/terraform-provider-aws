@@ -77,6 +77,7 @@ func dataSourceRoute() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"igw_firewall": routeIGWFirewallSchema(),
 				names.AttrInstanceID: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -226,6 +227,9 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("gateway_id", route.GatewayId)
+	if err := d.Set("igw_firewall", flattenIGWFirewall(route.IgwFirewall)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting igw_firewall: %s", err)
+	}
 	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)

@@ -10,7 +10,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/observabilityadmin"
@@ -34,6 +33,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -66,7 +66,7 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 100),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[0-9A-Za-z-_.#/]+`), ""),
+					lazystringvalidator.RegexMatches(`[0-9A-Za-z-_.#/]+`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -158,7 +158,7 @@ func (r *centralizationRuleForOrganizationResource) Schema(ctx context.Context, 
 																Required: true,
 																Validators: []validator.String{
 																	stringvalidator.LengthBetween(1, 512),
-																	stringvalidator.RegexMatches(regexache.MustCompile(`(?:[\._\-/#A-Za-z0-9]+|\$\{[A-Za-z]+(?:\.[A-Za-z]+){1,2}\})+`), ""),
+																	lazystringvalidator.RegexMatches(`(?:[\._\-/#A-Za-z0-9]+|\$\{[A-Za-z]+(?:\.[A-Za-z]+){1,2}\})+`, ""),
 																},
 															},
 														},

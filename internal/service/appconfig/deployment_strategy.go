@@ -83,7 +83,7 @@ func resourceDeploymentStrategy() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.ReplicateTo](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

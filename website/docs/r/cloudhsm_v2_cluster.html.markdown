@@ -17,7 +17,7 @@ CloudHSM API Reference](https://docs.aws.amazon.com/cloudhsm/latest/APIReference
 ~> **NOTE:** A CloudHSM Cluster can take several minutes to set up.
 Practically no single attribute can be updated, except for `tags`.
 If you need to delete a cluster, you have to remove its HSM modules first.
-To initialize cluster, you have to add an HSM instance to the cluster, then sign CSR and upload it.
+To initialize cluster, you have to add an HSM instance to the cluster, then sign CSR and upload it. See the [`aws_cloudhsm_v2_hsm` resource](/docs/providers/aws/r/cloudhsm_v2_hsm.html#cluster-certificate-signing-request) for an example of retrieving the CSR.
 
 ## Example Usage
 

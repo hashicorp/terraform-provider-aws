@@ -308,6 +308,67 @@ func TestAccBedrockDataAutomationProject_customOutputConfiguration(t *testing.T)
 	})
 }
 
+func TestAccBedrockDataAutomationProject_dataAutomationLibraryConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.DataAutomationProject
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_bedrockdataautomation_project.test"
+	libraryPath := tfjsonpath.New("data_automation_library_configuration").AtSliceIndex(0).AtMapKey("library")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockDataAutomationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Project/data_automation_library_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"library_index": config.IntegerVariable(0),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, libraryPath, knownvalue.ListSizeExact(1)),
+					statecheck.CompareValuePairs(resourceName, libraryPath.AtSliceIndex(0).AtMapKey("library_arn"), "aws_bedrockdataautomation_library.test[0]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Project/data_automation_library_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"library_index": config.IntegerVariable(0),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Project/data_automation_library_configuration/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+					"library_index": config.IntegerVariable(1),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckProjectExists(ctx, t, resourceName, &v),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, libraryPath.AtSliceIndex(0).AtMapKey("library_arn"), "aws_bedrockdataautomation_library.test[1]", tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
 func TestAccBedrockDataAutomationProject_encryptionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.DataAutomationProject

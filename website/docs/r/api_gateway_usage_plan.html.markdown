@@ -144,15 +144,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `api_stages` - Associated API stages of the usage plan.
 * `arn` - ARN of the usage plan.
-* `description` - Description of a usage plan.
 * `id` - ID of the usage plan.
-* `name` - Name of the usage plan.
-* `product_code` - AWS Marketplace product identifier associated with the usage plan.
-* `quota_settings` - Quota settings of the usage plan.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `throttle_settings` - Throttling limits of the usage plan.
 
 ## Import
 

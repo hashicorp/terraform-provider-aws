@@ -44,6 +44,81 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 }
 ```
 
+### Model Artifacts in Amazon S3
+
+This example uses a custom inference image from Amazon ECR and model artifacts uploaded to Amazon S3. The inference image must be pushed to the repository before the model is created, and the execution role must be able to pull the image and read the model artifacts.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  key    = "model.tar.gz"
+  source = "model.tar.gz"
+}
+
+resource "aws_ecr_repository" "example" {
+  name = "example"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name               = "example-sagemaker-model"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
+  }
+
+  statement {
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+    resources = [aws_ecr_repository.example.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  name   = "example-sagemaker-model"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
+}
+
+resource "aws_sagemaker_model" "example" {
+  name               = "example"
+  execution_role_arn = aws_iam_role.example.arn
+
+  primary_container {
+    image          = "${aws_ecr_repository.example.repository_url}:latest"
+    model_data_url = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
+  }
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:

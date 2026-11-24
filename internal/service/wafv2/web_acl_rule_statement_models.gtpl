@@ -15,31 +15,20 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/sync"
 )
 
-// StatementModelMaxLevel is the maximum nesting depth for logical statements.
-const StatementModelMaxLevel = {{.MaxLevel}}
-
-// AWS WAF only accepts some statements in a logical statement:
-//   - rate_based_statement, managed_rule_group_statement and rule_group_reference_statement
-//     are only valid at the top level of a rule.
-//   - and_statement can't directly contain and_statement, and or_statement can't directly
-//     contain or_statement. not_statement can contain any logical statement.
-//   - and_statement and or_statement need at least 2 statements.
-//
-// The statements AWS WAF rejects are kept in the schema but fail validation when populated, so
-// configurations that never populate them, such as empty dynamic blocks, stay valid.
-{{- define "leafFields"}}
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+{{ define "leafFields" }}
+	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
 	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
+	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
+	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
+	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
+	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
+	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
+	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
 	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
 	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
-{{- end}}
-{{- define "leafBlocks"}}
+{{ end }}
+
+{{ define "leafBlocks" }}
 		"asn_match_statement":                   asnMatchStatementBlock(ctx),
 		"byte_match_statement":                  byteMatchStatementBlock(ctx),
 		"geo_match_statement":                   geoMatchStatementBlock(ctx),
@@ -50,63 +39,73 @@ const StatementModelMaxLevel = {{.MaxLevel}}
 		"size_constraint_statement":             sizeConstraintStatementBlock(ctx),
 		"sqli_match_statement":                  sqliMatchStatementBlock(ctx),
 		"xss_match_statement":                   xssMatchStatementBlock(ctx),
-{{- end}}
+{{ end }}
+
+// ruleStatementSchemaLevel is the maximum nesting depth for logical statements.
+const ruleStatementSchemaLevel = {{ .MaxLevel }}
+
+// Statements nested in a logical statement only offer the statement types AWS WAF accepts there:
+//   - rate_based_statement, managed_rule_group_statement and rule_group_reference_statement
+//     are only valid at the top level of a rule.
+//   - and_statement can't directly contain and_statement, and or_statement can't directly
+//     contain or_statement. not_statement can contain any logical statement.
+//   - and_statement and or_statement need at least 2 statements.
+
 {{range .ChildLevels}}
-// webACLRuleAndChildStatementLevel{{.}}Model is a statement nested directly in an and_statement at level {{.}}.
-type webACLRuleAndChildStatementLevel{{.}}Model struct {
-{{- if gt . 0}}
-	AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel{{minus .}}Model] `tfsdk:"and_statement"`
-{{- end}}
-{{- if gt . 0}}
-	NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
-	OrStatement  fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel{{minus .}}Model]  `tfsdk:"or_statement"`
-{{- end}}
-	ManagedRuleGroupStatement   fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel] `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement          fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]        `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]     `tfsdk:"rule_group_reference_statement"`
-{{- template "leafFields"}}
-}
+	{{ if eq . 0 }}
+		// webACLRuleStatementLevel0Model is a statement nested directly in an and_statement at level 0.
+		type webACLRuleStatementLevel0Model struct {
+			{{- template "leafFields"}}
+		}
 
-// webACLRuleOrChildStatementLevel{{.}}Model is a statement nested directly in an or_statement at level {{.}}.
-type webACLRuleOrChildStatementLevel{{.}}Model struct {
-{{- if gt . 0}}
-	OrStatement fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel{{minus .}}Model] `tfsdk:"or_statement"`
-{{- end}}
-{{- if gt . 0}}
-	AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel{{minus .}}Model] `tfsdk:"and_statement"`
-	NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
-{{- end}}
-	ManagedRuleGroupStatement   fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel] `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement          fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]        `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]     `tfsdk:"rule_group_reference_statement"`
-{{- template "leafFields"}}
-}
+		type webACLRuleAndStatementLevel0Model struct {
+			Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel0Model] `tfsdk:"statement"`
+		}
 
-// webACLRuleNotChildStatementLevel{{.}}Model is the statement nested in a not_statement at level {{.}}.
-type webACLRuleNotChildStatementLevel{{.}}Model struct {
-{{- if gt . 0}}
-	AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel{{minus .}}Model] `tfsdk:"and_statement"`
-	NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
-	OrStatement  fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel{{minus .}}Model]  `tfsdk:"or_statement"`
-{{- end}}
-	ManagedRuleGroupStatement   fwtypes.ListNestedObjectValueOf[webACLRuleNestedManagedRuleGroupStatementModel] `tfsdk:"managed_rule_group_statement"`
-	RateBasedStatement          fwtypes.ListNestedObjectValueOf[webACLRuleNestedRateBasedStatementModel]        `tfsdk:"rate_based_statement"`
-	RuleGroupReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRuleGroupReferenceStatementModel]     `tfsdk:"rule_group_reference_statement"`
-{{- template "leafFields"}}
-}
+		type webACLRuleNotStatementLevel0Model struct {
+			Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel0Model] `tfsdk:"statement"`
+		}
 
-type webACLRuleAndStatementLevel{{.}}Model struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleAndChildStatementLevel{{.}}Model] `tfsdk:"statement"`
-}
+		type webACLRuleOrStatementLevel0Model struct {
+			Statements fwtypes.ListNestedObjectValueOf[webACLRuleStatementLevel0Model] `tfsdk:"statement"`
+		}
+	{{ else }}
+		// webACLRuleAndChildStatementLevel{{.}}Model is a statement nested directly in an and_statement at level {{.}}.
+		type webACLRuleAndChildStatementLevel{{.}}Model struct {
+			NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
+			OrStatement  fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel{{minus .}}Model]  `tfsdk:"or_statement"`
+			{{- template "leafFields"}}
+		}
 
-type webACLRuleNotStatementLevel{{.}}Model struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleNotChildStatementLevel{{.}}Model] `tfsdk:"statement"`
-}
+		// webACLRuleOrChildStatementLevel{{.}}Model is a statement nested directly in an or_statement at level {{.}}.
+		type webACLRuleOrChildStatementLevel{{.}}Model struct {
+			AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel{{minus .}}Model] `tfsdk:"and_statement"`
+			NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
+			{{- template "leafFields"}}
+		}
 
-type webACLRuleOrStatementLevel{{.}}Model struct {
-	Statements fwtypes.ListNestedObjectValueOf[webACLRuleOrChildStatementLevel{{.}}Model] `tfsdk:"statement"`
-}
-{{end}}
+		// webACLRuleNotChildStatementLevel{{.}}Model is the statement nested in a not_statement at level {{.}}.
+		type webACLRuleNotChildStatementLevel{{.}}Model struct {
+			AndStatement fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel{{minus .}}Model] `tfsdk:"and_statement"`
+			NotStatement fwtypes.ListNestedObjectValueOf[webACLRuleNotStatementLevel{{minus .}}Model] `tfsdk:"not_statement"`
+			OrStatement  fwtypes.ListNestedObjectValueOf[webACLRuleOrStatementLevel{{minus .}}Model]  `tfsdk:"or_statement"`
+			{{- template "leafFields"}}
+		}
+
+		type webACLRuleAndStatementLevel{{.}}Model struct {
+			Statements fwtypes.ListNestedObjectValueOf[webACLRuleAndChildStatementLevel{{.}}Model] `tfsdk:"statement"`
+		}
+
+		type webACLRuleNotStatementLevel{{.}}Model struct {
+			Statements fwtypes.ListNestedObjectValueOf[webACLRuleNotChildStatementLevel{{.}}Model] `tfsdk:"statement"`
+		}
+
+		type webACLRuleOrStatementLevel{{.}}Model struct {
+			Statements fwtypes.ListNestedObjectValueOf[webACLRuleOrChildStatementLevel{{.}}Model] `tfsdk:"statement"`
+		}
+	{{ end }}
+{{ end }}
+
 // webACLRuleStatementLevel{{.MaxLevel}}Model is the top-level rule statement.
 type webACLRuleStatementLevel{{.MaxLevel}}Model struct {
 	AndStatement                fwtypes.ListNestedObjectValueOf[webACLRuleAndStatementLevel{{minus .MaxLevel}}Model] `tfsdk:"and_statement"`
@@ -168,21 +167,21 @@ var orStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) s
 // andChildStatementBlockLevel{{.}} is for the statements of an AND statement.
 var andChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
-{{- if gt . 0}}
-		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
-		"or_statement":                          orStatementBlockLevel{{minus .}}(ctx),
-{{- end}}
-{{- if gt . 0}}
-		"and_statement":                         notValidInLogicalStatement(andStatementBlockLevel{{minus .}}(ctx)),
-{{- end}}
+		{{- if gt . 0}}
+			"not_statement": notStatementBlockLevel{{minus .}}(ctx),
+			"or_statement":  orStatementBlockLevel{{minus .}}(ctx),
+		{{- end}}
+		{{- template "leafBlocks"}}
 	}
 
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleAndChildStatementLevel{{.}}Model](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[
+				{{- if eq . 0 -}}
+					webACLRuleStatementLevel0Model,
+				{{- else -}}
+					webACLRuleAndChildStatementLevel{{.}}Model
+				{{- end -}}
+			](ctx),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
@@ -197,21 +196,21 @@ var andChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Cont
 // orChildStatementBlockLevel{{.}} is for the statements of an OR statement.
 var orChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
-{{- if gt . 0}}
-		"and_statement":                         andStatementBlockLevel{{minus .}}(ctx),
-		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
-{{- end}}
-{{- if gt . 0}}
-		"or_statement":                          notValidInLogicalStatement(orStatementBlockLevel{{minus .}}(ctx)),
-{{- end}}
+		{{- if gt . 0}}
+			"and_statement": andStatementBlockLevel{{minus .}}(ctx),
+			"not_statement": notStatementBlockLevel{{minus .}}(ctx),
+		{{- end}}
+		{{- template "leafBlocks"}}
 	}
 
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleOrChildStatementLevel{{.}}Model](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[
+				{{- if eq . 0 -}}
+					webACLRuleStatementLevel0Model,
+				{{- else -}}
+					webACLRuleOrChildStatementLevel{{.}}Model
+				{{- end -}}
+			](ctx),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtLeast(2),
@@ -226,19 +225,22 @@ var orChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Conte
 // notChildStatementBlockLevel{{.}} is for the single statement of a NOT statement.
 var notChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Context) schema.Block {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-		"managed_rule_group_statement":          nestedManagedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  nestedRateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        nestedRuleGroupReferenceStatementBlock(ctx),
-{{- if gt . 0}}
-		"and_statement":                         andStatementBlockLevel{{minus .}}(ctx),
-		"not_statement":                         notStatementBlockLevel{{minus .}}(ctx),
-		"or_statement":                          orStatementBlockLevel{{minus .}}(ctx),
-{{- end}}
+		{{- if gt . 0}}
+			"and_statement": andStatementBlockLevel{{minus .}}(ctx),
+			"not_statement": notStatementBlockLevel{{minus .}}(ctx),
+			"or_statement":  orStatementBlockLevel{{minus .}}(ctx),
+		{{- end}}
+		{{- template "leafBlocks"}}
 	}
 
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[webACLRuleNotChildStatementLevel{{.}}Model](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[
+				{{- if eq . 0 -}}
+					webACLRuleStatementLevel0Model,
+				{{- else -}}
+					webACLRuleNotChildStatementLevel{{.}}Model
+				{{- end -}}
+			](ctx),
 		Validators: []validator.List{
 			listvalidator.IsRequired(),
 			listvalidator.SizeAtMost(1),
@@ -251,15 +253,16 @@ var notChildStatementBlockLevel{{.}} = tfsync.OnceValueCtx(func(ctx context.Cont
 	}
 })
 {{end}}
+
 func statementBlockLevel{{.MaxLevel}}(ctx context.Context) schema.ListNestedBlock {
 	blocks := map[string]schema.Block{
-{{- template "leafBlocks"}}
-		"managed_rule_group_statement":          managedRuleGroupStatementBlock(ctx),
-		"rate_based_statement":                  rateBasedStatementBlock(ctx),
-		"rule_group_reference_statement":        ruleGroupReferenceStatementBlock(ctx),
-		"and_statement":                         andStatementBlockLevel{{minus .MaxLevel}}(ctx),
-		"not_statement":                         notStatementBlockLevel{{minus .MaxLevel}}(ctx),
-		"or_statement":                          orStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		"and_statement":                  andStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		"not_statement":                  notStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		"or_statement":                   orStatementBlockLevel{{minus .MaxLevel}}(ctx),
+		{{- template "leafBlocks" -}}
+		"managed_rule_group_statement":   managedRuleGroupStatementBlock(ctx),
+		"rate_based_statement":           rateBasedStatementBlock(ctx),
+		"rule_group_reference_statement": ruleGroupReferenceStatementBlock(ctx),
 	}
 
 	return schema.ListNestedBlock{

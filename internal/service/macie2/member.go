@@ -93,7 +93,7 @@ func resourceMember() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.MacieStatus](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"updated_at": {
 					Type:     schema.TypeString,
 					Computed: true,

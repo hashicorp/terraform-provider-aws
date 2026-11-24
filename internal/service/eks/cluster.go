@@ -626,7 +626,7 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upgrade_policy": {
 					Type:     schema.TypeList,
 					MaxItems: 1,
