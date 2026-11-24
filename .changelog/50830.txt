@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_wafv2_web_acl: Fix the `AWSManagedRulesAntiDDoSRuleSet` rule that Shield Advanced automatic application layer DDoS mitigation adds being shown as a diff and removed on update
-```
