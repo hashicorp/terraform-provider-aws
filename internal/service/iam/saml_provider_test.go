@@ -158,7 +158,7 @@ func TestAccIAMSAMLProvider_contextProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "subject"),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_type_value", "user"),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.source_key", "email"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.source_key", names.AttrEmail),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.target_key", "Email"),
 					resource.TestCheckResourceAttrSet(resourceName, "saml_key_hashes.#"),
 				),
