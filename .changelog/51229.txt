@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_apigatewayv2_portal_product_sharing_policy
-```
