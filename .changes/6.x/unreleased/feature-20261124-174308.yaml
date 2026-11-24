@@ -1,0 +1,5 @@
+kind: feature
+time: 2026-11-24T17:43:08.366955+01:00
+custom:
+    Name: aws_route53_record_set_protection
+    NewType: New Resource
