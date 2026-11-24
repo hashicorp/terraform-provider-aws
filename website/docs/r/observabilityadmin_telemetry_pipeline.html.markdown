@@ -134,17 +134,17 @@ resource "aws_observabilityadmin_telemetry_pipeline" "example" {
 
 This resource supports the following arguments:
 
+* `configuration` - (Required) Configuration block for the telemetry pipeline. See [`configuration` Block](#configuration-block) below.
 * `name` - (Required, Forces new resource) Name of the telemetry pipeline. Must be between 3 and 28 characters, start with a lowercase letter, and contain only lowercase letters, digits, and hyphens.
-* `configuration` - (Required) Configuration block for the telemetry pipeline. See [`configuration`](#configuration) below.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### configuration
+### `configuration` Block
 
-* `body` - (Required) The pipeline configuration body. This is a YAML-encoded string defining the pipeline source, optional processors, and sinks.
+* `body` - (Required) Pipeline configuration body. This is a YAML-encoded string defining the pipeline source, optional processors, and sinks.
 
 ## Attribute Reference
 
