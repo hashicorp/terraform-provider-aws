@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -139,6 +140,8 @@ func (r *eventBusResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateEventBus(ctx, &input)
@@ -413,8 +416,11 @@ func findEventBusByARN(ctx context.Context, conn *eventbridgev2.Client, arn stri
 	input := eventbridgev2.DescribeEventBusInput{
 		EventBusArn: aws.String(arn),
 	}
+	return findEventBus(ctx, conn, &input)
+}
 
-	out, err := conn.DescribeEventBus(ctx, &input)
+func findEventBus(ctx context.Context, conn *eventbridgev2.Client, input *eventbridgev2.DescribeEventBusInput) (*eventbridgev2.DescribeEventBusOutput, error) {
+	out, err := conn.DescribeEventBus(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,
