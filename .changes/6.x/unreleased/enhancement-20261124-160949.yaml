@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T16:09:49.489421-05:00
+custom:
+    Body: Change `allocated_storage`, `bucket`, `db_instance_type`, `organization`, `password`, `username`, `vpc_security_group_ids`, and `vpc_subnet_ids` from required to optional. They remain required unless the `restore` block is configured, in which case the values come from the backup
+    Impact: resource/aws_timestreaminfluxdb_db_instance
+    PullRequest: "50126"
