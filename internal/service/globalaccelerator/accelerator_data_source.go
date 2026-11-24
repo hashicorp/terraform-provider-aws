@@ -179,6 +179,12 @@ type acceleratorAttributesModel struct {
 }
 
 type ipSetModel struct {
-	IPAddresses fwtypes.ListValueOf[types.String] `tfsdk:"ip_addresses" autoflex:",legacy"`
-	IPFamily    types.String                      `tfsdk:"ip_family" autoflex:",legacy"`
+	IPAddressDetails fwtypes.ListNestedObjectValueOf[ipAddressDetailModel] `tfsdk:"ip_address_details"`
+	IPAddresses      fwtypes.ListValueOf[types.String]                     `tfsdk:"ip_addresses" autoflex:",legacy"`
+	IPFamily         types.String                                          `tfsdk:"ip_family" autoflex:",legacy"`
+}
+
+type ipAddressDetailModel struct {
+	IPAddress   types.String `tfsdk:"ip_address"`
+	NetworkZone types.String `tfsdk:"network_zone"`
 }

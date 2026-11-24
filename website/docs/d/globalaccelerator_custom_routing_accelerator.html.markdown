@@ -58,5 +58,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `ip_sets` Block
 
+* `ip_address_details` - Details of each IP address in the IP address set. See [`ip_address_details`](#ip_address_details-block) below.
 * `ip_addresses` - List of IP addresses in the IP address set.
 * `ip_family` - Type of IP addresses included in this IP set.
+
+### `ip_address_details` Block
+
+* `ip_address` - Static IP address.
+* `network_zone` - Network zone that the IP address is located on, for example `nz1`.

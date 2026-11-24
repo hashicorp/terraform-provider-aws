@@ -111,6 +111,22 @@ func resourceAccelerator() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"ip_address_details": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIPAddress: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"network_zone": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 							names.AttrIPAddresses: {
 								Type:     schema.TypeList,
 								Computed: true,
@@ -445,6 +461,10 @@ func flattenIPSet(apiObject *awstypes.IpSet) map[string]any {
 
 	tfMap := map[string]any{}
 
+	if v := apiObject.IpAddressDetails; v != nil {
+		tfMap["ip_address_details"] = flattenIPAddressDetails(v)
+	}
+
 	if v := apiObject.IpAddresses; v != nil {
 		tfMap[names.AttrIPAddresses] = v
 	}
@@ -465,6 +485,38 @@ func flattenIPSets(apiObjects []awstypes.IpSet) []any {
 
 	for _, apiObject := range apiObjects {
 		tfList = append(tfList, flattenIPSet(&apiObject))
+	}
+
+	return tfList
+}
+
+func flattenIPAddressDetail(apiObject *awstypes.IpAddressDetail) map[string]any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.IpAddress; v != nil {
+		tfMap[names.AttrIPAddress] = aws.ToString(v)
+	}
+
+	if v := apiObject.NetworkZone; v != nil {
+		tfMap["network_zone"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenIPAddressDetails(apiObjects []awstypes.IpAddressDetail) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenIPAddressDetail(&apiObject))
 	}
 
 	return tfList
