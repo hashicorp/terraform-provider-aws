@@ -35,7 +35,7 @@ func testAccEC2EBSEncryptionByDefault_List_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSEncryptionByDefaultDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
@@ -76,7 +76,7 @@ func testAccEC2EBSEncryptionByDefault_List_includeResource(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSEncryptionByDefaultDestroy(ctx, t),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			// Step 1: Setup
