@@ -415,6 +415,13 @@ func (r *distributionTenantResource) Update(ctx context.Context, req resource.Up
 		input.Id = aws.String(id)
 		input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
+		// UpdateDistributionTenant keeps the existing customizations when Customizations is omitted.
+		// Send an empty object so that removing the customizations block clears them.
+		// A managed certificate request attaches its certificate as a customization, so leave that case alone.
+		if old.Customizations.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0 && new.Customizations.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 && new.ManagedCertificateRequest.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+			input.Customizations = &awstypes.Customizations{}
+		}
+
 		output, err = conn.UpdateDistributionTenant(ctx, &input)
 
 		// Refresh our ETag if it is out of date and attempt update again.

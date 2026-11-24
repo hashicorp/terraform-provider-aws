@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T12:46:12.505005-05:00
+custom:
+  Body: Fix `Provider produced inconsistent result after apply` error and stale customizations when the `customizations` block is removed
+  Impact: resource/aws_cloudfront_distribution_tenant
+  PullRequest: "51311"
