@@ -1,3 +1,9 @@
+## 6.75.0 (Unreleased)
+
+BUG FIXES:
+
+* provider: Ignore AWS system tags when waiting for tag updates to propagate ([#51238](https://github.com/hashicorp/terraform-provider-aws/issues/51238))
+
 ## 6.74.0 (November 23, 2026)
 
 NOTES:
