@@ -32,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -747,17 +748,29 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 
 	// When restoring, configuration is inherited from the backup, so skip the V2/V3 enforcement.
 	if !data.Restore.IsNull() {
+		creating, diags := isCreatingFromRestore(ctx, req.State, data.Restore)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		inheritedFromBackup := []struct {
 			val  attr.Value
 			path string
 		}{
 			{data.AllocatedStorage, names.AttrAllocatedStorage},
 			{data.Bucket, names.AttrBucket},
-			{data.DBInstanceType, "db_instance_type"},
 			{data.DBStorageType, "db_storage_type"},
 			{data.Organization, "organization"},
 			{data.Password, names.AttrPassword},
 			{data.Username, names.AttrUsername},
+		}
+		// db_instance_type can be updated in place once the restored DB cluster exists.
+		if creating {
+			inheritedFromBackup = append(inheritedFromBackup, struct {
+				val  attr.Value
+				path string
+			}{data.DBInstanceType, "db_instance_type"})
 		}
 		for _, f := range inheritedFromBackup {
 			if !isNullOrUnknownValue(f.val) {
@@ -1078,6 +1091,22 @@ func (dbBackupConfigurationCustomScheduleValidator) ValidateObject(ctx context.C
 			"custom_schedule can only be set when type is CUSTOM_SCHEDULE",
 		)
 	}
+}
+
+// isCreatingFromRestore reports whether the plan creates the resource from its restore block.
+// That is the case for a new resource, or when the restore block differs from state, which forces replacement.
+func isCreatingFromRestore(ctx context.Context, state tfsdk.State, configRestore fwtypes.ListNestedObjectValueOf[restoreModel]) (bool, diag.Diagnostics) {
+	if state.Raw.IsNull() {
+		return true, nil
+	}
+
+	var stateRestore fwtypes.ListNestedObjectValueOf[restoreModel]
+	diags := state.GetAttribute(ctx, path.Root("restore"), &stateRestore)
+	if diags.HasError() {
+		return false, diags
+	}
+
+	return !configRestore.Equal(stateRestore), diags
 }
 
 func isNullOrUnknownValue(val attr.Value) bool {

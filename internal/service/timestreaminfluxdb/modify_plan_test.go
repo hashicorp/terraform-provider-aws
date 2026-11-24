@@ -5,6 +5,7 @@ package timestreaminfluxdb
 
 import (
 	"context"
+	"maps"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -116,20 +117,18 @@ func testModifyPlanUnknownString() tftypes.Value {
 
 func testDBInstanceModifyPlanConfig(overrides map[string]tftypes.Value) map[string]tftypes.Value {
 	config := map[string]tftypes.Value{
-		"allocated_storage":      tftypes.NewValue(tftypes.Number, 20),
-		"bucket":                 tftypes.NewValue(tftypes.String, "initial"),
-		"db_instance_type":       tftypes.NewValue(tftypes.String, "db.influx.medium"),
-		names.AttrName:           tftypes.NewValue(tftypes.String, "test"),
-		"organization":           tftypes.NewValue(tftypes.String, "organization"),
-		"password":               tftypes.NewValue(tftypes.String, "testpassword"),
-		"username":               tftypes.NewValue(tftypes.String, "admin"),
-		"vpc_security_group_ids": testModifyPlanStringSet("sg-12345678"),
-		"vpc_subnet_ids":         testModifyPlanStringSet("subnet-12345678"),
+		names.AttrAllocatedStorage:    tftypes.NewValue(tftypes.Number, 20),
+		names.AttrBucket:              tftypes.NewValue(tftypes.String, "initial"),
+		"db_instance_type":            tftypes.NewValue(tftypes.String, "db.influx.medium"),
+		names.AttrName:                tftypes.NewValue(tftypes.String, "test"),
+		"organization":                tftypes.NewValue(tftypes.String, "organization"),
+		names.AttrPassword:            tftypes.NewValue(tftypes.String, "testpassword"),
+		names.AttrUsername:            tftypes.NewValue(tftypes.String, "admin"),
+		names.AttrVPCSecurityGroupIDs: testModifyPlanStringSet("sg-12345678"),
+		"vpc_subnet_ids":              testModifyPlanStringSet("subnet-12345678"),
 	}
 
-	for k, v := range overrides {
-		config[k] = v
-	}
+	maps.Copy(config, overrides)
 
 	return config
 }
@@ -143,7 +142,7 @@ func TestDBInstanceModifyPlan_requiredArguments(t *testing.T) {
 		},
 		"unknown password": {
 			config: testDBInstanceModifyPlanConfig(map[string]tftypes.Value{
-				"password": testModifyPlanUnknownString(),
+				names.AttrPassword: testModifyPlanUnknownString(),
 			}),
 		},
 		"unknown vpc_subnet_ids": {
@@ -153,7 +152,7 @@ func TestDBInstanceModifyPlan_requiredArguments(t *testing.T) {
 		},
 		"missing password": {
 			config: testDBInstanceModifyPlanConfig(map[string]tftypes.Value{
-				"password": tftypes.NewValue(tftypes.String, nil),
+				names.AttrPassword: tftypes.NewValue(tftypes.String, nil),
 			}),
 			wantError: true,
 		},
@@ -179,7 +178,7 @@ func TestDBClusterModifyPlan_requiredArguments(t *testing.T) {
 		},
 		"unknown password": {
 			config: testDBClusterModifyPlanConfig(map[string]tftypes.Value{
-				"password": testModifyPlanUnknownString(),
+				names.AttrPassword: testModifyPlanUnknownString(),
 			}),
 		},
 		"unknown db_instance_type": {
@@ -189,7 +188,7 @@ func TestDBClusterModifyPlan_requiredArguments(t *testing.T) {
 		},
 		"missing password": {
 			config: testDBClusterModifyPlanConfig(map[string]tftypes.Value{
-				"password": tftypes.NewValue(tftypes.String, nil),
+				names.AttrPassword: tftypes.NewValue(tftypes.String, nil),
 			}),
 			wantError: true,
 		},
@@ -197,6 +196,115 @@ func TestDBClusterModifyPlan_requiredArguments(t *testing.T) {
 			config: testDBClusterModifyPlanConfig(map[string]tftypes.Value{
 				"db_instance_type": tftypes.NewValue(tftypes.String, nil),
 			}),
+			wantError: true,
+		},
+	})
+}
+
+func testModifyPlanRestoreConfig(ctx context.Context, t *testing.T, factory func(context.Context) (resource.ResourceWithConfigure, error), sourceDBBackupID string, overrides map[string]tftypes.Value) map[string]tftypes.Value {
+	t.Helper()
+
+	r, err := factory(ctx)
+	if err != nil {
+		t.Fatalf("creating resource: %s", err)
+	}
+
+	var schemaResp resource.SchemaResponse
+	r.Schema(ctx, resource.SchemaRequest{}, &schemaResp)
+
+	config := map[string]tftypes.Value{
+		names.AttrName:                tftypes.NewValue(tftypes.String, "test"),
+		"restore":                     testModifyPlanRestoreValue(ctx, schemaResp.Schema, sourceDBBackupID),
+		names.AttrVPCSecurityGroupIDs: testModifyPlanStringSet("sg-12345678"),
+		"vpc_subnet_ids":              testModifyPlanStringSet("subnet-12345678"),
+	}
+
+	maps.Copy(config, overrides)
+
+	return config
+}
+
+func TestDBInstanceModifyPlan_restore(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	restoreConfig := func(sourceDBBackupID string, overrides map[string]tftypes.Value) map[string]tftypes.Value {
+		return testModifyPlanRestoreConfig(ctx, t, newDBInstanceResource, sourceDBBackupID, overrides)
+	}
+	resize := map[string]tftypes.Value{
+		names.AttrAllocatedStorage: tftypes.NewValue(tftypes.Number, 40),
+		"db_instance_type":         tftypes.NewValue(tftypes.String, "db.influx.large"),
+		"db_storage_type":          tftypes.NewValue(tftypes.String, "InfluxIOIncludedT2"),
+	}
+
+	runModifyPlanTests(t, newDBInstanceResource, map[string]modifyPlanTestCase{
+		"create": {
+			config: restoreConfig("backup-1", nil),
+		},
+		"create with allocated_storage": {
+			config: restoreConfig("backup-1", map[string]tftypes.Value{
+				names.AttrAllocatedStorage: tftypes.NewValue(tftypes.Number, 40),
+			}),
+			wantError: true,
+		},
+		"create with password": {
+			config: restoreConfig("backup-1", map[string]tftypes.Value{
+				names.AttrPassword: tftypes.NewValue(tftypes.String, "testpassword"),
+			}),
+			wantError: true,
+		},
+		"update with mutable arguments": {
+			config: restoreConfig("backup-1", resize),
+			state:  restoreConfig("backup-1", nil),
+		},
+		"update with password": {
+			config: restoreConfig("backup-1", map[string]tftypes.Value{
+				names.AttrPassword: tftypes.NewValue(tftypes.String, "testpassword"),
+			}),
+			state:     restoreConfig("backup-1", nil),
+			wantError: true,
+		},
+		"replace with mutable arguments": {
+			config:    restoreConfig("backup-2", resize),
+			state:     restoreConfig("backup-1", nil),
+			wantError: true,
+		},
+	})
+}
+
+func TestDBClusterModifyPlan_restore(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+	restoreConfig := func(sourceDBBackupID string, overrides map[string]tftypes.Value) map[string]tftypes.Value {
+		return testModifyPlanRestoreConfig(ctx, t, newDBClusterResource, sourceDBBackupID, overrides)
+	}
+	instanceType := map[string]tftypes.Value{
+		"db_instance_type": tftypes.NewValue(tftypes.String, "db.influx.large"),
+	}
+
+	runModifyPlanTests(t, newDBClusterResource, map[string]modifyPlanTestCase{
+		"create": {
+			config: restoreConfig("backup-1", nil),
+		},
+		"create with db_instance_type": {
+			config:    restoreConfig("backup-1", instanceType),
+			wantError: true,
+		},
+		"update with db_instance_type": {
+			config: restoreConfig("backup-1", instanceType),
+			state:  restoreConfig("backup-1", nil),
+		},
+		"update with allocated_storage": {
+			config: restoreConfig("backup-1", map[string]tftypes.Value{
+				names.AttrAllocatedStorage: tftypes.NewValue(tftypes.Number, 40),
+			}),
+			state:     restoreConfig("backup-1", nil),
+			wantError: true,
+		},
+		"replace with db_instance_type": {
+			config:    restoreConfig("backup-2", instanceType),
+			state:     restoreConfig("backup-1", nil),
 			wantError: true,
 		},
 	})

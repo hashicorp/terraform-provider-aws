@@ -233,7 +233,7 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 
 ### Usage with Restore
 
-You can create a DB cluster by restoring an existing backup that was taken from a cluster. When the `restore` block is configured, the source configuration is inherited from the backup and must be omitted.
+You can create a DB cluster by restoring an existing backup that was taken from a cluster. When the `restore` block is configured, the source configuration is inherited from the backup and must be omitted when the DB cluster is created.
 
 ```terraform
 resource "aws_timestreaminfluxdb_db_backup" "example" {
@@ -285,7 +285,7 @@ The following arguments are required:
 
 * `name` - (Required) Name that uniquely identifies the DB cluster when interacting with the Amazon Timestream for InfluxDB API and CLI commands. This name will also be a prefix included in the endpoint. Cluster names must be unique per customer and per region. The argument must start with a letter, cannot contain consecutive hyphens (`-`) and cannot end with a hyphen.
 
-~> **Note:** When the [`restore`](#restore-block) block is configured, `db_instance_type` and the InfluxDB V2 credential arguments are inherited from the backup and must be omitted. `name` is always required, and `vpc_security_group_ids` and `vpc_subnet_ids` may optionally be provided to override the values from the backup.
+~> **Note:** When the [`restore`](#restore-block) block is configured, `allocated_storage`, `db_instance_type`, `db_storage_type`, and the InfluxDB V2 credential arguments are inherited from the backup and must be omitted when the DB cluster is created. After creation, `db_instance_type` can be set to update the DB cluster in-place. `name` is always required, and `vpc_security_group_ids` and `vpc_subnet_ids` may optionally be provided to override the values from the backup.
 
 The following arguments are optional:
 

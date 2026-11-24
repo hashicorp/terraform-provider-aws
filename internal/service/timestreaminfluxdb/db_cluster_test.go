@@ -1579,11 +1579,32 @@ func TestAccTimestreamInfluxDBDBCluster_restore(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "db_instance_type"),
 				),
 			},
+			{
+				// Arguments inherited from the backup can be updated in place after the restore.
+				Config: testAccDBClusterConfig_restoreUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "db_instance_type", "db.influx.large"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
 		},
 	})
 }
 
 func testAccDBClusterConfig_restore(rName string) string {
+	return testAccDBClusterConfig_restoreDBInstanceType(rName, "")
+}
+
+func testAccDBClusterConfig_restoreUpdated(rName string) string {
+	return testAccDBClusterConfig_restoreDBInstanceType(rName, `db_instance_type = "db.influx.large"`)
+}
+
+func testAccDBClusterConfig_restoreDBInstanceType(rName, dbInstanceType string) string {
 	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
 # InfluxDB V2.
 resource "aws_timestreaminfluxdb_db_cluster" "source" {
@@ -1608,9 +1629,11 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
   vpc_subnet_ids         = aws_subnet.test[*].id
   vpc_security_group_ids = [aws_security_group.test.id]
 
+  %[2]s
+
   restore {
     source_db_backup_id = aws_timestreaminfluxdb_db_backup.test.id
   }
 }
-`, rName))
+`, rName, dbInstanceType))
 }

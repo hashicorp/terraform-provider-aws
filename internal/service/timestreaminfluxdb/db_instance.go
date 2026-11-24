@@ -500,18 +500,32 @@ func (r *dbInstanceResource) ModifyPlan(ctx context.Context, req resource.Modify
 		return
 	}
 
+	creating, diags := isCreatingFromRestore(ctx, req.State, config.Restore)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	// When restoring, these arguments are inherited from the backup and must not be set.
 	inheritedFromBackup := []struct {
 		val  attr.Value
 		path string
 	}{
-		{config.AllocatedStorage, names.AttrAllocatedStorage},
 		{config.Bucket, names.AttrBucket},
-		{config.DBInstanceType, "db_instance_type"},
-		{config.DBStorageType, "db_storage_type"},
 		{config.Organization, "organization"},
 		{config.Password, names.AttrPassword},
 		{config.Username, names.AttrUsername},
+	}
+	// These arguments can be updated in place once the restored DB instance exists.
+	if creating {
+		inheritedFromBackup = append(inheritedFromBackup, []struct {
+			val  attr.Value
+			path string
+		}{
+			{config.AllocatedStorage, names.AttrAllocatedStorage},
+			{config.DBInstanceType, "db_instance_type"},
+			{config.DBStorageType, "db_storage_type"},
+		}...)
 	}
 	for _, f := range inheritedFromBackup {
 		if !isNullOrUnknownValue(f.val) {
