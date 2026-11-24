@@ -8,4 +8,6 @@ var (
 	ResourceEnvironment = resourceEnvironment
 
 	FindEnvironmentByName = findEnvironmentByName
+
+	AirflowVersionChangeRequiresReplacement = airflowVersionChangeRequiresReplacement
 )

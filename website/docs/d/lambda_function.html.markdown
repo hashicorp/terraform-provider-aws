@@ -141,6 +141,7 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
+* `accelerator_config` - Accelerator (GPU) resource requirements for the Lambda function. See [`accelerator_config`](#accelerator_config-block) below.
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
 * `capacity_provider_config` - Configuration for Lambda function's capacity provider. See [`capacity_provider_config`](#capacity_provider_config-block) below.
@@ -178,6 +179,10 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function. See [`vpc_config`](#vpc_config-block) below.
 
+### `accelerator_config` Block
+
+* `accelerator_memory_size` - Minimum accelerator (GPU) memory per execution environment, in GiB.
+
 ### `capacity_provider_config` Block
 
 * `lambda_managed_instances_capacity_provider_config` - Configuration block for Lambda Managed Instances Capacity Provider. See [`lambda_managed_instances_capacity_provider_config`](#lambda_managed_instances_capacity_provider_config-block) below.
@@ -195,6 +200,7 @@ This data source exports the following attributes in addition to the arguments a
 ### `durable_config` Block
 
 * `execution_timeout` - Maximum execution time in seconds for the durable function.
+* `kms_key_arn` - ARN of the KMS key used to encrypt the durable function's execution state.
 * `retention_period` - Number of days to retain the function's execution state.
 
 ### `environment` Block

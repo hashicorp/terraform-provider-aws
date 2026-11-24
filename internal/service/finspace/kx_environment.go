@@ -114,7 +114,7 @@ func ResourceKxEnvironment() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -522,8 +522,7 @@ func findKxEnvironmentByID(ctx context.Context, conn *finspace.Client, id string
 	}
 	out, err := conn.GetKxEnvironment(ctx, in)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

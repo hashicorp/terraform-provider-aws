@@ -9,7 +9,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/backup"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
@@ -33,6 +32,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,7 +63,7 @@ func (r *restoreTestingPlanResource) Schema(ctx context.Context, request resourc
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 50),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric characters, and underscores"),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z_]+$`, "must contain only alphanumeric characters, and underscores"),
 				},
 			},
 			names.AttrScheduleExpression: schema.StringAttribute{

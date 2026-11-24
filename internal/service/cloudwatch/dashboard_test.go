@@ -17,10 +17,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func checkDashboardARN(name string) knownvalue.Check {
+	return tfknownvalue.GlobalARNExact("cloudwatch", "dashboard/"+name)
+}
 
 func TestAccCloudWatchDashboard_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -48,7 +53,8 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_arn"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_arn"), checkDashboardARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("dashboard_name"), knownvalue.StringExact(rName)),
 				},
 			},
 			{

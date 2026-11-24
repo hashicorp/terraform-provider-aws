@@ -135,6 +135,20 @@ resource "aws_vpc_endpoint" "example" {
 }
 ```
 
+### VPC Lattice Tunnel Endpoint Type
+
+A `Tunnel` endpoint connects to exactly one `CIDR` type [`aws_vpclattice_resource_configuration`](vpclattice_resource_configuration.html), and consumers must send GENEVE-encapsulated traffic (UDP port 6081) to it. See [Access a network segment through a tunnel VPC endpoint](https://docs.aws.amazon.com/vpc/latest/privatelink/use-cidr-endpoint.html).
+
+```terraform
+resource "aws_vpc_endpoint" "example" {
+  resource_configuration_arn = aws_vpclattice_resource_configuration.example.arn
+  security_group_ids         = [aws_security_group.example.id]
+  subnet_ids                 = [aws_subnet.example1.id, aws_subnet.example2.id]
+  vpc_endpoint_type          = "Tunnel"
+  vpc_id                     = aws_vpc.example.id
+}
+```
+
 ### Non-AWS Service
 
 ```terraform
@@ -178,16 +192,16 @@ This resource supports the following arguments:
 * `policy` - (Optional) Policy to attach to the endpoint that controls access to the service. This is a JSON formatted string. Defaults to full access. All `Gateway` and some `Interface` endpoints support policies - see the [relevant AWS documentation](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-endpoints-access.html) for more details. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `private_dns_enabled` - (Optional) Whether to associate a private hosted zone with the specified VPC. Available for AWS services and AWS Marketplace partner services only. Applicable for endpoints of type `Interface`. Most users will want this enabled to allow services within the VPC to automatically use the endpoint. Defaults to `false`. If `vpc_endpoint_type` is anything other than `Interface`, changing this value forces a new resource to be created.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `resource_configuration_arn` - (Optional) ARN of a Resource Configuration to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
+* `resource_configuration_arn` - (Optional) ARN of a Resource Configuration to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required. Applicable for endpoints of type `Resource` and `Tunnel`. For `Tunnel` endpoints, the resource configuration must be of type `CIDR`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
-* `security_group_ids` - (Optional) ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`. If no security groups are specified, the VPC's [default security group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#DefaultSecurityGroup) is associated with the endpoint.
+* `security_group_ids` - (Optional) ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`, `Resource`, `ServiceNetwork`, and `Tunnel`. If no security groups are specified, the VPC's [default security group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#DefaultSecurityGroup) is associated with the endpoint.
 * `service_name` - (Optional) Service name. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`). Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `service_network_arn` - (Optional) ARN of a Service Network to connect this VPC Endpoint to. Exactly one of `resource_configuration_arn`, `service_name` or `service_network_arn` is required.
 * `service_region` - (Optional) AWS region of the VPC Endpoint Service. If specified, the VPC endpoint will connect to the service in the provided region. Applicable for endpoints of type `Interface`.
 * `subnet_configuration` - (Optional) Subnet configuration for the endpoint, used to select specific IPv4 and/or IPv6 addresses to the endpoint. See subnet_configuration below.
-* `subnet_ids` - (Optional) ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`. Interface type endpoints cannot function without being assigned to a subnet.
+* `subnet_ids` - (Optional) ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer`, `Interface`, `Resource`, `ServiceNetwork`, and `Tunnel`. Interface type endpoints cannot function without being assigned to a subnet. For `Tunnel` endpoints, the subnets must be in the Availability Zones of the resource gateway associated with the resource configuration.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_endpoint_type` - (Optional) VPC endpoint type, `Gateway`, `GatewayLoadBalancer`,`Interface`, `Resource` or `ServiceNetwork`. Defaults to `Gateway`.
+* `vpc_endpoint_type` - (Optional) VPC endpoint type, `Gateway`, `GatewayLoadBalancer`, `Interface`, `Resource`, `ServiceNetwork` or `Tunnel`. Defaults to `Gateway`.
 * `vpc_id` - (Required) ID of the VPC in which the endpoint will be used.
 
 ### `dns_options` Block

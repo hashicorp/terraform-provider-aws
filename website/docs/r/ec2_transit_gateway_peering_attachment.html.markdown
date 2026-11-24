@@ -56,7 +56,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "example" {
 }
 ```
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and attach a to a Transit Gateway in the second account via the `aws_ec2_transit_gateway_peering_attachment` resource can be found in [the `./examples/transit-gateway-cross-account-peering-attachment` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/transit-gateway-cross-account-peering-attachment).
+The peering attachment must be accepted in the account and Region of the peer Transit Gateway, even when both Transit Gateways are in the same account. For an example of how to request a peering attachment from one AWS account and accept it in a second AWS account, see the [`aws_ec2_transit_gateway_peering_attachment_accepter` resource](/docs/providers/aws/r/ec2_transit_gateway_peering_attachment_accepter.html#cross-account-usage).
 
 ## Argument Reference
 
@@ -66,7 +66,7 @@ This resource supports the following arguments:
 * `peer_account_id` - (Optional) Account ID of EC2 Transit Gateway to peer with. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
 * `peer_region` - (Required) Region of EC2 Transit Gateway to peer with.
 * `peer_transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway to peer with.
-* `options` - (Optional) Describes whether dynamic routing is enabled or disabled for the transit gateway peering request. See [options](#options) below for more details!
+* `options` - (Optional) Block describing whether dynamic routing is enabled or disabled for the transit gateway peering request. If not configured, the value is populated from the API. See [options](#options) below for more details!
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_id` - (Required) Identifier of EC2 Transit Gateway.
 
@@ -74,7 +74,7 @@ This resource supports the following arguments:
 
 The `options` block supports the following:
 
-* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled.. Supports `enable` and `disable`.
+* `dynamic_routing` - (Optional) Indicates whether dynamic routing is enabled or disabled. Supports `enable` and `disable`. If not configured, the value is populated from the API.
 
 ## Attribute Reference
 

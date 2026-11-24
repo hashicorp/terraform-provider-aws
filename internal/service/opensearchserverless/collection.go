@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -107,8 +107,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
-						`must start with any lower case letter and can include any lower case letter, number, or "-"`),
+					lazystringvalidator.RegexMatches(`^[a-z][0-9a-z-]+$`, `must start with any lower case letter and can include any lower case letter, number, or "-"`),
 				},
 			},
 			"dashboard_endpoint": schema.StringAttribute{
@@ -142,8 +141,7 @@ func (r *collectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
-						`must start with any lower case letter and can can include any lower case letter, number, or "-"`),
+					lazystringvalidator.RegexMatches(`^[a-z][0-9a-z-]+$`, `must start with any lower case letter and can can include any lower case letter, number, or "-"`),
 				},
 			},
 			"standby_replicas": schema.StringAttribute{

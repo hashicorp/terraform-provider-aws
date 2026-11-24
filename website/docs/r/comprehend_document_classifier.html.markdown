@@ -108,7 +108,7 @@ The following arguments are optional:
 
 * `kms_key_id` - (Optional) KMS Key used to encrypt the output documents.
   Can be a KMS Key ID, a KMS Key ARN, a KMS Alias name, or a KMS Alias ARN.
-* `output_s3_uri` - (Computed) Full path for the output documents.
+* `output_s3_uri` - (Read-Only) Full path for the output documents.
 * `s3_uri` - (Required) Destination path for the output documents.
   The full path to the output file will be returned in `output_s3_uri`.
 

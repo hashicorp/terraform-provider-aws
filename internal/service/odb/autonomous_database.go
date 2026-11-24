@@ -12,7 +12,6 @@ import (
 	"slices"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/odb"
@@ -42,6 +41,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -275,7 +275,7 @@ func autonomousDatabaseResourceAttributes() map[string]schema.Attribute {
 			Computed: true,
 			Validators: []validator.String{
 				stringvalidator.LengthBetween(1, 30),
-				stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z][A-Za-z0-9]*$`), "must start with a letter and contain only alphanumeric characters"),
+				lazystringvalidator.RegexMatches(`^[A-Za-z][A-Za-z0-9]*$`, "must start with a letter and contain only alphanumeric characters"),
 			},
 			Description: "Name of the Autonomous Database.",
 		},

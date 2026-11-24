@@ -51,6 +51,8 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_type", "FIREWALL"),
+					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "subnet_mapping.#", "1"),
@@ -100,6 +102,8 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_type", "FIREWALL"),
+					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "subnet_mapping.#", "1"),
@@ -149,6 +153,8 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.0.attachment.0.status", "READY"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "firewall_status.0.sync_states.*.attachment.0.subnet_id", subnetResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_type", "FIREWALL"),
+					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(dataSourceName, "subnet_mapping.#", "1"),
@@ -243,4 +249,40 @@ data "aws_networkfirewall_firewall" "test" {
   name = aws_networkfirewall_firewall.test.name
 }
 `, rName))
+}
+
+// AWS Network Security Manager creates and manages internet gateway firewalls, and Network Firewall
+// can't create them directly, so this test reads the firewall of a VPC that an NSM deployment protects.
+func TestAccNetworkFirewallFirewallDataSource_igwFirewall(t *testing.T) {
+	ctx := acctest.Context(t)
+	vpcID := acctest.SkipIfEnvVarNotSet(t, "NETWORK_FIREWALL_IGW_FIREWALL_VPC_ID")
+	dataSourceName := "data.aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallDataSourceConfig_igwFirewall(vpcID),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "network-firewall", "igw-firewall/"+vpcID),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_type", "IGW_FIREWALL"),
+					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "igw_firewall_configuration.0.enforcement_mode", "POLICY_CONTROLLED"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, vpcID),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVPCID, vpcID),
+				),
+			},
+		},
+	})
+}
+
+func testAccFirewallDataSourceConfig_igwFirewall(vpcID string) string {
+	return fmt.Sprintf(`
+data "aws_networkfirewall_firewall" "test" {
+  name          = %[1]q
+  firewall_type = "IGW_FIREWALL"
+}
+`, vpcID)
 }

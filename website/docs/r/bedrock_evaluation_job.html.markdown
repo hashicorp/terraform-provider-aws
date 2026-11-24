@@ -10,7 +10,7 @@ description: |-
 
 Manages an Amazon Bedrock evaluation job. An evaluation job assesses model or knowledge base performance using either automated metrics or human workers.
 
-~> Amazon Bedrock does not support permanently deleting an evaluation job. Destroying this resource stops the job (if it is still running) using the [StopEvaluationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopEvaluationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
+~> **Note:** Amazon Bedrock does not support permanently deleting an evaluation job. Destroying this resource stops the job (if it is still running) using the [StopEvaluationJob](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_StopEvaluationJob.html) API, then removes it from Terraform state. Set `skip_destroy` to leave the job in its current state instead.
 
 ## Example Usage
 
@@ -89,7 +89,7 @@ The `dataset_metric_config` block supports the following arguments:
 
 * `dataset` - (Required) Prompt dataset to use. See [`dataset` Block](#dataset-block) below.
 * `metric_names` - (Required) Names of the metrics to use for the evaluation job.
-* `task_type` - (Required) Type of task to evaluate. Common values are `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, and `Custom`. Use `General` for automated evaluation jobs that use a judge model (`evaluator_model_config`).
+* `task_type` - (Required) Type of task to evaluate. Valid values: `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, `Custom`.
 
 ### `evaluation_config.human.dataset_metric_config` Block
 
@@ -97,7 +97,7 @@ The `dataset_metric_config` block supports the following arguments:
 
 * `dataset` - (Required) Prompt dataset to use. See [`dataset` Block](#dataset-block) below.
 * `metric_names` - (Required) Names of the metrics to use for the evaluation job.
-* `task_type` - (Required) Type of task to evaluate. Common values are `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, and `Custom`.
+* `task_type` - (Required) Type of task to evaluate. Valid values: `Summarization`, `Classification`, `QuestionAndAnswer`, `Generation`, `Custom`.
 
 ### `dataset` Block
 
@@ -298,6 +298,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `job_type` - Whether the evaluation job is automated or human-based.
 * `last_modified_time` - Date and time the evaluation job was last modified.
 * `status` - Current status of the evaluation job.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -327,7 +328,7 @@ resource "aws_bedrock_evaluation_job" "example" {
 
 #### Required
 
-- `job_arn` (String) ARN of the evaluation job.
+* `job_arn` (String) ARN of the evaluation job.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Evaluation Job using the `job_arn`. For example:
 

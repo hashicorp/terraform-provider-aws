@@ -13,7 +13,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -64,7 +64,7 @@ func resourceOrganizationConformancePack() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^awsconfigconforms`), `must begin with "awsconfigconforms"`),
+						lazyvalidation.StringMatch(`^awsconfigconforms`, `must begin with "awsconfigconforms"`),
 					),
 				},
 				"delivery_s3_key_prefix": {
@@ -104,8 +104,8 @@ func resourceOrganizationConformancePack() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric and hyphen characters"),
 					),
 				},
 				"template_body": {
@@ -124,7 +124,7 @@ func resourceOrganizationConformancePack() *schema.Resource {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 1024),
-						validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
+						lazyvalidation.StringMatch(`^s3://`, "must begin with s3://"),
 					),
 					ConflictsWith: []string{"template_body"},
 				},

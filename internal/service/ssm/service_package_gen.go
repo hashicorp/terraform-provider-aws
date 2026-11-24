@@ -211,6 +211,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*inttypes.ServicePa
 			TypeName: "aws_ssm_service_setting",
 			Name:     "Service Setting",
 			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(
+				inttypes.WithIdentityDuplicateAttrs(names.AttrID),
+			),
+			Import: inttypes.SDKv2Import{
+				WrappedImport: true,
+			},
 		},
 	}
 }
@@ -258,6 +264,13 @@ func (p *servicePackage) SDKListResources(ctx context.Context) iter.Seq[*inttype
 				inttypes.StringIdentityAttribute("patch_group", true),
 				inttypes.StringIdentityAttribute("baseline_id", true),
 			}),
+		},
+		{
+			Factory:  newServiceSettingResourceAsListResource,
+			TypeName: "aws_ssm_service_setting",
+			Name:     "Service Setting",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentity(),
 		},
 	})
 }

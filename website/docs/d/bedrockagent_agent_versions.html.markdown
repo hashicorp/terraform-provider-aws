@@ -3,20 +3,20 @@ subcategory: "Bedrock Agents"
 layout: "aws"
 page_title: "AWS: aws_bedrockagent_agent_versions"
 description: |-
-  Terraform data source for managing an AWS Amazon BedrockAgent Agent Versions.
+  Provides details about AWS Bedrock Agents Agent Versions.
 ---
 
 # Data Source: aws_bedrockagent_agent_versions
 
-Terraform data source for managing an AWS Amazon BedrockAgent Agent Versions.
+Provides details about AWS Bedrock Agents Agent Versions.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-data "aws_bedrockagent_agent_versions" "test" {
-  agent_id = aws_bedrockagent_agent.test.agent_id
+data "aws_bedrockagent_agent_versions" "example" {
+  agent_id = aws_bedrockagent_agent.example.agent_id
 }
 ```
 
@@ -31,7 +31,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `agent_version_summaries` - List of objects, each of which contains information about a version of the agent. See [`agent_version_summaries` Block](#agent_version_summaries-block)
+* `agent_version_summaries` - List of objects, each of which contains information about a version of the agent. See [`agent_version_summaries` Block](#agent_version_summaries-block).
 
 ### `agent_version_summaries` Block
 
@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 * `agent_version` - Version of the agent.
 * `created_at` - Time at which the version was created.
 * `description` - Description of the version of the agent.
-* `guardrail_configuration` - Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block)
+* `guardrail_configuration` - Details about the guardrail associated with the agent. See [`guardrail_configuration` Block](#guardrail_configuration-block).
 * `updated_at` - Time at which the version was last updated.
 
 ### `guardrail_configuration` Block

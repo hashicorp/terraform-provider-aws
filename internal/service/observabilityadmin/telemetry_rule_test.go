@@ -203,13 +203,21 @@ func testAccTelemetryRule_allRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckTelemetryRuleDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTelemetryRuleConfig_allRegions(rName),
+				Config: testAccTelemetryRuleConfig_allRegions(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination_configuration.0.retention_in_days", "30"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("rule_arn"), tfknownvalue.RegionalARNExact("observabilityadmin", "telemetry-rule/"+rName)),
 				},
+			},
+			{
+				Config: testAccTelemetryRuleConfig_allRegions(rName, 14),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTelemetryRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.destination_configuration.0.retention_in_days", "14"),
+				),
 			},
 			{
 				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "rule_name"),
@@ -447,23 +455,41 @@ resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
 `, rName)
 }
 
-func testAccTelemetryRuleConfig_allRegions(rName string) string {
+func testAccTelemetryRuleConfig_allRegions(rName string, retentionInDays int) string {
 	return fmt.Sprintf(`
 resource "aws_observabilityadmin_telemetry_rule" "test" {
   rule_name = %[1]q
 
   rule {
-    resource_type          = "AWS::EKS::Cluster"
-    telemetry_type         = "Logs"
-    telemetry_source_types = ["EKS_AUDIT_LOGS"]
-    all_regions            = true
+    telemetry_type = "Logs"
+    resource_type  = "AWS::CloudTrail"
+    all_regions    = true
+
+    destination_configuration {
+      destination_type    = "cloud-watch-logs"
+      destination_pattern = "/aws/cloudtrail/<event-type>"
+      retention_in_days   = %[2]d
+
+      cloudtrail_parameters {
+        advanced_event_selectors {
+          name = "Management events selector"
+
+          field_selectors {
+            field = "eventCategory"
+            equals = [
+              "Management",
+            ]
+          }
+        }
+      }
+    }
   }
 
   depends_on = [aws_observabilityadmin_telemetry_evaluation.test]
 }
 
 resource "aws_observabilityadmin_telemetry_evaluation" "test" {}
-`, rName)
+`, rName, retentionInDays)
 }
 
 func testAccTelemetryRuleConfig_regions(rName string) string {

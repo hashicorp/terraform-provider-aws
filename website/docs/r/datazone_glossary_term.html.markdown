@@ -108,7 +108,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Id of the glossary term.
+* `id` - ID of the glossary term.
 * `created_at` - Time of glossary term creation.
 * `created_by` - Creator of glossary term.
 

@@ -89,6 +89,7 @@ This data source exports the following attributes in addition to the arguments a
 * `ipv6_native` - Whether this is an IPv6-only subnet.
 * `map_customer_owned_ip_on_launch` - Whether customer owned IP addresses are assigned on network interface creation.
 * `map_public_ip_on_launch` - Whether public IP addresses are assigned on instance launch.
+* `network_firewall_connectivity_type` - Internet connectivity that the Automated Internet Firewall applies to the subnet: `az-unsupported`, `bidirectional`, `exclude`, `flexible` or `outbound-only`. Only set if the subnet's VPC has a firewall.
 * `outpost_arn` - ARN of the Outpost.
 * `owner_id` - ID of the AWS account that owns the subnet.
 * `private_dns_hostname_type_on_launch` - The type of hostnames assigned to instances in the subnet at launch.

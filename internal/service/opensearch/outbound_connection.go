@@ -37,8 +37,8 @@ func resourceOutboundConnection() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Create: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -203,8 +203,20 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
+	// DeleteOutboundConnection fails with "UnknownError" while the connection is
+	// still validating or provisioning.
+	_, err := waitOutboundConnectionDeletable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+
+	if retry.NotFound(err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Outbound Connection (%s) to become deletable: %s", d.Id(), err)
+	}
+
 	log.Printf("[DEBUG] Deleting OpenSearch Outbound Connection: %s", d.Id())
-	_, err := conn.DeleteOutboundConnection(ctx, &opensearch.DeleteOutboundConnectionInput{
+	_, err = conn.DeleteOutboundConnection(ctx, &opensearch.DeleteOutboundConnectionInput{
 		ConnectionId: aws.String(d.Id()),
 	})
 
@@ -216,7 +228,7 @@ func resourceOutboundConnectionDelete(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "deleting OpenSearch Outbound Connection (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitOutboundConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitOutboundConnectionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for OpenSearch Outbound Connection (%s) delete: %s", d.Id(), err)
 	}
 
@@ -312,6 +324,44 @@ func waitOutboundConnectionCreated(ctx context.Context, conn *opensearch.Client,
 			awstypes.OutboundConnectionStatusCodeValidationFailed,
 		),
 		Refresh: statusOutboundConnection(conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.OutboundConnection); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.ConnectionStatus.Message)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitOutboundConnectionDeletable(ctx context.Context, conn *opensearch.Client, id string, timeout time.Duration) (*awstypes.OutboundConnection, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.OutboundConnectionStatusCodeValidating,
+			awstypes.OutboundConnectionStatusCodeApproved,
+			awstypes.OutboundConnectionStatusCodeProvisioning,
+		),
+		Target: enum.Slice(
+			awstypes.OutboundConnectionStatusCodePendingAcceptance,
+			awstypes.OutboundConnectionStatusCodeActive,
+			awstypes.OutboundConnectionStatusCodeRejecting,
+			awstypes.OutboundConnectionStatusCodeRejected,
+			awstypes.OutboundConnectionStatusCodeValidationFailed,
+			awstypes.OutboundConnectionStatusCodeDeleting,
+		),
+		// Return not-found as an error so a missing connection ends the wait at once.
+		Refresh: func(ctx context.Context) (any, string, error) {
+			output, err := findOutboundConnectionByID(ctx, conn, id)
+			if err != nil {
+				return nil, "", err
+			}
+
+			return output, string(output.ConnectionStatus.StatusCode), nil
+		},
 		Timeout: timeout,
 	}
 

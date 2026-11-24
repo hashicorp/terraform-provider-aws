@@ -12,9 +12,14 @@ environment variables.
 
 `main.tf` provisions that infrastructure: a shared VPC, a source MSK cluster (impersonating a
 self-managed Apache Kafka cluster) with SASL/SCRAM enabled and a SCRAM user, a target MSK
-cluster, and a customer-managed KMS key + Secrets Manager secret holding the SCRAM
-credentials. Using MSK for the source means its server certificate is signed by a public CA,
+cluster with IAM authentication enabled, a customer-managed KMS key + Secrets Manager secret
+holding the SCRAM credentials, and a bastion instance for reading the source cluster's Kafka
+`cluster.id`. Using MSK for the source means its server certificate is signed by a public CA,
 so the replicator trusts it without a custom root CA.
+
+The target cluster must have IAM client authentication enabled. MSK Replicator authenticates
+to its target over IAM, and `CreateReplicator` otherwise fails with
+`InvalidInput.InvalidKafkaCluster` ("IAM Auth is not enabled for the Amazon MSK Cluster").
 
 ## Usage
 
@@ -23,8 +28,12 @@ terraform init
 terraform apply
 ```
 
-Two MSK clusters are created; apply takes ~30-45 minutes and incurs cost. Destroy with
-`terraform destroy` when finished.
+Two MSK clusters are created; apply takes ~30-45 minutes and incurs cost (roughly $1.35/hour
+for the clusters, endpoints, and bastion). Destroy with `terraform destroy` when finished.
+
+> [!NOTE]
+> The generated SCRAM password is stored in `terraform.tfstate` in this directory. The state
+> file is gitignored; delete it along with the infrastructure.
 
 ### Export the environment variables
 
@@ -39,16 +48,32 @@ export MSK_ONPREM_KAFKA_SUBNET_IDS=$(terraform output -raw MSK_ONPREM_KAFKA_SUBN
 export MSK_ONPREM_KAFKA_SECURITY_GROUP_IDS=$(terraform output -raw MSK_ONPREM_KAFKA_SECURITY_GROUP_IDS)
 ```
 
-### Obtain the Kafka cluster ID (manual)
+### Obtain the Kafka cluster ID
 
-`MSK_ONPREM_KAFKA_CLUSTER_ID` is the Kafka `cluster.id` reported by the source brokers. It is
-not exposed by any MSK control-plane API, so read it from the data plane from a host with
-network access to the source cluster (for example an EC2 instance in the VPC created above),
-using the source's SASL/SCRAM bootstrap brokers:
+`MSK_ONPREM_KAFKA_CLUSTER_ID` is the Kafka `cluster.id` reported by the source brokers. No MSK
+control-plane API exposes it, so it has to be read from the data plane. The bastion created by
+this config carries `/opt/cluster-id.sh`, which builds a SASL/SCRAM client config from the
+Secrets Manager secret and asks the brokers via `kafka-cluster.sh cluster-id`. Run it with
+Session Manager:
 
 ```console
-kafka-metadata-quorum.sh --bootstrap-server <bootstrap> --command-config client.properties describe --status
-# or, with an AdminClient: describeCluster().clusterId()
+command_id=$(aws ssm send-command \
+  --instance-ids "$(terraform output -raw bastion_instance_id)" \
+  --document-name AWS-RunShellScript \
+  --parameters 'commands=["/opt/cluster-id.sh"]' \
+  --query Command.CommandId --output text)
+
+aws ssm get-command-invocation \
+  --command-id "$command_id" \
+  --instance-id "$(terraform output -raw bastion_instance_id)" \
+  --query StandardOutputContent --output text
+```
+
+The output is `Cluster ID: <cluster.id>`. The bastion needs a minute or two after `apply` to
+finish installing Java and the Kafka CLI via user data; `cloud-init status --wait` confirms it
+is ready.
+
+```console
 export MSK_ONPREM_KAFKA_CLUSTER_ID=<cluster.id>
 ```
 

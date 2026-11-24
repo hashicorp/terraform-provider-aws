@@ -35,3 +35,9 @@ from your statefile and management, **but will not destroy the Hosted Connection
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the connection.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)

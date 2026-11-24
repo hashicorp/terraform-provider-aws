@@ -323,7 +323,7 @@ For more detailed documentation about each argument, refer to the AWS official d
 * `enable_global_write_forwarding` - (Optional) Whether cluster should forward writes to an associated global cluster. Applied to secondary clusters to enable them to forward writes to an [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html)'s primary cluster. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html) for more information.
 * `enable_http_endpoint` - (Optional) Enable HTTP endpoint (data API). Only valid for some combinations of `engine_mode`, `engine` and `engine_version` and only available in some regions. See the [Region and version availability](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/data-api.html#data-api.regions) section of the documentation. This option also does not work with any of these options specified: `snapshot_identifier`, `replication_source_identifier`, `s3_import`.
 * `enable_local_write_forwarding` - (Optional) Whether read replicas can forward write operations to the writer DB instance in the DB cluster. By default, write operations aren't allowed on reader DB instances. See the [User Guide for Aurora](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-mysql-write-forwarding.html) for more information. **NOTE:** Local write forwarding requires Aurora MySQL version 3.04 or higher.
-* `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `iam-db-auth-error`, `instance`, `postgresql` (PostgreSQL), `slowquery`.
+* `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to export to CloudWatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `iam-db-auth-error`, `instance`, `postgresql` (PostgreSQL), `slowquery`.
 * `engine` - (Required) Name of the database engine to be used for this DB cluster. Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`. (Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
 * `engine_lifecycle_support` - (Optional) Life cycle type for this DB instance. This setting is valid for cluster types Aurora DB clusters and Multi-AZ DB clusters. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html
 * `engine_mode` - (Optional) Database engine mode. Valid values: `global` (only valid for Aurora MySQL 1.21 and earlier), `parallelquery`, `provisioned`, `serverless`. Defaults to: `provisioned`. Specify an empty value (`""`) for no engine mode. See the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless.html) for limitations when using `serverless`.
@@ -339,7 +339,7 @@ For more detailed documentation about each argument, refer to the AWS official d
 * `master_password_wo` - (Optional, Write-Only, required unless `manage_master_user_password` is set to true, a `snapshot_identifier`, `replication_source_identifier`, or `master_password` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Password for the master DB user. Note that this may show up in logs. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). Cannot be set if `manage_master_user_password` is set to `true`. If set, requires `master_password_wo_version` to be set.
 * `master_password_wo_version` - (Optional) Required when `master_password_wo` is set. Changing this value triggers an update to `master_password_wo`.
 * `master_user_secret_kms_key_id` - (Optional) Amazon Web Services KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. To use a KMS key in a different Amazon Web Services account, specify the key ARN or alias ARN. If not specified, the default KMS key for your Amazon Web Services account is used.
-* `master_username` - (Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database) Username for the master DB user. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). This argument does not support in-place updates and cannot be changed during a restore from snapshot.
+* `master_username` - (Optional) Username for the master DB user. Required unless a `snapshot_identifier` or `replication_source_identifier` is provided or unless a `global_cluster_identifier` is provided when the cluster is the "secondary" cluster of a global database. Please refer to the [RDS Naming Constraints](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_Limits.html#RDS_Limits.Constraints). This argument does not support in-place updates and cannot be changed during a restore from snapshot.
 * `monitoring_interval` - (Optional) Interval, in seconds, between points when Enhanced Monitoring metrics are collected for the DB cluster. To turn off collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid Values: 0, 1, 5, 10, 15, 30, 60.
 * `monitoring_role_arn` - (Optional) ARN for the IAM role that permits RDS to send enhanced monitoring metrics to CloudWatch Logs. You can find more information on the [AWS Documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_Monitoring.html#USER_Monitoring.OS.IAMRole.html) what IAM permissions are needed to allow Enhanced Monitoring for RDS Clusters.
 * `network_type` - (Optional) Network type of the cluster. Valid values: `IPV4`, `DUAL`.
@@ -349,6 +349,7 @@ For more detailed documentation about each argument, refer to the AWS official d
 * `port` - (Optional) Port on which the DB accepts connections.
 * `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. `04:00-09:00`.
 * `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., `wed:04:00-wed:04:30`
+* `publicly_accessible` - (Optional, Forces new resource) Whether the DB cluster is publicly accessible. Valid only for Multi-AZ DB clusters. If not specified, defaults to `true` when `db_subnet_group_name` is not set or is `default`, and `false` otherwise. If `true`, the VPC of the DB subnet group must have an internet gateway attached. Cannot be used with `s3_import`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. **Note:** Removing this attribute after creation will promote the read replica to a standalone cluster. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
 * `restore_to_point_in_time` - (Optional) Nested attribute for [point in time restore](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-pitr.html). More details below.
@@ -409,27 +410,15 @@ Full details on the core parameters and impacts are in the API Docs: [RestoreDBC
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of cluster
-* `availability_zones` - Availability zone of the instance
-* `backup_retention_period` - Backup retention period
-* `ca_certificate_identifier` - CA identifier of the CA certificate used for the DB instance's server certificate
 * `ca_certificate_valid_till` - Expiration date of the DB instance’s server certificate
-* `cluster_identifier` - RDS Cluster Identifier
 * `cluster_members` - List of RDS Instances that are a part of this cluster
 * `cluster_resource_id` - RDS Cluster Resource ID
-* `database_name` - Database name
 * `endpoint` - DNS address of the RDS instance
-* `engine` - Database engine
 * `engine_version_actual` - Running version of the database.
 * `hosted_zone_id` - Route53 Hosted Zone ID of the endpoint
 * `id` - RDS Cluster Identifier
 * `master_user_secret` - Block that specifies the master user secret. Only available when `manage_master_user_password` is set to true. [Documented below](#master_user_secret-block).
-* `master_username` - Master username for the database
-* `port` - Database port
-* `preferred_backup_window` - Daily time range during which the backups happen
-* `preferred_maintenance_window` - Maintenance window
 * `reader_endpoint` - Read-only endpoint for the Aurora cluster, automatically load-balanced across replicas
-* `replication_source_identifier` - ARN of the source DB cluster or DB instance if this DB cluster is created as a Read Replica.
-* `storage_encrypted` - Whether the DB cluster is encrypted
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `upgrade_rollout_order` - Order in which the clusters are upgraded (`first`, `second`, `last`). See [the AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Maintenance.AMVU.UpgradeRollout.html) for details.
 

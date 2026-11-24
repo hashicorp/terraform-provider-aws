@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/datazone"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/datazone/types"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -80,7 +80,7 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 			"domain_identifier": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`), "must conform to: ^dzd[-_][a-zA-Z0-9_-]{1,36}$ "),
+					lazystringvalidator.RegexMatches(`^dzd[-_][a-zA-Z0-9_-]{1,36}$`, "must conform to: ^dzd[-_][a-zA-Z0-9_-]{1,36}$ "),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -92,14 +92,14 @@ func (r *projectResource) Schema(ctx context.Context, req resource.SchemaRequest
 				ElementType: types.StringType,
 				Validators: []validator.List{
 					listvalidator.SizeBetween(1, 20),
-					listvalidator.ValueStringsAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_-]{1,36}$`), "must conform to: ^[a-zA-Z0-9_-]{1,36}$ ")),
+					listvalidator.ValueStringsAre(lazystringvalidator.RegexMatches(`^[a-zA-Z0-9_-]{1,36}$`, "must conform to: ^[a-zA-Z0-9_-]{1,36}$ ")),
 				},
 				Optional: true,
 			},
 
 			names.AttrName: schema.StringAttribute{
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[\w -]+$`), "must conform to: ^[\\w -]+$ "),
+					lazystringvalidator.RegexMatches(`^[\w -]+$`, "must conform to: ^[\\w -]+$ "),
 					stringvalidator.LengthBetween(1, 64),
 				},
 				Required: true,

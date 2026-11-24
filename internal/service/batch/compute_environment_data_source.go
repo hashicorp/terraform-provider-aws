@@ -55,9 +55,13 @@ func dataSourceComputeEnvironment() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrType: {
 					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"unmanaged_vcpus": {
+					Type:     schema.TypeInt,
 					Computed: true,
 				},
 				"update_policy": {
@@ -102,6 +106,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrStatus, computeEnvironment.Status)
 	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
 	d.Set(names.AttrType, computeEnvironment.Type)
+	d.Set("unmanaged_vcpus", computeEnvironment.UnmanagedvCpus)
 	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
 	}

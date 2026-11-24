@@ -7,6 +7,8 @@ package devopsagent
 
 import (
 	"context"
+	"iter"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/devopsagent"
@@ -24,7 +26,82 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
-	return []*inttypes.ServicePackageFrameworkResource{}
+	return []*inttypes.ServicePackageFrameworkResource{
+		{
+			Factory:  newAgentSpaceResource,
+			TypeName: "aws_devopsagent_agent_space",
+			Name:     "Agent Space",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("agent_space_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
+			Factory:  newAssetResource,
+			TypeName: "aws_devopsagent_asset",
+			Name:     "Asset",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assetImportID{},
+			},
+		},
+		{
+			Factory:  newAssetFileResource,
+			TypeName: "aws_devopsagent_asset_file",
+			Name:     "Asset File",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+				inttypes.StringIdentityAttribute(names.AttrPath, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      assetFileImportID{},
+			},
+		},
+	}
+}
+
+func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
+	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newAgentSpaceResourceAsListResource,
+			TypeName: "aws_devopsagent_agent_space",
+			Name:     "Agent Space",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("agent_space_id", true)),
+		},
+		{
+			Factory:  newAssetResourceAsListResource,
+			TypeName: "aws_devopsagent_asset",
+			Name:     "Asset",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+			}),
+		},
+		{
+			Factory:  newAssetFileResourceAsListResource,
+			TypeName: "aws_devopsagent_asset_file",
+			Name:     "Asset File",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("agent_space_id", true),
+				inttypes.StringIdentityAttribute("asset_id", true),
+				inttypes.StringIdentityAttribute(names.AttrPath, true),
+			}),
+		},
+	})
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*inttypes.ServicePackageSDKDataSource {

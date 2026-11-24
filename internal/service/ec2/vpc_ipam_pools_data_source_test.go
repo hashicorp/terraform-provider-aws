@@ -4,6 +4,7 @@
 package ec2_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -53,6 +54,33 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) { // nosemgrep:ci.vpc-in-tes
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.publicly_advertisable", resourceName, "publicly_advertisable"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.source_ipam_pool_id", resourceName, "source_ipam_pool_id"),
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.0.tags.tagtest", "3"),
+				),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/40314.
+func TestAccIPAMPoolsDataSource_identicalTags(t *testing.T) { // nosemgrep:ci.vpc-in-test-name
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_vpc_ipam_pools.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckIPAMPoolDestroy(ctx, t),
+			testAccCheckIPAMDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolsDataSourceConfig_identicalTags(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "ipam_pools.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipam_pools.*.id", "aws_vpc_ipam_pool.test1", names.AttrID),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ipam_pools.*.id", "aws_vpc_ipam_pool.test2", names.AttrID),
 				),
 			},
 		},
@@ -168,3 +196,39 @@ data "aws_vpc_ipam_pools" "test" {
   }
 }
 `
+
+func testAccIPAMPoolsDataSourceConfig_identicalTags(rName string) string {
+	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`
+resource "aws_vpc_ipam_pool" "test1" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  description    = "%[1]s-1"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_ipam_pool" "test2" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  description    = "%[1]s-2"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_vpc_ipam_pools" "test" {
+  filter {
+    name   = "description"
+    values = ["%[1]s-*"]
+  }
+
+  depends_on = [
+    aws_vpc_ipam_pool.test1,
+    aws_vpc_ipam_pool.test2,
+  ]
+}
+`, rName))
+}

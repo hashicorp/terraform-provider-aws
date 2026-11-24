@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
@@ -40,6 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -98,10 +98,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[^_][^\"]*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[^_][^\"]*$", ""),
 				},
 				Description: `The name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. 
 					A bucket combines the concept of a database and a retention period (the duration of time 
@@ -126,10 +123,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z0-9]+$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `The id of the DB parameter group assigned to your DB instance.`,
 			},
@@ -180,10 +174,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 40),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$", ""),
 				},
 				Description: `The name that uniquely identifies the DB instance when interacting with the 
 					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a 
@@ -221,7 +212,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(8, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `The password of the initial admin user created in InfluxDB. This password will 
 					allow you to access the InfluxDB UI to perform various administrative tasks and 
@@ -262,11 +253,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$"),
-						`Must start with a letter and can't end with a hyphen or contain two 
-						consecutive hyphens`,
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$", `Must start with a letter and can't end with a hyphen or contain two consecutive hyphens`),
 				},
 				Description: `The username of the initial admin user created in InfluxDB. 
 					Must start with a letter and can't end with a hyphen or contain two 
@@ -288,7 +275,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					setvalidator.SizeBetween(1, 5),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^sg-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^sg-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC security group IDs to associate with the DB instance.`,
@@ -305,7 +292,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					setvalidator.SizeBetween(1, 3),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^subnet-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^subnet-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC subnet IDs to associate with the DB instance. Provide at least 
@@ -332,7 +319,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(3, 63),
-											stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$"), ""),
+											lazystringvalidator.RegexMatches("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$", ""),
 										},
 										Description: `The name of the S3 bucket to deliver logs to.`,
 									},
@@ -359,14 +346,14 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 64),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`), ""),
+								lazystringvalidator.RegexMatches(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`, ""),
 							},
 						},
 						"timezone": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(0, 19),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^(UTC|[A-Za-z_]+/[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?)$`), ""),
+								lazystringvalidator.RegexMatches(`^(UTC|[A-Za-z_]+/[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?)$`, ""),
 							},
 						},
 					},

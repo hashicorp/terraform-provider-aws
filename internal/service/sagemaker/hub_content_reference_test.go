@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,6 +46,7 @@ func TestAccSageMakerHubContentReference_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "hub_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "sagemaker_public_hub_content_arn"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestMatchResourceAttr(resourceName, "versioned_hub_content_arn", regexache.MustCompile(`:hub-content/`+rName+`/ModelReference/`+rName+`/\d+\.\d+\.\d+$`)),
 				),
 			},
 			{

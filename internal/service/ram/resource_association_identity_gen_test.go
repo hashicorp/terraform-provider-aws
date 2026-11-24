@@ -208,7 +208,7 @@ func TestAccRAMResourceAssociation_Identity_regionOverride(t *testing.T) {
 	})
 }
 
-// Resource Identity was added after v6.65.0
+// Resource Identity was added after v6.67.0
 func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -229,7 +229,7 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T)
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.65.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.67.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},
@@ -271,7 +271,7 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_basic(t *testing.T)
 	})
 }
 
-// Resource Identity was added after v6.65.0
+// Resource Identity was added after v6.67.0
 func TestAccRAMResourceAssociation_Identity_ExistingResource_noRefreshNoChange(t *testing.T) {
 	ctx := acctest.Context(t)
 
@@ -297,7 +297,7 @@ func TestAccRAMResourceAssociation_Identity_ExistingResource_noRefreshNoChange(t
 		Steps: []resource.TestStep{
 			// Step 1: Create pre-Identity
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.65.0/"),
+				ConfigDirectory: config.StaticDirectory("testdata/ResourceAssociation/basic_v6.67.0/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 				},

@@ -40,7 +40,7 @@ const (
 // @ImportIDHandler("resourceAssociationImportID")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ram/types;awstypes;awstypes.ResourceShareAssociation")
 // @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckRAMSharingWithOrganizationEnabled")
-// @Testing(preIdentityVersion="v6.65.0")
+// @Testing(preIdentityVersion="v6.67.0")
 func resourceResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceAssociationCreate,

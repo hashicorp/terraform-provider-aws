@@ -43,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockdataautomation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockruntime"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
@@ -79,6 +80,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/continuum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
@@ -211,6 +213,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pricingplanmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -247,6 +250,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/securityir"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
@@ -325,6 +329,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		bedrockagentcore.ServicePackage(ctx),
+		bedrockdataautomation.ServicePackage(ctx),
 		bedrockruntime.ServicePackage(ctx),
 		billing.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
@@ -361,6 +366,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		configservice.ServicePackage(ctx),
 		connect.ServicePackage(ctx),
 		connectcases.ServicePackage(ctx),
+		continuum.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		costoptimizationhub.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
@@ -493,6 +499,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
+		pricingplanmanager.ServicePackage(ctx),
 		qbusiness.ServicePackage(ctx),
 		qldb.ServicePackage(ctx),
 		quicksight.ServicePackage(ctx),
@@ -529,6 +536,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		schemas.ServicePackage(ctx),
 		secretsmanager.ServicePackage(ctx),
 		securityhub.ServicePackage(ctx),
+		securityir.ServicePackage(ctx),
 		securitylake.ServicePackage(ctx),
 		serverlessrepo.ServicePackage(ctx),
 		servicecatalog.ServicePackage(ctx),

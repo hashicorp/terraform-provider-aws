@@ -421,7 +421,7 @@ func resourceDeploymentGroup() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"termination_hook_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,

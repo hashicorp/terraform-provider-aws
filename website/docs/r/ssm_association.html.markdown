@@ -79,7 +79,7 @@ resource "aws_ssm_association" "example" {
 }
 ```
 
-### Create an association with multiple instances with their instance ids
+### Create an association with multiple instances with their instance IDs
 
 ```terraform
 # Removed EC2 provisioning dependencies for brevity

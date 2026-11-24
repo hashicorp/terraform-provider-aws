@@ -59,7 +59,86 @@ resource "aws_networkfirewall_firewall" "example" {
 
 ### Transit Gateway Attached Firewall (Cross Account)
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and create Network Firewall in the second account to the Transit Gateway via the `aws_networkfirewall_firewall` and [`aws_networkfirewall_firewall_transit_gateway_attachment_accepter`](/docs/providers/aws/r/networkfirewall_firewall_transit_gateway_attachment_accepter.html) resources can be found in [the `./examples/network-firewall-cross-account-transit-gateway` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/network-firewall-cross-account-transit-gateway)
+This example creates a Transit Gateway in one AWS account, shares it with a second AWS account using Resource Access Manager (RAM), creates a Network Firewall attached to the Transit Gateway in the second account, and accepts the attachment in the first account with the [`aws_networkfirewall_firewall_transit_gateway_attachment_accepter` resource](/docs/providers/aws/r/networkfirewall_firewall_transit_gateway_attachment_accepter.html).
+
+~> **Note:** This example requires both AWS accounts to be in the same AWS Organization with [RAM sharing with AWS Organizations enabled](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs). Availability Zone IDs are used rather than names because Availability Zone names can map to different physical locations in each account.
+
+```terraform
+provider "aws" {
+  # Accepter's (Transit Gateway owner's) credentials.
+}
+
+provider "aws" {
+  alias = "firewall_owner"
+
+  # Firewall owner's credentials.
+}
+
+data "aws_caller_identity" "firewall_owner" {
+  provider = aws.firewall_owner
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+# Accepter's side: create and share the Transit Gateway.
+resource "aws_ec2_transit_gateway" "example" {}
+
+resource "aws_ram_resource_share" "example" {
+  name = "example"
+}
+
+resource "aws_ram_resource_association" "example" {
+  resource_arn       = aws_ec2_transit_gateway.example.arn
+  resource_share_arn = aws_ram_resource_share.example.arn
+}
+
+resource "aws_ram_principal_association" "example" {
+  principal          = data.aws_caller_identity.firewall_owner.account_id
+  resource_share_arn = aws_ram_resource_share.example.arn
+}
+
+# Firewall owner's side: create the firewall attached to the shared Transit Gateway.
+resource "aws_networkfirewall_firewall_policy" "example" {
+  provider = aws.firewall_owner
+
+  name = "example"
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:pass"]
+  }
+}
+
+resource "aws_networkfirewall_firewall" "example" {
+  provider = aws.firewall_owner
+
+  name                = "example"
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.example.arn
+  transit_gateway_id  = aws_ec2_transit_gateway.example.id
+
+  availability_zone_mapping {
+    availability_zone_id = data.aws_availability_zones.available.zone_ids[0]
+  }
+
+  # The Transit Gateway must be shared before the firewall can be attached.
+  depends_on = [
+    aws_ram_principal_association.example,
+    aws_ram_resource_association.example,
+  ]
+}
+
+# Accepter's side: accept the attachment.
+resource "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" "example" {
+  transit_gateway_attachment_id = aws_networkfirewall_firewall.example.firewall_status[0].transit_gateway_attachment_sync_states[0].attachment_id
+}
+```
 
 ## Argument Reference
 
