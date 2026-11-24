@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-25T07:07:38.909279217+13:00
+custom:
+    Name: aws_athena_system_table_configuration
+    NewType: New Resource
+    PullRequest: "50893"
