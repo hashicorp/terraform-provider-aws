@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:36:06.877401-05:00
+custom:
+  Body: Support `KB_8` for `association_config.request_body.*.default_size_inspection_limit` (accepted by AWS only for `application_load_balancer`)
+  Impact: resource/aws_wafv2_web_acl
+  PullRequest: "51215"
