@@ -106,7 +106,28 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
+func TestAccEFSFileSystemDataSource_Tags_search(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_efs_file_system.test"
+	resourceName := "aws_efs_file_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/FileSystem/data.tags_search/"),
+				ConfigVariables: config.Variables{},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrARN), resourceName, tfjsonpath.New(names.AttrARN), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccEFSFileSystemDataSource_Tags_nonExistent(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
