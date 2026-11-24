@@ -1,0 +1,49 @@
+{
+  "Name": "s3",
+  "ServiceName": "S3",
+  "Version": "v1.5",
+  "Actions": [
+    {
+      "Name": "PutBucketTagging",
+      "ActionConditionKeys": ["s3:ResourceAccount"],
+      "Annotations": {
+        "Properties": {
+          "IsDataPlane": false,
+          "IsList": false,
+          "IsPermissionManagement": false,
+          "IsTaggingOnly": true,
+          "IsWrite": false
+        }
+      },
+      "Resources": [{"Name": "bucket"}],
+      "SupportedBy": {"IAM Action Last Accessed": true}
+    }
+  ],
+  "ConditionKeys": [
+    {"Name": "s3:ResourceAccount", "Types": ["String"]}
+  ],
+  "Operations": [
+    {
+      "Name": "CopyObject",
+      "AuthorizedActions": [
+        {"Name": "GetObject", "Service": "s3"},
+        {"Name": "PutObject", "Service": "s3-object-lambda"}
+      ],
+      "SDK": [{"Name": "s3", "Method": "copy_object", "Package": "Boto3"}]
+    },
+    {
+      "Name": "PutBucketTagging",
+      "AuthorizedActions": [
+        {"Name": "PutBucketTagging", "Service": "s3"}
+      ],
+      "SDK": [{"Name": "s3", "Method": "put_bucket_tagging", "Package": "Boto3"}]
+    },
+    {
+      "Name": "ListDirectoryBuckets",
+      "SDK": [{"Name": "s3", "Method": "list_directory_buckets", "Package": "Boto3"}]
+    }
+  ],
+  "Resources": [
+    {"Name": "bucket", "ARNFormats": ["arn:${Partition}:s3:::${BucketName}"]}
+  ]
+}
