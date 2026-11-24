@@ -109,25 +109,25 @@ func resourceTransitVirtualInterface() *schema.Resource {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.IntBetween(0, 1000),
+					ValidateFunc: validation.IntAtLeast(0),
 				},
 				"prefix_pool_allocated_count_ipv6": {
 					Type:         schema.TypeInt,
 					Optional:     true,
 					Computed:     true,
-					ValidateFunc: validation.IntBetween(0, 1000),
-				},
-				"sitelink_enabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
+					ValidateFunc: validation.IntAtLeast(0),
 				},
 				"rate_limit": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
 				},
+				"sitelink_enabled": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan": {
 					Type:         schema.TypeInt,
 					Required:     true,
@@ -244,8 +244,8 @@ func resourceTransitVirtualInterfaceRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrName, vif.VirtualInterfaceName)
 	d.Set("prefix_pool_allocated_count_ipv4", vif.PrefixPoolAllocatedCountIpv4)
 	d.Set("prefix_pool_allocated_count_ipv6", vif.PrefixPoolAllocatedCountIpv6)
-	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("rate_limit", vif.RateLimit)
+	d.Set("sitelink_enabled", vif.SiteLinkEnabled)
 	d.Set("vlan", vif.Vlan)
 
 	return diags

@@ -66,6 +66,7 @@ func TestAccElastiCacheGlobalReplicationGroup_Redis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "0"),
 					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", primaryReplicationGroupId),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -120,12 +121,66 @@ func TestAccElastiCacheGlobalReplicationGroup_Valkey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "0"),
 					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", primaryReplicationGroupId),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	primaryReplicationGroupId := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckGlobalReplicationGroupDestroy(ctx, t),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_tags1(rName, primaryReplicationGroupId, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccGlobalReplicationGroupConfig_tags2(rName, primaryReplicationGroupId, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccGlobalReplicationGroupConfig_tags1(rName, primaryReplicationGroupId, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, t, resourceName, &globalReplicationGroup),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -1981,6 +2036,53 @@ resource "aws_elasticache_replication_group" "test" {
   num_cache_clusters = 1
 }
 `, rName, primaryReplicationGroupId)
+}
+
+func testAccGlobalReplicationGroupConfig_tags1(rName, primaryReplicationGroupId, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "test"
+
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
+}
+`, rName, primaryReplicationGroupId, tag1Key, tag1Value)
+}
+
+func testAccGlobalReplicationGroupConfig_tags2(rName, primaryReplicationGroupId, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "test"
+
+  engine             = "redis"
+  engine_version     = "5.0.6"
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
+}
+`, rName, primaryReplicationGroupId, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccGlobalReplicationGroupConfig_basic_nodeType(rName, primaryReplicationGroupId, nodeType string) string {

@@ -10,7 +10,6 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -46,6 +45,7 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -110,10 +110,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`),
-						`Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 40 characters.`,
-					),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z][a-zA-Z0-9_]{0,39}$`, `Valid characters are a-z, A-Z, 0-9, _ (underscore). The name must begin with a letter and can have up to 40 characters.`),
 				},
 			},
 			"max_iterations": schema.Int32Attribute{
@@ -624,7 +621,7 @@ func (r *harnessResource) Schema(ctx context.Context, request resource.SchemaReq
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthAtLeast(8),
-											stringvalidator.RegexMatches(regexache.MustCompile(`^https://[^#@]+$`), "must be an HTTPS URL"),
+											lazystringvalidator.RegexMatches(`^https://[^#@]+$`, "must be an HTTPS URL"),
 										},
 									},
 								},

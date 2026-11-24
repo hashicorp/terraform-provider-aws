@@ -28,7 +28,7 @@ func TestAccDevOpsAgentAsset_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccDevOpsAgentAsset_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetDestroy(ctx, t),
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestAccDevOpsAgentAsset_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgent),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DevOpsAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAssetDestroy(ctx, t),
 		Steps: []resource.TestStep{

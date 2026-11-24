@@ -208,7 +208,8 @@ func TestValidPolicyPath(t *testing.T) {
 			expectedDiags: diag.Diagnostics{
 				diag.Diagnostic{
 					Severity:      diag.Error,
-					Summary:       "invalid value for path (must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -)",
+					Summary:       "Invalid value",
+					Detail:        "Value is invalid: must contain uppercase or lowercase alphanumeric characters or any of the following: / , . + @ = _ -",
 					AttributePath: cty.GetAttrPath(names.AttrPath),
 				},
 			},

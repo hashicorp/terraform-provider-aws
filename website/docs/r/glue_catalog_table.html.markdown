@@ -346,7 +346,7 @@ To add an index to an existing table, see the [`glue_partition_index` resource](
 
 * `definer` - (Optional) Definer of a view in SQL.
 * `is_protected` - (Optional) You can set this flag as true to instruct the engine not to push user-provided operations into the logical plan of the view during query planning. However, setting this flag does not guarantee that the engine will comply. Refer to the engine's documentation to understand the guarantees provided, if any.
-* `last_refresh_type` - (Optional) Type of the materialized view's last refresh. Valid values: `Full`, `Incremental`.
+* `last_refresh_type` - (Optional) Type of the materialized view's last refresh. Valid values: `FULL`, `INCREMENTAL`.
 * `refresh_seconds` - (Optional) Auto refresh interval in seconds for the materialized view.
 * `representations` - (Optional) List of structures that contains the dialect of the view, and the query that defines the view. See [`representations`](#representations-block) below.
 * `sub_object_version_ids` - (Optional) List of the Apache Iceberg table versions referenced by the materialized view.

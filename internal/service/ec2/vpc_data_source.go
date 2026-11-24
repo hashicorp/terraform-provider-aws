@@ -147,6 +147,7 @@ func dataSourceVPC() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"network_firewall_association": vpcNetworkFirewallAssociationSchema(),
 				names.AttrOwnerID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -156,7 +157,7 @@ func dataSourceVPC() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 			}
 		},
 	}
@@ -212,6 +213,9 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	d.Set("default", vpc.IsDefault)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
+	if err := d.Set("network_firewall_association", flattenNetworkFirewallAssociations(vpc.NetworkFirewallAssociations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_firewall_association: %s", err)
+	}
 	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := findVPCAttributeByTwoPartKey(ctx, conn, d.Id(), awstypes.VpcAttributeNameEnableDnsHostnames); err != nil {

@@ -37,15 +37,27 @@ data "aws_networkfirewall_firewall" "example" {
 }
 ```
 
+### Find an internet gateway firewall by VPC
+
+AWS Network Security Manager creates and manages internet gateway firewalls. Each one is named after the ID of the VPC it protects.
+
+```terraform
+data "aws_networkfirewall_firewall" "example" {
+  name          = aws_vpc.example.id
+  firewall_type = "IGW_FIREWALL"
+}
+```
+
 ## Argument Reference
 
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `arn` - ARN of the firewall.
+* `firewall_type` - (Optional) Type of the firewall. Valid values: `FIREWALL`, `IGW_FIREWALL`. Set to `IGW_FIREWALL` to look up an internet gateway firewall by `name` or `arn`. When `arn` is supplied, the type must match its resource type. Defaults to `FIREWALL`.
 * `name` - Descriptive name of the firewall.
 
-One or more of these arguments is required.
+One or more of `arn` and `name` is required.
 
 ## Attribute Reference
 
@@ -83,6 +95,8 @@ This data source exports the following attributes in addition to the arguments a
         * `status_message` - A message providing additional information about the current status.
         * `transit_gateway_attachment_status` - The current status of the transit gateway attachment.
 * `id` - ARN that identifies the firewall.
+* `igw_firewall_configuration` - Internet gateway firewall settings. Only set for internet gateway firewalls.
+    * `enforcement_mode` - How the internet gateway firewall enforces its rules. `POLICY_CONTROLLED` means the firewall policy that AWS Network Security Manager associates with the firewall sets the enforcement mode.
 * `name` - Descriptive name of the firewall.
 * `subnet_change_protection` - A flag indicating whether the firewall is protected against changes to the subnet associations.
 * `subnet_mapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.

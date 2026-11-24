@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
@@ -31,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -99,7 +99,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 					setvalidator.ValueStringsAre(
 						stringvalidator.All(
 							stringvalidator.LengthAtMost(255),
-							stringvalidator.RegexMatches(regexache.MustCompile(`^sg-[0-9a-z]*$`), ""),
+							lazystringvalidator.RegexMatches(`^sg-[0-9a-z]*$`, ""),
 						),
 					),
 				},
@@ -113,7 +113,7 @@ func (r *vpcConnectionResource) Schema(ctx context.Context, req resource.SchemaR
 					setvalidator.ValueStringsAre(
 						stringvalidator.All(
 							stringvalidator.LengthAtMost(255),
-							stringvalidator.RegexMatches(regexache.MustCompile(`^subnet-[0-9a-z]*$`), ""),
+							lazystringvalidator.RegexMatches(`^subnet-[0-9a-z]*$`, ""),
 						),
 					),
 				},

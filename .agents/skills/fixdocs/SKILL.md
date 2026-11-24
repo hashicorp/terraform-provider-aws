@@ -83,16 +83,19 @@ Open the doc file (path is in the ss output) and apply fixes:
 
 When adding or editing documentation:
 - Arguments: `* \`name\` - (Required) Description.` or `* \`name\` - (Optional) Description.`
-- Attributes: `* \`name\` - Description.` (no Required/Optional label)
+- Attributes: `* \`name\` - Description.` (no label)
+- `(Read-Only)`: only for read-only fields in a block subsection that also has arguments; everything else read-only goes in Attribute Reference
 - Descriptions start with a verb or noun — never "A ", "An ", "The ", "Specifies ", "Indicates "
 - Don't spell out common abbreviations (e.g. ARN, KMS, VPC) — `swissshepherd`'s `banned_glosses` check enforces this; see [Abbreviations](../../../docs/end-user-documentation.md#abbreviations)
 - Boolean arguments: start with "Whether to..."
-- Keep alphabetical order within required/optional groups
+- Alphabetize. With 5+ arguments, including at least 2 required and 2 optional, split into required and optional lists; otherwise use one list
 - Block sections use heading: `` ### `block_name` Block ``
-- Byline for arguments: "The following arguments are required:" / "The following arguments are optional:"
-- Byline for attributes: "In addition to all arguments above, the following attributes are exported:"
+- Byline for one list: "This resource supports the following arguments:"
+- Bylines for split lists: "The following arguments are required:" / "The following arguments are optional:"
+- Byline for attributes: "This resource exports the following attributes in addition to the arguments above:"
+- In bylines, replace "resource" with the documentation type
 
-Authoritative reference: [docs/end-user-documentation.md](../../../docs/end-user-documentation.md). When this skill and that document disagree, the document wins.
+Precedence: `swissshepherd` wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then [docs/end-user-documentation.md](../../../docs/end-user-documentation.md), then this skill.
 
 ### Phase 5: Verify fix
 
@@ -129,7 +132,7 @@ Use the resource name without the `aws_` prefix in the commit message scope when
 - **Check both check blocks.** A target may appear in `ignore_targets` under `check "schema_docs"` AND `check "import_section"` (or others). Remove from all.
 - **Don't touch `ignore_contents_check`** unless the user explicitly asks — those are structural exceptions.
 - **Preserve file structure.** Don't rewrite entire doc files. Make minimal, targeted edits.
-- **Nested blocks.** When ss reports "block X.Y is not documented", the doc needs a subsection under the parent block's section. Default to `` ### `y` Block `` (just the child name) nested contextually after the parent. If the child name collides with another block of the same name elsewhere in the file (e.g. the same nested block name reused under two different parents), use the dotted path instead: `` ### `x.y` Block ``, with a matching dotted anchor. There is no single correct form — prefer the shorter undotted name, but use dotted paths when needed to keep headings unique. Be consistent within a file: don't mix dotted and undotted for the same block across the doc.
+- **Nested blocks.** For "block X.Y is not documented", add `` ### `y` Block `` after the parent's section. If another `y` block has different fields, use `` ### `x.y` Block ``. Same-named blocks with identical fields share one heading. Update in-page links after renaming a heading.
 
 ## Example session
 

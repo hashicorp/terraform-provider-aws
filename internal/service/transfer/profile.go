@@ -65,7 +65,7 @@ func resourceProfile() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.ProfileType](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

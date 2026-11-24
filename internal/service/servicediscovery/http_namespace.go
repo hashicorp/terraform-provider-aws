@@ -62,7 +62,7 @@ func resourceHTTPNamespace() *schema.Resource {
 					ValidateFunc: validNamespaceName,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

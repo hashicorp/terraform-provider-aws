@@ -12,6 +12,8 @@ Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
 ~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
 
+~> **NOTE:** WorkSpaces is available only in [certain Availability Zones](https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html) in each Region, identified by Availability Zone ID. Because Availability Zone names map to different Availability Zone IDs in each AWS account, use the `availability_zone_id` argument of the `aws_subnet` resource to place subnets in supported Availability Zones. The example below uses Availability Zone IDs supported in the `us-east-1` Region.
+
 ## Example Usage
 
 ```terraform
@@ -114,26 +116,26 @@ resource "aws_vpc" "example" {
 }
 
 resource "aws_subnet" "example_a" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1a"
-  cidr_block        = "10.0.0.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az2"
+  cidr_block           = "10.0.0.0/24"
 }
 
 resource "aws_subnet" "example_b" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1b"
-  cidr_block        = "10.0.1.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az4"
+  cidr_block           = "10.0.1.0/24"
 }
 resource "aws_subnet" "example_c" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1c"
-  cidr_block        = "10.0.2.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az4"
+  cidr_block           = "10.0.2.0/24"
 }
 
 resource "aws_subnet" "example_d" {
-  vpc_id            = aws_vpc.example.id
-  availability_zone = "us-east-1d"
-  cidr_block        = "10.0.3.0/24"
+  vpc_id               = aws_vpc.example.id
+  availability_zone_id = "use1-az6"
+  cidr_block           = "10.0.3.0/24"
 }
 ```
 
@@ -274,37 +276,37 @@ data "aws_region" "current" {}
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `directory_id` - (Optional) The directory identifier for registration in WorkSpaces service.
-* `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
-* `ip_group_ids` - (Optional) The identifiers of the IP access control groups associated with the directory.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tenancy` - (Optional) Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`.
-* `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
-* `saml_properties` - (Optional) Configuration of SAML authentication integration. Defined below.
-* `self_service_permissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`.. Defined below.
-* `workspace_access_properties` - (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
-* `workspace_creation_properties` - (Optional) Default properties that are used for creating WorkSpaces. Defined below.
-* `workspace_type` - (Optional) Specifies the type of WorkSpaces directory. Valid values are `PERSONAL` and `POOLS`. Default is `PERSONAL`.
 * `active_directory_config` - (Optional) Configuration for Active Directory integration when `workspace_type` is set to `POOLS`. Defined below.
-* `workspace_directory_name` - (Required for `POOLS`) The name of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
-* `workspace_directory_description` - (Required for `POOLS`) The description of the WorkSpaces directory when `workspace_type` is set to `POOLS`.
-* `user_identity_type` - (Required for `POOLS`) Specifies the user identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
+* `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
+* `directory_id` - (Optional) Directory identifier for registration in WorkSpaces service.
+* `ip_group_ids` - (Optional) Identifiers of the IP access control groups associated with the directory.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `saml_properties` - (Optional) Configuration of SAML authentication integration. Defined below.
+* `self_service_permissions` - (Optional) Permissions to enable or disable self-service capabilities when `workspace_type` is set to `PERSONAL`. Defined below.
+* `subnet_ids` - (Optional) Identifiers of the subnets where the directory resides.
+* `tags` - (Optional) Map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tenancy` - (Optional) Tenancy of the WorkSpaces directory. Valid values are `DEDICATED` or `SHARED`.
+* `user_identity_type` - (Optional) User identity type for the WorkSpaces directory. Valid values are `CUSTOMER_MANAGED`, `AWS_DIRECTORY_SERVICE`, `AWS_IAM_IDENTITY_CENTER`.
+* `workspace_access_properties` - (Optional) Devices and operating systems that users can use to access their WorkSpaces. Defined below.
+* `workspace_creation_properties` - (Optional) Default properties that are used for creating WorkSpaces. Defined below.
+* `workspace_directory_description` - (Optional) Description of the WorkSpaces directory. Required when `workspace_type` is set to `POOLS`.
+* `workspace_directory_name` - (Optional) Name of the WorkSpaces directory. Required when `workspace_type` is set to `POOLS`.
+* `workspace_type` - (Optional) Type of WorkSpaces directory. Valid values are `PERSONAL` and `POOLS`. Default is `PERSONAL`.
 
 -> **Note:** When `workspace_type` is set to `POOLS`, the `directory_id` is automatically generated and cannot be manually set.
 
-### certificate_based_auth_properties
+### `certificate_based_auth_properties` Block
 
 * `certificate_authority_arn` - (Optional) ARN of the certificate manager private certificate authority (ACM-PCA) that is used for certificate-based authentication.
 * `status` - (Optional) Status of certificate-based authentication. Default `DISABLED`.
 
-### saml_properties
+### `saml_properties` Block
 
-* `relay_state_parameter_name` - (Optional) The relay state parameter name supported by the SAML 2.0 identity provider (IdP). Default `RelayState`.
+* `relay_state_parameter_name` - (Optional) Relay state parameter name supported by the SAML 2.0 identity provider (IdP). Default `RelayState`.
 * `status` - (Optional) Status of SAML 2.0 authentication. Default `DISABLED`.
-* `user_access_url` - (Optional) The SAML 2.0 identity provider (IdP) user access URL.
+* `user_access_url` - (Optional) SAML 2.0 identity provider (IdP) user access URL.
 
-### self_service_permissions
+### `self_service_permissions` Block
 
 * `change_compute_type` - (Optional) Whether WorkSpaces directory users can change the compute type (bundle) for their workspace. Default `false`.
 * `increase_volume_size` - (Optional) Whether WorkSpaces directory users can increase the volume size of the drives on their workspace. Default `false`.
@@ -312,60 +314,59 @@ This resource supports the following arguments:
 * `restart_workspace` - (Optional) Whether WorkSpaces directory users can restart their workspace. Default `true`.
 * `switch_running_mode` - (Optional) Whether WorkSpaces directory users can switch the running mode of their workspace. Default `false`.
 
-### workspace_access_properties
+### `workspace_access_properties` Block
 
 * `access_endpoint_config` - (Optional) Configuration for accessing WorkSpaces through VPC endpoints instead of the public internet. Defined below.
-* `device_type_android` - (Optional) Indicates whether users can use Android devices to access their WorkSpaces.
-* `device_type_chromeos` - (Optional) Indicates whether users can use Chromebooks to access their WorkSpaces.
-* `device_type_ios` - (Optional) Indicates whether users can use iOS devices to access their WorkSpaces.
-* `device_type_linux` - (Optional) Indicates whether users can use Linux clients to access their WorkSpaces.
-* `device_type_osx` - (Optional) Indicates whether users can use macOS clients to access their WorkSpaces.
-* `device_type_web` - (Optional) Indicates whether users can access their WorkSpaces through a web browser.
-* `device_type_windows` - (Optional) Indicates whether users can use Windows clients to access their WorkSpaces.
-* `device_type_zeroclient` - (Optional) Indicates whether users can use zero client devices to access their WorkSpaces.
+* `device_type_android` - (Optional) Whether users can use Android devices to access their WorkSpaces.
+* `device_type_chromeos` - (Optional) Whether users can use Chromebooks to access their WorkSpaces.
+* `device_type_ios` - (Optional) Whether users can use iOS devices to access their WorkSpaces.
+* `device_type_linux` - (Optional) Whether users can use Linux clients to access their WorkSpaces.
+* `device_type_osx` - (Optional) Whether users can use macOS clients to access their WorkSpaces.
+* `device_type_web` - (Optional) Whether users can access their WorkSpaces through a web browser.
+* `device_type_windows` - (Optional) Whether users can use Windows clients to access their WorkSpaces.
+* `device_type_zeroclient` - (Optional) Whether users can use zero client devices to access their WorkSpaces.
 
-### access_endpoint_config
+### `access_endpoint_config` Block
 
 * `access_endpoints` - (Required) Set of access endpoints used to control the network paths that users use to access their WorkSpaces. Defined below.
 * `internet_fallback_protocols` - (Optional) List of protocols that fall back to the public internet when streaming over a VPC endpoint is unavailable. Valid value is `PCOIP`.
 
-### access_endpoints
+### `access_endpoints` Block
 
 * `access_endpoint_type` - (Required) Type of access endpoint. Valid value is `STREAMING_WSP`.
 * `vpc_endpoint_id` - (Required) Identifier of the VPC endpoint that the access endpoint uses.
 
-### workspace_creation_properties
+### `workspace_creation_properties` Block
 
 -> **Note:** Once you specified `custom_security_group_id` or `default_ou`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
-* `custom_security_group_id` - (Optional) The identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
-* `default_ou` - (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
-* `enable_internet_access` - (Optional) Indicates whether internet access is enabled for your WorkSpaces.
-* `enable_maintenance_mode` - (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
-* `user_enabled_as_local_administrator` - (Optional) Indicates whether users are local administrators of their WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
+* `custom_security_group_id` - (Optional) Identifier of your custom security group. Should relate to the same VPC, where WorkSpaces reside in.
+* `default_ou` - (Optional) Default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
+* `enable_internet_access` - (Optional) Whether internet access is enabled for your WorkSpaces.
+* `enable_maintenance_mode` - (Optional) Whether maintenance mode is enabled for your WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
+* `user_enabled_as_local_administrator` - (Optional) Whether users are local administrators of their WorkSpaces. Valid only if `workspace_type` is set to `PERSONAL`.
 
-### active_directory_config
+### `active_directory_config` Block
 
 -> **Note:** `active_directory_config` is only valid if `workspaces_type` is set to `POOLS`.
 
-* `domain_name` - Fully qualified domain name of the AWS Directory Service directory.
-* `service_account_secret_arn` - ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html).
+* `domain_name` - (Required) Fully qualified domain name of the AWS Directory Service directory.
+* `service_account_secret_arn` - (Required) ARN of the Secrets Manager secret that contains the credentials for the service account. For more information, see [Service Account Details](https://docs.aws.amazon.com/workspaces/latest/adminguide/pools-service-account-details.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The WorkSpaces directory identifier.
-* `alias` - The directory alias.
-* `customer_user_name` - The user name for the service account.
-* `directory_name` - The name of the directory.
-* `directory_type` - The directory type.
-* `dns_ip_addresses` - The IP addresses of the DNS servers for the directory.
-* `iam_role_id` - The identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
-* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
-* `registration_code` - The registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `workspace_security_group_id` - The identifier of the security group that is assigned to new WorkSpaces.
+* `alias` - Directory alias.
+* `customer_user_name` - User name for the service account.
+* `directory_name` - Name of the directory.
+* `directory_type` - Directory type.
+* `dns_ip_addresses` - IP addresses of the DNS servers for the directory.
+* `iam_role_id` - Identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
+* `id` - WorkSpaces directory identifier.
+* `registration_code` - Registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `workspace_security_group_id` - Identifier of the security group that is assigned to new WorkSpaces.
 
 ## Import
 

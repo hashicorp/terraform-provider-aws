@@ -15,8 +15,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1549,6 +1552,55 @@ func TestAccSiteVPNConnection_largeBandwidthTunnel_withoutTGWorVGW(t *testing.T)
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
+			},
+		},
+	})
+}
+
+func TestAccSiteVPNConnection_TunnelBandwidth_modify(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpn awstypes.VpnConnection
+	rBgpAsn := acctest.RandIntRange(t, 64512, 65534)
+	resourceName := "aws_vpn_connection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn, awstypes.VpnTunnelBandwidthStandard),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, t, resourceName, &vpn),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tunnel_bandwidth"), tfknownvalue.StringExact(awstypes.VpnTunnelBandwidthStandard)),
+				},
+			},
+			{
+				Config: testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn, awstypes.VpnTunnelBandwidthLarge),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccVPNConnectionExists(ctx, t, resourceName, &vpn),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("tunnel_bandwidth"), tfknownvalue.StringExact(awstypes.VpnTunnelBandwidthLarge)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3163,6 +3215,22 @@ resource "aws_vpn_connection" "test" {
   type                = "ipsec.1"
 }
 `, rName, rBgpAsn)
+}
+
+func testAccVPNConnectionConfig_tunnelBandwidth(rBgpAsn int, tunnelBandwidth awstypes.VpnTunnelBandwidth) string {
+	return fmt.Sprintf(`
+resource "aws_customer_gateway" "test" {
+  bgp_asn    = %[1]d
+  ip_address = "198.51.100.2"
+  type       = "ipsec.1"
+}
+
+resource "aws_vpn_connection" "test" {
+  customer_gateway_id = aws_customer_gateway.test.id
+  tunnel_bandwidth    = %[2]q
+  type                = "ipsec.1"
+}
+`, rBgpAsn, tunnelBandwidth)
 }
 
 func testAccVPNConnectionConfig_vpnConcentrator(rName string, rBgpAsn int) string {

@@ -36,6 +36,8 @@ import (
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/fms;fms.GetResourceSetOutput")
 // @Testing(serialize=true)
+// @Testing(preCheckRegion="us-east-1")
+// @Testing(preCheck="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.PreCheckOrganizationManagementAccount")
 func newResourceSetResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceSetResource{}
 

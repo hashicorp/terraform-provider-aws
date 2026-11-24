@@ -27,6 +27,7 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 		"DelegationSignerRecord": {
 			acctest.CtBasic:      testAccDelegationSignerRecord_basic,
 			acctest.CtDisappears: testAccDelegationSignerRecord_disappears,
+			"upgradeFromV6_69_1": testAccDelegationSignerRecord_upgradeFromV6_69_1,
 		},
 		"Domain": {
 			acctest.CtBasic:      testAccDomain_basic,

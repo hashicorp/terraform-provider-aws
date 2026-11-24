@@ -73,7 +73,7 @@ func resourceAPIKey() *schema.Resource {
 					Required: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrValue: {
 					Type:         schema.TypeString,
 					Optional:     true,

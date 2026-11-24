@@ -78,7 +78,7 @@ func resourceRepository() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(0, 100),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

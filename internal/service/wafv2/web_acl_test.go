@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"testing"
 	"time"
 
@@ -485,6 +486,63 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_Update_concurrentRuleRemoval(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	ruleName0 := fmt.Sprintf("%s-0", rName)
+
+	resourceName := "aws_wafv2_web_acl.test"
+	ruleResourceName0 := "aws_wafv2_web_acl_rule.test.0"
+	ruleResourceName1 := "aws_wafv2_web_acl_rule.test.1"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_concurrentRuleRemoval(rName, "Initial", 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLRuleExists(ctx, t, ruleResourceName0),
+					testAccCheckWebACLRuleExists(ctx, t, ruleResourceName1),
+				),
+			},
+			{
+				// Terraform destroys the dependent rule before updating the Web ACL, so the
+				// Web ACL update is sent with a stale lock token and must retry without
+				// restoring the removed rule.
+				Config: testAccWebACLConfig_concurrentRuleRemoval(rName, "Updated", 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_wafv2_web_acl_rule.test[0]", plancheck.ResourceActionNoop),
+						plancheck.ExpectResourceAction("aws_wafv2_web_acl_rule.test[1]", plancheck.ResourceActionDestroy),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, resourceName, &v),
+					testAccCheckWebACLRuleExists(ctx, t, ruleResourceName0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Updated"),
+					// The rule set in state is the planned value, so verify the rules in AWS instead.
+					func(*terraform.State) error {
+						var got []string
+						for _, r := range v.Rules {
+							got = append(got, aws.ToString(r.Name))
+						}
+						if want := []string{ruleName0}; !slices.Equal(got, want) {
+							return fmt.Errorf("WAFv2 WebACL rules = %v, want %v", got, want)
+						}
+						return nil
+					},
+				),
 			},
 		},
 	})
@@ -4248,6 +4306,54 @@ resource "aws_wafv2_web_acl" "test" {
   }
 }
 `, rName, ruleName1, priority1, ruleName2, priority2)
+}
+
+func testAccWebACLConfig_concurrentRuleRemoval(rName, description string, ruleCount int) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[2]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  count = %[3]d
+
+  name        = "%[1]s-${count.index}"
+  priority    = count.index
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-${count.index}"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, description, ruleCount)
 }
 
 func testAccWebACLConfig_byteMatchStatement(rName, positionalConstraint, searchString string) string {

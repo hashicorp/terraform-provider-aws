@@ -41,8 +41,6 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Profile.
-* `id` - ID of the Profile.
-* `name` - Name of the Profile.
 * `owner_id` - ID of the AWS account that owns the Profile.
 * `share_status` - Share status of the Profile.
 * `status` - Status of the Profile.

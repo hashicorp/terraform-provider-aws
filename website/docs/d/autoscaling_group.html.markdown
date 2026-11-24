@@ -22,7 +22,7 @@ data "aws_autoscaling_group" "foo" {
 
 This data source supports the following arguments:
 
-* `name` - Specify the exact name of the desired Auto Scaling group.
+* `name` - (Required) Specify the exact name of the desired Auto Scaling group.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
@@ -113,7 +113,6 @@ This data source exports the following attributes in addition to the arguments a
                 * `launch_template_name` - Name of the launch template.
                 * `version` - Template version.
             * `weighted_capacity` - Number of capacity units, which gives the instance type a proportional weight to other instance types.
-* `name` - Name of the Auto Scaling group.
 * `new_instances_protected_from_scale_in` - Whether newly launched instances are protected from termination by Amazon EC2 Auto Scaling when scaling in.
 * `placement_group` - Name of the placement group into which to launch your instances, if any. For more information, see Placement Groups (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placement-groups.html) in the EC2 User Guide.
 * `predicted_capacity` - Predicted capacity of the group.

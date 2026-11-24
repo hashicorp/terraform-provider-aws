@@ -576,7 +576,7 @@ func resourceCluster() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.StorageMode](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"zookeeper_connect_string": {
 					Type:     schema.TypeString,
 					Computed: true,

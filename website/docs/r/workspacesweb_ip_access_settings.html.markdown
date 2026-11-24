@@ -73,21 +73,21 @@ resource "aws_workspacesweb_ip_access_settings" "example" {
 
 The following arguments are required:
 
-* `display_name` - (Required) The display name of the IP access settings.
-* `ip_rule` - (Required) The IP rules of the IP access settings. See [IP Rule](#ip-rules) below.
+* `display_name` - (Required) Display name of the IP access settings.
+* `ip_rule` - (Required) IP rules of the IP access settings. See [`ip_rule` Block](#ip_rule-block) below.
 
 The following arguments are optional:
 
 * `additional_encryption_context` - (Optional) Additional encryption context for the IP access settings.
 * `customer_managed_key` - (Optional) ARN of the customer managed KMS key.
-* `description` - (Optional) The description of the IP access settings.
+* `description` - (Optional) Description of the IP access settings.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### IP Rules
+### `ip_rule` Block
 
-* `ip_range` - (Required) The IP range of the IP rule.
-* `description` - (Optional) The description of the IP rule.
+* `description` - (Optional) Description of the IP rule.
+* `ip_range` - (Required) IP range of the IP rule.
 
 ## Attribute Reference
 

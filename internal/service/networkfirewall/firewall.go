@@ -181,7 +181,7 @@ func resourceFirewall() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTransitGatewayID: {
 					Type:         schema.TypeString,
 					Optional:     true,

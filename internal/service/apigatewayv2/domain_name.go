@@ -135,7 +135,7 @@ func resourceDomainName() *schema.Resource {
 					ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RoutingMode](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
