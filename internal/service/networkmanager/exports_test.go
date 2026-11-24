@@ -47,6 +47,7 @@ var (
 	FindTransitGatewayRouteTableAttachmentByID              = findTransitGatewayRouteTableAttachmentByID
 	FindVPCAttachmentByID                                   = findVPCAttachmentByID
 
+	CoreNetworkPolicyVersionAtLeast                     = coreNetworkPolicyVersionAtLeast
 	CustomerGatewayAssociationParseResourceID           = customerGatewayAssociationParseResourceID
 	LinkAssociationParseResourceID                      = linkAssociationParseResourceID
 	TransitGatewayConnectPeerAssociationParseResourceID = transitGatewayConnectPeerAssociationParseResourceID

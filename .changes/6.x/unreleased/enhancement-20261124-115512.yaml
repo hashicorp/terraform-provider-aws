@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-24T11:55:12.219346+01:00
+custom:
+    Body: Add `2026.10` as a valid `version` value
+    Impact: data-source/aws_networkmanager_core_network_policy_document

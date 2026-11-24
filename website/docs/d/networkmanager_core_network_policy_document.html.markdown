@@ -20,6 +20,8 @@ Using this data source to generate policy documents is *optional*. It is also va
 
 ```terraform
 data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2026.10"
+
   core_network_configuration {
     vpn_ecmp_support = false
     asn_ranges       = ["64512-64555"]
@@ -88,7 +90,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 
 ```json
 {
-  "version": "2021.12",
+  "version": "2026.10",
   "core-network-configuration": {
     "asn-ranges": [
       "64512-64555"
@@ -173,7 +175,7 @@ This data source supports the following arguments:
 * `routing_policies` (Optional) - Block argument that defines routing policies for controlling route propagation. Routing policies allow you to filter, modify, and control BGP routes advertised to and from your core network. Available in policy version `2025.11` and later. Detailed below.
 * `segments` (Required) - Block argument that defines the different segments in the network. Here you can provide descriptions, change defaults, and provide explicit Regional operational and route filters. The names defined for each segment are used in the `segment_actions` and `attachment_policies` section. Each segment is created, and operates, as a completely separated routing domain. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
 * `segment_actions` (Optional) - A block argument, `segment_actions` define how routing works between segments. By default, attachments can only communicate with other attachments in the same segment. Detailed below.
-* `version` (Optional) - Version of the core network policy. Valid values: `2021.12`, `2025.11`. Default: `2021.12`.
+* `version` (Optional) - Version of the core network policy. Valid values: `2021.12`, `2025.11`, `2026.10`. Default: `2021.12`. See [Core network policy version parameters](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-policies-json.html#cloudwan-version-json) for details.
 
 ### `attachment_policies`
 

@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -22,6 +23,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// coreNetworkPolicyVersions lists the valid core network policy versions, oldest first.
+// A feature introduced in a version is available in that version and later, so append new versions.
+var coreNetworkPolicyVersions = []string{
+	"2021.12",
+	"2025.11",
+	"2026.10",
+}
+
+func coreNetworkPolicyVersionAtLeast(version, minimum string) bool {
+	v, m := slices.Index(coreNetworkPolicyVersions, version), slices.Index(coreNetworkPolicyVersions, minimum)
+	return v >= 0 && m >= 0 && v >= m
+}
 
 // @SDKDataSource("aws_networkmanager_core_network_policy_document", name="Core Network Policy Document")
 func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
@@ -49,13 +63,10 @@ func dataSourceCoreNetworkPolicyDocument() *schema.Resource {
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrVersion: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  "2021.12",
-					ValidateFunc: validation.StringInSlice([]string{
-						"2021.12",
-						"2025.11",
-					}, false),
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "2021.12",
+					ValidateFunc: validation.StringInSlice(coreNetworkPolicyVersions, false),
 				},
 				"core_network_configuration": {
 					Type:     schema.TypeList,
@@ -963,8 +974,8 @@ func expandDataCoreNetworkPolicyAttachmentPoliciesAction(tfList []any) (*coreNet
 }
 
 func expandCoreNetworkPolicyAttachmentRoutingPolicyRules(tfList []any, version string) ([]*coreNetworkPolicyAttachmentRoutingPolicyRule, error) {
-	if len(tfList) > 0 && version != "2025.11" {
-		return nil, fmt.Errorf("attachment_routing_policy_rules requires version 2025.11")
+	if len(tfList) > 0 && !coreNetworkPolicyVersionAtLeast(version, "2025.11") {
+		return nil, fmt.Errorf("attachment_routing_policy_rules requires version 2025.11 or later")
 	}
 
 	apiObjects := make([]*coreNetworkPolicyAttachmentRoutingPolicyRule, 0)
@@ -1098,8 +1109,8 @@ func expandCoreNetworkPolicySegments(tfList []any) ([]*coreNetworkPolicySegment,
 }
 
 func expandCoreNetworkPolicyRoutingPolicies(tfList []any, version string) ([]*coreNetworkPolicyRoutingPolicy, error) {
-	if len(tfList) > 0 && version != "2025.11" {
-		return nil, fmt.Errorf("routing_policies requires version 2025.11")
+	if len(tfList) > 0 && !coreNetworkPolicyVersionAtLeast(version, "2025.11") {
+		return nil, fmt.Errorf("routing_policies requires version 2025.11 or later")
 	}
 
 	apiObjects := make([]*coreNetworkPolicyRoutingPolicy, 0)
