@@ -145,6 +145,7 @@ var (
 	ResourceVerifiedAccessInstanceTrustProviderAttachment = resourceVerifiedAccessInstanceTrustProviderAttachment
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
+	ResourcePublicIPv4Pool                                = newPublicIPv4PoolResource
 
 	CheckMostRecentAndMissingFilters                            = checkMostRecentAndMissingFilters
 	CreateTags                                                  = createTags
@@ -291,6 +292,7 @@ var (
 	FindVerifiedAccessInstanceTrustProviderAttachmentExists     = findVerifiedAccessInstanceTrustProviderAttachmentExists
 	FindVerifiedAccessTrustProviderByID                         = findVerifiedAccessTrustProviderByID
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
+	FindPublicIPv4PoolByID                                      = findPublicIPv4PoolByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
 	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions

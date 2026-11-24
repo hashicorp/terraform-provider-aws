@@ -479,6 +479,7 @@ func RegisterSweepers() {
 	awsv2.Register("aws_vpc_route_server_endpoint", sweepRouteServerEndpoints, "aws_vpc_route_server_peer")
 	awsv2.Register("aws_vpc_route_server_peer", sweepRouteServerPeers)
 	awsv2.Register("aws_vpc_route_server_propagation", sweepRouteServerPropagations)
+	awsv2.Register("aws_ec2_public_ipv4_pool", sweepPublicIPv4Pools)
 }
 
 func sweepCapacityReservations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -3470,6 +3471,30 @@ func sweepSecondarySubnets(ctx context.Context, client *conns.AWSClient) ([]swee
 
 			sweepResources = append(sweepResources, framework.NewSweepResource(newSecondarySubnetResource, client,
 				framework.NewAttribute(names.AttrID, id)))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+// sweepPublicIPv4Pools deletes every aws_ec2_public_ipv4_pool in the Region, not only the acceptance tests' own.
+func sweepPublicIPv4Pools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.EC2Client(ctx)
+	var input ec2.DescribePublicIpv4PoolsInput
+	var sweepResources []sweep.Sweepable
+
+	pages := ec2.NewDescribePublicIpv4PoolsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.PublicIpv4Pools {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newPublicIPv4PoolResource, client,
+				framework.NewAttribute("pool_id", aws.ToString(v.PoolId)),
+				framework.NewAttribute("network_border_group", aws.ToString(v.NetworkBorderGroup))))
 		}
 	}
 
