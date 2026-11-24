@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:36:25.130567-05:00
+custom:
+  Body: Add `monetization_config.connected_account_config` argument
+  Impact: resource/aws_wafv2_web_acl
+  PullRequest: "50833"
