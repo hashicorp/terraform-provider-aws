@@ -23,14 +23,14 @@ data "aws_opensearchserverless_vpc_endpoint" "example" {
 This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_endpoint_id` - (Required) The unique identifier of the endpoint.
+* `vpc_endpoint_id` - (Required) Unique identifier of the endpoint.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `created_date` - The date the endpoint was created.
-* `name` - The name of the endpoint.
-* `security_group_ids` - The IDs of the security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint.
-* `subnet_ids` - The IDs of the subnets from which you access OpenSearch Serverless.
-* `vpc_id` - The ID of the VPC from which you access OpenSearch Serverless.
+* `created_date` - Date the endpoint was created.
+* `name` - Name of the endpoint.
+* `security_group_ids` - IDs of the security groups that define the ports, protocols, and sources for inbound traffic that you are authorizing into your endpoint.
+* `subnet_ids` - IDs of the subnets from which you access OpenSearch Serverless.
+* `vpc_id` - ID of the VPC from which you access OpenSearch Serverless.

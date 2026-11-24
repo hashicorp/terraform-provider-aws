@@ -145,7 +145,7 @@ func resourceDevice() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrType: {
 					Type:         schema.TypeString,
 					Optional:     true,

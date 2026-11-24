@@ -92,7 +92,7 @@ func resourceLag() *schema.Resource {
 				},
 				"rate_limiter_status": rateLimiterStatusSchema(),
 				names.AttrTags:        tftags.TagsSchema(),
-				names.AttrTagsAll:     tftags.TagsSchemaComputed(),
+				names.AttrTagsAll:     tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

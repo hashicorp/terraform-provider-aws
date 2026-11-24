@@ -10,7 +10,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -132,7 +132,7 @@ func resourceTransitGateway() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.SecurityGroupReferencingSupportValue](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_cidr_blocks": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -142,7 +142,7 @@ func resourceTransitGateway() *schema.Resource {
 						ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
 							validation.All(
 								validation.IsCIDRNetwork(0, 24),
-								validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.`), "must not be from range 169.254.0.0/16"),
+								lazyvalidation.StringDoesNotMatch(`^169\.254\.`, "must not be from range 169.254.0.0/16"),
 							),
 							validation.IsCIDRNetwork(0, 64),
 						),

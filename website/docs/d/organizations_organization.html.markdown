@@ -77,17 +77,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the organization.
-* `feature_set` - FeatureSet of the organization.
-* `id` - ID of the organization.
-* `master_account_arn` - ARN of the account that is designated as the master account for the organization.
-* `master_account_email` - The email address that is associated with the AWS account that is designated as the master account for the organization.
-* `master_account_id` - Unique identifier (ID) of the master account of an organization.
-* `master_account_name` - Name of the master account of an organization.
-
-### Master Account or Delegated Administrator Attribute Reference
-
-If the account is the master account or a delegated administrator for the organization, the following attributes are also exported:
+~> **Note:** The `accounts`, `aws_service_access_principals`, `enabled_policy_types`, `non_master_accounts`, and `roots` attributes are only exported if the account is the master account or a delegated administrator for the organization. Otherwise, they are empty.
 
 * `accounts` - List of organization accounts including the master account. For a list excluding the master account, see the `non_master_accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account.
@@ -98,8 +88,15 @@ If the account is the master account or a delegated administrator for the organi
     * `name` - Name of the account.
     * `state` - State of the account.
     * `status` - (**Deprecated** use `state` instead) Status of the account.
-* `aws_service_access_principals` - A list of AWS service principal names that have integration enabled with your organization. Organization must have `feature_set` set to `ALL`. For additional information, see the [AWS Organizations User Guide](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html).
-* `enabled_policy_types` - A list of Organizations policy types that are enabled in the Organization Root. Organization must have `feature_set` set to `ALL`. For additional information about valid policy types (e.g., `SERVICE_CONTROL_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
+* `arn` - ARN of the organization.
+* `aws_service_access_principals` - List of AWS service principal names that have integration enabled with your organization. Organization must have `feature_set` set to `ALL`. For additional information, see the [AWS Organizations User Guide](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_integrate_services.html).
+* `enabled_policy_types` - List of Organizations policy types that are enabled in the Organization Root. Organization must have `feature_set` set to `ALL`. For additional information about valid policy types (e.g., `SERVICE_CONTROL_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
+* `feature_set` - FeatureSet of the organization.
+* `id` - ID of the organization.
+* `master_account_arn` - ARN of the account that is designated as the master account for the organization.
+* `master_account_email` - Email address that is associated with the AWS account that is designated as the master account for the organization.
+* `master_account_id` - Unique identifier (ID) of the master account of an organization.
+* `master_account_name` - Name of the master account of an organization.
 * `non_master_accounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account.
     * `email` - Email of the account.
@@ -114,5 +111,5 @@ If the account is the master account or a delegated administrator for the organi
     * `id` - Identifier of the root.
     * `name` - Name of the root.
     * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
-        * `name` - Name of the policy type.
         * `status` - Status of the policy type as it relates to the associated root.
+        * `type` - Type of the policy.

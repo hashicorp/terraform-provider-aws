@@ -39,7 +39,7 @@ This resource supports the following arguments:
 * `canvas_app_settings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas_app_settings) below.
 * `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code_editor_app_settings) below.
 * `custom_file_system_config` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker AI Studio. See [Custom File System Config](#custom_file_system_config) below.
-* `custom_posix_user_config` - (Optional) Details about the POSIX identity that is used for file system operations. See [Custom Posix User Config](#custom_posix_user_config) below.
+* `custom_posix_user_config` - (Optional) Details about the POSIX identity that is used for file system operations. See [Custom POSIX User Config](#custom_posix_user_config) below.
 * `default_landing_uri` - (Optional) The default experience that the user is directed to when accessing the domain. The supported values are: `studio::`: Indicates that Studio is the default experience. This value can only be passed if StudioWebPortal is set to ENABLED. `app:JupyterServer:`: Indicates that Studio Classic is the default experience.
 * `execution_role` - (Required) The execution role ARN for the user.
 * `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter_lab_app_settings) below.

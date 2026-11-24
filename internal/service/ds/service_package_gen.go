@@ -28,6 +28,20 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
 	return []*inttypes.ServicePackageFrameworkResource{
 		{
+			Factory:  newDirectorySettingsResource,
+			TypeName: "aws_directory_service_directory_setting",
+			Name:     "Directory Setting",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      directorySettingsImportID{},
+			},
+		},
+		{
 			Factory:  newIPRouteResource,
 			TypeName: "aws_directory_service_ip_route",
 			Name:     "IP Route",
@@ -63,6 +77,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 
 func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*inttypes.ServicePackageFrameworkListResource] {
 	return slices.Values([]*inttypes.ServicePackageFrameworkListResource{
+		{
+			Factory:  newDirectorySettingsResourceAsListResource,
+			TypeName: "aws_directory_service_directory_setting",
+			Name:     "Directory Setting",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("directory_id", true),
+				inttypes.StringIdentityAttribute(names.AttrName, true),
+			}),
+		},
 		{
 			Factory:  newIPRouteResourceAsListResource,
 			TypeName: "aws_directory_service_ip_route",

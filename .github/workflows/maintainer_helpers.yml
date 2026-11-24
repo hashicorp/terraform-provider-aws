@@ -42,7 +42,7 @@ jobs:
       CURRENT_LABELS: ${{ github.event_name == 'issues' && toJSON(github.event.issue.labels.*.name) || toJSON(github.event.pull_request.labels.*.name) }}
       GH_CLI_SUBCOMMAND: ${{ github.event_name == 'pull_request_target' && 'pr' || 'issue' }}
     steps:
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         id: token
         with:
           app-id: ${{ secrets.APP_ID }}
@@ -109,7 +109,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: .github/actions/
+          sparse-checkout: |
+            .github/actions/
+            .changie.yaml
 
       - name: Community Check
         id: community_check
@@ -126,7 +128,7 @@ jobs:
         if: |
           steps.community_check.outputs.maintainer == 'true'
           && github.actor != 'dependabot[bot]'
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -145,7 +147,7 @@ jobs:
 
       - name: New Partner Pull Request
         if: steps.community_check.outputs.partner == 'true'
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -164,7 +166,7 @@ jobs:
 
       - name: Crashes and Regressions
         if: github.event.label.name == 'regression' || github.event.label.name == 'crash'
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         with:
           method: chat.postMessage
           token: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -203,7 +205,7 @@ jobs:
 
       - name: Pull Request Merged
         if: github.event.pull_request.merged
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         env:
           MERGED_BY_URL: ${{ github.event.pull_request.merged_by.html_url }}
           MERGED_BY_LOGIN: ${{ github.event.pull_request.merged_by.login }}
@@ -223,7 +225,89 @@ jobs:
               ]
             }
 
-      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+      - name: Get Changes Directory
+        id: changes-dir
+        if: github.event.pull_request.merged
+        shell: bash
+        run: echo "changes_dir=$(yq eval '.changesDir' .changie.yaml)" >> $GITHUB_OUTPUT
+
+      - name: Check for Missing CHANGELOG Fragment
+        id: fragment-filter
+        if: github.event.pull_request.merged
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          list-files: json
+          predicate-quantifier: 'every'
+          filters: |
+            service_files:
+              - 'internal/service/**/*.go'
+              - '!internal/service/**/*_test.go'
+            changie_fragments:
+              - added: '${{ steps.changes-dir.outputs.changes_dir }}/unreleased/*.yaml'
+
+      - name: Format Missing Fragment File List
+        id: format-files
+        if: |
+          steps.fragment-filter.outputs.service_files == 'true' &&
+          steps.fragment-filter.outputs.changie_fragments != 'true' &&
+          !contains(github.event.pull_request.labels.*.name, 'no-changelog-needed')
+        env:
+          SERVICE_FILES_JSON: ${{ steps.fragment-filter.outputs.service_files_files }}
+        shell: bash
+        run: |
+          FORMATTED=$(jq -r '.[] | "• `\(.)`"' <<< "$SERVICE_FILES_JSON")
+          DELIMITER="EOF_$(openssl rand -hex 16)"
+          {
+            echo "formatted<<${DELIMITER}"
+            echo "$FORMATTED"
+            echo "${DELIMITER}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Notify Maintainers of Missing CHANGELOG Entry
+        if: steps.format-files.outcome != 'skipped'
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":warning: *Missing CHANGELOG Entry*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('Pull request <{0}|#{1}: {2}> was merged but is missing a required CHANGELOG entry.', env.PR_URL, env.PR_NUMBER, env.PR_TITLE)) }}
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Files that require a CHANGELOG entry:*"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(steps.format-files.outputs.formatted) }}
+                  }
+                }
+              ]
+            }
+
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         if: github.event_name == 'schedule'
         id: token
         with:
@@ -241,7 +325,7 @@ jobs:
 
       - name: Release Tag
         if: github.event_name == 'push'
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         with:
           webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

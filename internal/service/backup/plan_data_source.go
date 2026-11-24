@@ -103,6 +103,10 @@ func dataSourcePlan() *schema.Resource {
 								},
 							},
 							"recovery_point_tags": tftags.TagsSchema(),
+							"rule_id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 							"rule_name": {
 								Type:     schema.TypeString,
 								Computed: true,
@@ -169,7 +173,7 @@ func dataSourcePlan() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVersion: {
 					Type:     schema.TypeString,
 					Computed: true,

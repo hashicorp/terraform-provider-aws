@@ -8,7 +8,6 @@ package opensearchserverless
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfsmithy "github.com/hashicorp/terraform-provider-aws/internal/smithy"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -50,7 +50,7 @@ func dataSourceSecurityPolicy() *schema.Resource {
 					Description: "Name of the policy.",
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 32),
-						validation.StringMatch(regexache.MustCompile(`^[a-z][0-9a-z-]+$`), `must start with any lower case letter and can include any lower case letter, number, or "-"`),
+						lazyvalidation.StringMatch(`^[a-z][0-9a-z-]+$`, `must start with any lower case letter and can include any lower case letter, number, or "-"`),
 					),
 				},
 				names.AttrPolicy: {

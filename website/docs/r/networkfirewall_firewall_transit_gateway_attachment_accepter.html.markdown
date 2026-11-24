@@ -21,18 +21,18 @@ The accepter can use the `aws_networkfirewall_firewall_transit_gateway_attachmen
 
 ```terraform
 resource "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" "example" {
-  transit_gateway_attachment_id = aws_networkfirewall_firewall.example.firewall_status[0].transit_gateway_attachment_sync_state[0].attachment_id
+  transit_gateway_attachment_id = aws_networkfirewall_firewall.example.firewall_status[0].transit_gateway_attachment_sync_states[0].attachment_id
 }
 ```
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and create Network Firewall in the second account to the Transit Gateway via the `aws_networkfirewall_firewall` and `aws_networkfirewall_firewall_transit_gateway_attachment_accepter` resources can be found in [the `./examples/network-firewall-cross-account-transit-gateway` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/network-firewall-cross-account-transit-gateway)
+For an example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, create a Network Firewall attached to the Transit Gateway in the second account, and accept the attachment, see the [`aws_networkfirewall_firewall` resource](/docs/providers/aws/r/networkfirewall_firewall.html#transit-gateway-attached-firewall-cross-account).
 
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `transit_gateway_attachment_id` - (Required) The unique identifier of the transit gateway attachment to accept. This ID is returned in the response when creating a transit gateway-attached firewall.
+* `transit_gateway_attachment_id` - (Required) Unique identifier of the transit gateway attachment to accept. This ID is returned in the response when creating a transit gateway-attached firewall.
 
 ## Attribute Reference
 

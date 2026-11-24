@@ -11,7 +11,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -59,8 +59,8 @@ func resourceServiceQuota() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric and hyphen characters"),
 					),
 				},
 				"quota_name": {
@@ -81,8 +81,8 @@ func resourceServiceQuota() *schema.Resource {
 					ForceNew: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric and hyphen characters"),
 					),
 				},
 				names.AttrServiceName: {

@@ -12,7 +12,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -26,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -71,7 +71,7 @@ func resourceQueryDefinition() *schema.Resource {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 255),
-						validation.StringMatch(regexache.MustCompile(`^([^:*\/]+\/?)*[^:*\/]+$`), "cannot contain a colon or asterisk and cannot start or end with a slash"),
+						lazyvalidation.StringMatch(`^([^:*\/]+\/?)*[^:*\/]+$`, "cannot contain a colon or asterisk and cannot start or end with a slash"),
 					),
 				},
 				"query_definition_id": {

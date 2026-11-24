@@ -107,7 +107,7 @@ func resourceConnection() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -250,12 +250,16 @@ func resourceConnection() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vlan_id": {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
 			}
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 	}
 }
@@ -354,7 +358,7 @@ func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Connection (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitConnectionConfirmed(ctx, conn, d.Id()); err != nil {
+		if err := waitConnectionConfirmed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Connection (%s) update: %s", d.Id(), err)
 		}
 	}

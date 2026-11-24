@@ -28,13 +28,13 @@ resource "aws_gamelift_alias" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) Name of the alias.
 * `description` - (Optional) Description of the alias.
-* `routing_strategy` - (Required) Specifies the fleet and/or routing type to use for the alias.
+* `name` - (Required) Name of the alias.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `routing_strategy` - (Required) Fleet and/or routing type to use for the alias.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-#### `routing_strategy`
+#### `routing_strategy` Block
 
 * `fleet_id` - (Optional) ID of the GameLift Fleet to point the alias to.
 * `message` - (Optional) Message text to be used with the `TERMINAL` routing strategy.
@@ -44,9 +44,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Alias ID.
 * `arn` - Alias ARN.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - Alias ID.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

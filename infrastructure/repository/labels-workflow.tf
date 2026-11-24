@@ -37,6 +37,10 @@ variable "workflow_labels" {
       color       = "7345b6", # color:terraform (main)
       description = "Pertains to the AWS Client and service connections."
     },
+    "community-priority" = {
+      color       = "7345b6", # color:terraform (main)
+      description = "Issues that are prioritized by the community and are able to be implemented."
+    },
     "crash" = {
       color       = "e05959", # color:boundary
       description = "Results from or addresses a Terraform crash or kernel panic."

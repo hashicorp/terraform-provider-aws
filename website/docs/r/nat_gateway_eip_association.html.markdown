@@ -26,8 +26,8 @@ resource "aws_nat_gateway_eip_association" "example" {
 
 The following arguments are required:
 
-* `allocation_id` - (Required) The ID of the Elastic IP Allocation to associate with the NAT Gateway.
-* `nat_gateway_id` - (Required) The ID of the NAT Gateway to associate the Elastic IP Allocation to.
+* `allocation_id` - (Required) ID of the Elastic IP Allocation to associate with the NAT Gateway.
+* `nat_gateway_id` - (Required) ID of the NAT Gateway to associate the Elastic IP Allocation to.
 
 The following arguments are optional:
 
@@ -35,7 +35,9 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `association_id` - ID of the association between the Elastic IP address and the NAT Gateway.
 
 ## Timeouts
 

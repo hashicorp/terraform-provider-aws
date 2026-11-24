@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -90,10 +91,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 				Description: "Name of the hub content reference.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`),
-						"valid characters are a-z, A-Z, 0-9, and - (hyphen)",
-					),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`, "valid characters are a-z, A-Z, 0-9, and - (hyphen)"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -119,10 +117,7 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 				Description: "Name of the private SageMaker Hub to add the content reference to.",
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 63),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`),
-						"valid characters are a-z, A-Z, 0-9, and - (hyphen)",
-					),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}$`, "valid characters are a-z, A-Z, 0-9, and - (hyphen)"),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -153,6 +148,14 @@ func (r *hubContentReferenceResource) Schema(ctx context.Context, _ resource.Sch
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"versioned_hub_content_arn": schema.StringAttribute{
+				CustomType:  fwtypes.ARNType,
+				Computed:    true,
+				Description: "ARN of the hub content reference, including the version suffix.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -241,6 +244,7 @@ func (r *hubContentReferenceResource) flatten(ctx context.Context, output *sagem
 	data.HubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.HubContentArn))
 	data.MinVersion = fwflex.StringToFramework(ctx, output.ReferenceMinVersion)
 	data.SageMakerPublicHubContentArn = fwflex.StringToFrameworkARN(ctx, stripARNVersion(output.SageMakerPublicHubContentArn))
+	data.VersionedHubContentARN = fwflex.StringToFrameworkARN(ctx, output.HubContentArn)
 
 	return diags
 }
@@ -316,12 +320,10 @@ func (r *hubContentReferenceResource) Delete(ctx context.Context, request resour
 	}
 }
 
-var versionSuffix = regexache.MustCompile(`/\d+\.\d+\.\d+$`)
-
 // stripARNVersion removes the semantic version suffix from a SageMaker hub content ARN.
 // If no version suffix is present, the ARN is returned unchanged.
 func stripARNVersion(arn *string) *string {
-	return aws.String(versionSuffix.ReplaceAllString(aws.ToString(arn), ""))
+	return aws.String(regexache.MustCompile(`/\d+\.\d+\.\d+$`).ReplaceAllString(aws.ToString(arn), ""))
 }
 
 const hubContentReferenceImportIDSeparator = intflex.ResourceIdSeparator
@@ -355,12 +357,16 @@ func (hubContentReferenceImportID) Parse(id string) (string, map[string]any, err
 }
 
 func findHubContentByName(ctx context.Context, conn *sagemaker.Client, hubName, hubContentName string, contentType awstypes.HubContentType) (*sagemaker.DescribeHubContentOutput, error) {
-	input := &sagemaker.DescribeHubContentInput{
+	input := sagemaker.DescribeHubContentInput{
 		HubName:        aws.String(hubName),
 		HubContentName: aws.String(hubContentName),
 		HubContentType: contentType,
 	}
 
+	return findHubContent(ctx, conn, &input)
+}
+
+func findHubContent(ctx context.Context, conn *sagemaker.Client, input *sagemaker.DescribeHubContentInput) (*sagemaker.DescribeHubContentOutput, error) {
 	output, err := conn.DescribeHubContent(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFound](err) {
@@ -393,4 +399,5 @@ type hubContentReferenceResourceModel struct {
 	Tags                         tftags.Map                                    `tfsdk:"tags"`
 	TagsAll                      tftags.Map                                    `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                `tfsdk:"timeouts"`
+	VersionedHubContentARN       fwtypes.ARN                                   `tfsdk:"versioned_hub_content_arn"`
 }

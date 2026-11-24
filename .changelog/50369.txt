@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_secretsmanager_secret_version: Fix read and delete errors when the version is no longer current and its KMS key has been disabled or deleted, such as after the secret moved to a new key. Terraform keeps the value from state and shows a warning
+```

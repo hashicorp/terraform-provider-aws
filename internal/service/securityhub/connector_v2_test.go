@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -284,6 +285,41 @@ func testAccConnectorV2_tags(t *testing.T) {
 	})
 }
 
+func testAccConnectorV2_azure(t *testing.T) {
+	ctx := acctest.Context(t)
+	var connector securityhub.GetConnectorV2Output
+	resourceName := "aws_securityhub_connector_v2.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	clientID := acctest.SkipIfEnvVarNotSet(t, "AZURE_CLIENT_IDENTIFIER")
+	tenantID := acctest.SkipIfEnvVarNotSet(t, "AZURE_TENANT_IDENTIFIER")
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectorV2Destroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorV2Config_azure(rName, clientID, tenantID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectorV2Exists(ctx, t, resourceName, &connector),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("connector_provider").AtSliceIndex(0).AtMapKey("azure").AtSliceIndex(0).AtMapKey("azure_regions"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("connector_provider").AtSliceIndex(0).AtMapKey("azure").AtSliceIndex(0).AtMapKey("scope_configuration").AtSliceIndex(0).AtMapKey("scope_type"), tfknownvalue.StringExact(awstypes.ScopeTypeTenant)),
+				},
+			},
+			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "connector_id"),
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "connector_id",
+			},
+		},
+	})
+}
+
 func testAccCheckConnectorV2Exists(ctx context.Context, t *testing.T, n string, v *securityhub.GetConnectorV2Output) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -454,4 +490,34 @@ resource "aws_securityhub_connector_v2" "test" {
   depends_on = [aws_securityhub_aggregator_v2.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccConnectorV2Config_azure(rName, clientID, tenantID string) string {
+	return acctest.ConfigCompose(testAccConnectorV2Config_base(), fmt.Sprintf(`
+resource "aws_config_connector" "test" {
+  connector_configuration {
+    azure {
+      client_identifier = %[2]q
+      tenant_identifier = %[3]q
+    }
+  }
+}
+
+resource "aws_securityhub_connector_v2" "test" {
+  name = %[1]q
+
+  connector_provider {
+    azure {
+      aws_config_connector_arn = aws_config_connector.test.arn
+      azure_regions            = ["eastus"]
+
+      scope_configuration {
+        scope_type = "TENANT"
+      }
+    }
+  }
+
+  depends_on = [aws_securityhub_aggregator_v2.test]
+}
+`, rName, clientID, tenantID))
 }

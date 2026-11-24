@@ -59,7 +59,7 @@ func ResourceTracker() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.PositionFiltering](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tracker_arn": {
 					Type:     schema.TypeString,
 					Computed: true,

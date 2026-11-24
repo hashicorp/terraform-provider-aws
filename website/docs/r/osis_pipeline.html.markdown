@@ -72,42 +72,42 @@ resource "aws_osis_pipeline" "example" {
 
 The following arguments are required:
 
-* `max_units` - (Required) The maximum pipeline capacity, in Ingestion Compute Units (ICUs).
-* `min_units` - (Required) The minimum pipeline capacity, in Ingestion Compute Units (ICUs).
-* `pipeline_configuration_body` - (Required) The pipeline configuration in YAML format. This argument accepts the pipeline configuration as a string or within a .yaml file. If you provide the configuration as a string, each new line must be escaped with `\n`.
+* `max_units` - (Required) Maximum pipeline capacity, in Ingestion Compute Units (ICUs).
+* `min_units` - (Required) Minimum pipeline capacity, in Ingestion Compute Units (ICUs).
+* `pipeline_configuration_body` - (Required) Pipeline configuration in YAML format. This argument accepts the pipeline configuration as a string or within a `.yaml` file. If you provide the configuration as a string, each new line must be escaped with `\n`.
 * `pipeline_name` - (Required) Name of the pipeline. Pipeline names are unique across the pipelines owned by an account within an AWS Region.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `buffer_options` - (Optional) Key-value pairs to configure persistent buffering for the pipeline. See [`buffer_options`](#buffer_options) below.
-* `encryption_at_rest_options` - (Optional) Key-value pairs to configure encryption for data that is written to a persistent buffer. See [`encryption_at_rest_options`](#encryption_at_rest_options) below.
-* `log_publishing_options` - (Optional) Key-value pairs to configure log publishing. See [`log_publishing_options`](#log_publishing_options) below.
+* `buffer_options` - (Optional) Key-value pairs to configure persistent buffering for the pipeline. See [`buffer_options`](#buffer_options-block) below.
+* `encryption_at_rest_options` - (Optional) Key-value pairs to configure encryption for data that is written to a persistent buffer. See [`encryption_at_rest_options`](#encryption_at_rest_options-block) below.
+* `log_publishing_options` - (Optional) Key-value pairs to configure log publishing. See [`log_publishing_options`](#log_publishing_options-block) below.
 * `pipeline_role_arn` - (Optional) ARN of the IAM role that grants the pipeline permission to access AWS resources.
-* `tags` - (Optional) A map of tags to assign to the pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `vpc_options` - (Optional) Container for the values required to configure VPC access for the pipeline. If you don't specify these values, OpenSearch Ingestion creates the pipeline with a public endpoint. See [`vpc_options`](#vpc_options) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the pipeline. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_options` - (Optional) Container for the values required to configure VPC access for the pipeline. If you don't specify these values, OpenSearch Ingestion creates the pipeline with a public endpoint. See [`vpc_options`](#vpc_options-block) below.
 
-### buffer_options
+### `buffer_options` Block
 
 * `persistent_buffer_enabled` - (Required) Whether persistent buffering should be enabled.
 
-### encryption_at_rest_options
+### `encryption_at_rest_options` Block
 
-* `kms_key_arn` - (Required) The ARN of the KMS key used to encrypt data-at-rest in OpenSearch Ingestion. By default, data is encrypted using an AWS owned key.
+* `kms_key_arn` - (Required) ARN of the KMS key used to encrypt data-at-rest in OpenSearch Ingestion. By default, data is encrypted using an AWS owned key.
 
-### log_publishing_options
+### `log_publishing_options` Block
 
-* `cloudwatch_log_destination` - (Optional) The destination for OpenSearch Ingestion logs sent to Amazon CloudWatch Logs. This parameter is required if IsLoggingEnabled is set to true. See [`cloudwatch_log_destination`](#cloudwatch_log_destination) below.
+* `cloudwatch_log_destination` - (Optional) Destination for OpenSearch Ingestion logs sent to Amazon CloudWatch Logs. This parameter is required if IsLoggingEnabled is set to true. See [`cloudwatch_log_destination`](#cloudwatch_log_destination-block) below.
 * `is_logging_enabled` - (Optional) Whether logs should be published.
 
-### cloudwatch_log_destination
+### `cloudwatch_log_destination` Block
 
-* `log_group` - (Required) The name of the CloudWatch Logs group to send pipeline logs to. You can specify an existing log group or create a new one. For example, /aws/OpenSearchService/IngestionService/my-pipeline.
+* `log_group` - (Required) Name of the CloudWatch Logs group to send pipeline logs to. You can specify an existing log group or create a new one. For example, /aws/OpenSearchService/IngestionService/my-pipeline.
 
-### vpc_options
+### `vpc_options` Block
 
-* `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoint.
-* `security_group_ids` - (Optional) A list of security groups associated with the VPC endpoint.
+* `security_group_ids` - (Optional) List of security groups associated with the VPC endpoint.
+* `subnet_ids` - (Required) List of subnet IDs associated with the VPC endpoint.
 * `vpc_endpoint_management` - (Optional) Whether you or Amazon OpenSearch Ingestion service create and manage the VPC endpoint configured for the pipeline. Valid values are `CUSTOMER` or `SERVICE`
 
 ## Attribute Reference
@@ -115,7 +115,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - (**Deprecated**) Name of the pipeline.
-* `ingest_endpoint_urls` - The list of ingestion endpoints for the pipeline, which you can send data to.
+* `ingest_endpoint_urls` - List of ingestion endpoints for the pipeline, which you can send data to.
 * `pipeline_arn` - ARN of the pipeline.
 
 ## Timeouts

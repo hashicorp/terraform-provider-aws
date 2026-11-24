@@ -55,12 +55,12 @@ This resource exports the following attributes in addition to the arguments abov
     * `resource_record_name` - Name of the DNS record to create to validate the certificate.
     * `resource_record_type` - Type of DNS record to create to validate the certificate.
     * `resource_record_value` - Value of the DNS record to create to validate the certificate.
-* `id` - Combination of attributes to create a unique id: `lb_name`,`name`
+* `id` - Combination of attributes to create a unique ID: `lb_name`,`name`
 * `support_code` - Support code for the certificate.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_lb_certificate` using the id attribute. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_lb_certificate` using the `id` attribute. For example:
 
 ```terraform
 import {
@@ -69,7 +69,7 @@ import {
 }
 ```
 
-Using `terraform import`, import `aws_lightsail_lb_certificate` using the id attribute. For example:
+Using `terraform import`, import `aws_lightsail_lb_certificate` using the `id` attribute. For example:
 
 ```console
 % terraform import aws_lightsail_lb_certificate.example example-load-balancer,example-load-balancer-certificate

@@ -67,6 +67,30 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 }
 ```
 
+### Policy with Route 53 Resolved IP Validation
+
+```terraform
+resource "aws_route53_resolver_firewall_rule_group" "example" {
+  name = "example"
+}
+
+resource "aws_networkfirewall_firewall_policy" "example" {
+  name = "example"
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                      = "DROP"
+      dns_expiry_exception_policy = "CONTINUE"
+      dns_firewall_rule_group_id  = aws_route53_resolver_firewall_rule_group.example.id
+      source_ip_ranges            = ["10.0.0.0/16"]
+    }
+  }
+}
+```
+
 ### Policy with a Custom Action for Stateless Inspection
 
 ```terraform
@@ -142,140 +166,156 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 
 This resource supports the following arguments:
 
+* `description` - (Optional) Friendly description of the firewall policy.
+* `encryption_configuration` - (Optional) KMS encryption configuration settings. See [`encryption_configuration` Block](#encryption_configuration-block) below for details.
+* `firewall_policy` - (Required) Configuration block describing the rule groups and policy actions to use in the firewall policy. See [`firewall_policy` Block](#firewall_policy-block) below for details.
+* `name` - (Required, Forces new resource) Friendly name of the firewall policy.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `description` - (Optional) A friendly description of the firewall policy.
-* `encryption_configuration` - (Optional) KMS encryption configuration settings. See [Encryption Configuration](#encryption-configuration) below for details.
-* `firewall_policy` - (Required) A configuration block describing the rule groups and policy actions to use in the firewall policy. See [Firewall Policy](#firewall-policy) below for details.
-* `name` - (Required, Forces new resource) A friendly name of the firewall policy.
 * `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Encryption Configuration
+### `encryption_configuration` Block
 
 `encryption_configuration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
 
-* `key_id` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
-* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
+* `key_id` - (Optional) ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
+* `type` - (Required) Type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
-### Firewall Policy
+### `firewall_policy` Block
 
 The `firewall_policy` block supports the following arguments:
 
 * `enable_tls_session_holding` - (Optional) Boolean indicating whether to prevent TCP and TLS packets from reaching destination servers until TLS Inspection has evaluated Server Name Indication (SNI) rules. If `true`, `tls_inspection_configuration_arn` is required. Default value: `false`.
 
-* `policy_variables` - (Optional). Contains variables that you can use to override default Suricata settings in your firewall policy. See [Rule Variables](#rule-variables) for details.
+* `policy_variables` - (Optional) Variables that you can use to override default Suricata settings in your firewall policy. See [`rule_variables` Block](#rule_variables-block) for details.
+
+* `route53_resolved_ip_validation` - (Optional) Resolved IP validation settings, which check that a connection's destination IP address was returned by the Route 53 Resolver in a VPC associated with a DNS Firewall rule group. See [`route53_resolved_ip_validation` Block](#route53_resolved_ip_validation-block) below for details.
 
 * `stateful_default_actions` - (Optional) Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. Value values: `aws:drop_strict`, `aws:drop_established`, `aws:drop_established_app_layer`, `aws:alert_strict`, `aws:alert_established, `aws:alert_established_app_layer`. For more information, see [Strict evaluation order](https://docs.aws.amazon.com/network-firewall/latest/developerguide/suricata-rule-evaluation-order.html#suricata-strict-rule-evaluation-order.html) in the AWS Network Firewall Developer Guide.
 
-* `stateful_engine_options` - (Optional) A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](#stateful-engine-options) below for details.
+* `stateful_engine_options` - (Optional) Configuration block that defines options on how the policy handles stateful rules. See [`stateful_engine_options` Block](#stateful_engine_options-block) below for details.
 
-* `stateful_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateful rule groups that are used in the policy. See [Stateful Rule Group Reference](#stateful-rule-group-reference) below for details.
+* `stateful_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateful rule groups that are used in the policy. See [`stateful_rule_group_reference` Block](#stateful_rule_group_reference-block) below for details.
 
-* `stateless_custom_action` - (Optional) Set of configuration blocks describing the custom action definitions that are available for use in the firewall policy's `stateless_default_actions`. See [Stateless Custom Action](#stateless-custom-action) below for details.
+* `stateless_custom_action` - (Optional) Set of configuration blocks describing the custom action definitions that are available for use in the firewall policy's `stateless_default_actions`. See [`stateless_custom_action` Block](#stateless_custom_action-block) below for details.
 
-* `stateless_default_actions` - (Required) Set of actions to take on a packet if it does not match any of the stateless rules in the policy. You must specify one of the standard actions including: `aws:drop`, `aws:pass`, or `aws:forward_to_sfe`.
-In addition, you can specify custom actions that are compatible with your standard action choice. If you want non-matching packets to be forwarded for stateful inspection, specify `aws:forward_to_sfe`.
+* `stateless_default_actions` - (Required) Set of actions to take on a packet if it does not match any of the stateless rules in the policy. You must specify one of the standard actions including: `aws:drop`, `aws:pass`, or `aws:forward_to_sfe`. In addition, you can specify custom actions that are compatible with your standard action choice. If you want non-matching packets to be forwarded for stateful inspection, specify `aws:forward_to_sfe`.
 
-* `stateless_fragment_default_actions` - (Required) Set of actions to take on a fragmented packet if it does not match any of the stateless rules in the policy. You must specify one of the standard actions including: `aws:drop`, `aws:pass`, or `aws:forward_to_sfe`.
-In addition, you can specify custom actions that are compatible with your standard action choice. If you want non-matching packets to be forwarded for stateful inspection, specify `aws:forward_to_sfe`.
+* `stateless_fragment_default_actions` - (Required) Set of actions to take on a fragmented packet if it does not match any of the stateless rules in the policy. You must specify one of the standard actions including: `aws:drop`, `aws:pass`, or `aws:forward_to_sfe`. In addition, you can specify custom actions that are compatible with your standard action choice. If you want non-matching packets to be forwarded for stateful inspection, specify `aws:forward_to_sfe`.
 
-* `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [Stateless Rule Group Reference](#stateless-rule-group-reference) below for details.
+* `stateless_rule_group_reference` - (Optional) Set of configuration blocks containing references to the stateless rule groups that are used in the policy. See [`stateless_rule_group_reference` Block](#stateless_rule_group_reference-block) below for details.
 
-* `tls_inspection_configuration_arn` - (Optional) The (ARN) of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."  This cannot be removed from a FW Policy.
+* `tls_inspection_configuration_arn` - (Optional) ARN of the TLS Inspection policy to attach to the FW Policy.  This must be added at creation of the resource per AWS documentation. "You can only add a TLS inspection configuration to a new policy, not to an existing policy."  This cannot be removed from a FW Policy.
 
-### Rule Variables
+### `rule_variables` Block
 
 The `rule_variables` block supports the following arguments:
 
-* `key` - (Required) An alphanumeric string to identify the `ip_set`. Valid values: `HOME_NET`
+* `ip_set` - (Required) Configuration block that defines a set of IP addresses. See [`ip_set` Block](#ip_set-block) below for details.
 
-* `ip_set` - (Required) A configuration block that defines a set of IP addresses. See [IP Set](#ip-set) below for details.
+* `key` - (Required) Alphanumeric string to identify the `ip_set`. Valid values: `HOME_NET`
 
-### IP Set
+### `ip_set` Block
 
 The `ip_set` block supports the following argument:
 
 * `definition` - (Required) Set of IPv4 or IPv6 addresses in CIDR notation to use for the Suricata `HOME_NET` variable.
 
-### Stateful Engine Options
+### `route53_resolved_ip_validation` Block
 
-The `stateful_engine_options` block supports the following argument:
+The `route53_resolved_ip_validation` block supports the following arguments. For more information, see [Route 53 resolved IP validation](https://docs.aws.amazon.com/network-firewall/latest/developerguide/route53-resolved-ip-validation-policy-setting.html) in the AWS Network Firewall Developer Guide.
+
+* `action` - (Required) Action to take on connections that fail validation. Allowed values are: `ALERT`, `DROP`, and `REJECT`. `ALERT` requires firewall logging. `REJECT` sends a TCP reset; Network Firewall drops non-TCP traffic.
+* `bypass_destination_validation_ip_ranges` - (Optional) Set of destination IPv4 or IPv6 CIDR blocks that are exempt from the policy-level check. Use `/32` or `/128` for a single address. Valid number of entries is between `1` and `100`. Doesn't affect rules that use the `AWS_ROUTE_53_RESOLVED_DOMAIN` target type.
+* `dns_expiry_exception_policy` - (Required) Action to take when the recorded DNS resolution has expired from the resolved IP cache but traffic continues. Allowed values are: `CONTINUE`, `DROP`, and `REJECT`. `CONTINUE` treats the expired resolution as valid.
+* `dns_firewall_rule_group_id` - (Required) ID of the Route 53 Resolver DNS Firewall rule group, such as `aws_route53_resolver_firewall_rule_group.example.id`. DNS responses from the Route 53 Resolver in VPCs associated with this rule group are used for validation. Changing this value swaps the managed association asynchronously; the provider waits for the policy to return to `ACTIVE`.
+* `source_ip_ranges` - (Optional) Set of client source IPv4 or IPv6 CIDR blocks whose connections are subject to the policy-level validation check. Use `/32` or `/128` for a single address. Valid number of entries is between `1` and `100`. If omitted, validation applies to the CIDR ranges of the firewall's VPC and of any additional VPCs attached to the firewall. Doesn't affect stateful rules that use the `AWS_ROUTE_53_RESOLVED_DOMAIN` target type or `aws_route_53_resolved_domain` rule keyword; those rules still evaluate traffic regardless of these source ranges.
+
+~> **Note:** An empty list can't be set for `source_ip_ranges` or `bypass_destination_validation_ip_ranges`. The AWS API treats an empty `source_ip_ranges` list as "validate no source addresses", which this resource doesn't support. Omit the argument instead.
+
+-> **Note:** Removing the `route53_resolved_ip_validation` block turns off resolved IP validation and removes the managed DNS Firewall rule group association.
+
+### `stateful_engine_options` Block
+
+The `stateful_engine_options` block supports the following arguments:
 
 ~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this firewall policy can only reference stateful rule groups that utilize `STRICT_ORDER`.
 
-* `flow_timeouts` - (Optional) Amount of time that can pass without any traffic sent through the firewall before the firewall determines that the connection is idle.
+* `flow_timeouts` - (Optional) Amount of time that can pass without any traffic sent through the firewall before the firewall determines that the connection is idle. See [`flow_timeouts` Block](#flow_timeouts-block) below for details.
 
-* `rule_order` - Indicates how to manage the order of stateful rule evaluation for the policy. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
+* `rule_order` - (Optional) How to manage the order of stateful rule evaluation for the policy. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
-* `stream_exception_policy` - Describes how to treat traffic which has broken midstream. Default value: `DROP`. Valid values: `DROP`, `CONTINUE`, `REJECT`.
+* `stream_exception_policy` - (Optional) How to treat traffic which has broken midstream. Default value: `DROP`. Valid values: `DROP`, `CONTINUE`, `REJECT`.
 
-### Flow Timeouts
+### `flow_timeouts` Block
 
 The `flow_timeouts` block supports the following argument:
 
-* `tcp_idle_timeout_seconds` - Number of seconds that can pass without any TCP traffic sent through the firewall before the firewall determines that the connection is idle. After the idle timeout passes, data packets are dropped, however, the next TCP SYN packet is considered a new flow and is processed by the firewall. Clients or targets can use TCP keepalive packets to reset the idle timeout. Default value: `350`.
+* `tcp_idle_timeout_seconds` - (Optional) Number of seconds that can pass without any TCP traffic sent through the firewall before the firewall determines that the connection is idle. After the idle timeout passes, data packets are dropped, however, the next TCP SYN packet is considered a new flow and is processed by the firewall. Clients or targets can use TCP keepalive packets to reset the idle timeout. Default value: `350`.
 
-### Stateful Rule Group Reference
+### `stateful_rule_group_reference` Block
 
 The `stateful_rule_group_reference` block supports the following arguments:
 
 * `deep_threat_inspection` - (Optional) Whether to enable deep threat inspection, which allows AWS to analyze service logs of network traffic processed by these rule groups to identify threat indicators across customers. AWS will use these threat indicators to improve the active threat defense managed rule groups and protect the security of AWS customers and services. This only applies to active threat defense maanaged rule groups.
 
   For details, refer to [AWS active threat defense for AWS Network Firewall](https://docs.aws.amazon.com/network-firewall/latest/developerguide/aws-managed-rule-groups-atd.html) in the AWS Network Firewall Developer Guide.
-* `priority` - (Optional) An integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
+* `override` - (Optional) Configuration block for override values. See [`override` Block](#override-block) below for details.
+
+* `priority` - (Optional) Integer setting that indicates the order in which to apply the stateful rule groups in a single policy. This argument must be specified if the policy has a `stateful_engine_options` block with a `rule_order` value of `STRICT_ORDER`. AWS Network Firewall applies each stateful rule group to a packet starting with the group that has the lowest priority setting.
 
 * `resource_arn` - (Required) ARN of the stateful rule group.
 
-* `override` - (Optional) Configuration block for override values
+### `override` Block
 
-#### Override
+The `override` block supports the following argument:
 
-* `action` - (Optional) The action that changes the rule group from DROP to ALERT . This only applies to managed rule groups.
+* `action` - (Optional) Action that changes the rule group from `DROP` to `ALERT`. This only applies to managed rule groups.
 
-### Stateless Custom Action
+### `stateless_custom_action` Block
 
 The `stateless_custom_action` block supports the following arguments:
 
-* `action_definition` - (Required) A configuration block describing the custom action associated with the `action_name`. See [Action Definition](#action-definition) below for details.
+* `action_definition` - (Required) Configuration block describing the custom action associated with the `action_name`. See [`action_definition` Block](#action_definition-block) below for details.
 
-* `action_name` - (Required, Forces new resource) A friendly name of the custom action.
+* `action_name` - (Required, Forces new resource) Friendly name of the custom action.
 
-### Stateless Rule Group Reference
+### `stateless_rule_group_reference` Block
 
 The `stateless_rule_group_reference` block supports the following arguments:
 
-* `priority` - (Required) An integer setting that indicates the order in which to run the stateless rule groups in a single policy. AWS Network Firewall applies each stateless rule group to a packet starting with the group that has the lowest priority setting.
+* `priority` - (Required) Integer setting that indicates the order in which to run the stateless rule groups in a single policy. AWS Network Firewall applies each stateless rule group to a packet starting with the group that has the lowest priority setting.
 
 * `resource_arn` - (Required) ARN of the stateless rule group.
 
-### Action Definition
+### `action_definition` Block
 
 The `action_definition` block supports the following argument:
 
-* `publish_metric_action` - (Required) A configuration block describing the stateless inspection criteria that publishes the specified metrics to Amazon CloudWatch for the matching packet. You can pair this custom action with any of the standard stateless rule actions. See [Publish Metric Action](#publish-metric-action) below for details.
+* `publish_metric_action` - (Required) Configuration block describing the stateless inspection criteria that publishes the specified metrics to Amazon CloudWatch for the matching packet. You can pair this custom action with any of the standard stateless rule actions. See [`publish_metric_action` Block](#publish_metric_action-block) below for details.
 
-### Publish Metric Action
+### `publish_metric_action` Block
 
 The `publish_metric_action` block supports the following argument:
 
-* `dimension` - (Required) Set of configuration blocks describing dimension settings to use for Amazon CloudWatch custom metrics. See [Dimension](#dimension) below for more details.
+* `dimension` - (Required) Set of configuration blocks describing dimension settings to use for Amazon CloudWatch custom metrics. See [`dimension` Block](#dimension-block) below for more details.
 
-### Dimension
+### `dimension` Block
 
 The `dimension` block supports the following argument:
 
-* `value` - (Required) The string value to use in the custom metric dimension.
+* `value` - (Required) String value to use in the custom metric dimension.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - ARN that identifies the firewall policy.
-
 * `arn` - ARN that identifies the firewall policy.
 
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - ARN that identifies the firewall policy.
 
-* `update_token` - A string token used when updating a firewall policy.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+* `update_token` - String token used when updating a firewall policy.
 
 ## Import
 

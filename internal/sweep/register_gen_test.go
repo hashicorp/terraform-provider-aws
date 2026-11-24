@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagentcore"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockdataautomation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/billing"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
@@ -57,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/continuum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
@@ -120,6 +122,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdacore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdamicrovms"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lambdaweb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
@@ -138,6 +141,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkfirewall"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkflowmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/networksecuritymanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notifications"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/notificationscontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/observabilityadmin"
@@ -240,6 +244,7 @@ func registerSweepers() {
 	bedrock.RegisterSweepers()
 	bedrockagent.RegisterSweepers()
 	bedrockagentcore.RegisterSweepers()
+	bedrockdataautomation.RegisterSweepers()
 	billing.RegisterSweepers()
 	budgets.RegisterSweepers()
 	chime.RegisterSweepers()
@@ -261,6 +266,7 @@ func registerSweepers() {
 	cognitoidp.RegisterSweepers()
 	configservice.RegisterSweepers()
 	connect.RegisterSweepers()
+	continuum.RegisterSweepers()
 	cur.RegisterSweepers()
 	customerprofiles.RegisterSweepers()
 	dataexchange.RegisterSweepers()
@@ -324,6 +330,7 @@ func registerSweepers() {
 	lambda.RegisterSweepers()
 	lambdacore.RegisterSweepers()
 	lambdamicrovms.RegisterSweepers()
+	lambdaweb.RegisterSweepers()
 	lexmodels.RegisterSweepers()
 	lexv2models.RegisterSweepers()
 	licensemanager.RegisterSweepers()
@@ -342,6 +349,7 @@ func registerSweepers() {
 	networkfirewall.RegisterSweepers()
 	networkflowmonitor.RegisterSweepers()
 	networkmanager.RegisterSweepers()
+	networksecuritymanager.RegisterSweepers()
 	notifications.RegisterSweepers()
 	notificationscontacts.RegisterSweepers()
 	observabilityadmin.RegisterSweepers()

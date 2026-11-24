@@ -14,6 +14,8 @@ Manages AWS CloudWatch OTel enrichment. This is a singleton resource that enable
 
 ~> **NOTE:** Creating this Terraform resource starts AWS CloudWatch OTel enrichment and deleting this Terraform resource stops AWS CloudWatch OTel enrichment.
 
+Filters are evaluated as follows. `include_filter` is applied first, then the `exclude_filter` match set is subtracted from the result. Exclusion always wins, so a metric matched by both is not enriched. An inactive direction is permissive: with no `include_filter`, every supported namespace is in scope, and with no `exclude_filter`, nothing is removed. Namespaces and metric names are matched exactly and case-sensitively, with no wildcards or prefixes, so `AWS/EC2` matches only `AWS/EC2`. At most 100 selectors are allowed across `include_filter` and `exclude_filter` **combined**. Two lists of 60 selectors each satisfy the per-list limit but are rejected together.
+
 ## Example Usage
 
 ### Enable OTel Enrichment
@@ -61,13 +63,6 @@ The following arguments are optional:
 * `exclude_filter` - (Optional) Namespaces and metric names to leave unenriched. [See below](#exclude_filter-block).
 * `include_filter` - (Optional) Namespaces and metric names to enrich. [See below](#include_filter-block).
 * `region` - (Optional) AWS region where this resource is managed.
-
-Filters are evaluated as follows:
-
-* `include_filter` is applied first, then the `exclude_filter` match set is subtracted from the result. Exclusion always wins, so a metric matched by both is not enriched.
-* An inactive direction is permissive. With no `include_filter`, every supported namespace is in scope; with no `exclude_filter`, nothing is removed.
-* Namespaces and metric names are matched exactly and case-sensitively. There are no wildcards or prefixes, so `AWS/EC2` matches only `AWS/EC2`.
-* At most 100 selectors are allowed across `include_filter` and `exclude_filter` **combined**. Two lists of 60 selectors each satisfy the per-list limit but are rejected together.
 
 ### `exclude_filter` Block
 

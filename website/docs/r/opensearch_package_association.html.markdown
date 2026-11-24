@@ -43,15 +43,16 @@ resource "aws_opensearch_package_association" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `package_id` - (Required, Forces new resource) Internal ID of the package to associate with a domain.
 * `domain_name` - (Required, Forces new resource) Name of the domain to associate the package with.
+* `package_id` - (Required, Forces new resource) Internal ID of the package to associate with a domain.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the package association.
+* `id` - ID of the package association.
+* `reference_path` - Reference path for the package.
 
 ## Timeouts
 

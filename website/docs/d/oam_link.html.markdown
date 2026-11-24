@@ -24,8 +24,8 @@ data "aws_oam_link" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `link_identifier` - (Required) ARN of the link.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -39,6 +39,7 @@ This data source exports the following attributes in addition to the arguments a
 * `link_id` - ID string that AWS generated as part of the link ARN.
 * `resource_types` - Types of data that the source account shares with the monitoring account.
 * `sink_arn` - ARN of the sink that is used for this link.
+* `tags` - Map of tags assigned to the resource.
 
 ### `link_configuration` Block
 

@@ -1,0 +1,91 @@
+{
+  "resources": [
+    {
+      "service": "s3",
+      "resource_type": "aws_test_bucket",
+      "plugin_type": "SDKv2",
+      "expr": "resourceBucket",
+      "location": "internal/service/s3/bucket.go:10",
+      "create": {
+        "expr": "resourceBucketCreate",
+        "location": "internal/service/s3/bucket.go:20",
+        "sdk_calls": [
+          "s3.CopyObject",
+          "s3.PutBucketTagging"
+        ]
+      },
+      "read": {
+        "expr": "resourceBucketRead",
+        "location": "internal/service/s3/bucket.go:30",
+        "sdk_calls": [
+          "s3.ListDirectoryBuckets",
+          "s3.NoSuchOperation",
+          "s3.PutBucketTagging"
+        ]
+      },
+      "delete": {
+        "expr": "schema.NoopContext",
+        "sdk_calls": []
+      },
+      "customize_diff": {
+        "expr": "customdiff.All",
+        "location": "internal/service/s3/bucket.go:40",
+        "sdk_calls": [
+          "s3.PutBucketTagging"
+        ],
+        "functions": [
+          {
+            "expr": "validateBucket",
+            "location": "internal/service/s3/bucket.go:50",
+            "sdk_calls": [
+              "s3.PutBucketTagging"
+            ]
+          }
+        ]
+      },
+      "tags": {
+        "list": {
+          "expr": "(*servicePackage).ListTags",
+          "location": "internal/service/s3/tags.go:10",
+          "sdk_calls": [
+            "s3.PutBucketTagging"
+          ]
+        }
+      }
+    },
+    {
+      "service": "elbv2",
+      "resource_type": "aws_test_lb",
+      "plugin_type": "Framework",
+      "expr": "newLBResource",
+      "location": "internal/service/elbv2/lb.go:10",
+      "create": {
+        "expr": "(*lbResource).Create",
+        "location": "internal/service/elbv2/lb.go:20",
+        "sdk_calls": [
+          "elasticloadbalancing.CreateLoadBalancer",
+          "elasticloadbalancingv2.CreateLoadBalancer",
+          "evidently.GetProject",
+          "iam.CreateInstanceProfile",
+          "qldb.CreateLedger"
+        ]
+      }
+    }
+  ],
+  "dataSources": [
+    {
+      "service": "s3",
+      "data_source_type": "aws_test_bucket",
+      "plugin_type": "SDKv2",
+      "expr": "dataSourceBucket",
+      "location": "internal/service/s3/bucket_data_source.go:10",
+      "read": {
+        "expr": "dataSourceBucketRead",
+        "location": "internal/service/s3/bucket_data_source.go:20",
+        "sdk_calls": [
+          "s3.CopyObject"
+        ]
+      }
+    }
+  ]
+}

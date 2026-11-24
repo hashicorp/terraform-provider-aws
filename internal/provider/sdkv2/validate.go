@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 // validAssumeRoleDuration validates a string can be parsed as a valid time.Duration
@@ -30,10 +30,10 @@ func validAssumeRoleDuration(v any, k string) (ws []string, errors []error) {
 
 var validAssumeRoleSessionName = validation.All(
 	validation.StringLenBetween(2, 64),
-	validation.StringMatch(regexache.MustCompile(`[\w+=,.@\-]*`), ""),
+	lazyvalidation.StringMatch(`[\w+=,.@\-]*`, ""),
 )
 
 var validAssumeRoleSourceIdentity = validation.All(
 	validation.StringLenBetween(2, 64),
-	validation.StringMatch(regexache.MustCompile(`[\w+=,.@\-]*`), ""),
+	lazyvalidation.StringMatch(`[\w+=,.@\-]*`, ""),
 )

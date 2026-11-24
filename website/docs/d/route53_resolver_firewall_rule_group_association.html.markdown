@@ -14,7 +14,7 @@ This data source allows to retrieve details about a specific a Route 53 Resolver
 
 ## Example Usage
 
-The following example shows how to get a firewall rule group association from its id.
+The following example shows how to get a firewall rule group association from its ID.
 
 ```terraform
 data "aws_route53_resolver_firewall_rule_group_association" "example" {

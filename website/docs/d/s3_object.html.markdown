@@ -103,6 +103,9 @@ This data source exports the following attributes in addition to the arguments a
 * `expires` - Date and time at which the object is no longer cacheable.
 * `last_modified` - Last modified date of the object in RFC1123 format (e.g., `Mon, 02 Jan 2006 15:04:05 MST`)
 * `metadata` - Map of metadata stored with the object in S3. [Keys](https://developer.hashicorp.com/terraform/language/expressions/types#maps-objects) are always returned in lowercase.
+* `object_lock_event_hold` - Whether this object has an active event hold. Valid values are `ON` and `OFF`.
+* `object_lock_event_hold_duration_days` - Number of days the object remains protected after its event hold is released.
+* `object_lock_event_hold_duration_years` - Number of years the object remains protected after its event hold is released.
 * `object_lock_legal_hold_status` - Whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
 * `object_lock_mode` - Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
 * `object_lock_retain_until_date` - Date and time when this object's object lock will expire.
@@ -110,7 +113,6 @@ This data source exports the following attributes in addition to the arguments a
 * `sse_kms_key_id` - If present, specifies the ID of the KMS master encryption key that was used for the object.
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `tags`  - Map of tags assigned to the object.
-* `version_id` - Latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
 
 -> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.

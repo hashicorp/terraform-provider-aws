@@ -1,0 +1,18 @@
+{
+  "Name": "elasticloadbalancing",
+  "ServiceName": "Elastic Load Balancing",
+  "Version": "v1.5",
+  "Operations": [
+    {
+      "Name": "CreateLoadBalancer",
+      "AuthorizedActions": [
+        {"Name": "CreateLoadBalancer", "Service": "elasticloadbalancing"},
+        {"Name": "AddTags", "Service": "elasticloadbalancing"}
+      ],
+      "SDK": [
+        {"Name": "elb", "Method": "create_load_balancer", "Package": "Boto3"},
+        {"Name": "elbv2", "Method": "create_load_balancer", "Package": "Boto3"}
+      ]
+    }
+  ]
+}

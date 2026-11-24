@@ -40,7 +40,7 @@ This data source exports the following attributes in addition to the arguments a
 * `available_container_databases` - Number of Autonomous CDBs that you can create with the currently available storage.
 * `available_cpus` - Number of CPU cores available for allocation to Autonomous Databases.
 * `cloud_exadata_infrastructure_arn` - Cloud exadata infrastructure ARN associated with this cloud autonomous VM cluster.
-* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure id associated with this cloud autonomous VM cluster.
+* `cloud_exadata_infrastructure_id` - Cloud exadata infrastructure ID associated with this cloud autonomous VM cluster.
 * `compute_model` - Compute model of the Autonomous VM cluster: ECPU or OCPU.
 * `cpu_core_count` - Total number of CPU cores in the Autonomous VM cluster.
 * `cpu_core_count_per_node` - Number of CPU cores enabled per node in the Autonomous VM cluster.
@@ -84,3 +84,20 @@ This data source exports the following attributes in addition to the arguments a
 * `time_ords_certificate_expires` - Expiration date and time of the Oracle REST Data Services (ORDS) certificate.
 * `time_zone` - Time zone of the Autonomous VM cluster.
 * `total_container_databases` - Total number of Autonomous Container Databases that can be created with the allocated local storage.
+
+### `maintenance_window` Block
+
+* `days_of_week` - Days of the week when maintenance can be performed. See [`days_of_week` Block](#days_of_week-block) below.
+* `hours_of_day` - Hours of the day when maintenance can be performed.
+* `lead_time_in_weeks` - Lead time in weeks before the maintenance window.
+* `months` - Months when maintenance can be performed. See [`months` Block](#months-block) below.
+* `preference` - Preference for the maintenance window scheduling.
+* `weeks_of_month` - Weeks of the month when maintenance can be performed.
+
+#### `days_of_week` Block
+
+* `name` - Name of the day of the week.
+
+#### `months` Block
+
+* `name` - Name of the month.

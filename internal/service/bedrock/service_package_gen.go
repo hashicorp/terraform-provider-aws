@@ -88,6 +88,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newEnforcedGuardrailConfigurationResource,
+			TypeName: "aws_bedrock_enforced_guardrail_configuration",
+			Name:     "Enforced Guardrail Configuration",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("config_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newEvaluationJobResource,
 			TypeName: "aws_bedrock_evaluation_job",
 			Name:     "Evaluation Job",
@@ -114,6 +124,16 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Guardrail",
 			Tags:     inttypes.ResourceTagsAttribute("guardrail_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newGuardrailResourcePolicyResource,
+			TypeName: "aws_bedrock_guardrail_resource_policy",
+			Name:     "Guardrail Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
 		},
 		{
 			Factory:  newGuardrailVersionResource,
@@ -181,6 +201,13 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Tags:     inttypes.ResourceTagsAttribute("job_arn"),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalARNIdentityNamed("job_arn"),
+		},
+		{
+			Factory:  newGuardrailResourcePolicyResourceAsListResource,
+			TypeName: "aws_bedrock_guardrail_resource_policy",
+			Name:     "Guardrail Resource Policy",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalARNIdentityNamed(names.AttrResourceARN),
 		},
 		{
 			Factory:  newModelInvocationJobResourceAsListResource,

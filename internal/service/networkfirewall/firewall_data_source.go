@@ -8,15 +8,15 @@ package networkfirewall
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -198,12 +198,30 @@ func dataSourceFirewall() *schema.Resource {
 						},
 					},
 				},
+				"firewall_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FirewallType](),
+				},
+				"igw_firewall_configuration": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enforcement_mode": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				names.AttrName: {
 					Type:         schema.TypeString,
 					Optional:     true,
 					Computed:     true,
 					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z-]{1,128}$`, "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 				},
 				"subnet_change_protection": {
 					Type:     schema.TypeBool,
@@ -221,7 +239,7 @@ func dataSourceFirewall() *schema.Resource {
 						},
 					},
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrTransitGatewayID: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -254,6 +272,10 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk(names.AttrName); ok {
 		input.FirewallName = aws.String(v.(string))
 	}
+	// Without a type, a lookup by name only finds standard firewalls.
+	if v, ok := d.GetOk("firewall_type"); ok {
+		input.FirewallType = awstypes.FirewallType(v.(string))
+	}
 
 	output, err := findFirewall(ctx, conn, &input)
 
@@ -277,6 +299,15 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	if err := d.Set("firewall_status", flattenDataSourceFirewallStatus(output.FirewallStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting firewall_status: %s", err)
 	}
+	// The service returns igw_firewall_configuration only for internet gateway firewalls.
+	if firewall.IgwFirewallConfiguration != nil {
+		d.Set("firewall_type", awstypes.FirewallTypeIgwFirewall)
+	} else {
+		d.Set("firewall_type", awstypes.FirewallTypeFirewall)
+	}
+	if err := d.Set("igw_firewall_configuration", flattenDataSourceIgwFirewallConfiguration(firewall.IgwFirewallConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting igw_firewall_configuration: %s", err)
+	}
 	d.Set(names.AttrName, firewall.FirewallName)
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
@@ -290,6 +321,18 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	setTagsOut(ctx, firewall.Tags)
 
 	return diags
+}
+
+func flattenDataSourceIgwFirewallConfiguration(apiObject *awstypes.IgwFirewallConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"enforcement_mode": apiObject.EnforcementMode,
+	}
+
+	return []any{tfMap}
 }
 
 func flattenDataSourceFirewallStatus(apiObject *awstypes.FirewallStatus) []any {

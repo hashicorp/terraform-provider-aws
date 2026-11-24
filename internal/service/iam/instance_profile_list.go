@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -97,6 +98,10 @@ func (l *instanceProfileListResource) List(ctx context.Context, request list.Lis
 			if request.IncludeResource {
 				tflog.Info(ctx, "Reading IAM Instance Profile")
 				fullInstanceProfile, err := findInstanceProfileByName(ctx, conn, name)
+				if retry.NotFound(err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping")
+					continue
+				}
 				if err != nil {
 					yield(fwdiag.NewListResultErrorDiagnostic(err))
 					return
