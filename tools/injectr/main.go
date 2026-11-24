@@ -7,6 +7,10 @@ import (
 	"flag"
 	"log"
 	"strings"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/docs"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
 func main() {
@@ -17,7 +21,7 @@ func main() {
 	skipSync := flag.Bool("skip-sync", false, "use the existing service reference files without checking for updates")
 	skipGenerate := flag.Bool("skip-generate", false, "use the existing permissions map without regenerating it")
 
-	var insert InsertOptions
+	var insert docs.InsertOptions
 	flag.StringVar(&insert.Root, "root", "../..", "path to the root of the terraform-provider-aws repository")
 	flag.Var((*stringList)(&insert.Files), "insert-file", "comma-separated documentation files, relative to -root, to add IAM permissions to")
 	flag.Var((*stringList)(&insert.Services), "insert-service", "comma-separated service packages to add IAM permissions to, e.g. s3,sqs")
@@ -26,19 +30,19 @@ func main() {
 	flag.Parse()
 
 	if !*skipSync {
-		if err := SyncServiceRefs(*serviceDataDir, *serviceIndexFile); err != nil {
+		if err := serviceref.SyncServiceRefs(*serviceDataDir, *serviceIndexFile); err != nil {
 			log.Fatal(err)
 		}
 	}
 
 	if !*skipGenerate {
-		if err := GeneratePermissionsMap(*serviceDataDir, *sdkMapFile, *permissionsMapFile); err != nil {
+		if err := permissions.GeneratePermissionsMap(*serviceDataDir, *sdkMapFile, *permissionsMapFile); err != nil {
 			log.Fatal(err)
 		}
 	}
 
 	if insert.Enabled() {
-		if err := InsertIAMPermissions(*permissionsMapFile, insert); err != nil {
+		if err := docs.InsertIAMPermissions(*permissionsMapFile, insert); err != nil {
 			log.Fatal(err)
 		}
 	}

@@ -1,7 +1,9 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+// Package serviceref downloads and parses the AWS Service Reference: the API
+// operations of each AWS service and the IAM actions each requires.
+package serviceref
 
 import (
 	"encoding/json"
@@ -18,6 +20,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/internal/atomicfile"
 )
 
 const serviceRefURL = "https://servicereference.us-east-1.amazonaws.com/"
@@ -187,7 +191,7 @@ func WriteServiceIndex(urls []ServiceURL, path string) error {
 		return err
 	}
 
-	return writeFileAtomic(path, b)
+	return atomicfile.Write(path, b)
 }
 
 // LoadServiceIndex reads a file written by WriteServiceIndex. The returned map
@@ -227,7 +231,7 @@ func GetServiceRef(su ServiceURL, dir string) error {
 	}
 
 	path := filepath.Join(dir, su.Service+".json")
-	if err := writeFileAtomic(path, b); err != nil {
+	if err := atomicfile.Write(path, b); err != nil {
 		return fmt.Errorf("%s: %w", su.Service, err)
 	}
 	fmt.Printf("saved %s\n", path)
@@ -298,28 +302,4 @@ func PruneStale(dir string, urls []ServiceURL) ([]string, error) {
 	}
 
 	return pruned, errors.Join(errs...)
-}
-
-// writeFileAtomic writes data to path through a temporary file in the same
-// directory, renamed into place only after a successful write and close. A
-// failed or interrupted write leaves any existing file at path unchanged.
-func writeFileAtomic(path string, data []byte) error {
-	tmp, err := os.CreateTemp(filepath.Dir(path), filepath.Base(path)+".*.tmp")
-	if err != nil {
-		return err
-	}
-	defer os.Remove(tmp.Name()) // no-op after a successful rename
-
-	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
-		return err
-	}
-	if err := tmp.Close(); err != nil {
-		return err
-	}
-	if err := os.Chmod(tmp.Name(), 0o644); err != nil {
-		return err
-	}
-
-	return os.Rename(tmp.Name(), path)
 }

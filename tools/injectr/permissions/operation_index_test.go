@@ -1,31 +1,33 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package permissions
 
 import (
 	"slices"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
 func testOperationIndex() *OperationIndex {
-	boto3 := func(names ...string) []SDKMethod {
-		var methods []SDKMethod
+	boto3 := func(names ...string) []serviceref.SDKMethod {
+		var methods []serviceref.SDKMethod
 		for _, name := range names {
-			methods = append(methods, SDKMethod{Name: name, Package: "Boto3"})
+			methods = append(methods, serviceref.SDKMethod{Name: name, Package: "Boto3"})
 		}
 		return methods
 	}
-	actions := func(service string, names ...string) []AuthorizedAction {
-		var aas []AuthorizedAction
+	actions := func(service string, names ...string) []serviceref.AuthorizedAction {
+		var aas []serviceref.AuthorizedAction
 		for _, name := range names {
-			aas = append(aas, AuthorizedAction{Name: name, Service: service})
+			aas = append(aas, serviceref.AuthorizedAction{Name: name, Service: service})
 		}
 		return aas
 	}
 
-	return NewOperationIndex(ServiceRefs{
-		"s3": {Name: "s3", Operations: []Operation{
+	return NewOperationIndex(serviceref.ServiceRefs{
+		"s3": {Name: "s3", Operations: []serviceref.Operation{
 			{
 				Name:              "CopyObject",
 				AuthorizedActions: append(actions("s3", "PutObject", "GetObject", "PutObject"), actions("s3-object-lambda", "PutObject")...),
@@ -33,17 +35,17 @@ func testOperationIndex() *OperationIndex {
 			},
 			{Name: "ListDirectoryBuckets", SDK: boto3("s3")},
 		}},
-		"elasticloadbalancing": {Name: "elasticloadbalancing", Operations: []Operation{
+		"elasticloadbalancing": {Name: "elasticloadbalancing", Operations: []serviceref.Operation{
 			{Name: "CreateLoadBalancer", AuthorizedActions: actions("elasticloadbalancing", "CreateLoadBalancer"), SDK: boto3("elb", "elbv2")},
 		}},
-		"sso": {Name: "sso", Operations: []Operation{
+		"sso": {Name: "sso", Operations: []serviceref.Operation{
 			{Name: "CreatePermissionSet", AuthorizedActions: actions("sso", "CreatePermissionSet"), SDK: boto3("sso-admin")},
 		}},
-		"cognito-idp": {Name: "cognito-idp", Operations: []Operation{
+		"cognito-idp": {Name: "cognito-idp", Operations: []serviceref.Operation{
 			{Name: "CreateUserPool", AuthorizedActions: actions("cognito-idp", "CreateUserPool"), SDK: boto3("cognito-idp")},
 		}},
-		"other": {Name: "other", Operations: []Operation{
-			{Name: "DoThing", AuthorizedActions: actions("other", "DoThing"), SDK: []SDKMethod{{Name: "other", Package: "NotBoto3"}}},
+		"other": {Name: "other", Operations: []serviceref.Operation{
+			{Name: "DoThing", AuthorizedActions: actions("other", "DoThing"), SDK: []serviceref.SDKMethod{{Name: "other", Package: "NotBoto3"}}},
 		}},
 		"qldb": {Name: "qldb"},
 	})
@@ -122,7 +124,7 @@ func TestBoto3ClientAliasesExist(t *testing.T) {
 	t.Parallel()
 	skipWithoutRealData(t)
 
-	refs, err := LoadServiceRefs(realServiceDataDir)
+	refs, err := serviceref.LoadServiceRefs(realServiceDataDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -138,7 +140,7 @@ func TestBoto3ClientAliasesExist(t *testing.T) {
 func BenchmarkNewOperationIndex(b *testing.B) {
 	skipWithoutRealData(b)
 
-	refs, err := LoadServiceRefs(realServiceDataDir)
+	refs, err := serviceref.LoadServiceRefs(realServiceDataDir)
 	if err != nil {
 		b.Fatal(err)
 	}

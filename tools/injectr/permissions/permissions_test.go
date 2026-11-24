@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package permissions
 
 import (
 	"bytes"
@@ -9,13 +9,17 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
 var update = flag.Bool("update", false, "update testdata/permissions_map.json")
 
 const (
+	testServiceDataDir     = "../serviceref/testdata/service-data"
 	testSDKMapFile         = "testdata/sdkmap_input.json"
 	testPermissionsMapFile = "testdata/permissions_map.json"
+	realServiceDataDir     = "../service-data"
 )
 
 // TestGeneratePermissionsMap compares the output for the test fixtures to
@@ -50,7 +54,7 @@ func TestGeneratePermissionsMap(t *testing.T) {
 func TestAddPermissionsStats(t *testing.T) {
 	t.Parallel()
 
-	refs, err := LoadServiceRefs(testServiceDataDir)
+	refs, err := serviceref.LoadServiceRefs(testServiceDataDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -87,7 +91,7 @@ func TestAddPermissionsStats(t *testing.T) {
 func TestAddPermissionsRerun(t *testing.T) {
 	t.Parallel()
 
-	refs, err := LoadServiceRefs(testServiceDataDir)
+	refs, err := serviceref.LoadServiceRefs(testServiceDataDir)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +150,7 @@ func TestWritePermissionsMapReplacesFile(t *testing.T) {
 func BenchmarkAddPermissions(b *testing.B) {
 	skipWithoutRealData(b)
 
-	refs, err := LoadServiceRefs(realServiceDataDir)
+	refs, err := serviceref.LoadServiceRefs(realServiceDataDir)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -180,6 +184,18 @@ func BenchmarkGeneratePermissionsMap(b *testing.B) {
 		os.Stdout = stdout
 		if err != nil {
 			b.Fatal(err)
+		}
+	}
+}
+
+// skipWithoutRealData skips tb unless the tool has been run, so that the real
+// service-data and sdkmap.json exist.
+func skipWithoutRealData(tb testing.TB) {
+	tb.Helper()
+
+	for _, path := range []string{realServiceDataDir, realSDKMapFile} {
+		if _, err := os.Stat(path); err != nil {
+			tb.Skipf("%s not found; run the tool first", path)
 		}
 	}
 }

@@ -1,7 +1,9 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+// Package permissions maps the AWS SDK calls in sdkmap's output to the IAM
+// permissions they require, using the AWS Service Reference.
+package permissions
 
 import (
 	"cmp"
@@ -10,6 +12,9 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/internal/atomicfile"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
 // PermissionStats summarizes an AddPermissions run.
@@ -29,7 +34,7 @@ type PermissionStats struct {
 // permissions added to outPath.
 func GeneratePermissionsMap(serviceDataDir, sdkMapPath, outPath string) error {
 	start := time.Now()
-	refs, err := LoadServiceRefs(serviceDataDir)
+	refs, err := serviceref.LoadServiceRefs(serviceDataDir)
 	if err != nil {
 		return err
 	}
@@ -106,7 +111,7 @@ func WritePermissionsMap(path string, m *PermissionsMap) error {
 		return err
 	}
 
-	return writeFileAtomic(path, b)
+	return atomicfile.Write(path, b)
 }
 
 func printPermissionStats(stats PermissionStats) {

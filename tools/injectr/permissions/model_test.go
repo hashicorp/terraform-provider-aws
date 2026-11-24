@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package permissions
 
 import (
 	"bytes"
@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	sdkmapGoldenDir = "../sdkmap/testdata/golden"
-	realSDKMapFile  = "../../sdkmap.json"
+	sdkmapGoldenDir = "../../sdkmap/testdata/golden"
+	realSDKMapFile  = "../../../sdkmap.json"
 )
 
 // sdkMapFiles returns sdkmap's golden test outputs, plus the real sdkmap.json

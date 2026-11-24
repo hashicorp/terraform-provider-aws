@@ -1,27 +1,29 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package docs
 
 import (
 	"slices"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
 )
 
 func TestResourcePermissions(t *testing.T) {
 	t.Parallel()
 
-	ref := func(perms ...string) *FuncRef { return &FuncRef{IAMPermissions: perms} }
-	r := &Resource{
+	ref := func(perms ...string) *permissions.FuncRef { return &permissions.FuncRef{IAMPermissions: perms} }
+	r := &permissions.Resource{
 		Create: ref("svc:Create", "svc:Describe"),
 		Read:   ref("svc:Describe"),
 		Update: ref("svc:Update"),
 		Delete: ref("svc:Delete"),
-		CustomizeDiff: &FuncRef{Functions: []*FuncRef{
+		CustomizeDiff: &permissions.FuncRef{Functions: []*permissions.FuncRef{
 			ref("svc:Validate"),
 		}},
 		Import: ref("svc:Import"),
-		Tags:   &ResourceTags{List: ref("svc:ListTags"), Update: ref("svc:TagResource")},
+		Tags:   &permissions.ResourceTags{List: ref("svc:ListTags"), Update: ref("svc:TagResource")},
 	}
 
 	got := resourcePermissions(r)
@@ -39,7 +41,7 @@ func TestResourcePermissions(t *testing.T) {
 func TestResourcePermissionsEmptyRead(t *testing.T) {
 	t.Parallel()
 
-	got := resourcePermissions(&Resource{Create: &FuncRef{IAMPermissions: []string{"svc:Create"}}})
+	got := resourcePermissions(&permissions.Resource{Create: &permissions.FuncRef{IAMPermissions: []string{"svc:Create"}}})
 
 	if len(got.Read) != 0 {
 		t.Errorf("Read = %v, want none", got.Read)
@@ -52,9 +54,9 @@ func TestResourcePermissionsEmptyRead(t *testing.T) {
 func TestDataSourcePermissions(t *testing.T) {
 	t.Parallel()
 
-	d := &DataSource{
-		Read: &FuncRef{IAMPermissions: []string{"svc:Get", "svc:Describe"}},
-		Tags: &ResourceTags{List: &FuncRef{IAMPermissions: []string{"svc:Describe", "svc:ListTags"}}},
+	d := &permissions.DataSource{
+		Read: &permissions.FuncRef{IAMPermissions: []string{"svc:Get", "svc:Describe"}},
+		Tags: &permissions.ResourceTags{List: &permissions.FuncRef{IAMPermissions: []string{"svc:Describe", "svc:ListTags"}}},
 	}
 
 	got := dataSourcePermissions(d)

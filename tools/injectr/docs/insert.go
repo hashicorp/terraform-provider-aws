@@ -1,7 +1,9 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+// Package docs adds an IAM Permissions section, built from a permissions
+// map, to resource and data source documentation.
+package docs
 
 import (
 	"errors"
@@ -12,6 +14,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
 )
 
 // InsertOptions selects the documentation to add IAM permissions to.
@@ -49,7 +53,7 @@ const (
 // InsertIAMPermissions adds an IAM Permissions section, built from the
 // permissions map at permissionsMapPath, to the documentation selected by opts.
 func InsertIAMPermissions(permissionsMapPath string, opts InsertOptions) error {
-	m, err := LoadSDKMap(permissionsMapPath)
+	m, err := permissions.LoadSDKMap(permissionsMapPath)
 	if err != nil {
 		return err
 	}
@@ -85,7 +89,7 @@ func InsertIAMPermissions(permissionsMapPath string, opts InsertOptions) error {
 }
 
 // allDocs returns the documentation of every type in map.
-func allDocs(m *PermissionsMap) []doc {
+func allDocs(m *permissions.PermissionsMap) []doc {
 	docs := make([]doc, 0, len(m.Resources)+len(m.DataSources))
 	for i := range m.Resources {
 		r := &m.Resources[i]
