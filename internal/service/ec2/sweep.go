@@ -3480,22 +3480,17 @@ func sweepSecondarySubnets(ctx context.Context, client *conns.AWSClient) ([]swee
 // sweepPublicIPv4Pools deletes every aws_ec2_public_ipv4_pool in the Region, not only the acceptance tests' own.
 func sweepPublicIPv4Pools(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
-	var input ec2.DescribePublicIpv4PoolsInput
 	var sweepResources []sweep.Sweepable
 
-	pages := ec2.NewDescribePublicIpv4PoolsPaginator(conn, &input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
+	var input ec2.DescribePublicIpv4PoolsInput
+	for v, err := range listPublicIPv4Pools(ctx, conn, &input) {
 		if err != nil {
 			return nil, err
 		}
 
-		for _, v := range page.PublicIpv4Pools {
-			sweepResources = append(sweepResources, framework.NewSweepResource(newPublicIPv4PoolResource, client,
-				framework.NewAttribute("pool_id", aws.ToString(v.PoolId)),
-				framework.NewAttribute("network_border_group", aws.ToString(v.NetworkBorderGroup))))
-		}
+		sweepResources = append(sweepResources, framework.NewSweepResource(newPublicIPv4PoolResource, client,
+			framework.NewAttribute("pool_id", aws.ToString(v.PoolId)),
+			framework.NewAttribute("network_border_group", aws.ToString(v.NetworkBorderGroup))))
 	}
 
 	return sweepResources, nil

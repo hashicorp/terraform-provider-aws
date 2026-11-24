@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -183,16 +184,27 @@ func (r *publicIPv4PoolResource) Read(ctx context.Context, request resource.Read
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, output, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, output, &data))
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.ARN = fwtypes.ARNValue(r.buildARN(ctx, &data))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+// flatten sets the model from the finder's value, for Read and for an item the list resource includes.
+func (r *publicIPv4PoolResource) flatten(ctx context.Context, output *awstypes.PublicIpv4Pool, data *publicIPv4PoolResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
+	diags.Append(fwflex.Flatten(ctx, output, data)...)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.ARN = fwtypes.ARNValue(r.buildARN(ctx, data))
 
 	setTagsOut(ctx, output.Tags)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	return diags
 }
 
 func (r *publicIPv4PoolResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {

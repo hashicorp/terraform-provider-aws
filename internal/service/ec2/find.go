@@ -1261,23 +1261,16 @@ func findPublicIPv4Pool(ctx context.Context, conn *ec2.Client, input *ec2.Descri
 }
 
 func findPublicIPv4Pools(ctx context.Context, conn *ec2.Client, input *ec2.DescribePublicIpv4PoolsInput) ([]awstypes.PublicIpv4Pool, error) {
-	var output []awstypes.PublicIpv4Pool
+	output, err := tfslices.CollectWithError(listPublicIPv4Pools(ctx, conn, input))
 
-	pages := ec2.NewDescribePublicIpv4PoolsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
-			return nil, &retry.NotFoundError{
-				LastError: err,
-			}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
 		}
+	}
 
-		if err != nil {
-			return nil, err
-		}
-
-		output = append(output, page.PublicIpv4Pools...)
+	if err != nil {
+		return nil, err
 	}
 
 	return output, nil
