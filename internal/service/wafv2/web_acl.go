@@ -601,9 +601,9 @@ func findWebACLByThreePartKey(ctx context.Context, conn *wafv2.Client, id, name,
 const (
 	shieldAntiDDoSRuleName     = "AWSManagedRulesAntiDDoSRuleSet"
 	shieldAntiDDoSRulePriority = 9999999
-)
 
-var shieldMitigationRuleNameRegex = regexache.MustCompile(`^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`)
+	shieldMitigationRuleNamePattern = `^ShieldMitigationRuleGroup_\d{12}_[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}_.*`
+)
 
 // filterWebACLRules removes the AWS-added Shield Advanced auto mitigation rules here
 // so that the provider will not report diff and/or attempt to remove the rules as they are
@@ -652,7 +652,7 @@ func findShieldRule(rules []awstypes.Rule) []awstypes.Rule {
 func isShieldRule(r awstypes.Rule) bool {
 	name := aws.ToString(r.Name)
 
-	if shieldMitigationRuleNameRegex.MatchString(name) {
+	if regexache.MustCompile(shieldMitigationRuleNamePattern).MatchString(name) {
 		return true
 	}
 
