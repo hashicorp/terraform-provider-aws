@@ -1,18 +1,18 @@
 kind: bug
 time: 2026-11-25T15:21:18.991892-05:00
 custom:
-    Body: 'Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...`'
-    Impact: |-
-        resource/aws_s3_bucket_website_configuration
-        resource/aws_s3_bucket_cors_configuration
-        resource/aws_s3_bucket_replication_configuration
-        resource/aws_s3_bucket_accelerate_configuration
-        resource/aws_s3_bucket_intelligent_tiering_configuration
-        resource/aws_s3_bucket_analytics_configuration
-        resource/aws_s3_bucket_versioning
-        resource/aws_s3_bucket_logging
-        resource/aws_s3_bucket_ownership_controls
-        resource/aws_s3_bucket_notification
-        resource/aws_s3_bucket_request_payment_configuration
-        resource/aws_s3_bucket_public_access_block
-    PullRequest: ""
+  Body: 'Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...`'
+  Impact: |-
+    resource/aws_s3_bucket_website_configuration
+    resource/aws_s3_bucket_cors_configuration
+    resource/aws_s3_bucket_replication_configuration
+    resource/aws_s3_bucket_accelerate_configuration
+    resource/aws_s3_bucket_intelligent_tiering_configuration
+    resource/aws_s3_bucket_analytics_configuration
+    resource/aws_s3_bucket_versioning
+    resource/aws_s3_bucket_logging
+    resource/aws_s3_bucket_ownership_controls
+    resource/aws_s3_bucket_notification
+    resource/aws_s3_bucket_request_payment_configuration
+    resource/aws_s3_bucket_public_access_block
+  PullRequest: "51377"
