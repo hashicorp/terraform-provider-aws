@@ -271,6 +271,123 @@ resource "aws_dynamodb_table" "example" {
 }
 ```
 
+#### Multi-Account Global Tables
+
+A [multi-account global table](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables-MultiAccount.html) starts from a single-Region table with settings replication enabled. Each additional replica is created in its own account with `global_table_source_arn`. Every replica's resource policy must allow the DynamoDB replication service to replicate between all replicas, and the existing replicas' policies must allow the joining account to call `dynamodb:AssociateTableReplica`. The new replica's resource policy must be supplied at creation with `resource_policy`.
+
+~> **Note:** Settings such as `billing_mode`, capacity, indexes, streams, TTL, and warm throughput are synchronized across all replicas of a multi-account global table. Configure them identically on every replica, because a change applied to any replica is propagated to all of them.
+
+~> **Note:** Multi-account global tables support Multi-Region Eventual Consistency only, and do not support AWS managed KMS keys. Point-in-time recovery, deletion protection, table class, encryption, tags, and the resource policy are configured per replica. The source table can't be deleted for 24 hours after a replica is added.
+
+```terraform
+provider "aws" {
+  alias  = "source"
+  region = "us-east-2"
+}
+
+provider "aws" {
+  alias  = "replica"
+  region = "us-east-1"
+  # Credentials for the replica account.
+}
+
+data "aws_caller_identity" "source" {
+  provider = aws.source
+}
+
+data "aws_caller_identity" "replica" {
+  provider = aws.replica
+}
+
+locals {
+  source_arn  = "arn:aws:dynamodb:us-east-2:${data.aws_caller_identity.source.account_id}:table/example"
+  replica_arn = "arn:aws:dynamodb:us-east-1:${data.aws_caller_identity.replica.account_id}:table/example"
+}
+
+data "aws_iam_policy_document" "replication" {
+  for_each = {
+    source  = local.source_arn
+    replica = local.replica_arn
+  }
+
+  statement {
+    actions = [
+      "dynamodb:ReadDataForReplication",
+      "dynamodb:WriteDataForReplication",
+      "dynamodb:ReplicateSettings",
+    ]
+    resources = [each.value]
+
+    principals {
+      type        = "Service"
+      identifiers = ["replication.dynamodb.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.source.account_id, data.aws_caller_identity.replica.account_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = [local.source_arn, local.replica_arn]
+    }
+  }
+
+  dynamic "statement" {
+    for_each = each.key == "source" ? [1] : []
+
+    content {
+      actions   = ["dynamodb:AssociateTableReplica"]
+      resources = [each.value]
+
+      principals {
+        type        = "AWS"
+        identifiers = [data.aws_caller_identity.replica.account_id]
+      }
+    }
+  }
+}
+
+resource "aws_dynamodb_table" "source" {
+  provider = aws.source
+
+  name             = "example"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "pk"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  global_table_settings_replication_mode = "ENABLED"
+  resource_policy                        = data.aws_iam_policy_document.replication["source"].json
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "replica" {
+  provider = aws.replica
+
+  name             = "example"
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "pk"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  global_table_source_arn = aws_dynamodb_table.source.arn
+  resource_policy         = data.aws_iam_policy_document.replication["replica"].json
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+}
+```
+
 ### Replica Tagging
 
 You can manage global table replicas' tags in various ways. This example shows using `replica.*.propagate_tags` for the first replica and the `aws_dynamodb_tag` resource for the other.
@@ -347,13 +464,16 @@ The following arguments are optional:
 * `deletion_protection_enabled` - (Optional) Enables deletion protection for table. Defaults to `false`.
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
+* `global_table_settings_replication_mode` - (Optional) Settings replication mode of the table. Set to `ENABLED` on a single-Region table so that it can be the source of a [multi-account global table](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables-MultiAccount.html), or `DISABLED` to turn settings replication off. Tables created with `global_table_source_arn` always use `ENABLED`. Conflicts with `replica` and `global_table_witness`.
+* `global_table_source_arn` - (Optional) ARN of an existing replica of a multi-account global table, in another account, from which to create this table as a new replica. The key schema and the settings that are synchronized across replicas are inherited from the source table. Only used when the table is created; changing it to a different ARN forces a new resource. Conflicts with `replica`, `global_table_witness`, `import_table`, and the `restore_*` arguments. See [Multi-Account Global Tables](#multi-account-global-tables).
 * `global_table_witness` - (Optional) Witness Region in a Multi-Region Strong Consistency deployment. **Note** This must be used alongside a single `replica` with `consistency_mode` set to `STRONG`. Other combinations will fail to provision. See below.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
 * `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
-* `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. See below.
+* `replica` - (Optional) Configuration block(s) with [DynamoDB Global Tables V2 (version 2019.11.21)](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables.V2.html) replication configurations. Only same-account replicas are managed here; replicas of a multi-account global table in other accounts are not included. See below.
+* `resource_policy` - (Optional) Resource-based policy document, in JSON format, to attach to the table. Required at creation for a replica created with `global_table_source_arn`. Do not use together with [`aws_dynamodb_resource_policy`](/docs/providers/aws/r/dynamodb_resource_policy.html) for the same table. When this argument is not set, Terraform doesn't read or manage the table's resource policy.
 * `restore_backup_arn` - (Optional) ARN of backup to restore.
 * `restore_date_time` - (Optional) Time of the point-in-time recovery point to restore.
 * `restore_source_name` - (Optional) Name of the table to restore. Must match the name of an existing table.

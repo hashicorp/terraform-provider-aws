@@ -6,6 +6,9 @@ package dynamodb_test
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 )
@@ -52,6 +55,74 @@ func TestARNForNewRegion(t *testing.T) {
 
 			if got != testCase.ExpectedARN {
 				t.Errorf("got %s, expected %s", got, testCase.ExpectedARN)
+			}
+		})
+	}
+}
+
+func TestSameAccountReplicaDescriptions(t *testing.T) {
+	t.Parallel()
+
+	tableARN := "arn:aws:dynamodb:us-west-2:111122223333:table/test" //lintignore:AWSAT003,AWSAT005
+
+	testCases := []struct {
+		TestName        string
+		TableARN        string
+		Replicas        []awstypes.ReplicaDescription
+		ExpectedRegions []string
+	}{
+		{
+			TestName:        "no replicas",
+			TableARN:        tableARN,
+			ExpectedRegions: []string{},
+		},
+		{
+			TestName: "replicas without ARN are kept",
+			TableARN: tableARN,
+			Replicas: []awstypes.ReplicaDescription{
+				{RegionName: aws.String("us-east-1")}, //lintignore:AWSAT003
+			},
+			ExpectedRegions: []string{"us-east-1"}, //lintignore:AWSAT003
+		},
+		{
+			TestName: "other account replicas are dropped",
+			TableARN: tableARN,
+			Replicas: []awstypes.ReplicaDescription{
+				{
+					RegionName: aws.String("us-east-1"),                                          //lintignore:AWSAT003
+					ReplicaArn: aws.String("arn:aws:dynamodb:us-east-1:111122223333:table/test"), //lintignore:AWSAT003,AWSAT005
+				},
+				{
+					RegionName: aws.String("us-east-2"),                                          //lintignore:AWSAT003
+					ReplicaArn: aws.String("arn:aws:dynamodb:us-east-2:444455556666:table/test"), //lintignore:AWSAT003,AWSAT005
+				},
+			},
+			ExpectedRegions: []string{"us-east-1"}, //lintignore:AWSAT003
+		},
+		{
+			TestName: "unparseable table ARN keeps all replicas",
+			TableARN: "not-an-arn",
+			Replicas: []awstypes.ReplicaDescription{
+				{
+					RegionName: aws.String("us-east-2"),                                          //lintignore:AWSAT003
+					ReplicaArn: aws.String("arn:aws:dynamodb:us-east-2:444455556666:table/test"), //lintignore:AWSAT003,AWSAT005
+				},
+			},
+			ExpectedRegions: []string{"us-east-2"}, //lintignore:AWSAT003
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			got := []string{}
+			for _, v := range tfdynamodb.SameAccountReplicaDescriptions(testCase.TableARN, testCase.Replicas) {
+				got = append(got, aws.ToString(v.RegionName))
+			}
+
+			if diff := cmp.Diff(testCase.ExpectedRegions, got); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})
 	}

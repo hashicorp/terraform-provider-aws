@@ -8968,6 +8968,109 @@ func TestAccDynamoDBTable_GSI_keySchema_unknown(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTable_globalTableSettingsReplicationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, resourceName, &conf),
+				),
+			},
+			{
+				Config: testAccTableConfig_globalTableSettingsReplicationMode(rName, "ENABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "global_table_settings_replication_mode", "ENABLED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_globalTableSettingsReplicationMode(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "global_table_settings_replication_mode", "DISABLED"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+// The source table of a multi-account global table can't be deleted for 24 hours after a replica is added,
+// so this test's destroy step is expected to fail and leave the source table for the sweeper.
+func TestAccDynamoDBTable_multiAccountGlobalTable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var source awstypes.TableDescription
+	sourceResourceName := "aws_dynamodb_table.source"
+	replicaResourceName := "aws_dynamodb_table.replica"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_multiAccountGlobalTable(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, t, sourceResourceName, &source),
+					resource.TestCheckResourceAttr(sourceResourceName, "global_table_settings_replication_mode", "ENABLED"),
+					resource.TestCheckResourceAttr(sourceResourceName, "replica.#", "0"),
+					acctest.CheckResourceAttrRegionalARNIgnoreRegionAndAccount(replicaResourceName, names.AttrARN, "dynamodb", "table/"+rName),
+					resource.TestCheckResourceAttr(replicaResourceName, "billing_mode", "PAY_PER_REQUEST"),
+					resource.TestCheckResourceAttrPair(replicaResourceName, "global_table_source_arn", sourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(replicaResourceName, "global_table_settings_replication_mode", "ENABLED"),
+					resource.TestCheckResourceAttrPair(replicaResourceName, "hash_key", sourceResourceName, "hash_key"),
+					resource.TestCheckResourceAttr(replicaResourceName, "replica.#", "0"),
+					resource.TestCheckResourceAttr(replicaResourceName, "stream_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccTableConfig_multiAccountGlobalTable(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            sourceResourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"resource_policy"},
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).DynamoDBClient(ctx)
@@ -13446,4 +13549,145 @@ variable "global_secondary_index" {
   }]
 }
 `, rName)
+}
+
+func testAccTableConfig_globalTableSettingsReplicationMode(rName, mode string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = %[1]q
+
+  global_table_settings_replication_mode = %[2]q
+
+  attribute {
+    name = %[1]q
+    type = "S"
+  }
+}
+`, rName, mode)
+}
+
+func testAccTableConfig_multiAccountGlobalTable(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountAlternateRegionProvider(), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "source" {}
+
+data "aws_region" "source" {}
+
+data "aws_caller_identity" "replica" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "replica" {
+  provider = "awsalternate"
+}
+
+locals {
+  source_arn  = "arn:${data.aws_partition.current.partition}:dynamodb:${data.aws_region.source.region}:${data.aws_caller_identity.source.account_id}:table/%[1]s"
+  replica_arn = "arn:${data.aws_partition.current.partition}:dynamodb:${data.aws_region.replica.region}:${data.aws_caller_identity.replica.account_id}:table/%[1]s"
+}
+
+data "aws_iam_policy_document" "source" {
+  statement {
+    actions = [
+      "dynamodb:ReadDataForReplication",
+      "dynamodb:WriteDataForReplication",
+      "dynamodb:ReplicateSettings",
+    ]
+    resources = [local.source_arn]
+
+    principals {
+      type        = "Service"
+      identifiers = ["replication.dynamodb.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.source.account_id, data.aws_caller_identity.replica.account_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = [local.source_arn, local.replica_arn]
+    }
+  }
+
+  statement {
+    actions   = ["dynamodb:AssociateTableReplica"]
+    resources = [local.source_arn]
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_caller_identity.replica.account_id]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "replica" {
+  statement {
+    actions = [
+      "dynamodb:ReadDataForReplication",
+      "dynamodb:WriteDataForReplication",
+      "dynamodb:ReplicateSettings",
+    ]
+    resources = [local.replica_arn]
+
+    principals {
+      type        = "Service"
+      identifiers = ["replication.dynamodb.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.source.account_id, data.aws_caller_identity.replica.account_id]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceArn"
+      values   = [local.source_arn, local.replica_arn]
+    }
+  }
+}
+
+resource "aws_dynamodb_table" "source" {
+  name             = %[1]q
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "pk"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  global_table_settings_replication_mode = "ENABLED"
+  resource_policy                        = data.aws_iam_policy_document.source.json
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table" "replica" {
+  provider = "awsalternate"
+
+  name             = %[1]q
+  billing_mode     = "PAY_PER_REQUEST"
+  hash_key         = "pk"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  global_table_source_arn = aws_dynamodb_table.source.arn
+  resource_policy         = data.aws_iam_policy_document.replica.json
+
+  attribute {
+    name = "pk"
+    type = "S"
+  }
+}
+`, rName))
 }

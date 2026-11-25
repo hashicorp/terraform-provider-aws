@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -109,6 +110,10 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_backup_arn", func(_ context.Context, old, new, meta any) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
+			// DescribeTable doesn't return the source table ARN, so only force a new table when a known value changes.
+			customdiff.ForceNewIfChange("global_table_source_arn", func(_ context.Context, old, new, meta any) bool {
+				return old.(string) != "" && new.(string) != "" && old.(string) != new.(string)
+			}),
 			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 				if diff.Id() == "" {
 					return nil
@@ -121,6 +126,17 @@ func resourceTable() *schema.Resource {
 							return fmt.Errorf("%s cannot be decreased (current value: %d, requested value: %d)", attr, oldVal, newVal)
 						}
 					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+				if v := diff.Get("global_table_source_arn").(string); v == "" {
+					return nil
+				}
+
+				if v := diff.Get("global_table_settings_replication_mode").(string); v != "" && v != string(awstypes.GlobalTableSettingsReplicationModeEnabled) {
+					return fmt.Errorf("global_table_settings_replication_mode must be %q when global_table_source_arn is set", awstypes.GlobalTableSettingsReplicationModeEnabled)
 				}
 
 				return nil
@@ -244,6 +260,35 @@ func resourceTable() *schema.Resource {
 								Computed: true,
 							},
 						},
+					},
+				},
+				"global_table_settings_replication_mode": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"global_table_witness", "replica"},
+					ValidateFunc: validation.StringInSlice(enum.Slice(
+						awstypes.GlobalTableSettingsReplicationModeEnabled,
+						awstypes.GlobalTableSettingsReplicationModeDisabled,
+					), false),
+					DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+						// Tables that have never had settings replication enabled may not report a mode.
+						return old == "" && new == string(awstypes.GlobalTableSettingsReplicationModeDisabled)
+					},
+				},
+				"global_table_source_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					ConflictsWith: []string{
+						"global_table_witness",
+						"import_table",
+						"replica",
+						"restore_backup_arn",
+						"restore_date_time",
+						"restore_source_name",
+						"restore_source_table_arn",
+						"restore_to_latest_time",
 					},
 				},
 				"global_table_witness": {
@@ -462,6 +507,7 @@ func resourceTable() *schema.Resource {
 						},
 					},
 				},
+				"resource_policy": sdkv2.IAMPolicyDocumentSchemaOptional(),
 				"restore_date_time": {
 					Type:         schema.TypeString,
 					Optional:     true,
@@ -655,8 +701,47 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	sourceName, nameOk := d.GetOk("restore_source_name")
 	sourceArn, arnOk := d.GetOk("restore_source_table_arn")
+	globalTableSourceARN, globalTableSourceARNOk := d.GetOk("global_table_source_arn")
+	settingsReplicationModeSetOnCreate := false
+	resourcePolicySetOnCreate := false
 
-	if nameOk || arnOk {
+	if globalTableSourceARNOk {
+		// Settings that are synchronized across a multi-account global table (key schema, billing mode,
+		// throughput, indexes, streams, TTL, warm throughput) are inherited from the source table.
+		input := &dynamodb.CreateTableInput{
+			GlobalTableSettingsReplicationMode: awstypes.GlobalTableSettingsReplicationModeEnabled,
+			GlobalTableSourceArn:               aws.String(globalTableSourceARN.(string)),
+			TableName:                          aws.String(tableName),
+			Tags:                               getTagsIn(ctx),
+		}
+
+		if v, ok := d.GetOk("deletion_protection_enabled"); ok {
+			input.DeletionProtectionEnabled = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("resource_policy"); ok {
+			policy, err := structure.NormalizeJsonString(v.(string))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			input.ResourcePolicy = aws.String(policy)
+		}
+
+		if v, ok := d.GetOk("server_side_encryption"); ok {
+			input.SSESpecification = expandEncryptAtRestOptions(v.([]any))
+		}
+
+		if v, ok := d.GetOk("table_class"); ok {
+			input.TableClass = awstypes.TableClass(v.(string))
+		}
+
+		if err := createTableWithRetry(ctx, conn, input); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, tableName, err)
+		}
+
+		settingsReplicationModeSetOnCreate = true
+		resourcePolicySetOnCreate = true
+	} else if nameOk || arnOk {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
 			TargetTableName: aws.String(tableName),
 		}
@@ -944,24 +1029,24 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 			input.WarmThroughput = expandWarmThroughput(v.([]any)[0].(map[string]any))
 		}
 
-		_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
-			return conn.CreateTable(ctx, input)
-		}, func(err error) (bool, error) {
-			if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
-				return true, err
-			}
-			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
-				return true, err
-			}
-			if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "indexed tables that can be created simultaneously") {
-				return true, err
-			}
-			return false, err
-		})
+		if v, ok := d.GetOk("global_table_settings_replication_mode"); ok {
+			input.GlobalTableSettingsReplicationMode = awstypes.GlobalTableSettingsReplicationMode(v.(string))
+		}
 
-		if err != nil {
+		if v, ok := d.GetOk("resource_policy"); ok {
+			policy, err := structure.NormalizeJsonString(v.(string))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			input.ResourcePolicy = aws.String(policy)
+		}
+
+		if err := createTableWithRetry(ctx, conn, input); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, tableName, err)
 		}
+
+		settingsReplicationModeSetOnCreate = true
+		resourcePolicySetOnCreate = true
 	}
 
 	d.SetId(tableName)
@@ -987,7 +1072,20 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
-	if d.Get("ttl.0.enabled").(bool) {
+	if v, ok := d.GetOk("resource_policy"); ok && !resourcePolicySetOnCreate {
+		if err := putTableResourcePolicy(ctx, conn, aws.ToString(output.TableArn), v.(string)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("global_table_settings_replication_mode"); ok && !settingsReplicationModeSetOnCreate {
+		if err := updateGlobalTableSettingsReplicationMode(ctx, conn, d.Id(), awstypes.GlobalTableSettingsReplicationMode(v.(string)), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), err)
+		}
+	}
+
+	// TTL is synchronized from the source table of a multi-account global table.
+	if d.Get("ttl.0.enabled").(bool) && !globalTableSourceARNOk {
 		if err := updateTimeToLive(ctx, conn, d.Id(), d.Get("ttl").([]any), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling TTL: %w", err))
 		}
@@ -1074,6 +1172,8 @@ func resourceTableFlatten(ctx context.Context, c *conns.AWSClient, d *schema.Res
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
 	}
 
+	d.Set("global_table_settings_replication_mode", table.GlobalTableSettingsReplicationMode)
+
 	if err := d.Set("global_table_witness", flattenGlobalTableWitnesses(table.GlobalTableWitnesses)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_table_witness", err)
 	}
@@ -1100,7 +1200,7 @@ func resourceTableFlatten(ctx context.Context, c *conns.AWSClient, d *schema.Res
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "server_side_encryption", err)
 	}
 
-	replicas := flattenReplicaDescriptions(table.Replicas)
+	replicas := flattenReplicaDescriptions(sameAccountReplicaDescriptions(aws.ToString(table.TableArn), table.Replicas))
 
 	var err error
 	if replicas, err = addReplicaPITRs(ctx, conn, d.Id(), replicas); err != nil {
@@ -1132,6 +1232,25 @@ func resourceTableFlatten(ctx context.Context, c *conns.AWSClient, d *schema.Res
 
 	if err := d.Set("warm_throughput", flattenTableWarmThroughput(table.WarmThroughput)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "warm_throughput", err)
+	}
+
+	// Only read the resource policy when it is managed by this resource, so that tables whose policy is
+	// managed by aws_dynamodb_resource_policy (or not at all) don't need dynamodb:GetResourcePolicy.
+	if v := d.Get("resource_policy").(string); v != "" {
+		output, err := findResourcePolicyByARN(ctx, conn, aws.ToString(table.TableArn))
+
+		switch {
+		case retry.NotFound(err):
+			d.Set("resource_policy", "")
+		case err != nil:
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTable, d.Id(), fmt.Errorf("resource policy: %w", err))
+		default:
+			policyToSet, err := verify.PolicyToSet(v, aws.ToString(output.Policy))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			d.Set("resource_policy", policyToSet)
+		}
 	}
 
 	describeBackupsInput := dynamodb.DescribeContinuousBackupsInput{
@@ -1491,6 +1610,26 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 		}
 	}
 
+	if d.HasChange("resource_policy") {
+		if v := d.Get("resource_policy").(string); v != "" {
+			if err := putTableResourcePolicy(ctx, conn, d.Get(names.AttrARN).(string), v); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+			}
+		} else {
+			if err := deleteTableResourcePolicy(ctx, conn, d.Get(names.AttrARN).(string)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("global_table_settings_replication_mode") {
+		if v := d.Get("global_table_settings_replication_mode").(string); v != "" {
+			if err := updateGlobalTableSettingsReplicationMode(ctx, conn, d.Id(), awstypes.GlobalTableSettingsReplicationMode(v), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
+			}
+		}
+	}
+
 	replicaTagsChange := false
 	if d.HasChange("replica") {
 		replicaTagsChange = true
@@ -1560,6 +1699,98 @@ func resourceTableDelete(ctx context.Context, d *schema.ResourceData, meta any) 
 	}
 
 	return diags
+}
+
+func createTableWithRetry(ctx context.Context, conn *dynamodb.Client, input *dynamodb.CreateTableInput) error {
+	_, err := tfresource.RetryWhen(ctx, createTableTimeout, func(ctx context.Context) (any, error) {
+		return conn.CreateTable(ctx, input)
+	}, func(err error) (bool, error) {
+		if tfawserr.ErrCodeEquals(err, errCodeThrottlingException) {
+			return true, err
+		}
+		if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "can be created, updated, or deleted simultaneously") {
+			return true, err
+		}
+		if errs.IsAErrorMessageContains[*awstypes.LimitExceededException](err, "indexed tables that can be created simultaneously") {
+			return true, err
+		}
+		return false, err
+	})
+
+	return err
+}
+
+func updateGlobalTableSettingsReplicationMode(ctx context.Context, conn *dynamodb.Client, tableName string, mode awstypes.GlobalTableSettingsReplicationMode, timeout time.Duration) error {
+	input := dynamodb.UpdateTableInput{
+		GlobalTableSettingsReplicationMode: mode,
+		TableName:                          aws.String(tableName),
+	}
+
+	if _, err := conn.UpdateTable(ctx, &input); err != nil {
+		return fmt.Errorf("updating global table settings replication mode: %w", err)
+	}
+
+	if _, err := waitTableActive(ctx, conn, tableName, timeout); err != nil {
+		return fmt.Errorf("waiting for global table settings replication mode update: %w", err)
+	}
+
+	return nil
+}
+
+func putTableResourcePolicy(ctx context.Context, conn *dynamodb.Client, tableARN, policy string) error {
+	policy, err := structure.NormalizeJsonString(policy)
+	if err != nil {
+		return err
+	}
+
+	input := dynamodb.PutResourcePolicyInput{
+		Policy:      aws.String(policy),
+		ResourceArn: aws.String(tableARN),
+	}
+
+	if _, err := conn.PutResourcePolicy(ctx, &input); err != nil {
+		return fmt.Errorf("putting resource policy: %w", err)
+	}
+
+	return nil
+}
+
+func deleteTableResourcePolicy(ctx context.Context, conn *dynamodb.Client, tableARN string) error {
+	input := dynamodb.DeleteResourcePolicyInput{
+		ResourceArn: aws.String(tableARN),
+	}
+
+	_, err := conn.DeleteResourcePolicy(ctx, &input)
+
+	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting resource policy: %w", err)
+	}
+
+	return nil
+}
+
+// sameAccountReplicaDescriptions drops replicas of a multi-account global table that live in other accounts.
+// They can only be managed from their own account, so they are not part of this table's `replica` set.
+func sameAccountReplicaDescriptions(tableARN string, apiObjects []awstypes.ReplicaDescription) []awstypes.ReplicaDescription {
+	tableAccountID, err := accountIDFromARN(tableARN)
+	if err != nil {
+		return apiObjects
+	}
+
+	return slices.DeleteFunc(slices.Clone(apiObjects), func(apiObject awstypes.ReplicaDescription) bool {
+		replicaARN := aws.ToString(apiObject.ReplicaArn)
+		if replicaARN == "" {
+			return false
+		}
+
+		replicaAccountID, err := accountIDFromARN(replicaARN)
+
+		return err == nil && replicaAccountID != tableAccountID
+	})
 }
 
 // custom diff
