@@ -14,6 +14,7 @@ var (
 	ResourceBucketInventory                         = resourceBucketInventory
 	ResourceBucketLifecycleConfiguration            = newBucketLifecycleConfigurationResource
 	ResourceBucketLogging                           = resourceBucketLogging
+	ResourceBucketLoggingFlatten                    = resourceBucketLoggingFlatten
 	ResourceBucketMetadataConfiguration             = newBucketMetadataConfigurationResource
 	ResourceBucketMetric                            = resourceBucketMetric
 	ResourceBucketNotification                      = resourceBucketNotification
