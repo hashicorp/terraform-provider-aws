@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_service_linked_role: Prevent a phantom `custom_suffix`, and the resulting forced replacement, on refresh for roles whose default names contain an underscore (e.g. `AWSServiceRoleForHealth_Organizations`)
+```
