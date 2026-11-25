@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Return an actionable error when `account_id` is used with a `SERVICE_MANAGED` stack set, instead of the API `ValidationError`
+```

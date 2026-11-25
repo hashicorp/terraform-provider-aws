@@ -265,6 +265,11 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	// is composed with stack_set_name and region to form the resources ID.
 	accountOrOrgID := accountID
 
+	callAs := d.Get("call_as").(string)
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = awstypes.CallAs(v.(string))
+	}
+
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		dt := expandDeploymentTargets(v.([]any))
 		if len(dt.OrganizationalUnitIds) > 0 {
@@ -272,13 +277,15 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 		input.DeploymentTargets = dt
 	} else {
+		// Best effort: without cloudformation:DescribeStackSet, CreateStackInstances returns its own error.
+		if stackSet, err := findStackSetByName(ctx, conn, stackSetName, callAs); err == nil {
+			if err := validateStackSetInstanceAccountTarget(stackSetName, accountID, stackSet.PermissionModel); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		}
+
 		d.Set(names.AttrAccountID, accountID)
 		input.Accounts = []string{accountID}
-	}
-
-	callAs := d.Get("call_as").(string)
-	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -596,4 +603,15 @@ func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []
 	}
 
 	return tfList
+}
+
+// validateStackSetInstanceAccountTarget returns an error for an account target on a SERVICE_MANAGED stack set, which CreateStackInstances rejects.
+func validateStackSetInstanceAccountTarget(stackSetName, accountID string, permissionModel awstypes.PermissionModels) error {
+	if permissionModel != awstypes.PermissionModelsServiceManaged {
+		return nil
+	}
+
+	return fmt.Errorf("CloudFormation StackSet (%[1]s) uses the %[2]s permission model, which does not accept account_id (%[3]s) when creating stack instances; "+
+		"use deployment_targets { organizational_unit_ids = [<organizational unit of %[3]s>], accounts = [%[3]q], account_filter_type = %[4]q } instead",
+		stackSetName, awstypes.PermissionModelsServiceManaged, accountID, awstypes.AccountFilterTypeIntersection)
 }
