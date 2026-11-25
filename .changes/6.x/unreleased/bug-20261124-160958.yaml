@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T16:09:58.843489-05:00
+custom:
+    Body: Fix `is required for InfluxDB V2 clusters` errors when `allocated_storage`, `bucket`, `organization`, `password`, or `username` are set to values not known until apply
+    Impact: resource/aws_timestreaminfluxdb_db_cluster
+    PullRequest: "50126"

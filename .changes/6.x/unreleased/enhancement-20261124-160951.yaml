@@ -1,0 +1,8 @@
+kind: enhancement
+time: 2026-11-24T16:09:51.688765-05:00
+custom:
+    Body: Add `restored_from_db_backup_id` attribute
+    Impact: |-
+        resource/aws_timestreaminfluxdb_db_instance
+        resource/aws_timestreaminfluxdb_db_cluster
+    PullRequest: "50126"

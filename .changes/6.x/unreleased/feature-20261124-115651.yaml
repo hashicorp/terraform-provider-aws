@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-24T11:56:51.308054-05:00
+custom:
+    Name: aws_timestreaminfluxdb_db_backups
+    NewType: New Data Source
+    PullRequest: "50126"
