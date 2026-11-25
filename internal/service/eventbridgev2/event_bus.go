@@ -43,7 +43,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridgev2;eventbridgev2.DescribeEventBusOutput")
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccEventBusPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="storage_configuration")
 func newEventBusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
