@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -3231,3 +3232,529 @@ const testAccWebACLRuleStateJSON_logicalStatementNesting = `{
     "rule_group_reference_statement": []
   }]
 }`
+
+func TestAccWAFV2WebACLRule_preParseTextTransformation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	webACLResourceName := "aws_wafv2_web_acl.test"
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	var wa awstypes.WebACL
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_preParseTextTransformation(rName, `
+      pre_parse_text_transformation {
+        priority = 0
+        type     = "URL_DECODE"
+      }
+
+      pre_parse_text_transformation {
+        priority = 1
+        type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+      }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &wa),
+					testAccCheckWebACLRulePreParseTextTransformations(&wa, rName, awstypes.PreParseTextTransformationTypeUrlDecode, awstypes.PreParseTextTransformationTypeCombineDuplicateQueryArgsByComma),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.0.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.1.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.1.type", "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.text_transformation.0.type", "UPPERCASE"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleConfig_preParseTextTransformation(rName, `
+      pre_parse_text_transformation {
+        priority = 0
+        type     = "REPLACE_SEMICOLONS_WITH_AMPERSANDS"
+      }
+`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &wa),
+					testAccCheckWebACLRulePreParseTextTransformations(&wa, rName, awstypes.PreParseTextTransformationTypeReplaceSemicolonsWithAmpersands),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.0.priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.0.type", "REPLACE_SEMICOLONS_WITH_AMPERSANDS"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleConfig_preParseTextTransformation(rName, ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &wa),
+					testAccCheckWebACLRulePreParseTextTransformations(&wa, rName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_preParseTextTransformationStatements(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+	scopeDownResourceName := "aws_wafv2_web_acl_rule.scope_down"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_preParseTextTransformationStatements(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					testAccCheckWebACLRuleExists(ctx, t, scopeDownResourceName),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.0.pre_parse_text_transformation.0.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.1.regex_match_statement.0.pre_parse_text_transformation.0.type", "URL_DECODE_UNI"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.2.size_constraint_statement.0.pre_parse_text_transformation.0.type", "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.3.sqli_match_statement.0.pre_parse_text_transformation.0.type", "REPLACE_SEMICOLONS_WITH_AMPERSANDS"),
+					resource.TestCheckResourceAttr(resourceName, "statement.0.or_statement.0.statement.4.xss_match_statement.0.pre_parse_text_transformation.0.type", "URL_DECODE"),
+					resource.TestCheckResourceAttr(scopeDownResourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.byte_match_statement.0.pre_parse_text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(scopeDownResourceName, "statement.0.rate_based_statement.0.scope_down_statement.0.byte_match_statement.0.pre_parse_text_transformation.0.type", "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"),
+				),
+			},
+		},
+	})
+}
+
+// The documented inline-to-separate migration must keep a pre-parse text transformation through
+// a later, unrelated update of the adopted rule.
+func TestAccWAFV2WebACLRule_migrateInlineToSeparateResourcePreParseTextTransformation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	webACLResourceName := "aws_wafv2_web_acl.test"
+	ruleResourceName := "aws_wafv2_web_acl_rule.test"
+
+	var wa awstypes.WebACL
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleMigrationConfig_inlinePreParseTextTransformation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &wa),
+					testAccCheckWebACLRulePreParseTextTransformations(&wa, "test-rule", awstypes.PreParseTextTransformationTypeCombineDuplicateQueryArgsByComma),
+				),
+			},
+			{
+				Config: testAccWebACLRuleMigrationConfig_separatePreParseTextTransformation(rName, "test-rule"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, ruleResourceName),
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &wa),
+					testAccCheckWebACLRulePreParseTextTransformations(&wa, "test-rule", awstypes.PreParseTextTransformationTypeCombineDuplicateQueryArgsByComma),
+					resource.TestCheckResourceAttr(ruleResourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.#", "1"),
+					resource.TestCheckResourceAttr(ruleResourceName, "statement.0.byte_match_statement.0.pre_parse_text_transformation.0.type", "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleMigrationConfig_separatePreParseTextTransformation(rName, "test-rule-updated"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(ruleResourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, t, webACLResourceName, &wa),
+					testAccCheckWebACLRulePreParseTextTransformations(&wa, "test-rule", awstypes.PreParseTextTransformationTypeCombineDuplicateQueryArgsByComma),
+					resource.TestCheckResourceAttr(ruleResourceName, "visibility_config.0.metric_name", "test-rule-updated"),
+				),
+			},
+		},
+	})
+}
+
+// testAccCheckWebACLRulePreParseTextTransformations checks the pre-parse text transformations that
+// AWS holds for the byte_match_statement of the named rule, in priority order.
+func testAccCheckWebACLRulePreParseTextTransformations(wa *awstypes.WebACL, ruleName string, want ...awstypes.PreParseTextTransformationType) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rule := range wa.Rules {
+			if aws.ToString(rule.Name) != ruleName {
+				continue
+			}
+			if rule.Statement == nil || rule.Statement.ByteMatchStatement == nil {
+				return fmt.Errorf("WAFv2 Web ACL Rule %s has no byte_match_statement", ruleName)
+			}
+
+			var got []awstypes.PreParseTextTransformationType
+			for _, v := range rule.Statement.ByteMatchStatement.PreParseTextTransformations {
+				got = append(got, v.Type)
+			}
+			if !slices.Equal(got, want) {
+				return fmt.Errorf("WAFv2 Web ACL Rule %s pre-parse text transformations: got %v, want %v", ruleName, got, want)
+			}
+
+			return nil
+		}
+
+		return fmt.Errorf("WAFv2 Web ACL Rule %s not found in Web ACL", ruleName)
+	}
+}
+
+func testAccWebACLRuleConfig_preParseTextTransformation(rName, preParse string) string {
+	return acctest.ConfigCompose(testAccWebACLRuleConfig_webACLOnly(rName), fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    byte_match_statement {
+      search_string         = "EVIL,EVIL"
+      positional_constraint = "EXACTLY"
+
+      field_to_match {
+        single_query_argument {
+          name = "p"
+        }
+      }
+%[2]s
+      text_transformation {
+        priority = 0
+        type     = "UPPERCASE"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, preParse))
+}
+
+func testAccWebACLRuleConfig_preParseTextTransformationStatements(rName string) string {
+	return acctest.ConfigCompose(testAccWebACLRuleConfig_webACLOnly(rName), fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  regular_expression {
+    regex_string = "^test-[a-z]+$"
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    count {}
+  }
+
+  statement {
+    or_statement {
+      statement {
+        regex_pattern_set_reference_statement {
+          arn = aws_wafv2_regex_pattern_set.test.arn
+
+          field_to_match {
+            single_query_argument {
+              name = "u"
+            }
+          }
+
+          pre_parse_text_transformation {
+            priority = 0
+            type     = "URL_DECODE"
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "TRIM"
+          }
+        }
+      }
+
+      statement {
+        regex_match_statement {
+          regex_string = "test[0-9]+"
+
+          field_to_match {
+            all_query_arguments {}
+          }
+
+          pre_parse_text_transformation {
+            priority = 0
+            type     = "URL_DECODE_UNI"
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "CMD_LINE_UNIX"
+          }
+        }
+      }
+
+      statement {
+        size_constraint_statement {
+          comparison_operator = "GT"
+          size                = 100
+
+          field_to_match {
+            all_query_arguments {}
+          }
+
+          pre_parse_text_transformation {
+            priority = 0
+            type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "REMOVE_WHITESPACE"
+          }
+        }
+      }
+
+      statement {
+        sqli_match_statement {
+          field_to_match {
+            all_query_arguments {}
+          }
+
+          pre_parse_text_transformation {
+            priority = 0
+            type     = "REPLACE_SEMICOLONS_WITH_AMPERSANDS"
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "REMOVE_COMMENTS_CHAR"
+          }
+        }
+      }
+
+      statement {
+        xss_match_statement {
+          field_to_match {
+            single_query_argument {
+              name = "x"
+            }
+          }
+
+          pre_parse_text_transformation {
+            priority = 0
+            type     = "URL_DECODE"
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "JS_DECODE_EXT"
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "scope_down" {
+  name        = "%[1]s-scope-down"
+  priority    = 2
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    rate_based_statement {
+      limit              = 1000
+      aggregate_key_type = "IP"
+
+      scope_down_statement {
+        byte_match_statement {
+          search_string         = "EVIL,EVIL"
+          positional_constraint = "EXACTLY"
+
+          field_to_match {
+            single_query_argument {
+              name = "p"
+            }
+          }
+
+          pre_parse_text_transformation {
+            priority = 0
+            type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+          }
+
+          text_transformation {
+            priority = 0
+            type     = "UPPERCASE"
+          }
+        }
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "%[1]s-scope-down"
+    sampled_requests_enabled   = false
+  }
+
+  depends_on = [aws_wafv2_web_acl_rule.test]
+}
+`, rName))
+}
+
+func testAccWebACLRuleMigrationConfig_inlinePreParseTextTransformation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "test-rule"
+    priority = 1
+
+    action {
+      block {}
+    }
+
+    statement {
+      byte_match_statement {
+        search_string         = "EVIL,EVIL"
+        positional_constraint = "EXACTLY"
+
+        field_to_match {
+          single_query_argument {
+            name = "p"
+          }
+        }
+
+        pre_parse_text_transformation {
+          priority = 0
+          type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+        }
+
+        text_transformation {
+          priority = 0
+          type     = "UPPERCASE"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "test-rule"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName)
+}
+
+func testAccWebACLRuleMigrationConfig_separatePreParseTextTransformation(rName, metricName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = "test-rule"
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    block {}
+  }
+
+  statement {
+    byte_match_statement {
+      search_string         = "EVIL,EVIL"
+      positional_constraint = "EXACTLY"
+
+      field_to_match {
+        single_query_argument {
+          name = "p"
+        }
+      }
+
+      pre_parse_text_transformation {
+        priority = 0
+        type     = "COMBINE_DUPLICATE_QUERY_ARGS_BY_COMMA"
+      }
+
+      text_transformation {
+        priority = 0
+        type     = "UPPERCASE"
+      }
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[2]q
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, metricName)
+}
