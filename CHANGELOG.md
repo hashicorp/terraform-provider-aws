@@ -1,8 +1,13 @@
 ## 6.75.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_ebs_encryption_by_default: Newly created resources now use the AWS Region as the `id` attribute value instead of a generated identifier. The `id` for existing resources is updated to the AWS region when upgrading to `v6.75.0` or higher. ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+
 FEATURES:
 
 * **New List Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New List Resource:** `aws_ebs_encryption_by_default` ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
 * **New List Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
 * **New Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
 * **New Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
@@ -10,6 +15,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_ebs_encryption_by_default: Add resource identity support ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
 * resource/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
 
 BUG FIXES:
