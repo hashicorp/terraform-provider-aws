@@ -3,7 +3,7 @@
 
 # sdkmap test fixture
 
-Miniature provider root for tests using `-root testdata`. Its `mock*` service packages are test fixtures: they use AWS SDK V2 clients matching the directory name, need not compile, and omit irrelevant helpers. Mock resources and data sources are named `Foo`, `Bar`, `Baz`, and `Qux`, in that order.
+Miniature provider root for `sdkmap` tests. Its `mock*` service packages are test fixtures: they use AWS SDK V2 clients matching the directory name, need not compile, and omit irrelevant helpers. Mock resources and data sources are named `Foo`, `Bar`, `Baz`, and `Qux`, in that order.
 
 | Path | Fixture |
 | --- | --- |
@@ -29,8 +29,8 @@ Miniature provider root for tests using `-root testdata`. Its `mock*` service pa
 
 ## Golden files
 
-`golden/<package>.json` is the expected output for each fixture service, with its `resources` and `dataSources` arrays sorted by type. `TestMapPackages` compares it and requires a test case for every loaded service and golden file. Following intentional changes, regenerate then review the diff:
+`golden/<package>.json` is the expected output for each fixture service, with its `resources` and `dataSources` arrays sorted by type. `TestMapPackages` requires a test case per service and golden file. After intentional changes, regenerate from `tools/injectr` and review the diff:
 
 ```bash
-go test -run TestMapPackages -update
+go test ./sdkmap -run TestMapPackages -update
 ```

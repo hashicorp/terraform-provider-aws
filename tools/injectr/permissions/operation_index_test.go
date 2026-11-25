@@ -7,6 +7,7 @@ import (
 	"slices"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
@@ -59,7 +60,7 @@ func TestOperationIndexResolve(t *testing.T) {
 	testCases := map[string]struct {
 		sdkCall    string
 		want       []string
-		wantReason unresolvedReason
+		wantReason model.UnresolvedReason
 	}{
 		"same package and client name": {
 			sdkCall: "s3.CopyObject",

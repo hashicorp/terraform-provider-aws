@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"slices"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 )
 
 const testPermissionsMapFile = "../permissions/testdata/permissions_map.json"
@@ -119,8 +121,9 @@ func TestInsertIAMPermissions(t *testing.T) {
 	writeFile(t, resourceDoc, "# Resource: aws_test_bucket\n\n## Import\n\nText.\n")
 	writeFile(t, dataSourceDoc, "# Data Source: aws_test_bucket\n")
 
+	m := loadTestPermissionsMap(t)
 	for range 2 {
-		if err := InsertIAMPermissions(testPermissionsMapFile, InsertOptions{Root: root, All: true}); err != nil {
+		if err := InsertIAMPermissions(m, InsertOptions{Root: root, All: true}); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -149,13 +152,23 @@ func TestInsertIAMPermissionsDryRun(t *testing.T) {
 	writeFile(t, path, "# Resource: aws_test_bucket\n")
 
 	opts := InsertOptions{Root: root, Files: []string{"website/docs/r/test_bucket.html.markdown"}, DryRun: true}
-	if err := InsertIAMPermissions(testPermissionsMapFile, opts); err != nil {
+	if err := InsertIAMPermissions(loadTestPermissionsMap(t), opts); err != nil {
 		t.Fatal(err)
 	}
 
 	if got := readFile(t, path); got != "# Resource: aws_test_bucket\n" {
 		t.Errorf("dry run changed the doc:\n%s", got)
 	}
+}
+
+func loadTestPermissionsMap(t *testing.T) *model.Map {
+	t.Helper()
+
+	m, err := model.Load(testPermissionsMapFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return m
 }
 
 func writeFile(t *testing.T, path, content string) {

@@ -13,7 +13,7 @@ import (
 // ("list-resources"), ephemeral resources ("ephemeral-resources"), or actions
 // ("actions"):
 //
-//  1. Add it to PermissionsMap once sdkmap reports it.
+//  1. Add it to model.Map once sdkmap reports it.
 //  2. Define its docKind below.
 //  3. Add a function returning its docPermissions in permissions.go.
 //  4. Add its docs in allDocs.

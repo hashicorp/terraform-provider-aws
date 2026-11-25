@@ -1,10 +1,9 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package sdkmap
 
 import (
-	"encoding/json"
 	"flag"
 	"go/ast"
 	"go/parser"
@@ -15,6 +14,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 )
 
 // testdataRoot is the root of a fixture shaped like the provider repository. See testdata/README.md.
@@ -141,17 +142,16 @@ func TestMapPackages(t *testing.T) {
 			m := a.mapPackages([]*servicePackage{pkg})
 
 			// Order isn't asserted.
-			slices.SortFunc(m.Resources, func(x, y resource) int {
+			slices.SortFunc(m.Resources, func(x, y model.Resource) int {
 				return strings.Compare(x.ResourceType, y.ResourceType)
 			})
-			slices.SortFunc(m.DataSources, func(x, y dataSource) int {
+			slices.SortFunc(m.DataSources, func(x, y model.DataSource) int {
 				return strings.Compare(x.DataSourceType, y.DataSourceType)
 			})
-			got, err := json.MarshalIndent(m, "", "  ")
+			got, err := m.Encode()
 			if err != nil {
 				t.Fatal(err)
 			}
-			got = append(got, '\n')
 
 			goldenFile := filepath.Join(goldenDir, testCase.pkg+".json")
 			if *update {
@@ -1014,11 +1014,11 @@ func (*foo) ModifyPlan()  {}
 func (*foo) ImportState() {}
 `)
 
-			var r resource
+			var r model.Resource
 			a.addMethodRefs(pkg, &r, "foo", testCase.annotation)
 
 			var got []string
-			for _, ref := range r.ownFuncRefs() {
+			for _, ref := range ownFuncRefs(&r) {
 				got = append(got, ref.Expr)
 			}
 

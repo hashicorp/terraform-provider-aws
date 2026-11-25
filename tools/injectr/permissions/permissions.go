@@ -1,8 +1,8 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// Package permissions maps the AWS SDK calls in sdkmap's output to the IAM
-// permissions they require, using the AWS Service Reference.
+// Package permissions maps the AWS SDK calls found by package sdkmap to the
+// IAM permissions they require, using the AWS Service Reference.
 package permissions
 
 import (
@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform-provider-aws/tools/injectr/internal/atomicfile"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
@@ -23,16 +23,15 @@ type PermissionStats struct {
 	SDKCalls int // SDK calls processed, counting each occurrence
 	Resolved int // SDK calls mapped to IAM permissions
 
-	Unresolved map[unresolvedReason]int
+	Unresolved map[model.UnresolvedReason]int
 	// UnresolvedByPackage counts unresolved SDK calls by AWS SDK for Go v2
 	// package, e.g. "qldb".
 	UnresolvedByPackage map[string]int
 }
 
-// GeneratePermissionsMap reads the service reference data in serviceDataDir
-// and the sdkmap output at sdkMapPath, and writes the sdkmap output with IAM
-// permissions added to outPath.
-func GeneratePermissionsMap(serviceDataDir, sdkMapPath, outPath string) error {
+// GeneratePermissionsMap adds to m the IAM permissions its SDK calls require,
+// using the service references in serviceDataDir, and writes m to outPath.
+func GeneratePermissionsMap(serviceDataDir string, m *model.Map, outPath string) error {
 	start := time.Now()
 	refs, err := serviceref.LoadServiceRefs(serviceDataDir)
 	if err != nil {
@@ -42,18 +41,11 @@ func GeneratePermissionsMap(serviceDataDir, sdkMapPath, outPath string) error {
 	fmt.Printf("#### Indexed %d service references from %s (%s)\n", len(refs), serviceDataDir, since(start))
 
 	start = time.Now()
-	m, err := LoadSDKMap(sdkMapPath)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("#### Loaded %d resources and %d data sources from %s (%s)\n", len(m.Resources), len(m.DataSources), sdkMapPath, since(start))
-
-	start = time.Now()
 	stats := AddPermissions(m, index)
 	fmt.Printf("#### Added IAM permissions (%s)\n", since(start))
 
 	start = time.Now()
-	if err := WritePermissionsMap(outPath, m); err != nil {
+	if err := m.Write(outPath); err != nil {
 		return err
 	}
 	fmt.Printf("#### Wrote %s (%s)\n", outPath, since(start))
@@ -65,9 +57,9 @@ func GeneratePermissionsMap(serviceDataDir, sdkMapPath, outPath string) error {
 
 // AddPermissions sets the IAM permissions, and any unresolved SDK calls, on
 // every function reference in m.
-func AddPermissions(m *PermissionsMap, index *OperationIndex) PermissionStats {
+func AddPermissions(m *model.Map, index *OperationIndex) PermissionStats {
 	stats := PermissionStats{
-		Unresolved:          make(map[unresolvedReason]int),
+		Unresolved:          make(map[model.UnresolvedReason]int),
 		UnresolvedByPackage: make(map[string]int),
 	}
 
@@ -79,7 +71,7 @@ func AddPermissions(m *PermissionsMap, index *OperationIndex) PermissionStats {
 	return stats
 }
 
-func addPermissions(f *FuncRef, index *OperationIndex, stats *PermissionStats) {
+func addPermissions(f *model.FuncRef, index *OperationIndex, stats *PermissionStats) {
 	perms := []string{} // non-nil, so that none is written as []
 	f.UnresolvedSDKCalls = nil
 
@@ -88,7 +80,7 @@ func addPermissions(f *FuncRef, index *OperationIndex, stats *PermissionStats) {
 
 		callPerms, reason := index.Resolve(call)
 		if reason != "" {
-			f.UnresolvedSDKCalls = append(f.UnresolvedSDKCalls, UnresolvedSDKCall{SDKCall: call, Reason: reason})
+			f.UnresolvedSDKCalls = append(f.UnresolvedSDKCalls, model.UnresolvedSDKCall{SDKCall: call, Reason: reason})
 			stats.Unresolved[reason]++
 			goSDKPackage, _, _ := strings.Cut(call, ".")
 			stats.UnresolvedByPackage[goSDKPackage]++
@@ -101,17 +93,6 @@ func addPermissions(f *FuncRef, index *OperationIndex, stats *PermissionStats) {
 
 	slices.Sort(perms)
 	f.IAMPermissions = slices.Compact(perms)
-}
-
-// WritePermissionsMap writes m to path, atomically, so that an interrupted run
-// never leaves a partial file at path.
-func WritePermissionsMap(path string, m *PermissionsMap) error {
-	b, err := m.encode()
-	if err != nil {
-		return err
-	}
-
-	return atomicfile.Write(path, b)
 }
 
 func printPermissionStats(stats PermissionStats) {

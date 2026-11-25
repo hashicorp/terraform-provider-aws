@@ -15,7 +15,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 )
 
 // InsertOptions selects the documentation to add IAM permissions to.
@@ -51,13 +51,8 @@ const (
 )
 
 // InsertIAMPermissions adds an IAM Permissions section, built from the
-// permissions map at permissionsMapPath, to the documentation selected by opts.
-func InsertIAMPermissions(permissionsMapPath string, opts InsertOptions) error {
-	m, err := permissions.LoadSDKMap(permissionsMapPath)
-	if err != nil {
-		return err
-	}
-
+// permissions map m, to the documentation selected by opts.
+func InsertIAMPermissions(m *model.Map, opts InsertOptions) error {
 	docs, err := selectDocs(allDocs(m), opts)
 	if err != nil {
 		return err
@@ -89,7 +84,7 @@ func InsertIAMPermissions(permissionsMapPath string, opts InsertOptions) error {
 }
 
 // allDocs returns the documentation of every type in map.
-func allDocs(m *permissions.PermissionsMap) []doc {
+func allDocs(m *model.Map) []doc {
 	docs := make([]doc, 0, len(m.Resources)+len(m.DataSources))
 	for i := range m.Resources {
 		r := &m.Resources[i]

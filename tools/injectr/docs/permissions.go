@@ -6,7 +6,7 @@ package docs
 import (
 	"slices"
 
-	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 )
 
 // docPermissions are the IAM permissions listed in a type's documentation.
@@ -15,20 +15,20 @@ type docPermissions struct {
 	Write []string // needed to apply; includes Read. Nil for kinds that are only read, e.g. data sources.
 }
 
-func resourcePermissions(r *permissions.Resource) docPermissions {
-	var tagsList, tagsUpdate *permissions.FuncRef
+func resourcePermissions(r *model.Resource) docPermissions {
+	var tagsList, tagsUpdate *model.FuncRef
 	if r.Tags != nil {
 		tagsList, tagsUpdate = r.Tags.List, r.Tags.Update
 	}
 
-	read := []*permissions.FuncRef{r.Read, r.CustomizeDiff, r.ModifyPlan, r.Import, tagsList}
+	read := []*model.FuncRef{r.Read, r.CustomizeDiff, r.ModifyPlan, r.Import, tagsList}
 	write := append(slices.Clone(read), r.Create, r.Update, r.Delete, tagsUpdate)
 
 	return docPermissions{Read: permissionsOf(read), Write: permissionsOf(write)}
 }
 
-func dataSourcePermissions(d *permissions.DataSource) docPermissions {
-	refs := []*permissions.FuncRef{d.Read}
+func dataSourcePermissions(d *model.DataSource) docPermissions {
+	refs := []*model.FuncRef{d.Read}
 	if d.Tags != nil {
 		refs = append(refs, d.Tags.List)
 	}
@@ -38,10 +38,10 @@ func dataSourcePermissions(d *permissions.DataSource) docPermissions {
 
 // permissionsOf returns the sorted, deduplicated IAM permissions of refs,
 // including their nested functions. Nil refs are skipped.
-func permissionsOf(refs []*permissions.FuncRef) []string {
+func permissionsOf(refs []*model.FuncRef) []string {
 	var perms []string
-	var walk func([]*permissions.FuncRef)
-	walk = func(refs []*permissions.FuncRef) {
+	var walk func([]*model.FuncRef)
+	walk = func(refs []*model.FuncRef) {
 		for _, f := range refs {
 			if f == nil {
 				continue
