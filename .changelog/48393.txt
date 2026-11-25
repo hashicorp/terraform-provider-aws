@@ -1,0 +1,1 @@
+* fixed a bug in `aws_savingsplans_savings_plan` where commitment values with different decimal precision could cause inconsistent apply results after creation. ([#48393](https://github.com/hashicorp/terraform-provider-aws/issues/48393))
