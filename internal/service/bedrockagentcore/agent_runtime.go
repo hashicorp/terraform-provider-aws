@@ -18,6 +18,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -304,6 +305,22 @@ func (r *agentRuntimeResource) Schema(ctx context.Context, request resource.Sche
 						"request_header_allowlist": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
+						},
+					},
+				},
+			},
+			"resource_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"minimum_memory_in_mib": schema.Int32Attribute{
+							Required: true,
+							Validators: []validator.Int32{
+								int32validator.AtLeast(1),
+							},
 						},
 					},
 				},
@@ -987,6 +1004,7 @@ type agentRuntimeResourceModel struct {
 	PlatformVersion            types.String                                                     `tfsdk:"platform_version"`
 	ProtocolConfiguration      fwtypes.ListNestedObjectValueOf[protocolConfigurationModel]      `tfsdk:"protocol_configuration"`
 	RequestHeaderConfiguration fwtypes.ListNestedObjectValueOf[requestHeaderConfigurationModel] `tfsdk:"request_header_configuration"`
+	ResourceConfigurations     fwtypes.ListNestedObjectValueOf[resourceConfigurationModel]      `tfsdk:"resource_configuration"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
 	Tags                       tftags.Map                                                       `tfsdk:"tags"`
 	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
@@ -1487,6 +1505,10 @@ func (m requestHeaderConfigurationModel) Expand(ctx context.Context) (any, diag.
 		return &r, diags
 	}
 	return nil, diags
+}
+
+type resourceConfigurationModel struct {
+	MinimumMemoryInMiB types.Int32 `tfsdk:"minimum_memory_in_mib"`
 }
 
 type workloadIdentityDetailsModel struct {

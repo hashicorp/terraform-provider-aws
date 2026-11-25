@@ -157,6 +157,30 @@ resource "aws_bedrockagentcore_agent_runtime" "example" {
 }
 ```
 
+### Agent runtime with a resource configuration
+
+```terraform
+resource "aws_bedrockagentcore_agent_runtime" "example" {
+  agent_runtime_name = "example_agent_runtime"
+  role_arn           = aws_iam_role.example.arn
+  platform_version   = "V2"
+
+  agent_runtime_artifact {
+    container_configuration {
+      container_uri = "${aws_ecr_repository.example.repository_url}:latest"
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  resource_configuration {
+    minimum_memory_in_mib = 8192
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -177,6 +201,7 @@ The following arguments are optional:
 * `protocol_configuration` - (Optional) Protocol configuration for the agent runtime. See [`protocol_configuration`](#protocol_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `request_header_configuration` - (Optional) Configuration for HTTP request headers that will be passed through to the runtime. See [`request_header_configuration`](#request_header_configuration-block) below.
+* `resource_configuration` - (Optional) Resource configuration that gives each session of the agent runtime a committed baseline of memory and vCPU. Only supported when `platform_version` is `V2`. When omitted, sessions use the default allocation with consumption-based pricing. See [`resource_configuration`](#resource_configuration-block) below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `agent_runtime_artifact` Block
@@ -349,6 +374,12 @@ The `protocol_configuration` block supports the following:
 The `request_header_configuration` block supports the following:
 
 * `request_header_allowlist` - (Optional) List of HTTP request headers that are allowed to be passed through to the runtime.
+
+### `resource_configuration` Block
+
+The `resource_configuration` block supports the following:
+
+* `minimum_memory_in_mib` - (Required) Baseline amount of memory, in mebibytes (MiB), to allocate to each session. vCPU is allocated in proportion to memory (1 vCPU for every 4 GB), and sessions can burst up to 4 times the baseline. For example, `8192` gives each session a baseline of 8 GB of memory and 2 vCPU, and a peak of 32 GB of memory and 8 vCPU. See [Available resource configurations](https://docs.aws.amazon.com/bedrock-agentcore/latest/devguide/runtime-how-it-works.html#runtime-v2-baseline-peak-sizes) for the supported values.
 
 ## Attribute Reference
 

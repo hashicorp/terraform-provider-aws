@@ -1291,6 +1291,105 @@ func TestAccBedrockAgentCoreAgentRuntime_protocolConfiguration(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentCoreAgentRuntime_resourceConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			// Platform version V2 is only available in a subset of the Regions that support AgentCore.
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.UsEast2RegionID, endpoints.UsWest2RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_resourceConfiguration(rName, rBucketName, 4096),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"minimum_memory_in_mib": knownvalue.Int32Exact(4096),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_resourceConfiguration(rName, rBucketName, 8192),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"minimum_memory_in_mib": knownvalue.Int32Exact(8192),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				// Omitting the resource configuration returns the agent runtime to the default allocation.
+				Config: testAccAgentRuntimeConfig_platformVersion(rName, rBucketName, "V2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("resource_configuration"), knownvalue.ListSizeExact(0)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgentCoreAgentRuntime_artifactContainer(t *testing.T) {
 	ctx := acctest.Context(t)
 	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
@@ -2102,6 +2201,42 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, mountPath))
+}
+
+func testAccAgentRuntimeConfig_resourceConfiguration(rName, rBucketName string, minimumMemoryInMiB int) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  platform_version   = "V2"
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  resource_configuration {
+    minimum_memory_in_mib = %[2]d
+  }
+
+  depends_on = [aws_iam_role_policy.bucket]
+}
+`, rName, minimumMemoryInMiB))
 }
 
 func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName string) string {
