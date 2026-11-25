@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_iam_openid_connect_provider: Fix overly strict URL validation that rejects valid OIDC provider URLs without the `https://` scheme prefix
+```
