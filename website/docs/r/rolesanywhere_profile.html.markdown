@@ -52,7 +52,14 @@ This resource supports the following arguments:
 * `role_arns` - (Optional) A list of IAM roles that this profile can assume
 * `session_policy` - (Optional) A session policy that applies to the trust boundary of the vended session credentials.
 * `accept_role_session_name` - (Optional) Whether or not a custom role session name is accepted.
+* `tip_configuration` - (Optional) Trusted identity propagation (TIP) settings for the profile. When TIP is enabled, sessions from the profile include the identity from the X.509 certificate in `aws:OriginIdentity` condition keys. See [`tip_configuration`](#tip_configuration) below. To turn TIP off, set `status` to `DISABLED`; removing the block from the configuration does not change the setting in AWS.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### tip_configuration
+
+* `status` - (Required) Whether trusted identity propagation is used for the profile. Valid values: `ENABLED`, `DISABLED`.
+* `subject_source` - (Optional) The certificate field whose value becomes the `aws:OriginIdentity/Subject` condition key. Valid values: `x509Subject/CN`, `x509SAN/URI`. If not specified, AWS uses `x509Subject/CN`. The profile's attribute mappings must include a rule for this field.
+* `subject_type` - (Optional) Whether the certificates for the profile identify workloads or people. Valid values: `workload`, `user`. If not specified, sessions don't include the `aws:OriginIdentity/SubjectType` condition key.
 
 ## Attribute Reference
 

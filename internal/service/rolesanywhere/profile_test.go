@@ -249,6 +249,70 @@ func TestAccRolesAnywhereProfile_acceptRoleSessionName(t *testing.T) {
 	})
 }
 
+func TestAccRolesAnywhereProfile_tipConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	roleName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rolesanywhere_profile.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProfileDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProfileConfig_tipConfiguration(rName, roleName, "ENABLED", "x509SAN/URI", "workload"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.subject_source", "x509SAN/URI"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.subject_type", "workload"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProfileConfig_tipConfiguration(rName, roleName, "ENABLED", "x509Subject/CN", "user"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.subject_source", "x509Subject/CN"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.subject_type", "user"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_tipConfiguration(rName, roleName, "DISABLED", "x509Subject/CN", "user"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "DISABLED"),
+				),
+			},
+			{
+				Config: testAccProfileConfig_tipConfiguration(rName, roleName, "ENABLED", "x509Subject/CN", "user"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "ENABLED"),
+				),
+			},
+			{
+				// Removing the block doesn't change the setting in AWS.
+				Config: testAccProfileConfig_basic(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProfileDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).RolesAnywhereClient(ctx)
@@ -383,4 +447,21 @@ resource "aws_rolesanywhere_profile" "test" {
   accept_role_session_name = %[2]t
 }
 `, rName, acceptRoleSessionName))
+}
+
+func testAccProfileConfig_tipConfiguration(rName, roleName, status, subjectSource, subjectType string) string {
+	return acctest.ConfigCompose(
+		testAccProfileConfig_base(roleName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_profile" "test" {
+  name      = %[1]q
+  role_arns = [aws_iam_role.test.arn]
+
+  tip_configuration {
+    status         = %[2]q
+    subject_source = %[3]q
+    subject_type   = %[4]q
+  }
+}
+`, rName, status, subjectSource, subjectType))
 }

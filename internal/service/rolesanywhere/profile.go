@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -87,6 +88,32 @@ func resourceProfile() *schema.Resource {
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+				"tip_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"subject_source": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TipSubjectSource](),
+							},
+							"subject_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TipSubjectType](),
+							},
+							names.AttrStatus: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.TipStatus](),
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -127,6 +154,10 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.SessionPolicy = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("tip_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.TipConfiguration = expandTipConfiguration(v.([]any)[0].(map[string]any))
+	}
+
 	output, err := conn.CreateProfile(ctx, &input)
 
 	if err != nil {
@@ -163,6 +194,9 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("require_instance_properties", profile.RequireInstanceProperties)
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
+	if err := d.Set("tip_configuration", flattenTipConfiguration(profile.TipConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tip_configuration: %s", err)
+	}
 
 	return diags
 }
@@ -198,6 +232,12 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta any
 
 		if d.HasChange("session_policy") {
 			input.SessionPolicy = aws.String(d.Get("session_policy").(string))
+		}
+
+		if d.HasChange("tip_configuration") {
+			if v, ok := d.GetOk("tip_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.TipConfiguration = expandTipConfiguration(v.([]any)[0].(map[string]any))
+			}
 		}
 
 		_, err := conn.UpdateProfile(ctx, &input)
@@ -289,4 +329,32 @@ func enableProfile(ctx context.Context, conn *rolesanywhere.Client, id string) e
 
 	_, err := conn.EnableProfile(ctx, &input)
 	return err
+}
+
+func expandTipConfiguration(tfMap map[string]any) *awstypes.TipConfiguration {
+	apiObject := &awstypes.TipConfiguration{
+		Status: awstypes.TipStatus(tfMap[names.AttrStatus].(string)),
+	}
+
+	if v, ok := tfMap["subject_source"].(string); ok && v != "" {
+		apiObject.SubjectSource = awstypes.TipSubjectSource(v)
+	}
+
+	if v, ok := tfMap["subject_type"].(string); ok && v != "" {
+		apiObject.SubjectType = awstypes.TipSubjectType(v)
+	}
+
+	return apiObject
+}
+
+func flattenTipConfiguration(apiObject *awstypes.TipConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	return []any{map[string]any{
+		"subject_source": apiObject.SubjectSource,
+		"subject_type":   apiObject.SubjectType,
+		names.AttrStatus: apiObject.Status,
+	}}
 }
