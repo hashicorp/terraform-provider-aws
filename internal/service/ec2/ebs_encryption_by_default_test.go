@@ -22,8 +22,8 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
-			"serial": testAccEC2EBSEBSEncryptionByDefault_identitySerial,
-			"v6_74_0": testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
+			"serial":        testAccEC2EBSEBSEncryptionByDefault_identitySerial,
+			"v6_74_0":       testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
