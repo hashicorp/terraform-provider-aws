@@ -56,6 +56,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "profile_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "revision"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 					resource.TestCheckResourceAttr(resourceName, "user_status", "ENABLED"),

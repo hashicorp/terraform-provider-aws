@@ -107,6 +107,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `external_ids` - A list of identifiers issued to this resource by an external identity provider.
     * `id` - The identifier issued to this resource by an external identity provider.
     * `issuer` - The issuer for an external identifier.
+* `revision` - Revision of the user in the identity store. Terraform uses this value to detect concurrent modifications.
 * `user_id` - The identifier for this user in the identity store.
 * `user_status` - The current status of the user account.
 
