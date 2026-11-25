@@ -158,9 +158,13 @@ func TestAccIAMSAMLProvider_contextProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "subject"),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_type_value", "user"),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.source_key", names.AttrEmail),
-					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.target_key", "Email"),
-					resource.TestCheckResourceAttrSet(resourceName, "saml_key_hashes.#"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": names.AttrEmail,
+						"target_key": "Email",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "saml_key_hashes.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "saml_key_hashes.0.issuer_url"),
+					resource.TestCheckResourceAttr(resourceName, "saml_key_hashes.0.key_hashes.#", "1"),
 				),
 			},
 			{
@@ -224,11 +228,94 @@ func TestAccIAMSAMLProvider_identityCenterInstance(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccSAMLProviderConfig_identityCenterInstanceSubject(rName, idpEntityId, "nameid"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSAMLProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_center_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "nameid"),
+				),
+			},
+			{
 				Config: testAccSAMLProviderConfig_basic(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMSAMLProvider_contextProviderKeyDefinitions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName(t))
+	resourceName := "aws_iam_saml_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSAMLProviderConfig_contextProviderKeyDefinitions(rName, idpEntityId, `
+    key_definition {
+      source_key = "email"
+    }
+
+    key_definition {
+      source_key = "department"
+      target_key = "Department"
+    }
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSAMLProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": names.AttrEmail,
+						"target_key": names.AttrEmail, // Defaults to the source key when omitted.
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "department",
+						"target_key": "Department",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "groups",
+						"target_key": "Groups",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSAMLProviderConfig_contextProviderKeyDefinitions(rName, idpEntityId, `
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+
+    key_definition {
+      source_key = "title"
+      target_key = "Title"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSAMLProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "title",
+						"target_key": "Title",
+					}),
 				),
 			},
 		},
@@ -338,6 +425,38 @@ resource "aws_iam_saml_provider" "test" {
   }
 }
 `, rName, idpEntityId, subjectSourceKey, subjectTypeValue)
+}
+
+func testAccSAMLProviderConfig_contextProviderKeyDefinitions(rName, idpEntityId, keyDefinitions string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_saml_provider" "test" {
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
+
+  context_provider {
+    subject_source_key = "subject"
+    subject_type_value = "user"
+%[3]s  }
+}
+`, rName, idpEntityId, keyDefinitions)
+}
+
+func testAccSAMLProviderConfig_identityCenterInstanceSubject(rName, idpEntityId, subjectSourceKey string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_saml_provider" "test" {
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  context_provider {
+    subject_source_key = %[3]q
+    subject_type_value = "user"
+  }
+}
+`, rName, idpEntityId, subjectSourceKey)
 }
 
 func testAccSAMLProviderConfig_identityCenterInstance(rName, idpEntityId string) string {

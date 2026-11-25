@@ -26,6 +26,14 @@ func validResourceName(max int) schema.SchemaValidateFunc {
 	)
 }
 
+// validContextProviderKey validates the keys of a trusted identity propagation
+// context provider: ASCII letters, numbers, single spaces and `_.:/=+-@#`, with
+// no leading, trailing or consecutive spaces.
+var validContextProviderKey = lazyvalidation.StringMatch(
+	`^[0-9A-Za-z_.:/=+@#-]+( [0-9A-Za-z_.:/=+@#-]+)*$`,
+	"can only contain ASCII letters, numbers, single spaces, and the characters _ . : / = + - @ #, and can't start or end with a space",
+)
+
 var validAccountAlias = validation.All(
 	validation.StringLenBetween(3, 63),
 	lazyvalidation.StringMatch(`^[0-9a-z][0-9a-z-]+$`, "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
