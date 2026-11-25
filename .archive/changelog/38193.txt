@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_docdb_cluster: Use `master_password` on resource Create when `snapshot_identifier` is configured
-```

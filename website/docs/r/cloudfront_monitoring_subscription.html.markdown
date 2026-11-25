@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront monitoring subscription using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront monitoring subscription using the ID. For example:
 
 ```terraform
 import {
@@ -56,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudFront monitoring subscription using the id. For example:
+Using `terraform import`, import CloudFront monitoring subscription using the ID. For example:
 
 ```console
 % terraform import aws_cloudfront_monitoring_subscription.example E3QYSUHO4VYRGB

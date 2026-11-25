@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -382,6 +383,14 @@ func TestAccVPCSecurityGroupRule_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceSecurityGroupRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -1611,11 +1620,13 @@ func testAccSecurityGroupRuleImportStateIdFunc(resourceName string) resource.Imp
 		}
 
 		var parts []string
-		parts = append(parts, sgID)
-		parts = append(parts, ruleType)
-		parts = append(parts, protocol)
-		parts = append(parts, fromPort)
-		parts = append(parts, toPort)
+		parts = append(parts,
+			sgID,
+			ruleType,
+			protocol,
+			fromPort,
+			toPort,
+		)
 		parts = append(parts, *cidrs...)
 		parts = append(parts, *ipv6CIDRs...)
 		parts = append(parts, *prefixes...)

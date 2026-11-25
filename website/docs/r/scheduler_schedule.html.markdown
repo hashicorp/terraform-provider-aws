@@ -135,24 +135,24 @@ The following arguments are optional:
 * `tags` - (Optional) The metadata that you apply to the task. Each tag consists of a key and an optional value. For more information, see [`RunTask`](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_RunTask.html) in the Amazon ECS API Reference.
 * `task_count` - (Optional) The number of tasks to create. Ranges from `1` (default) to `10`.
 
-##### capacity_provider_strategy Configuration Block
+#### capacity_provider_strategy Configuration Block
 
 * `base` - (Optional) How many tasks, at a minimum, to run on the specified capacity provider. Only one capacity provider in a capacity provider strategy can have a base defined. Ranges from `0` (default) to `100000`.
 * `capacity_provider` - (Required) Short name of the capacity provider.
 * `weight` - (Optional) Designates the relative percentage of the total number of tasks launched that should use the specified capacity provider. The weight value is taken into consideration after the base value, if defined, is satisfied. Ranges from from `0` to `1000`.
 
-##### network_configuration Configuration Block
+#### network_configuration Configuration Block
 
 * `assign_public_ip` - (Optional) Specifies whether the task's elastic network interface receives a public IP address. This attribute is a boolean type, where `true` maps to `ENABLED` and `false` to `DISABLED`. You can specify `true` only when the `launch_type` is set to `FARGATE`.
 * `security_groups` - (Optional) Set of 1 to 5 Security Group ID-s to be associated with the task. These security groups must all be in the same VPC.
 * `subnets` - (Optional) Set of 1 to 16 subnets to be associated with the task. These subnets must all be in the same VPC.
 
-##### placement_constraints Configuration Block
+#### placement_constraints Configuration Block
 
 * `expression` - (Optional) A cluster query language expression to apply to the constraint. You cannot specify an expression if the constraint type is `distinctInstance`. For more information, see [Cluster query language](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/cluster-query-language.html) in the Amazon ECS Developer Guide.
 * `type` - (Required) The type of constraint. One of: `distinctInstance`, `memberOf`.
 
-##### placement_strategy Configuration Block
+#### placement_strategy Configuration Block
 
 * `field` - (Optional) The field to apply the placement strategy against.
 * `type` - (Required) The type of placement strategy. One of: `random`, `spread`, `binpack`.
@@ -175,7 +175,7 @@ The following arguments are optional:
 
 * `pipeline_parameter` - (Optional) Set of up to 200 parameter names and values to use when executing the SageMaker AI Model Building Pipeline. Detailed below.
 
-##### pipeline_parameter Configuration Block
+#### pipeline_parameter Configuration Block
 
 * `name` - (Required) Name of parameter to start execution of a SageMaker AI Model Building Pipeline.
 * `value` - (Required) Value of parameter to start execution of a SageMaker AI Model Building Pipeline.
@@ -192,6 +192,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the schedule.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_scheduler_schedule.example
+  identity = {
+    group_name = "my-schedule-group"
+    name       = "my-schedule"
+  }
+}
+
+resource "aws_scheduler_schedule" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `group_name` - (String) Name of the schedule group.
+* `name` - (String) Name of the schedule.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import schedules using the combination `group_name/name`. For example:
 

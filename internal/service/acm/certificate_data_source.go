@@ -34,59 +34,61 @@ func dataSourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificate: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrCertificateChain: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDomain: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
-			},
-			"key_types": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.KeyAlgorithm](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrMostRecent: {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"statuses": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags: {
-				Type:         schema.TypeMap,
-				Optional:     true,
-				Computed:     true,
-				Elem:         &schema.Schema{Type: schema.TypeString},
-				AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
-			},
-			"types": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+				names.AttrCertificate: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrCertificateChain: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDomain: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
+				},
+				"key_types": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.KeyAlgorithm](),
+					},
+				},
+				names.AttrMostRecent: {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"statuses": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags: {
+					Type:         schema.TypeMap,
+					Optional:     true,
+					Computed:     true,
+					Elem:         &schema.Schema{Type: schema.TypeString},
+					AtLeastOneOf: []string{names.AttrDomain, names.AttrTags},
+				},
+				"types": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }
@@ -125,20 +127,36 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	const (
 		timeout = 1 * time.Minute
 	)
-	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout,
-		func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
-			output, err := findCertificates(ctx, conn, &input, f)
-			switch {
-			case err != nil:
-				return nil, err
-			case len(output) == 0:
-				return nil, tfresource.NewEmptyResultError()
-			default:
-				return output, nil
-			}
-		},
-	)
+	tagsToMatch := keyValueTags(ctx, getTagsIn(ctx))
+	certificateSummaries, err := tfresource.RetryWhenNotFound(ctx, timeout, func(ctx context.Context) ([]awstypes.CertificateSummary, error) {
+		output, err := findCertificates(ctx, conn, &input, f)
+		if err != nil {
+			return nil, err
+		}
 
+		if len(output) > 0 && len(tagsToMatch) > 0 {
+			matches := make([]awstypes.CertificateSummary, 0, len(output))
+			for _, certificate := range output {
+				arn := aws.ToString(certificate.CertificateArn)
+				tags, err := listTags(ctx, conn, arn)
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+					continue
+				}
+				if err != nil {
+					return nil, fmt.Errorf("listing tags for ACM Certificate (%s): %w", arn, err)
+				}
+				if tags.ContainsAll(tagsToMatch) {
+					matches = append(matches, certificate)
+				}
+			}
+			output = matches
+		}
+
+		if len(output) == 0 {
+			return nil, tfresource.NewEmptyResultError()
+		}
+		return output, nil
+	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 	}
@@ -147,36 +165,17 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	for _, certificateSummary := range certificateSummaries {
 		certificateARN := aws.ToString(certificateSummary.CertificateArn)
 		certificate, err := findCertificateByARN(ctx, conn, certificateARN)
-
 		if retry.NotFound(err) {
 			continue
 		}
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", certificateARN, err)
 		}
-
-		if tagsToMatch := getTagsIn(ctx); len(tagsToMatch) > 0 {
-			tags, err := listTags(ctx, conn, certificateARN)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				continue
-			}
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", certificateARN, err)
-			}
-
-			if !tags.ContainsAll(keyValueTags(ctx, tagsToMatch)) {
-				continue
-			}
-		}
-
 		certificates = append(certificates, certificate)
 	}
 
 	if len(certificates) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no matching ACM Certificate found")
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", tfresource.NewEmptyResultError())
 	}
 
 	var matchedCertificate *awstypes.CertificateDetail
@@ -191,7 +190,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			}
 		}
 	} else if n := len(certificates); n > 1 {
-		return sdkdiag.AppendErrorf(diags, "%d matching ACM Certificates found", n)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", tfresource.NewTooManyResultsError(n, nil))
 	} else {
 		matchedCertificate = certificates[0]
 	}

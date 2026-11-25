@@ -20,6 +20,31 @@ resource "aws_ivs_channel" "example" {
 }
 ```
 
+### With Recording Configuration
+
+This example records broadcasts from the channel to an S3 bucket. To start streaming, configure streaming software with the channel's `ingest_endpoint` and the stream key from the [`aws_ivs_stream_key` data source](/docs/providers/aws/d/ivs_stream_key.html).
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket_prefix = "example-ivs-recordings-"
+}
+
+resource "aws_ivs_recording_configuration" "example" {
+  name = "example"
+
+  destination_configuration {
+    s3 {
+      bucket_name = aws_s3_bucket.example.id
+    }
+  }
+}
+
+resource "aws_ivs_channel" "example" {
+  name                        = "example"
+  recording_configuration_arn = aws_ivs_recording_configuration.example.arn
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
@@ -30,7 +55,7 @@ The following arguments are optional:
 * `name` - (Optional) Channel name.
 * `recording_configuration_arn` - (Optional) Recording configuration ARN.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `STANDARD`, `BASIC`.
+* `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `STANDARD`, `BASIC`, `ADVANCED_SD`, `ADVANCED_HD`.
 
 ## Attribute Reference
 
@@ -70,7 +95,7 @@ resource "aws_ivs_channel" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS channel.
+- `arn` (String) ARN of the IVS channel.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Channel using the ARN. For example:
 

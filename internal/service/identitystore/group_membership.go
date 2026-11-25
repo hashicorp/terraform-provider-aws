@@ -22,8 +22,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
+// @IdentityAttribute("identity_store_id")
+// @IdentityAttribute("membership_id")
+// @ImportIDHandler("groupMembershipImportID")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/identitystore;identitystore.DescribeGroupMembershipOutput")
+// @Testing(preCheckWithRegion="acctest.PreCheckSSOAdminInstancesWithRegion")
+// @Testing(preIdentityVersion="v6.73.0")
 // @SDKResource("aws_identitystore_group_membership", name="Group Membership")
 func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
@@ -31,33 +38,31 @@ func resourceGroupMembership() *schema.Resource {
 		ReadWithoutTimeout:   resourceGroupMembershipRead,
 		DeleteWithoutTimeout: resourceGroupMembershipDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
-
-		Schema: map[string]*schema.Schema{
-			"group_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 47),
-			},
-			"identity_store_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 36),
-			},
-			"member_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 47),
-			},
-			"membership_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"group_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 47),
+				},
+				"identity_store_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 36),
+				},
+				"member_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 47),
+				},
+				"membership_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -105,17 +110,25 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading IdentityStore Group Membership (%s): %s", d.Id(), err)
 	}
 
-	memberId, err := userIDFromMemberID(out.MemberId)
-	if err != nil {
+	if err := resourceGroupMembershipFlatten(d, out); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	return diags
+}
+
+func resourceGroupMembershipFlatten(d *schema.ResourceData, out *identitystore.DescribeGroupMembershipOutput) error {
+	memberIDValue, err := userIDFromMemberID(out.MemberId)
+	if err != nil {
+		return fmt.Errorf("flattening group member ID: %w", err)
 	}
 
 	d.Set("group_id", out.GroupId)
 	d.Set("identity_store_id", out.IdentityStoreId)
-	d.Set("member_id", memberId)
+	d.Set("member_id", memberIDValue)
 	d.Set("membership_id", out.MembershipId)
 
-	return diags
+	return nil
 }
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -199,4 +212,28 @@ func findGroupMembership(ctx context.Context, conn *identitystore.Client, input 
 	}
 
 	return output, nil
+}
+
+var _ inttypes.SDKv2ImportID = groupMembershipImportID{}
+
+type groupMembershipImportID struct{}
+
+func (groupMembershipImportID) Create(d *schema.ResourceData) string {
+	return groupMembershipCreateResourceID(
+		d.Get("identity_store_id").(string),
+		d.Get("membership_id").(string),
+	)
+}
+
+func (groupMembershipImportID) Parse(id string) (string, map[string]any, error) {
+	identityStoreID, membershipID, err := groupMembershipParseResourceID(id)
+	if err != nil {
+		return "", nil, err
+	}
+
+	result := map[string]any{
+		"identity_store_id": identityStoreID,
+		"membership_id":     membershipID,
+	}
+	return id, result, nil
 }

@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -33,7 +32,12 @@ import (
 
 // @FrameworkResource("aws_cloudwatch_log_delivery_source", name="Delivery Source")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(importStateIdAttribute="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.DeliverySource")
+// @Testing(serialize=true)
 func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliverySourceResource{}
 
@@ -42,6 +46,7 @@ func newDeliverySourceResource(context.Context) (resource.ResourceWithConfigure,
 
 type deliverySourceResource struct {
 	framework.ResourceWithModel[deliverySourceResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *deliverySourceResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -94,7 +99,8 @@ func (r *deliverySourceResource) Create(ctx context.Context, request resource.Cr
 
 	conn := r.Meta().LogsClient(ctx)
 
-	input := cloudwatchlogs.PutDeliverySourceInput{}
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input cloudwatchlogs.PutDeliverySourceInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -106,7 +112,7 @@ func (r *deliverySourceResource) Create(ctx context.Context, request resource.Cr
 	output, err := conn.PutDeliverySource(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Source (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Source (%s)", name), err.Error())
 
 		return
 	}
@@ -127,7 +133,8 @@ func (r *deliverySourceResource) Read(ctx context.Context, request resource.Read
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findDeliverySourceByName(ctx, conn, data.Name.ValueString())
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	output, err := findDeliverySourceByName(ctx, conn, name)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -137,7 +144,7 @@ func (r *deliverySourceResource) Read(ctx context.Context, request resource.Read
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Source (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Source (%s)", name), err.Error())
 
 		return
 	}
@@ -167,23 +174,21 @@ func (r *deliverySourceResource) Delete(ctx context.Context, request resource.De
 
 	conn := r.Meta().LogsClient(ctx)
 
-	_, err := conn.DeleteDeliverySource(ctx, &cloudwatchlogs.DeleteDeliverySourceInput{
-		Name: fwflex.StringFromFramework(ctx, data.Name),
-	})
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	input := cloudwatchlogs.DeleteDeliverySourceInput{
+		Name: aws.String(name),
+	}
+	_, err := conn.DeleteDeliverySource(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery Source (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery Source (%s)", name), err.Error())
 
 		return
 	}
-}
-
-func (r *deliverySourceResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findDeliverySourceByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.DeliverySource, error) {

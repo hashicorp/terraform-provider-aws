@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOrganizationsPoliciesForTargetDataSource_basic(t *testing.T) {
+func testAccPoliciesForTargetDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	datasourceName := "data.aws_organizations_policies_for_target.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)

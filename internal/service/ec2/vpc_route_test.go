@@ -58,6 +58,7 @@ func TestAccVPCRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "igw_firewall.#", "0"),
 					acctest.CheckResourceAttrFormat(ctx, resourceName, names.AttrID, fmt.Sprintf("r-{route_table_id}%d", create.StringHashcode(destinationCidr))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceID, ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
@@ -101,6 +102,14 @@ func TestAccVPCRoute_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -127,6 +136,14 @@ func TestAccVPCRoute_Disappears_routeTable(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceRouteTable(), rtResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rtResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(rtResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

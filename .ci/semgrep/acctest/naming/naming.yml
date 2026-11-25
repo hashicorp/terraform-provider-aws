@@ -16,6 +16,19 @@ rules:
           # regex: "^testAccCheckDestroy"
     severity: WARNING
 
+  - id: destroy-check-with-meta
+    languages: [go]
+    message: The check destroy with meta function should match the pattern "testAccCheck<Resource>DestroyWithMeta".
+    paths:
+      include:
+        - "/internal/**/*_test.go"
+    patterns:
+      - pattern: func $FUNCNAME(...) { ... }
+      - metavariable-regex:
+          metavariable: "$FUNCNAME"
+          regex: '^testAccCheck[a-zA-Z]+Destroy(?!With)Meta'
+    severity: WARNING
+
   - id: destroy-check-with-provider
     languages: [go]
     message: The check destroy with provider function should match the pattern "testAccCheck<Resource>DestroyWithProvider".
@@ -52,7 +65,7 @@ rules:
       - pattern: func $FUNCNAME(...) { ... }
       - metavariable-regex:
           metavariable: "$FUNCNAME"
-          regex: "^testAccCheck[a-zA-Z]+Destroy(?!WithProvider)(?!WithRegion)"
+          regex: "^testAccCheck[a-zA-Z]+Destroy(?!WithMeta)(?!WithProvider)(?!WithRegion)"
       - pattern-not: func $FUNCNAME(s *terraform.State) error { ... }
       - pattern-not: func $FUNCNAME(...) resource.TestCheckFunc { ... }
     severity: WARNING

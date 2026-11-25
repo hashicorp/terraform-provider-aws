@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/guardduty/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,92 +48,94 @@ func resourceFilter() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAction: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.FilterAction](),
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
-			},
-			"detector_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"finding_criteria": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"criterion": {
-							Type:     schema.TypeSet,
-							MinItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									names.AttrField: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"greater_than": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"greater_than_or_equal": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"less_than": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"less_than_or_equal": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidStringDateOrPositiveInt,
-									},
-									"matches": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 5,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 512),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAction: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.FilterAction](),
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 512),
+				},
+				"detector_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"finding_criteria": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"criterion": {
+								Type:     schema.TypeSet,
+								MinItems: 1,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem:     &schema.Schema{Type: schema.TypeString},
 										},
-									},
-									"not_equals": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"not_matches": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 1,
-										MaxItems: 5,
-										Elem: &schema.Schema{
+										names.AttrField: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"greater_than": {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringLenBetween(1, 512),
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"greater_than_or_equal": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"less_than": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"less_than_or_equal": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: verify.ValidStringDateOrPositiveInt,
+										},
+										"matches": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 5,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 512),
+											},
+										},
+										"not_equals": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"not_matches": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 5,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringLenBetween(1, 512),
+											},
 										},
 									},
 								},
@@ -141,23 +143,22 @@ func resourceFilter() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 64),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`),
-						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
-				),
-			},
-			"rank": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 64),
+						lazyvalidation.StringMatch(`^[a-zA-Z0-9_.-]+$`, "only alphanumeric characters, hyphens, underscores, and periods are allowed"),
+					),
+				},
+				"rank": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+			}
 		},
 	}
 }

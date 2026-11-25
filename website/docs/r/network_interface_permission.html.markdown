@@ -35,16 +35,23 @@ resource "aws_network_interface_permission" "example" {
 
 This resource supports the following arguments:
 
+* `aws_account_id` - (Required) Amazon Web Services account ID.
+* `network_interface_id` - (Required) ID of the network interface.
+* `permission` - (Required) Type of permission to grant. Valid values are `INSTANCE-ATTACH` or `EIP-ASSOCIATE`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `network_interface_id` - (Required) The ID of the network interface.
-* `aws_account_id` - (Required) The Amazon Web Services account ID.
-* `permission` - (Required) The type of permission to grant. Valid values are `INSTANCE-ATTACH` or `EIP-ASSOCIATE`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `network_interface_permission_id` - ENI permission ID.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

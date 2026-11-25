@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_identitystore_group: Allow `display_name` to be updated in-place
-```

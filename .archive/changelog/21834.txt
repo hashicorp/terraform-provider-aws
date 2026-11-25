@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_batch_job_definition: Suppress unnecessary differences in `container_properties.environment`
-```

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_sagemaker_notebook_instance: Support `notebook-al2-v3` value for `platform_identifier`
-```

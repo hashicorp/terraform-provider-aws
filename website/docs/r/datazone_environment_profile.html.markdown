@@ -110,7 +110,7 @@ resource "aws_datazone_environment_profile" "test" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aws_account_id` - (Required) -  Id of the AWS account being used.
+* `aws_account_id` - (Required) -  ID of the AWS account being used.
 * `aws_account_region` - (Required) -  Desired region for environment profile.
 * `domain_identifier` - (Required) -  Domain Identifier for environment profile.
 * `name` - (Required) -  Name of the environment profile.
@@ -131,6 +131,34 @@ This resource exports the following attributes in addition to the arguments abov
 * `updated_at` - Time of last update to environment profile.
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_datazone_environment_profile.example
+  identity = {
+    domain_identifier = "domain-id-12345678"
+    id                = "environment_profile-id-12345678"
+  }
+}
+
+resource "aws_datazone_environment_profile" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `domain_identifier` - (String) Identifier of the DataZone domain.
+* `id` - (String) ID of the environment profile.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Environment Profile using a comma-delimited string combining `id` and `domain_identifier`. For example:
 

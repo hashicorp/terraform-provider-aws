@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	"github.com/aws/aws-sdk-go-v2/service/codegurureviewer/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,222 +48,224 @@ func resourceRepositoryAssociation() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrAssociationID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"connection_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"kms_key_details": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Show difference for new resources
-					if d.Id() == "" {
-						return false
-					}
-					// Show difference if existing state reflects different default type
-					_, defaultEncryptionOption := d.GetChange("kms_key_details.0.encryption_option")
-					if defaultEncryptionOption := types.EncryptionOption(defaultEncryptionOption.(string)); defaultEncryptionOption != types.EncryptionOptionAoCmk {
-						return defaultEncryptionOption == types.EncryptionOptionAoCmk
-					}
-					return true
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"encryption_option": {
-							Type:             schema.TypeString,
-							ForceNew:         true,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
-						},
-						names.AttrKMSKeyID: {
-							Type:     schema.TypeString,
-							ForceNew: true,
-							Optional: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 2048),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z-]+`), ""),
-							),
-						},
+				names.AttrAssociationID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"connection_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"kms_key_details": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					MaxItems: 1,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// Show difference for new resources
+						if d.Id() == "" {
+							return false
+						}
+						// Show difference if existing state reflects different default type
+						_, defaultEncryptionOption := d.GetChange("kms_key_details.0.encryption_option")
+						if defaultEncryptionOption := types.EncryptionOption(defaultEncryptionOption.(string)); defaultEncryptionOption != types.EncryptionOptionAoCmk {
+							return defaultEncryptionOption == types.EncryptionOptionAoCmk
+						}
+						return true
 					},
-				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwner: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"provider_type": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"repository": {
-				Type:     schema.TypeList,
-				Required: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bitbucket": {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"connection_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-									names.AttrOwner: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
-										),
-									},
-								},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"encryption_option": {
+								Type:             schema.TypeString,
+								ForceNew:         true,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.EncryptionOption](),
 							},
-						},
-						"codecommit": {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-								},
-							},
-						},
-						"github_enterprise_server": {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"connection_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-									names.AttrOwner: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
-										),
-									},
-								},
-							},
-						},
-						names.AttrS3Bucket: {
-							Type:     schema.TypeList,
-							ForceNew: true,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrBucketName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 63),
-											validation.StringMatch(regexache.MustCompile(`^\S(.*\S)?$`), ""),
-										),
-									},
-									names.AttrName: {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`^\S[\w.-]*$`), ""),
-										),
-									},
-								},
+							names.AttrKMSKeyID: {
+								Type:     schema.TypeString,
+								ForceNew: true,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 2048),
+									lazyvalidation.StringMatch(`[0-9A-Za-z-]+`, ""),
+								),
 							},
 						},
 					},
 				},
-			},
-			"s3_repository_details": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrBucketName: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"code_artifacts": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"build_artifacts_object_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrOwner: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"provider_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"repository": {
+					Type:     schema.TypeList,
+					Required: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bitbucket": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"connection_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
+											),
+										},
+										names.AttrOwner: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												lazyvalidation.StringMatch(`^\S(.*\S)?$`, ""),
+											),
+										},
 									},
-									"source_code_artifacts_object_key": {
-										Type:     schema.TypeString,
-										Computed: true,
+								},
+							},
+							"codecommit": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
+											),
+										},
+									},
+								},
+							},
+							"github_enterprise_server": {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"connection_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
+											),
+										},
+										names.AttrOwner: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												lazyvalidation.StringMatch(`^\S(.*\S)?$`, ""),
+											),
+										},
+									},
+								},
+							},
+							names.AttrS3Bucket: {
+								Type:     schema.TypeList,
+								ForceNew: true,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrBucketName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 63),
+												lazyvalidation.StringMatch(`^\S(.*\S)?$`, ""),
+											),
+										},
+										names.AttrName: {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 100),
+												lazyvalidation.StringMatch(`^\S[\w.-]*$`, ""),
+											),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrState: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"state_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"s3_repository_details": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrBucketName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"code_artifacts": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"build_artifacts_object_key": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"source_code_artifacts_object_key": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				names.AttrState: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"state_reason": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+			}
 		},
 	}
 }

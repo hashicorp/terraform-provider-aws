@@ -82,114 +82,117 @@ func resourceVPC() *schema.Resource {
 
 		// Keep in sync with aws_default_vpc's schema.
 		// See notes in default_vpc.go.
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"assign_generated_ipv6_cidr_block": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"ipv6_ipam_pool_id"},
-			},
-			names.AttrCIDRBlock: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{"ipv4_netmask_length"},
-			},
-			"default_network_acl_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"default_security_group_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"enable_dns_hostnames": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"enable_dns_support": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"enable_network_address_usage_metrics": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"instance_tenancy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      awstypes.TenancyDefault,
-				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.TenancyDefault, awstypes.TenancyDedicated), false),
-			},
-			"ipv4_ipam_pool_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"ipv4_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
-				ConflictsWith: []string{names.AttrCIDRBlock},
-				RequiredWith:  []string{"ipv4_ipam_pool_id"},
-			},
-			"ipv6_association_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ipv6_cidr_block": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-				ValidateFunc:  validVPCIPv6CIDRBlock,
-			},
-			"ipv6_cidr_block_network_border_group": {
-				Type:         schema.TypeString,
-				Computed:     true,
-				Optional:     true,
-				RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_ipam_pool_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
-			},
-			"ipv6_netmask_length": {
-				Type:          schema.TypeInt,
-				Optional:      true,
-				ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
-				ConflictsWith: []string{"ipv6_cidr_block"},
-				RequiredWith:  []string{"ipv6_ipam_pool_id"},
-			},
-			"main_route_table_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrOwnerID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"assign_generated_ipv6_cidr_block": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"ipv6_ipam_pool_id"},
+				},
+				names.AttrCIDRBlock: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{"ipv4_netmask_length"},
+				},
+				"default_network_acl_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"default_security_group_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"enable_dns_hostnames": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"enable_dns_support": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"enable_network_address_usage_metrics": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"instance_tenancy": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      awstypes.TenancyDefault,
+					ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.TenancyDefault, awstypes.TenancyDedicated), false),
+				},
+				"ipv4_ipam_pool_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"ipv4_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ForceNew:      true,
+					ValidateFunc:  validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
+					ConflictsWith: []string{names.AttrCIDRBlock},
+					RequiredWith:  []string{"ipv4_ipam_pool_id"},
+				},
+				"ipv6_association_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ipv6_cidr_block": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Computed:      true,
+					ConflictsWith: []string{"ipv6_netmask_length", "assign_generated_ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+					ValidateFunc:  validVPCIPv6CIDRBlock,
+				},
+				"ipv6_cidr_block_network_border_group": {
+					Type:         schema.TypeString,
+					Computed:     true,
+					Optional:     true,
+					RequiredWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_ipam_pool_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"assign_generated_ipv6_cidr_block"},
+				},
+				"ipv6_netmask_length": {
+					Type:          schema.TypeInt,
+					Optional:      true,
+					ValidateFunc:  validation.IntInSlice(vpcCIDRValidIPv6Netmasks),
+					ConflictsWith: []string{"ipv6_cidr_block"},
+					RequiredWith:  []string{"ipv6_ipam_pool_id"},
+				},
+				"main_route_table_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"network_firewall_association": vpcNetworkFirewallAssociationSchema(),
+				names.AttrOwnerID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+			}
 		},
 	}
 }
@@ -728,6 +731,49 @@ func modifyVPCTenancy(ctx context.Context, conn *ec2.Client, vpcID string, v str
 	return nil
 }
 
+// vpcNetworkFirewallAssociationSchema describes the Automated Internet Firewall that AWS Network
+// Security Manager sets up between a VPC and its internet gateway. It is read-only.
+func vpcNetworkFirewallAssociationSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"firewall_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"firewall_onboarding_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
+}
+
+func flattenNetworkFirewallAssociations(apiObjects []awstypes.NetworkFirewallAssociation) []any {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []any
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			"firewall_arn":               aws.ToString(apiObject.FirewallArn),
+			"firewall_mode":              apiObject.FirewallMode,
+			"firewall_onboarding_status": apiObject.FirewallOnboardingStatus,
+		})
+	}
+
+	return tfList
+}
+
 func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awstypes.Vpc, d *schema.ResourceData) error {
 	conn := client.EC2Client(ctx)
 	ownerID := aws.ToString(vpc.OwnerId)
@@ -735,6 +781,9 @@ func resourceVPCFlatten(ctx context.Context, client *conns.AWSClient, vpc *awsty
 	d.Set(names.AttrCIDRBlock, vpc.CidrBlock)
 	d.Set("dhcp_options_id", vpc.DhcpOptionsId)
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
+	if err := d.Set("network_firewall_association", flattenNetworkFirewallAssociations(vpc.NetworkFirewallAssociations)); err != nil {
+		return fmt.Errorf("setting network_firewall_association: %w", err)
+	}
 	d.Set(names.AttrOwnerID, ownerID)
 
 	if v, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func(ctx context.Context) (bool, error) {

@@ -5,11 +5,11 @@ package fis
 
 // Exports for use in tests only.
 var (
-	ResourceExperimentTemplate = resourceExperimentTemplate
-
-	FindExperimentTemplateByID = findExperimentTemplateByID
-
+	ResourceExperimentTemplate         = resourceExperimentTemplate
 	ResourceTargetAccountConfiguration = newResourceTargetAccountConfiguration
+	ResourceSafetyLeverState           = newSafetyLeverStateResource
 
+	FindExperimentTemplateByID         = findExperimentTemplateByID
 	FindTargetAccountConfigurationByID = findTargetAccountConfigurationByID
+	FindSafetyLever                    = findSafetyLever
 )

@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_ec2_client_vpn_endpoint
-```

@@ -9,14 +9,18 @@ import (
 	"log"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	sweepfw "github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_glue_catalog", sweepCatalogs)
 	awsv2.Register("aws_glue_catalog_database", sweepCatalogDatabases,
 		"aws_datazone_environment",
 	)
@@ -31,6 +35,35 @@ func RegisterSweepers() {
 	awsv2.Register("aws_glue_security_configuration", sweepSecurityConfigurations)
 	awsv2.Register("aws_glue_trigger", sweepTriggers)
 	awsv2.Register("aws_glue_workflow", sweepWorkflows)
+}
+
+func sweepCatalogs(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.GlueClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	input := &glue.GetCatalogsInput{
+		Recursive: true,
+	}
+
+	for {
+		output, err := conn.GetCatalogs(ctx, input)
+		if err != nil {
+			return nil, smarterr.NewError(err)
+		}
+
+		for _, v := range output.CatalogList {
+			sweepResources = append(sweepResources, sweepfw.NewSweepResource(newCatalogResource, client,
+				sweepfw.NewAttribute(names.AttrID, aws.ToString(v.CatalogId))),
+			)
+		}
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return sweepResources, nil
 }
 
 func sweepCatalogDatabases(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {

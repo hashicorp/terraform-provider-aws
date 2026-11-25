@@ -34,7 +34,7 @@ func TestAccEC2InstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceType, resourceName, names.AttrInstanceType),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
-					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(datasourceName, names.AttrOutpostARN, ""),
 					resource.TestCheckResourceAttrSet(datasourceName, "launch_time"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{

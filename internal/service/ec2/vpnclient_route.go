@@ -38,40 +38,46 @@ func resourceClientVPNRoute() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(4 * time.Minute),
-			Delete: schema.DefaultTimeout(4 * time.Minute),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"client_vpn_endpoint_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"destination_cidr_block": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidCIDRNetworkAddress,
-			},
-			"origin": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"target_vpc_subnet_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"client_vpn_endpoint_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"destination_cidr_block": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidCIDRNetworkAddress,
+				},
+				"origin": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"target_vpc_subnet_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -88,11 +94,14 @@ func resourceClientVPNRouteCreate(ctx context.Context, d *schema.ResourceData, m
 		ClientToken:          aws.String(create.UniqueId(ctx)),
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
-		TargetVpcSubnetId:    aws.String(targetSubnetID),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if targetSubnetID != "" {
+		input.TargetVpcSubnetId = aws.String(targetSubnetID)
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, ec2PropagationTimeout, func(ctx context.Context) (any, error) {
@@ -138,6 +147,7 @@ func resourceClientVPNRouteRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("destination_cidr_block", route.DestinationCidr)
 	d.Set("origin", route.Origin)
 	d.Set("target_vpc_subnet_id", route.TargetSubnet)
+	d.Set(names.AttrTransitGatewayAttachmentID, route.TransitGatewayAttachmentId)
 	d.Set(names.AttrType, route.Type)
 
 	return diags
@@ -156,7 +166,9 @@ func resourceClientVPNRouteDelete(ctx context.Context, d *schema.ResourceData, m
 	input := ec2.DeleteClientVpnRouteInput{
 		ClientVpnEndpointId:  aws.String(endpointID),
 		DestinationCidrBlock: aws.String(destinationCIDR),
-		TargetVpcSubnetId:    aws.String(targetSubnetID),
+	}
+	if targetSubnetID != "" {
+		input.TargetVpcSubnetId = aws.String(targetSubnetID)
 	}
 	_, err = conn.DeleteClientVpnRoute(ctx, &input)
 
@@ -187,7 +199,8 @@ func clientVPNRouteCreateResourceID(endpointID, targetSubnetID, destinationCIDR 
 func clientVPNRouteParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, clientVPNRouteIDSeparator)
 
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
+	// TargetSubnetID is empty for routes on Transit Gateway-based Client VPN endpoints.
+	if len(parts) == 3 && parts[0] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil
 	}
 

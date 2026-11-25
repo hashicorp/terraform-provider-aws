@@ -26,6 +26,7 @@ func RegisterSweepers() {
 			"aws_ecs_express_gateway_service",
 			"aws_vpc_endpoint_service",
 			"aws_lb_listener",
+			"aws_arczonalshift_zonal_autoshift_configuration",
 		},
 	})
 

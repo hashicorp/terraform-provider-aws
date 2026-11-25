@@ -42,40 +42,35 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
-* `name` - (Required) The name or description of the rule.
+* `metric_name` - (Required) Name or description for the Amazon CloudWatch metric of this rule.
+* `name` - (Required) Name or description of the rule.
+* `predicate` - (Optional) Objects to include in a rule. See [`predicate` Block](#predicate-block) below for details.
 * `rate_key` - (Required) Valid value is IP.
-* `rate_limit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 100.
-* `predicate` - (Optional) The objects to include in a rule (documented below).
+* `rate_limit` - (Required) Maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 100.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Blocks
-
-### `predicate`
+### `predicate` Block
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
 
-#### Arguments
+The `predicate` block supports the following arguments:
 
-* `negated` - (Required) Set this to `false` if you want to allow, block, or count requests
-  based on the settings in the specified `ByteMatchSet`, `IPSet`, `SqlInjectionMatchSet`, `XssMatchSet`, or `SizeConstraintSet`.
-  For example, if an IPSet includes the IP address `192.0.2.44`, AWS WAF will allow or block requests based on that IP address.
-  If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses _except_ `192.0.2.44`.
-* `data_id` - (Required) A unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
-* `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
+* `data_id` - (Required) Unique identifier for a predicate in the rule, such as Byte Match Set ID or IPSet ID.
+* `negated` - (Required) Set this to `false` if you want to allow, block, or count requests based on the settings in the specified `ByteMatchSet`, `IPSet`, `SqlInjectionMatchSet`, `XssMatchSet`, or `SizeConstraintSet`. For example, if an IPSet includes the IP address `192.0.2.44`, AWS WAF will allow or block requests based on that IP address. If set to `true`, AWS WAF will allow, block, or count requests based on all IP addresses _except_ `192.0.2.44`.
+* `type` - (Required) Type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF Regional Rate Based Rule.
-* `arn` - The ARN of the WAF Regional Rate Based Rule.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the WAF Regional Rate Based Rule.
+* `id` - ID of the WAF Regional Rate Based Rule.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rate Based Rule using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rate Based Rule using the ID. For example:
 
 ```terraform
 import {
@@ -84,7 +79,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Regional Rate Based Rule using the id. For example:
+Using `terraform import`, import WAF Regional Rate Based Rule using the ID. For example:
 
 ```console
 % terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

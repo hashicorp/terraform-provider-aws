@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
@@ -34,6 +33,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -65,17 +65,15 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 			"label_attribute_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,126}$`), ""),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,126}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"label_category_config_s3_uri": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-				},
+				Optional:   true,
+				Validators: validHTTPSOrS3URIFramework,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -85,7 +83,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 			"labeling_job_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`), ""),
+					lazystringvalidator.RegexMatches(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -102,7 +100,7 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"stopping_conditions": framework.ResourceOptionalComputedListOfObjectsAttribute[labelingJobStoppingConditionsModel](ctx, 1, nil, listplanmodifier.RequiresReplace()),
+			"stopping_conditions": framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[labelingJobStoppingConditionsModel](ctx),
 			names.AttrTags:        tftags.TagsAttributeForceNew(),
 			names.AttrTagsAll:     tftags.TagsAttributeComputedOnly(),
 		},
@@ -283,10 +281,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 										},
 									},
 									"ui_template_s3_uri": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-										},
+										Optional:   true,
+										Validators: validHTTPSOrS3URIFramework,
 										PlanModifiers: []planmodifier.String{
 											stringplanmodifier.RequiresReplace(),
 										},
@@ -352,10 +348,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"manifest_s3_uri": schema.StringAttribute{
-													Required: true,
-													Validators: []validator.String{
-														stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-													},
+													Required:   true,
+													Validators: validHTTPSOrS3URIFramework,
 													PlanModifiers: []planmodifier.String{
 														stringplanmodifier.RequiresReplace(),
 													},
@@ -488,10 +482,8 @@ func (r *labelingJobResource) Schema(ctx context.Context, request resource.Schem
 							},
 						},
 						"s3_output_path": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								stringvalidator.RegexMatches(httpsOrS3URIRegexp, "must be HTTPS or Amazon S3 URI"),
-							},
+							Required:   true,
+							Validators: validHTTPSOrS3URIFramework,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},

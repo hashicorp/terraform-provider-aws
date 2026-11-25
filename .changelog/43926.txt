@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_cognito_user_pool: Fixed to accept an empty `email_mfa_configuration` block
-```

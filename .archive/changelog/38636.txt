@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Fix empty tags drift on fwprovider resources
-```

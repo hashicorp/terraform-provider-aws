@@ -11,6 +11,7 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/backup/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -76,6 +77,14 @@ func TestAccBackupRestoreTestingSelection_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfbackup.ResourceRestoreTestingSelection, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -121,6 +130,52 @@ func TestAccBackupRestoreTestingSelection_updates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "restore_testing_plan_name", rName+"_plan"),
 					resource.TestCheckResourceAttr(resourceName, "protected_resource_type", "EC2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccBackupRestoreTestingSelection_validationWindowHoursZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	var restoretestingplan awstypes.RestoreTestingSelectionForGet
+	resourceName := "aws_backup_restore_testing_selection.test"
+	rName := strings.ReplaceAll(acctest.RandomWithPrefix(t, acctest.ResourcePrefix), "-", "_")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRestoreTestingSelectionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRestoreTestingSelectionConfig_validationWindowHours(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRestoreTestingSelectionExists(ctx, t, resourceName, &restoretestingplan),
+					resource.TestCheckResourceAttr(resourceName, "validation_window_hours", "1"),
+				),
+			},
+			{
+				Config: testAccRestoreTestingSelectionConfig_validationWindowHours(rName, 0),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRestoreTestingSelectionExists(ctx, t, resourceName, &restoretestingplan),
+					resource.TestCheckResourceAttr(resourceName, "validation_window_hours", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateId:                        fmt.Sprintf("%s:%s", rName, rName+"_plan"),
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{names.AttrApplyImmediately, "user"},
 			},
 		},
 	})
@@ -264,4 +319,45 @@ resource "aws_backup_restore_testing_selection" "test" {
   }
 }
 `, rName))
+}
+
+func testAccRestoreTestingSelectionConfig_validationWindowHours(rName string, hours int) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "backup.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_backup_restore_testing_plan" "test" {
+  name = "%[1]s_plan"
+
+  recovery_point_selection {
+    algorithm            = "LATEST_WITHIN_WINDOW"
+    include_vaults       = ["*"]
+    recovery_point_types = ["SNAPSHOT"]
+  }
+
+  schedule_expression = "cron(0 12 1 1 ? *)"
+}
+
+resource "aws_backup_restore_testing_selection" "test" {
+  name = %[1]q
+
+  restore_testing_plan_name = aws_backup_restore_testing_plan.test.name
+  protected_resource_type   = "EC2"
+  iam_role_arn              = aws_iam_role.test.arn
+
+  protected_resource_arns = ["*"]
+
+  validation_window_hours = %[2]d
+}
+`, rName, hours)
 }

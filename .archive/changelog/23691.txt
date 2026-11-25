@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_dms_endpoint: Add ability to use AWS Secrets Manager with the `aurora-postgresql` and `mongodb` engines
-```

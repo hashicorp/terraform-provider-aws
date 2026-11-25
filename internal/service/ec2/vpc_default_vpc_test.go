@@ -53,6 +53,21 @@ func testAccPreCheckDefaultVPCExists(ctx context.Context, t *testing.T) {
 	}
 }
 
+// testAccCheckDefaultVPCExists is the standard-named wrapper required by
+// Resource Identity generated tests. aws_default_vpc adopts the AWS-managed
+// default VPC so existence checks are equivalent to acctest.CheckVPCExists.
+func testAccCheckDefaultVPCExists(ctx context.Context, t *testing.T, n string, v *awstypes.Vpc) resource.TestCheckFunc {
+	return acctest.CheckVPCExists(ctx, t, n, v)
+}
+
+// testAccCheckDefaultVPCDestroy is the standard-named wrapper required by
+// Resource Identity generated tests. aws_default_vpc never deletes the
+// underlying AWS default VPC (delete is a no-op unless force_destroy is set),
+// so destroy verification reuses the "existing" variant.
+func testAccCheckDefaultVPCDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+	return testAccCheckDefaultVPCDestroyExists(ctx, t)
+}
+
 func testAccPreCheckDefaultVPCNotFound(ctx context.Context, t *testing.T) {
 	if vpcID := defaultVPC(ctx, t); vpcID != "" {
 		t.Logf("Deleting existing default VPC: %s", vpcID)
@@ -113,12 +128,36 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
+					testAccCheckVPCNetworkFirewallAssociation(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "existing_default_vpc"},
+			},
 		},
 	})
+}
+
+func testAccCheckVPCNetworkFirewallAssociation(resourceName string, vpc *awstypes.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		checks := []resource.TestCheckFunc{
+			resource.TestCheckResourceAttr(resourceName, "network_firewall_association.#", fmt.Sprint(len(vpc.NetworkFirewallAssociations))),
+		}
+		for i, association := range vpc.NetworkFirewallAssociations {
+			prefix := fmt.Sprintf("network_firewall_association.%d.", i)
+			checks = append(checks,
+				resource.TestCheckResourceAttr(resourceName, prefix+"firewall_arn", aws.ToString(association.FirewallArn)),
+				resource.TestCheckResourceAttr(resourceName, prefix+"firewall_mode", string(association.FirewallMode)),
+				resource.TestCheckResourceAttr(resourceName, prefix+"firewall_onboarding_status", string(association.FirewallOnboardingStatus)),
+			)
+		}
+		return resource.ComposeAggregateTestCheckFunc(checks...)(s)
+	}
 }
 
 func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {

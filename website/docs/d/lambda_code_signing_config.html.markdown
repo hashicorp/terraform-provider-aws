@@ -133,16 +133,16 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `allowed_publishers` - List of allowed publishers as signing profiles for this code signing configuration. [See below](#allowed_publishers-attribute-reference).
+* `allowed_publishers` - List of allowed publishers as signing profiles for this code signing configuration. [See below](#allowed_publishers-block).
 * `config_id` - Unique identifier for the code signing configuration.
 * `description` - Code signing configuration description.
 * `last_modified` - Date and time that the code signing configuration was last modified.
-* `policies` - List of code signing policies that control the validation failure action for signature mismatch or expiry. [See below](#policies-attribute-reference).
+* `policies` - List of code signing policies that control the validation failure action for signature mismatch or expiry. [See below](#policies-block).
 
-### allowed_publishers Attribute Reference
+### `allowed_publishers` Block
 
 * `signing_profile_version_arns` - Set of ARNs for each of the signing profiles. A signing profile defines a trusted user who can sign a code package.
 
-### policies Attribute Reference
+### `policies` Block
 
 * `untrusted_artifact_on_deployment` - Code signing configuration policy for deployment validation failure. Valid values: `Warn`, `Enforce`.

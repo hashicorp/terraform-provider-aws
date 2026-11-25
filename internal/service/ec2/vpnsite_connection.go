@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,635 +47,636 @@ func resourceVPNConnection() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_attachment_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"customer_gateway_configuration": {
-				Type:      schema.TypeString,
-				Sensitive: true,
-				Computed:  true,
-			},
-			"customer_gateway_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"enable_acceleration": {
-				Type:         schema.TypeBool,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				RequiredWith: []string{names.AttrTransitGatewayID},
-			},
-			"local_ipv4_network_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsCIDRNetwork(0, 32),
-			},
-			"local_ipv6_network_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-			},
-			"outside_ip_address_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
-			},
-			"preshared_key_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"preshared_key_storage": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(preSharedKeyStorageType_Values(), false),
-			},
-			"remote_ipv4_network_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsCIDRNetwork(0, 32),
-			},
-			"remote_ipv6_network_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-			},
-			"routes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"destination_cidr_block": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrSource: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrState: {
-							Type:     schema.TypeString,
-							Computed: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_attachment_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"customer_gateway_configuration": {
+					Type:      schema.TypeString,
+					Sensitive: true,
+					Computed:  true,
+				},
+				"customer_gateway_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"enable_acceleration": {
+					Type:         schema.TypeBool,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					RequiredWith: []string{names.AttrTransitGatewayID},
+				},
+				"local_ipv4_network_cidr": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IsCIDRNetwork(0, 32),
+				},
+				"local_ipv6_network_cidr": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IsCIDRNetwork(0, 128),
+				},
+				"outside_ip_address_type": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(outsideIPAddressType_Values(), false),
+				},
+				"preshared_key_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"preshared_key_storage": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(preSharedKeyStorageType_Values(), false),
+				},
+				"remote_ipv4_network_cidr": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IsCIDRNetwork(0, 32),
+				},
+				"remote_ipv6_network_cidr": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.IsCIDRNetwork(0, 128),
+				},
+				"routes": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"destination_cidr_block": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrSource: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrState: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"static_routes_only": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"vpn_gateway_id", "vpn_concentrator_id"},
-			},
-			"transport_transit_gateway_attachment_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"tunnel_bandwidth": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
-				// Not supported on VGW
-				ConflictsWith: []string{"vpn_gateway_id"},
-			},
-			"tunnel_inside_ip_version": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.TunnelInsideIpVersion](),
-			},
-			"tunnel1_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel1_bgp_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel1_bgp_holdtime": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"tunnel1_cgw_inside_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel1_dpd_timeout_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsDPDTimeoutAction_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVPNTunnelOptionsDPDTimeoutAction && new == "" {
-						return true
-					}
-					return false
+				"static_routes_only": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
 				},
-			},
-			"tunnel1_dpd_timeout_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(30),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsDPDTimeoutSeconds) && new == "0" {
-						return true
-					}
-					return false
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"tunnel1_enable_tunnel_lifecycle_control": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"tunnel1_ike_versions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				names.AttrTransitGatewayID: {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"vpn_gateway_id", "vpn_concentrator_id"},
+				},
+				"transport_transit_gateway_attachment_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"tunnel_bandwidth": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.VpnTunnelBandwidth](),
+					// Not supported on VGW
+					ConflictsWith: []string{"vpn_gateway_id"},
+				},
+				"tunnel_inside_ip_version": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.TunnelInsideIpVersion](),
+				},
+				"tunnel1_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tunnel1_bgp_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tunnel1_bgp_holdtime": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"tunnel1_cgw_inside_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tunnel1_dpd_timeout_action": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsIKEVersion_Values(), false),
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsDPDTimeoutAction_Values(), false),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == defaultVPNTunnelOptionsDPDTimeoutAction && new == "" {
+							return true
+						}
+						return false
+					},
 				},
-			},
-			"tunnel1_inside_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
-			},
-			"tunnel1_inside_ipv6_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-			},
-			"tunnel1_log_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bgp_log_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"bgp_log_group_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"bgp_log_output_format": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
-									},
-									"log_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"log_group_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"log_output_format": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+				"tunnel1_dpd_timeout_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(30),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel1_enable_tunnel_lifecycle_control": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"tunnel1_ike_versions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsIKEVersion_Values(), false),
+					},
+				},
+				"tunnel1_inside_cidr": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
+				},
+				"tunnel1_inside_ipv6_cidr": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
+				},
+				"tunnel1_log_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_log_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bgp_log_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"bgp_log_group_arn": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"bgp_log_output_format": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
+										},
+										"log_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"log_group_arn": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"log_output_format": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"tunnel1_phase1_dh_group_numbers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			"tunnel1_phase1_encryption_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel1_phase1_dh_group_numbers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeInt},
+				},
+				"tunnel1_phase1_encryption_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+					},
+				},
+				"tunnel1_phase1_integrity_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+					},
+				},
+				"tunnel1_phase1_lifetime_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(900, 28800),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel1_phase2_dh_group_numbers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeInt},
+				},
+				"tunnel1_phase2_encryption_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+					},
+				},
+				"tunnel1_phase2_integrity_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+					},
+				},
+				"tunnel1_phase2_lifetime_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(900, 3600),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel1_preshared_key": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+					Optional:     true,
+					Sensitive:    true,
+					Computed:     true,
+					ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
 				},
-			},
-			"tunnel1_phase1_integrity_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel1_rekey_fuzz_percentage": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 100),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel1_rekey_margin_time_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(60, 1800),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel1_replay_window_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(64, 2048),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsReplayWindowSize) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel1_startup_action": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsStartupAction_Values(), false),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == defaultVPNTunnelOptionsStartupAction && new == "" {
+							return true
+						}
+						return false
+					},
 				},
-			},
-			"tunnel1_phase1_lifetime_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(900, 28800),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
-						return true
-					}
-					return false
+				"tunnel1_vgw_inside_address": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"tunnel1_phase2_dh_group_numbers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			"tunnel1_phase2_encryption_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel2_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tunnel2_bgp_asn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tunnel2_bgp_holdtime": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"tunnel2_cgw_inside_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"tunnel2_dpd_timeout_action": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsDPDTimeoutAction_Values(), false),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == defaultVPNTunnelOptionsDPDTimeoutAction && new == "" {
+							return true
+						}
+						return false
+					},
 				},
-			},
-			"tunnel1_phase2_integrity_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel2_dpd_timeout_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntAtLeast(30),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsDPDTimeoutSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel2_enable_tunnel_lifecycle_control": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"tunnel2_ike_versions": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsIKEVersion_Values(), false),
+					},
+				},
+				"tunnel2_inside_cidr": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
 				},
-			},
-			"tunnel1_phase2_lifetime_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(900, 3600),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel1_preshared_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				Computed:     true,
-				ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
-			},
-			"tunnel1_rekey_fuzz_percentage": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyFuzzPercentage) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel1_rekey_margin_time_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(60, 1800),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel1_replay_window_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(64, 2048),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsReplayWindowSize) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel1_startup_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsStartupAction_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVPNTunnelOptionsStartupAction && new == "" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel1_vgw_inside_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel2_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel2_bgp_asn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel2_bgp_holdtime": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"tunnel2_cgw_inside_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"tunnel2_dpd_timeout_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsDPDTimeoutAction_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVPNTunnelOptionsDPDTimeoutAction && new == "" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_dpd_timeout_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntAtLeast(30),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsDPDTimeoutSeconds) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_enable_tunnel_lifecycle_control": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"tunnel2_ike_versions": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel2_inside_ipv6_cidr": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsIKEVersion_Values(), false),
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
 				},
-			},
-			"tunnel2_inside_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validVPNConnectionTunnelInsideCIDR(),
-			},
-			"tunnel2_inside_ipv6_cidr": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-			},
-			"tunnel2_log_options": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cloudwatch_log_options": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bgp_log_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"bgp_log_group_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"bgp_log_output_format": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
-									},
-									"log_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"log_group_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"log_output_format": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+				"tunnel2_log_options": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"cloudwatch_log_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"bgp_log_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"bgp_log_group_arn": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"bgp_log_output_format": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogBGPLogOutputFormat_Values(), false),
+										},
+										"log_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+										},
+										"log_group_arn": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"log_output_format": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringInSlice(vpnTunnelCloudWatchLogOutputFormat_Values(), false),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"tunnel2_phase1_dh_group_numbers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			"tunnel2_phase1_encryption_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel2_phase1_dh_group_numbers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeInt},
+				},
+				"tunnel2_phase1_encryption_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+					},
+				},
+				"tunnel2_phase1_integrity_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+					},
+				},
+				"tunnel2_phase1_lifetime_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(900, 28800),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel2_phase2_dh_group_numbers": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeInt},
+				},
+				"tunnel2_phase2_encryption_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+					},
+				},
+				"tunnel2_phase2_integrity_algorithms": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
+					},
+				},
+				"tunnel2_phase2_lifetime_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(900, 3600),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel2_preshared_key": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1EncryptionAlgorithm_Values(), false),
+					Optional:     true,
+					Sensitive:    true,
+					Computed:     true,
+					ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
 				},
-			},
-			"tunnel2_phase1_integrity_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				"tunnel2_rekey_fuzz_percentage": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(0, 100),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyFuzzPercentage) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel2_rekey_margin_time_seconds": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(60, 1800),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel2_replay_window_size": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					ValidateFunc: validation.IntBetween(64, 2048),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == strconv.Itoa(defaultVPNTunnelOptionsReplayWindowSize) && new == "0" {
+							return true
+						}
+						return false
+					},
+				},
+				"tunnel2_startup_action": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase1IntegrityAlgorithm_Values(), false),
+					Optional:     true,
+					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsStartupAction_Values(), false),
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						if old == defaultVPNTunnelOptionsStartupAction && new == "" {
+							return true
+						}
+						return false
+					},
 				},
-			},
-			"tunnel2_phase1_lifetime_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(900, 28800),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase1LifetimeSeconds) && new == "0" {
-						return true
-					}
-					return false
+				"tunnel2_vgw_inside_address": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"tunnel2_phase2_dh_group_numbers": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeInt},
-			},
-			"tunnel2_phase2_encryption_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
+				names.AttrType: {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2EncryptionAlgorithm_Values(), false),
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringInSlice(vpnConnectionType_Values(), false),
 				},
-			},
-			"tunnel2_phase2_integrity_algorithms": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(vpnTunnelOptionsPhase2IntegrityAlgorithm_Values(), false),
-				},
-			},
-			"tunnel2_phase2_lifetime_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(900, 3600),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsPhase2LifetimeSeconds) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_preshared_key": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				Computed:     true,
-				ValidateFunc: validVPNConnectionTunnelPreSharedKey(),
-			},
-			"tunnel2_rekey_fuzz_percentage": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(0, 100),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyFuzzPercentage) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_rekey_margin_time_seconds": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(60, 1800),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsRekeyMarginTimeSeconds) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_replay_window_size": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(64, 2048),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == strconv.Itoa(defaultVPNTunnelOptionsReplayWindowSize) && new == "0" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_startup_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(vpnTunnelOptionsStartupAction_Values(), false),
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == defaultVPNTunnelOptionsStartupAction && new == "" {
-						return true
-					}
-					return false
-				},
-			},
-			"tunnel2_vgw_inside_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(vpnConnectionType_Values(), false),
-			},
-			"vgw_telemetry": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"accepted_route_count": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
-						names.AttrCertificateARN: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"last_status_change": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"outside_ip_address": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatus: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						names.AttrStatusMessage: {
-							Type:     schema.TypeString,
-							Computed: true,
+				"vgw_telemetry": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"accepted_route_count": {
+								Type:     schema.TypeInt,
+								Computed: true,
+							},
+							names.AttrCertificateARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"last_status_change": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"outside_ip_address": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatusMessage: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
 						},
 					},
 				},
-			},
-			"vpn_gateway_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_concentrator_id"},
-			},
-			"vpn_concentrator_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_gateway_id"},
-			},
+				"vpn_gateway_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_concentrator_id"},
+				},
+				"vpn_concentrator_id": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ForceNew:      true,
+					ConflictsWith: []string{names.AttrTransitGatewayID, "vpn_gateway_id"},
+				},
+			}
 		},
 
 		CustomizeDiff: customizeDiffValidateOutsideIPAddressType,
@@ -936,7 +938,7 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr") {
+	if d.HasChanges("local_ipv4_network_cidr", "local_ipv6_network_cidr", "remote_ipv4_network_cidr", "remote_ipv6_network_cidr", "tunnel_bandwidth") {
 		input := ec2.ModifyVpnConnectionOptionsInput{
 			VpnConnectionId: aws.String(d.Id()),
 		}
@@ -955,6 +957,10 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		if d.HasChange("remote_ipv6_network_cidr") {
 			input.RemoteIpv6NetworkCidr = aws.String(d.Get("remote_ipv6_network_cidr").(string))
+		}
+
+		if d.HasChanges("tunnel_bandwidth") {
+			input.TunnelBandwidth = awstypes.VpnTunnelBandwidth(d.Get("tunnel_bandwidth").(string))
 		}
 
 		_, err := conn.ModifyVpnConnectionOptions(ctx, &input)
@@ -1750,8 +1756,8 @@ func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
-		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		lazyvalidation.StringDoesNotMatch(`^0`, "cannot start with zero character"),
+		lazyvalidation.StringMatch(`^[0-9A-Za-z_.]+$`, "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 
@@ -1770,7 +1776,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 
 	return validation.All(
 		validation.IsCIDRNetwork(30, 30),
-		validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "must be within 169.254.0.0/16"),
+		lazyvalidation.StringMatch(`^169\.254\.`, "must be within 169.254.0.0/16"),
 		validation.StringNotInSlice(disallowedCidrs, false),
 	)
 }
@@ -1778,7 +1784,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexache.MustCompile(`^fd`), "must be within fd00::/8"),
+		lazyvalidation.StringMatch(`^fd`, "must be within fd00::/8"),
 	)
 }
 

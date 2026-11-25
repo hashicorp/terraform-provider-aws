@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_sagemaker_prebuilt_ecr_image: Add Hugging Face DLCs
-```

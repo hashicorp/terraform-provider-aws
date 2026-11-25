@@ -161,24 +161,24 @@ The following arguments are optional:
 * `continuous_parameter_ranges` - (Optional) Continuous parameter ranges.
 * `integer_parameter_ranges` - (Optional) Integer parameter ranges.
 
-##### auto_parameters
+#### auto_parameters
 
 * `name` - (Required) Parameter name.
 * `value_hint` - (Required) Value hint for the parameter.
 
-##### categorical_parameter_ranges
+#### categorical_parameter_ranges
 
 * `name` - (Required) Parameter name.
 * `values` - (Required) Set of allowed values.
 
-##### continuous_parameter_ranges
+#### continuous_parameter_ranges
 
 * `max_value` - (Required) Maximum value.
 * `min_value` - (Required) Minimum value.
 * `name` - (Required) Parameter name.
 * `scaling_type` - (Optional) Scaling rule for the range.
 
-##### integer_parameter_ranges
+#### integer_parameter_ranges
 
 * `max_value` - (Required) Maximum value.
 * `min_value` - (Required) Minimum value.
@@ -195,7 +195,7 @@ The following arguments are optional:
 
 * `hyperband_strategy_config` - (Optional) Hyperband strategy settings. See [`hyperband_strategy_config`](#hyperband_strategy_config).
 
-##### hyperband_strategy_config
+#### hyperband_strategy_config
 
 * `max_resource` - (Optional) Upper bound for resource allocation.
 * `min_resource` - (Optional) Lower bound for resource allocation.
@@ -206,11 +206,11 @@ The following arguments are optional:
 * `convergence_detected` - (Optional) Stop condition based on convergence. See [`convergence_detected`](#convergence_detected).
 * `target_objective_metric_value` - (Optional) Target metric value that can stop tuning.
 
-##### best_objective_not_improving
+#### best_objective_not_improving
 
 * `max_number_of_training_jobs_not_improving` - (Optional) Maximum training jobs without improvement before completion.
 
-##### convergence_detected
+#### convergence_detected
 
 * `complete_on_convergence` - (Optional) Whether to complete tuning when convergence is detected.
 
@@ -250,7 +250,7 @@ Each block supports:
 
 Provide exactly one of `algorithm_name` or `training_image`.
 
-##### metric_definitions
+#### metric_definitions
 
 * `name` - (Required) Metric name.
 * `regex` - (Required) Pattern used to extract metric values.
@@ -271,7 +271,7 @@ Provide exactly one of `algorithm_name` or `training_image`.
 
 Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `instance_configs` is set.
 
-##### instance_configs
+#### instance_configs
 
 * `instance_count` - (Optional) Number of instances.
 * `instance_type` - (Optional) Instance type.
@@ -309,11 +309,11 @@ Do not set `instance_count`, `instance_type`, or `volume_size_in_gb` when `insta
 * `s3_data_type` - (Required) S3 data type.
 * `s3_uri` - (Required) S3 or HTTPS source URI.
 
-##### hub_access_config
+#### hub_access_config
 
 * `hub_content_arn` - (Required) Hub content ARN.
 
-##### model_access_config
+#### model_access_config
 
 * `accept_eula` - (Required) Whether to accept model EULA. Value must be `true`.
 

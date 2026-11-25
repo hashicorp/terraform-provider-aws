@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_acm_certificate: Trigger resource recreation with `VALIDATION_TIMED_OUT` status
-```

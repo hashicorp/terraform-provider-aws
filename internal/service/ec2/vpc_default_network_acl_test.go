@@ -281,6 +281,56 @@ func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 	})
 }
 
+func TestAccVPCDefaultNetworkACL_tagBasedAuth(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.NetworkAcl
+	resourceName := "aws_default_network_acl.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	policy := fmt.Sprintf(`
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyStm1",
+      "Effect": "Deny",
+      "Action": [
+        "ec2:DeleteNetworkAclEntry"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringNotEquals": {
+          "aws:ResourceTag/Allowed": %[1]q
+        }
+      }
+    }
+  ]
+}`, rName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAssumeRoleARN(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDefaultNetworkACLDestroy,
+		Steps: []resource.TestStep{
+			// Smoke test: Expect failure when tags are not set
+			{
+				Config:      testAccVPCDefaultNetworkACLConfig_tagBasedAuth_NoTag(policy),
+				ExpectError: regexache.MustCompile(`is not authorized to perform: ec2:DeleteNetworkAclEntry`),
+			},
+			{
+				Config: testAccVPCDefaultNetworkACLConfig_tagBasedAuth(rName, policy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDefaultNetworkACLExists(ctx, t, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDefaultNetworkACLDestroy(s *terraform.State) error {
 	// The default NACL is not deleted.
 	return nil
@@ -523,4 +573,38 @@ resource "aws_default_network_acl" "test" {
   default_network_acl_id = aws_vpc.test.default_network_acl_id
 }
 `, rName)
+}
+
+func testAccVPCDefaultNetworkACLConfig_tagBasedAuth_NoTag(policy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAssumeRolePolicy(policy),
+		`
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
+
+  # Do not set tags here to confirm failure
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+`)
+}
+
+func testAccVPCDefaultNetworkACLConfig_tagBasedAuth(rName, policy string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigAssumeRolePolicy(policy),
+		fmt.Sprintf(`
+resource "aws_default_network_acl" "test" {
+  default_network_acl_id = aws_vpc.test.default_network_acl_id
+
+  tags = {
+    Allowed = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+`, rName))
 }

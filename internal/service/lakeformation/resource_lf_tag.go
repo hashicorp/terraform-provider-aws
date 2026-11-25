@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
@@ -36,9 +35,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -116,7 +117,7 @@ func (r *resourceLFTagResource) Schema(ctx context.Context, req resource.SchemaR
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 255),
-								stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+								lazystringvalidator.RegexMatches(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`, ""),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -407,6 +408,11 @@ func (r *resourceLFTagResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	if outputTag.IsNull() {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(tfresource.NewEmptyResultError()))
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	state.LFTag = outputTag
 
@@ -582,6 +588,9 @@ func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagOnDatabase {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -630,6 +639,9 @@ func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 		diags.Append(err...)
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
+	if tag == nil {
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
 
 	for _, v := range input.LFTagsOnTable {
 		if aws.ToString(v.TagKey) == tag.Key.ValueString() {
@@ -675,6 +687,9 @@ func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourc
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
+		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
+	}
+	if tag == nil {
 		return fwtypes.NewListNestedObjectValueOfNull[LFTag](ctx)
 	}
 

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -36,7 +37,10 @@ func TestAccLogsDeliveryDestination_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryDestinationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
 				),
@@ -54,10 +58,14 @@ func TestAccLogsDeliveryDestination_basic(t *testing.T) {
 				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
@@ -79,12 +87,23 @@ func TestAccLogsDeliveryDestination_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeliveryDestinationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeliveryDestinationConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/DeliveryDestination/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryDestinationExists(ctx, t, resourceName, &v),
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tflogs.ResourceDeliveryDestination, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -121,10 +140,10 @@ func TestAccLogsDeliveryDestination_XRAY(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 		},
@@ -162,10 +181,10 @@ func TestAccLogsDeliveryDestination_tags(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -234,10 +253,10 @@ func TestAccLogsDeliveryDestination_outputFormat(t *testing.T) {
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -287,10 +306,10 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationSameTy
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -340,10 +359,10 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationDiffer
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -396,10 +415,10 @@ func TestAccLogsDeliveryDestination_updateDeliveryDestinationConfigurationWithTa
 				},
 			},
 			{
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccDeliveryDestinationImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: names.AttrName,
 			},
 			{
@@ -467,17 +486,6 @@ func testAccCheckDeliveryDestinationExists(ctx context.Context, t *testing.T, n 
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccDeliveryDestinationImportStateIDFunc(n string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", n)
-		}
-
-		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

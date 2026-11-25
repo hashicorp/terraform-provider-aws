@@ -38,37 +38,33 @@ resource "aws_wafregional_rule" "wafrule" {
 
 This resource supports the following arguments:
 
+* `metric_name` - (Required) Name or description for the Amazon CloudWatch metric of this rule.
+* `name` - (Required) Name or description of the rule.
+* `predicate` - (Optional) Objects to include in a rule. See [`predicate` Block](#predicate-block) below for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name or description of the rule.
-* `metric_name` - (Required) The name or description for the Amazon CloudWatch metric of this rule.
-* `predicate` - (Optional) The objects to include in a rule (documented below).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Fields
-
-### `predicate`
+### `predicate` Block
 
 See the [WAF Documentation](https://docs.aws.amazon.com/waf/latest/APIReference/API_Predicate.html) for more information.
 
-#### Arguments
+The `predicate` block supports the following arguments:
 
-* `type` - (Required) The type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`
-* `data_id` - (Required) The unique identifier of a predicate, such as the ID of a `ByteMatchSet` or `IPSet`.
+* `data_id` - (Required) Unique identifier of a predicate, such as the ID of a `ByteMatchSet` or `IPSet`.
 * `negated` - (Required) Whether to use the settings or the negated settings that you specified in the objects.
-
-## Remarks
+* `type` - (Required) Type of predicate in a rule. Valid values: `ByteMatch`, `GeoMatch`, `IPMatch`, `RegexMatch`, `SizeConstraint`, `SqlInjectionMatch`, or `XssMatch`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF Regional Rule.
-* `arn` - The ARN of the WAF Regional Rule.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the WAF Regional Rule.
+* `id` - ID of the WAF Regional Rule.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rule using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Rule using the ID. For example:
 
 ```terraform
 import {
@@ -77,7 +73,7 @@ import {
 }
 ```
 
-Using `terraform import`, import WAF Regional Rule using the id. For example:
+Using `terraform import`, import WAF Regional Rule using the ID. For example:
 
 ```console
 % terraform import aws_wafregional_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc

@@ -1,3 +1,0 @@
-```release-note:note
-resource/aws_appmesh_virtual_node: Number of default backends per virtual node increased up to 50
-```

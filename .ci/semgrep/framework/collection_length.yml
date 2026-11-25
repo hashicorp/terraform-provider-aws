@@ -1,0 +1,33 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: collection-length-not-null
+    languages: [go]
+    message: >-
+      Prefer `$X.Length(fwtypes.CollectionLengthUnhandledAsZero)`
+      to `!$X.IsNull() && len($X.Elements()) > 0`
+    pattern: "!$X.IsNull() && len($X.Elements()) > 0"
+    fix: "$X.Length(fwtypes.CollectionLengthUnhandledAsZero) > 0"
+    severity: WARNING
+
+  - id: collection-length-is-null
+    languages: [go]
+    message: >-
+      Prefer `$X.Length(fwtypes.CollectionLengthUnhandledAsZero)`
+      to `$X.IsNull() || len($X.Elements()) == 0`
+    pattern: "$X.IsNull() || len($X.Elements()) == 0"
+    fix: "$X.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0"
+    severity: WARNING
+
+  - id: collection-length
+    languages: [go]
+    message: >-
+      Prefer `$X.Length(fwtypes.CollectionLengthUnhandledAsZero)`
+      to `len($X.Elements())`
+    patterns:
+      - pattern: "len($X.Elements())"
+      - pattern-not-inside: "!$X.IsNull() && len($X.Elements()) > 0"
+      - pattern-not-inside: "$X.IsNull() || len($X.Elements()) == 0"
+    fix: "$X.Length(fwtypes.CollectionLengthUnhandledAsZero)"
+    severity: WARNING

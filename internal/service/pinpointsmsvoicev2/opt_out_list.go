@@ -7,13 +7,13 @@ package pinpointsmsvoicev2
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -25,14 +25,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	// After a referencing pool is deleted, opt-out list may continue
+	// to be reported as in-use for a short period of time.
+	optOutListResourceNotEmptyTimeout = 5 * time.Minute
+)
+
 // @FrameworkResource("aws_pinpointsmsvoicev2_opt_out_list", name="Opt-out List")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newOptOutListResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &optOutListResource{}
 
@@ -52,7 +60,7 @@ func (r *optOutListResource) Schema(ctx context.Context, request resource.Schema
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$`), ""),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9][A-Za-z0-9_\-]{0,63}$`, ""),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -143,9 +151,19 @@ func (r *optOutListResource) Delete(ctx context.Context, request resource.Delete
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	_, err := conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
-		OptOutListName: data.ID.ValueStringPointer(),
-	})
+	_, err := tfresource.RetryWhen(ctx, optOutListResourceNotEmptyTimeout,
+		func(ctx context.Context) (*pinpointsmsvoicev2.DeleteOptOutListOutput, error) {
+			return conn.DeleteOptOutList(ctx, &pinpointsmsvoicev2.DeleteOptOutListInput{
+				OptOutListName: data.ID.ValueStringPointer(),
+			})
+		},
+		func(err error) (bool, error) {
+			if ce, ok := errors.AsType[*awstypes.ConflictException](err); ok && ce.Reason == awstypes.ConflictExceptionReasonResourceNotEmpty {
+				return true, err
+			}
+			return false, err
+		},
+	)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return

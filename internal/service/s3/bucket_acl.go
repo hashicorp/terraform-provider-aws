@@ -47,101 +47,103 @@ func resourceBucketACL() *schema.Resource {
 		UpdateWithoutTimeout: resourceBucketACLUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"access_control_policy": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				Computed:     true,
-				MaxItems:     1,
-				ExactlyOneOf: []string{"access_control_policy", "acl"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"grant": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"grantee": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"email_address": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrDisplayName: {
-													Type:     schema.TypeString,
-													Computed: true,
-													Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
-														"AWS and will be removed in a future major version.",
-												},
-												names.AttrID: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrType: {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[types.Type](),
-												},
-												names.AttrURI: {
-													Type:     schema.TypeString,
-													Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"access_control_policy": {
+					Type:         schema.TypeList,
+					Optional:     true,
+					Computed:     true,
+					MaxItems:     1,
+					ExactlyOneOf: []string{"access_control_policy", "acl"},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"grant": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"grantee": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"email_address": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrDisplayName: {
+														Type:     schema.TypeString,
+														Computed: true,
+														Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+															"AWS and will be removed in a future major version.",
+													},
+													names.AttrID: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													names.AttrType: {
+														Type:             schema.TypeString,
+														Required:         true,
+														ValidateDiagFunc: enum.Validate[types.Type](),
+													},
+													names.AttrURI: {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
 												},
 											},
 										},
-									},
-									"permission": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[types.Permission](),
+										"permission": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.Permission](),
+										},
 									},
 								},
 							},
-						},
-						names.AttrOwner: {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrDisplayName: {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
-											"AWS and will be removed in a future major version.",
-									},
-									names.AttrID: {
-										Type:     schema.TypeString,
-										Required: true,
+							names.AttrOwner: {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrDisplayName: {
+											Type:     schema.TypeString,
+											Optional: true,
+											Computed: true,
+											Deprecated: "display_name is deprecated. This attribute is no longer returned by " +
+												"AWS and will be removed in a future major version.",
+										},
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"acl": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ExactlyOneOf: []string{"access_control_policy", "acl"},
-				ValidateFunc: validation.StringInSlice(bucketCannedACL_Values(), false),
-			},
-			names.AttrBucket: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			names.AttrExpectedBucketOwner: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidAccountID,
-				Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
-			},
+				"acl": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ExactlyOneOf: []string{"access_control_policy", "acl"},
+					ValidateFunc: validation.StringInSlice(bucketCannedACL_Values(), false),
+				},
+				names.AttrBucket: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				names.AttrExpectedBucketOwner: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidAccountID,
+					Deprecated:   "expected_bucket_owner is deprecated. It will be removed in a future verion of the provider.",
+				},
+			}
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -248,6 +250,12 @@ func resourceBucketACLRead(ctx context.Context, d *schema.ResourceData, meta any
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket ACL (%s): %s", d.Id(), err)
 	}
+
+	return resourceBucketACLFlatten(d, bucketACL, bucket, expectedBucketOwner, acl)
+}
+
+func resourceBucketACLFlatten(d *schema.ResourceData, bucketACL *s3.GetBucketAclOutput, bucket, expectedBucketOwner, acl string) diag.Diagnostics {
+	var diags diag.Diagnostics
 
 	if err := d.Set("access_control_policy", flattenBucketACL(bucketACL)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_control_policy: %s", err)

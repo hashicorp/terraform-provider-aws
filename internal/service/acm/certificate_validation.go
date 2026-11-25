@@ -43,18 +43,20 @@ func resourceCertificateValidation() *schema.Resource {
 			Create: schema.DefaultTimeout(75 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrCertificateARN: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"validation_record_fqdns": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrCertificateARN: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"validation_record_fqdns": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

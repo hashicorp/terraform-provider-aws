@@ -22,7 +22,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -41,24 +40,26 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 func settingSchema() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrNamespace: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "", // This default is required to work around an error seen is some situations with Unknown values
-			},
-			names.AttrValue: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrNamespace: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "", // This default is required to work around an error seen is some situations with Unknown values
+				},
+				names.AttrValue: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+			}
 		},
 	}
 }
@@ -78,10 +79,6 @@ func environmentTier_Values() []string {
 const (
 	environmentTierTypeSQSHTTP  = "SQS/HTTP"
 	environmentTierTypeStandard = "Standard"
-)
-
-var (
-	environmentCNAMERegex = regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`)
 )
 
 // @SDKResource("aws_elastic_beanstalk_environment", name="Environment")
@@ -189,7 +186,7 @@ func resourceEnvironment() *schema.Resource {
 					ConflictsWith: []string{"platform_arn", "template_name"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"template_name": {
 					Type:          schema.TypeString,
 					Optional:      true,
@@ -358,7 +355,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta a
 	if cname != "" {
 		var cnamePrefix string
 
-		if cnamePrefixMatch := environmentCNAMERegex.FindStringSubmatch(cname); len(cnamePrefixMatch) > 1 {
+		if cnamePrefixMatch := regexache.MustCompile(`(^[^.]+)(.\w{2}-\w{4,9}-\d{1,2})?\.(elasticbeanstalk\.com|eb\.amazonaws\.com\.cn)$`).FindStringSubmatch(cname); len(cnamePrefixMatch) > 1 {
 			cnamePrefix = cnamePrefixMatch[1]
 		}
 
@@ -606,17 +603,14 @@ func findEnvironmentByID(ctx context.Context, conn *elasticbeanstalk.Client, id 
 	}
 
 	if status := output.Status; status == awstypes.EnvironmentStatusTerminated {
-		return nil, &sdkretry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
+		return nil, &retry.NotFoundError{
+			Message: string(status),
 		}
 	}
 
 	// Eventual consistency check.
 	if aws.ToString(output.EnvironmentId) != id {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil
@@ -700,8 +694,8 @@ func findEvents(ctx context.Context, conn *elasticbeanstalk.Client, input *elast
 	return output, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id string) sdkretry.StateRefreshFunc {
-	return func() (any, string, error) {
+func statusEnvironment(conn *elasticbeanstalk.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
 		output, err := findEnvironmentByID(ctx, conn, id)
 
 		if retry.NotFound(err) {
@@ -717,10 +711,10 @@ func statusEnvironment(ctx context.Context, conn *elasticbeanstalk.Client, id st
 }
 
 func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) { //nolint:unparam
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusLaunching, awstypes.EnvironmentStatusUpdating),
 		Target:       enum.Slice(awstypes.EnvironmentStatusReady),
-		Refresh:      statusEnvironment(ctx, conn, id),
+		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,
@@ -737,10 +731,10 @@ func waitEnvironmentReady(ctx context.Context, conn *elasticbeanstalk.Client, id
 }
 
 func waitEnvironmentDeleted(ctx context.Context, conn *elasticbeanstalk.Client, id string, pollInterval, timeout time.Duration) (*awstypes.EnvironmentDescription, error) {
-	stateConf := &sdkretry.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending:      enum.Slice(awstypes.EnvironmentStatusTerminating),
 		Target:       []string{},
-		Refresh:      statusEnvironment(ctx, conn, id),
+		Refresh:      statusEnvironment(conn, id),
 		Timeout:      timeout,
 		Delay:        10 * time.Second,
 		PollInterval: pollInterval,

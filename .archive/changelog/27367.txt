@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_rds_proxy_endpoint: Respect configured provider `default_tags` value on resource Update
-```

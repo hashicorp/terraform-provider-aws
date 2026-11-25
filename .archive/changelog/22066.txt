@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_elasticache_replication_group: Add `data_tiering_enabled` argument
-```

@@ -85,6 +85,31 @@ resource "aws_elasticache_serverless_cache" "example" {
 }
 ```
 
+### Valkey Serverless with Public Endpoint
+
+```terraform
+resource "aws_elasticache_serverless_cache" "example" {
+  engine               = "valkey"
+  name                 = "example"
+  major_engine_version = "9"
+
+  connection_type = "public"
+
+  # Public endpoints require IAM authentication and have no VPC, so no subnet_ids/security_group_ids.
+  user_group_id = "default.iam-user-group"
+
+  cache_usage_limits {
+    data_storage {
+      maximum = 10
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = 5000
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -96,11 +121,13 @@ The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
+* `connection_type` - (Optional, Forces new resource) Connectivity option for the cache. Valid values are `vpc` (reachable only from within a VPC) and `public` (reachable over the internet, `valkey` only). Defaults to `vpc`. A `public` endpoint requires `engine` `valkey` with `major_engine_version` `9` or later, requires IAM authentication over TLS 1.3, and is created without `subnet_ids` or `security_group_ids`. These `public` requirements are enforced by AWS and are not validated by the provider, so an invalid combination fails at apply time with the AWS API error rather than during `plan`. This value cannot be changed after creation.
 * `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
 * `major_engine_version` - (Optional) The version of the cache engine that will be used to create the serverless cache.
   See [Describe Cache Engine Versions](https://docs.aws.amazon.com/cli/latest/reference/elasticache/describe-cache-engine-versions.html) in the AWS Documentation for supported versions.
+* `network_type` - (Optional) IP protocol version used by the serverless cache. Valid values are `ipv4`, `ipv6`, or `dual_stack`. `ipv6` is only supported with IPv6-only subnets. If not specified, defaults to `ipv4`, unless all provided subnets are IPv6-only, in which case it defaults to `ipv6`.
 * `security_group_ids` - (Optional) A list of the one or more VPC security groups to be associated with the serverless cache. The security group will authorize traffic access for the VPC end-point (private-link). If no other information is given this will be the VPC’s Default Security Group that is associated with the cluster VPC end-point.
 * `snapshot_arns_to_restore` - (Optional) The list of ARN(s) of the snapshot that the new serverless cache will be created from. Only supported for engine types `"redis"` or `"valkey"`.
 * `snapshot_retention_limit` - (Optional) The number of snapshots that will be retained for the serverless cache that is being created. As new snapshots beyond this limit are added, the oldest snapshots will be deleted on a rolling basis. Only supported for engine types `"redis"` or `"valkey"`.
@@ -134,7 +161,7 @@ The `ecpu_per_second` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the serverless cache.
+* `arn` - ARN of the serverless cache.
 * `create_time` - Timestamp of when the serverless cache was created.
 * `endpoint` - Represents the information required for client programs to connect to a cache node. See [`endpoint` Block](#endpoint-block) for details.
 * `full_engine_version` - The name and version number of the engine the serverless cache is compatible with.

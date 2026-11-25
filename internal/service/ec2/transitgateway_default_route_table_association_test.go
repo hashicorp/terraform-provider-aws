@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
@@ -75,9 +76,18 @@ func testAccTransitGatewayDefaultRouteTableAssociation_disappears(t *testing.T, 
 				Config: testAccTransitgatewayDefaultRouteTableAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayDefaultRouteTableAssociationExists(ctx, t, resourceName, &transitgateway),
+					// nosemgrep:ci.semgrep.acctest.disappears-expect-resource-action -- Default route table association is a sub-resource/attribute of the Transit Gateway; "disappearing" it reverts to the original default route table, so the plan is an update, not a create.
 					acctest.CheckFrameworkResourceDisappears(ctx, t, tfec2.ResourceTransitGatewayDefaultRouteTableAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -109,6 +119,14 @@ func testAccTransitGatewayDefaultRouteTableAssociation_Disappears_transitGateway
 					acctest.CheckSDKResourceDisappears(ctx, t, tfec2.ResourceTransitGateway(), "aws_ec2_transit_gateway.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

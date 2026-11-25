@@ -1,0 +1,20 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: testcase-use-paralleltest
+    languages: [go]
+    message: "Acceptance tests should use acctest.ParallelTest if not serialized."
+    severity: ERROR
+    patterns:
+      - pattern-inside: |
+          func $FUNC($T *testing.T) {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ^TestAcc
+      - pattern: acctest.Test(...)
+    paths:
+      include:
+        - "**/*_test.go"

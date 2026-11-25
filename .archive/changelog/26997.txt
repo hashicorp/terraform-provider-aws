@@ -1,3 +1,0 @@
-```release-note:new-resource
- aws_kms_custom_key_store
-```

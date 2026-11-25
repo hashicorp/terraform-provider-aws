@@ -75,7 +75,7 @@ resource "aws_iam_openid_connect_provider" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IAM OpenID Connect provider.
+- `arn` (String) ARN of the IAM OpenID Connect provider.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM OpenID Connect Providers using the `arn`. For example:
 

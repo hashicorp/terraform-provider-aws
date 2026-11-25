@@ -81,10 +81,7 @@ func (r *indexResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedListOfObjectsAttribute[indexEncryptionConfigurationModel](ctx, 1, nil,
-				listplanmodifier.UseStateForUnknown(),
-				listplanmodifier.RequiresReplace(),
-			),
+			names.AttrEncryptionConfiguration: framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[indexEncryptionConfigurationModel](ctx),
 			"index_arn": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{

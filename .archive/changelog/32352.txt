@@ -1,3 +1,0 @@
-```release-note:bug
-provider: Correctly handle `forbidden_account_ids`
-```

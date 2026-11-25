@@ -4,12 +4,15 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"go/ast"
+	"go/format"
 	"go/parser"
 	"go/token"
 	"io"
+	"io/fs"
 	"log"
 	"math"
 	"os"
@@ -43,6 +46,13 @@ type Options struct {
 	SchemaOnly      bool
 	OutputFile      string
 	ScoringStrategy ScoringStrategy
+	// Replace mode options
+	Replace       bool
+	Literal       string
+	ConstantName  string
+	ConstantsFile string
+	PackagePath   string
+	DryRun        bool
 }
 
 var opts Options
@@ -59,10 +69,25 @@ func parseFlags() {
 	flag.IntVar(&opts.MinPkgCount, "minpkgcount", 4, "the number of packages the string literal must appear in to be output")
 	flag.StringVar(&opts.OutputFile, "output", "", "the file to write the output to (default is stdout)")
 
+	// Replace mode flags
+	flag.BoolVar(&opts.Replace, "replace", false, "replace mode: replace string literals with constants")
+	flag.StringVar(&opts.Literal, "literal", "", "the string literal to replace (replace mode)")
+	flag.StringVar(&opts.ConstantName, "constant", "", "the constant name to use (replace mode)")
+	flag.StringVar(&opts.ConstantsFile, "constants-file", "", "the constants file to update (replace mode)")
+	flag.StringVar(&opts.PackagePath, "package", ".", "the package path to process (replace mode)")
+	flag.BoolVar(&opts.DryRun, "dry-run", false, "show what would be changed without modifying files (replace mode)")
+
 	var scoringStrategy string
 	flag.StringVar(&scoringStrategy, "scoringstrategy", "STANDARD", "the scoring strategy to use (STANDARD, MULT, GMEAN, TEST, TEST_MULT, RT_MEAN_SQ)")
 
 	flag.Parse() // must be after flag declarations and before flag uses
+
+	if opts.Replace {
+		if opts.Literal == "" || opts.ConstantName == "" || opts.ConstantsFile == "" {
+			log.Fatal("Replace mode requires --literal, --constant, and --constants-file flags")
+		}
+		return
+	}
 
 	fmt.Printf("Scoring strategy: %s\n", scoringStrategy)
 	switch scoringStrategy {
@@ -398,6 +423,14 @@ func main() {
 	// Parse the command line flags
 	parseFlags()
 
+	// Handle replace mode
+	if opts.Replace {
+		if err := runReplace(); err != nil {
+			log.Fatalf("Replace failed: %v", err)
+		}
+		return
+	}
+
 	fset := token.NewFileSet() // positions are relative to fset
 
 	v := &visitor{
@@ -435,4 +468,274 @@ func main() {
 	}
 
 	v.output()
+}
+
+// parseConstantsFile parses the constants file and returns the AST
+// If the file doesn't exist, it creates a new one with the basic structure
+func parseConstantsFile(path string) (*token.FileSet, *ast.File, error) {
+	fset := token.NewFileSet()
+
+	// Check if file exists
+	if _, err := os.Stat(path); errors.Is(err, fs.ErrNotExist) {
+		// Create new constants file
+		dir := filepath.Dir(path)
+		pkgName := filepath.Base(dir)
+
+		content := fmt.Sprintf(`// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package %s
+
+// Schema attribute name constants used across package
+const ()
+`, pkgName)
+
+		if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			return nil, nil, fmt.Errorf("creating constants file: %w", err)
+		}
+		fmt.Printf("Created new constants file: %s\n", path)
+	}
+
+	f, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing constants file: %w", err)
+	}
+	return fset, f, nil
+}
+
+// hasConstant checks if a constant with the given name exists in the file
+func hasConstant(f *ast.File, name string) bool {
+	for _, decl := range f.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if !ok || genDecl.Tok != token.CONST {
+			continue
+		}
+		for _, spec := range genDecl.Specs {
+			valueSpec, ok := spec.(*ast.ValueSpec)
+			if !ok {
+				continue
+			}
+			for _, ident := range valueSpec.Names {
+				if ident.Name == name {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// addConstant adds a new constant to the constants file in alphabetical order
+func addConstant(f *ast.File, name, value string) error {
+	// Find the const block
+	var constDecl *ast.GenDecl
+	for _, decl := range f.Decls {
+		genDecl, ok := decl.(*ast.GenDecl)
+		if ok && genDecl.Tok == token.CONST {
+			constDecl = genDecl
+			break
+		}
+	}
+
+	if constDecl == nil {
+		return fmt.Errorf("no const block found in constants file")
+	}
+
+	// Create new constant spec
+	newSpec := &ast.ValueSpec{
+		Names: []*ast.Ident{ast.NewIdent(name)},
+		Values: []ast.Expr{&ast.BasicLit{
+			Kind:  token.STRING,
+			Value: strconv.Quote(value),
+		}},
+	}
+
+	// Find insertion point (alphabetical order)
+	insertIdx := len(constDecl.Specs)
+	for i, spec := range constDecl.Specs {
+		valueSpec, ok := spec.(*ast.ValueSpec)
+		if !ok || len(valueSpec.Names) == 0 {
+			continue
+		}
+		if valueSpec.Names[0].Name > name {
+			insertIdx = i
+			break
+		}
+	}
+
+	// Insert at the correct position
+	constDecl.Specs = append(constDecl.Specs[:insertIdx], append([]ast.Spec{newSpec}, constDecl.Specs[insertIdx:]...)...)
+
+	return nil
+}
+
+// writeConstantsFile writes the modified AST back to the file
+func writeConstantsFile(fset *token.FileSet, f *ast.File, path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		return fmt.Errorf("creating file: %w", err)
+	}
+	defer file.Close()
+
+	if err := format.Node(file, fset, f); err != nil {
+		return fmt.Errorf("formatting file: %w", err)
+	}
+
+	return nil
+}
+
+// replacementVisitor replaces string literals with constant identifiers,
+// skipping literals that are values of const declarations.
+type replacementVisitor struct {
+	literal      string
+	constantName string
+	replacements int
+	parents      []ast.Node
+}
+
+func (v *replacementVisitor) Visit(n ast.Node) ast.Visitor {
+	if n == nil {
+		v.parents = v.parents[:len(v.parents)-1]
+		return v
+	}
+
+	v.parents = append(v.parents, n)
+
+	lit, ok := n.(*ast.BasicLit)
+	if !ok || lit.Kind != token.STRING {
+		return v
+	}
+
+	str, err := strconv.Unquote(lit.Value)
+	if err != nil || str != v.literal {
+		return v
+	}
+
+	// Skip if this literal is the value of a const declaration
+	if v.isConstValue(n) {
+		return v
+	}
+
+	lit.Kind = token.IDENT
+	lit.Value = v.constantName
+	v.replacements++
+
+	return v
+}
+
+func (v *replacementVisitor) isConstValue(n ast.Node) bool {
+	if len(v.parents) < 3 {
+		return false
+	}
+	valueSpec, ok := v.parents[len(v.parents)-2].(*ast.ValueSpec)
+	if !ok {
+		return false
+	}
+	genDecl, ok := v.parents[len(v.parents)-3].(*ast.GenDecl)
+	if !ok || genDecl.Tok != token.CONST {
+		return false
+	}
+	for _, val := range valueSpec.Values {
+		if val == n {
+			return true
+		}
+	}
+	return false
+}
+
+// replaceInFile replaces string literals in a single file
+func replaceInFile(path string, literal, constantName string) (int, error) {
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+	if err != nil {
+		return 0, fmt.Errorf("parsing file: %w", err)
+	}
+
+	v := &replacementVisitor{
+		literal:      literal,
+		constantName: constantName,
+	}
+	ast.Walk(v, f)
+
+	if v.replacements == 0 {
+		return 0, nil
+	}
+
+	if !opts.DryRun {
+		file, err := os.Create(path)
+		if err != nil {
+			return 0, fmt.Errorf("creating file: %w", err)
+		}
+		defer file.Close()
+
+		if err := format.Node(file, fset, f); err != nil {
+			return 0, fmt.Errorf("formatting file: %w", err)
+		}
+	}
+
+	return v.replacements, nil
+}
+
+// runReplace executes the replacement operation
+func runReplace() error {
+	// Parse constants file
+	fset, constFile, err := parseConstantsFile(opts.ConstantsFile)
+	if err != nil {
+		return err
+	}
+
+	// Check if constant exists, add if not
+	if !hasConstant(constFile, opts.ConstantName) {
+		fmt.Printf("Adding constant %s = %q to %s\n", opts.ConstantName, opts.Literal, opts.ConstantsFile)
+		if err := addConstant(constFile, opts.ConstantName, opts.Literal); err != nil {
+			return err
+		}
+		if !opts.DryRun {
+			if err := writeConstantsFile(fset, constFile, opts.ConstantsFile); err != nil {
+				return err
+			}
+		}
+	} else {
+		fmt.Printf("Constant %s already exists in %s\n", opts.ConstantName, opts.ConstantsFile)
+	}
+
+	// Find all .go files in package (excluding _test.go and the constants file itself)
+	var files []string
+	err = filepath.Walk(opts.PackagePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() && path != opts.PackagePath {
+			return filepath.SkipDir // Don't recurse
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".go") &&
+			!strings.HasSuffix(path, "_test.go") {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("walking package: %w", err)
+	}
+
+	// Replace in each file
+	totalReplacements := 0
+	for _, file := range files {
+		count, err := replaceInFile(file, opts.Literal, opts.ConstantName)
+		if err != nil {
+			return fmt.Errorf("replacing in %s: %w", file, err)
+		}
+		if count > 0 {
+			fmt.Printf("  %s: %d replacement(s)\n", file, count)
+			totalReplacements += count
+		}
+	}
+
+	if opts.DryRun {
+		fmt.Printf("\nDry run: would make %d replacement(s)\n", totalReplacements)
+	} else {
+		fmt.Printf("\nMade %d replacement(s)\n", totalReplacements)
+	}
+
+	return nil
 }

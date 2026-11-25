@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_route_table: Allow an existing local route to be adopted or imported and the target to be updated
-```

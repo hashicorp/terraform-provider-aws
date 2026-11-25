@@ -55,32 +55,28 @@ resource "aws_network_acl" "main" {
 
 This resource supports the following arguments:
 
+* `egress` - (Optional) Egress rule. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+* `ingress` - (Optional) Ingress rule. Parameters defined below. This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_id` - (Required) The ID of the associated VPC.
-* `subnet_ids` - (Optional) A list of Subnet IDs to apply the ACL to
-* `ingress` - (Optional) Specifies an ingress rule. Parameters defined below.
-  This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
-* `egress` - (Optional) Specifies an egress rule. Parameters defined below.
-  This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `subnet_ids` - (Optional) List of Subnet IDs to apply the ACL to.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_id` - (Required) ID of the associated VPC.
 
-### egress and ingress
+### `egress` and `ingress` Block
 
 Both arguments are processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 Both `egress` and `ingress` support the following keys:
 
-* `from_port` - (Required) The from port to match.
-* `to_port` - (Required) The to port to match.
-* `rule_no` - (Required) The rule number. Used for ordering.
-* `action` - (Required) The action to take.
-* `protocol` - (Required) The protocol to match. If using the -1 'all'
-protocol, you must specify a from and to port of 0.
-* `cidr_block` - (Optional) The CIDR block to match. This must be a
-valid network mask.
-* `ipv6_cidr_block` - (Optional) The IPv6 CIDR block.
-* `icmp_type` - (Optional) The ICMP type to be used. Default 0.
-* `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
+* `action` - (Required) Action to take.
+* `cidr_block` - (Optional) CIDR block to match. This must be a valid network mask.
+* `from_port` - (Required) From port to match.
+* `icmp_code` - (Optional) ICMP type code to be used. Default 0.
+* `icmp_type` - (Optional) ICMP type to be used. Default 0.
+* `ipv6_cidr_block` - (Optional) IPv6 CIDR block.
+* `protocol` - (Required) Protocol to match. If using the -1 'all' protocol, you must specify a from and to port of 0.
+* `rule_no` - (Required) Rule number. Used for ordering.
+* `to_port` - (Required) To port to match.
 
 ~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
@@ -88,12 +84,34 @@ valid network mask.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the network ACL
-* `arn` - The ARN of the network ACL
-* `owner_id` - The ID of the AWS account that owns the network ACL.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the network ACL
+* `id` - ID of the network ACL
+* `owner_id` - ID of the AWS account that owns the network ACL.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
+
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_network_acl.main
+  identity = {
+    id = "acl-7aaabd18"
+  }
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) ID of the Network ACL.
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network ACLs using the `id`. For example:
 

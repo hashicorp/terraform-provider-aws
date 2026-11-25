@@ -7,6 +7,11 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    groups:
+      actions-cache:
+        patterns:
+          - "actions/cache"
+          - "actions/cache/*"
 
   - package-ecosystem: "gomod"
     directories:
@@ -15,10 +20,6 @@ updates:
       aws-sdk-go-v1:
         patterns:
           - "github.com/aws/aws-sdk-go"
-      aws-sdk-go-v2:
-        patterns:
-          - "github.com/aws/aws-sdk-go-v2"
-          - "github.com/aws/aws-sdk-go-v2/*"
       aws-sdk-go-base:
         patterns:
           - "github.com/hashicorp/aws-sdk-go-base/v2"
@@ -27,6 +28,9 @@ updates:
         patterns:
           - "github.com/hashicorp/terraform-plugin-*"
     ignore:
+      # AWS SDK for Go v2 is updated by a dedicated workflow.
+      - dependency-name: "github.com/aws/aws-sdk-go-v2"
+      - dependency-name: "github.com/aws/aws-sdk-go-v2/*"
       # aws/smithy-go should only be updated via aws/aws-sdk-go-v2
       - dependency-name: "github.com/aws/smithy-go"
       # go-cty should only be updated via terraform-plugin-sdk
@@ -52,7 +56,6 @@ updates:
       - "/.ci/providerlint"
       - "/.ci/tools"
       - "/skaff"
-      - "/tools/tfsdk2fw"
     schedule:
       interval: "daily"
     open-pull-requests-limit: 30

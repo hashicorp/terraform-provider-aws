@@ -38,27 +38,29 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
 This resource supports the following arguments:
 
+* `name` - (Required) Name of the set.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the set
-* `xss_match_tuple` - (Optional) The parts of web requests that you want to inspect for cross-site scripting attacks.
+* `xss_match_tuple` - (Optional) Parts of web requests that you want to inspect for cross-site scripting attacks. See [`xss_match_tuple` Block](#xss_match_tuple-block) below for details.
 
-### Nested fields
+### `xss_match_tuple` Block
 
-#### `xss_match_tuple`
+The `xss_match_tuple` block supports the following arguments:
 
-* `field_to_match` - (Required) Specifies where in a web request to look for cross-site scripting attacks.
+* `field_to_match` - (Required) Where in a web request to look for cross-site scripting attacks. See [`field_to_match` Block](#field_to_match-block) below for details.
 * `text_transformation` - (Required) Which text transformation, if any, to perform on the web request before inspecting the request for cross-site scripting attacks.
 
-#### `field_to_match`
+### `field_to_match` Block
+
+The `field_to_match` block supports the following arguments:
 
 * `data` - (Optional) When the value of `type` is `HEADER`, enter the name of the header that you want the WAF to search, for example, `User-Agent` or `Referer`. If the value of `type` is any other value, omit `data`.
-* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified stringE.g., `HEADER` or `METHOD`
+* `type` - (Required) Part of the web request that you want AWS WAF to search for a specified string. For example, `HEADER` or `METHOD`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Regional WAF XSS Match Set.
+* `id` - ID of the Regional WAF XSS Match Set.
 
 ## Import
 

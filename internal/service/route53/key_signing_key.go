@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
@@ -24,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -53,75 +53,77 @@ func resourceKeySigningKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"digest_algorithm_mnemonic": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"digest_algorithm_type": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"digest_value": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"dnskey_record": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ds_record": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"flag": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrHostedZoneID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"key_management_service_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"key_tag": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_.-]"), "must contain only alphanumeric characters, periods, underscores, or hyphens"),
-				),
-			},
-			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_algorithm_mnemonic": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"signing_algorithm_type": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrStatus: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  keySigningKeyStatusActive,
-				ValidateFunc: validation.StringInSlice([]string{
-					keySigningKeyStatusActive,
-					keySigningKeyStatusInactive,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"digest_algorithm_mnemonic": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"digest_algorithm_type": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"digest_value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"dnskey_record": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ds_record": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"flag": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrHostedZoneID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"key_management_service_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"key_tag": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(3, 128),
+						lazyvalidation.StringMatch("^[0-9A-Za-z_.-]", "must contain only alphanumeric characters, periods, underscores, or hyphens"),
+					),
+				},
+				names.AttrPublicKey: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_algorithm_mnemonic": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"signing_algorithm_type": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrStatus: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  keySigningKeyStatusActive,
+					ValidateFunc: validation.StringInSlice([]string{
+						keySigningKeyStatusActive,
+						keySigningKeyStatusInactive,
+					}, false),
+				},
+			}
 		},
 
 		Timeouts: &schema.ResourceTimeout{

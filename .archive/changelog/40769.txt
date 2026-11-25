@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_eip_association: Adds validation to only allow one of `instance_id` or `network_interface_id`
-```

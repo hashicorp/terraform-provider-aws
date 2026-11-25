@@ -20,7 +20,7 @@ resource "aws_ivschat_room" "example" {
 }
 ```
 
-## Usage with Logging Configuration to S3 Bucket
+### Usage with Logging Configuration to S3 Bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -45,6 +45,72 @@ resource "aws_ivschat_logging_configuration" "example" {
 resource "aws_ivschat_room" "example" {
   name                              = "tf-ivschat-room"
   logging_configuration_identifiers = [aws_ivschat_logging_configuration.example.arn]
+}
+```
+
+### Usage with Message Review Handler
+
+The message review handler is a Lambda function that receives each message's `Content` and returns a `ReviewResult` (`ALLOW` or `DENY`) and, optionally, modified `Content`. IVS Chat must be granted permission to invoke the function before the room is created.
+
+```terraform
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name               = "example-ivschat-message-review-handler"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "archive_file" "example" {
+  type                    = "zip"
+  source_content_filename = "index.js"
+  source_content          = <<-EOT
+    exports.handler = async function ({ Content }) {
+      return { ReviewResult: "ALLOW", Content: Content + " - edited by Lambda" };
+    };
+  EOT
+  output_path             = "${path.module}/message_review_handler.zip"
+}
+
+resource "aws_lambda_function" "example" {
+  filename      = data.archive_file.example.output_path
+  function_name = "example-ivschat-message-review-handler"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs24.x"
+  code_sha256   = data.archive_file.example.output_base64sha256
+}
+
+resource "aws_lambda_permission" "example" {
+  action         = "lambda:InvokeFunction"
+  function_name  = aws_lambda_function.example.function_name
+  principal      = "ivschat.amazonaws.com"
+  source_account = data.aws_caller_identity.current.account_id
+  source_arn     = "arn:${data.aws_partition.current.partition}:ivschat:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:room/*"
+}
+
+resource "aws_ivschat_room" "example" {
+  name = "example"
+
+  message_review_handler {
+    uri             = aws_lambda_function.example.arn
+    fallback_result = "ALLOW"
+  }
+
+  depends_on = [aws_lambda_permission.example]
 }
 ```
 
@@ -106,7 +172,7 @@ resource "aws_ivschat_room" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the IVS Chat room.
+- `arn` (String) ARN of the IVS Chat room.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Chat Room using the ARN. For example:
 

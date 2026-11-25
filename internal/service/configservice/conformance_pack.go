@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/configservice"
 	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -41,67 +41,69 @@ func resourceConformancePack() *schema.Resource {
 		UpdateWithoutTimeout: resourceConformancePackPut,
 		DeleteWithoutTimeout: resourceConformancePackDelete,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"delivery_s3_bucket": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 63),
-			},
-			"delivery_s3_key_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1024),
-			},
-			"input_parameter": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				MaxItems: 60,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"parameter_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"parameter_value": {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"delivery_s3_bucket": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 63),
+				},
+				"delivery_s3_key_prefix": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 1024),
+				},
+				"input_parameter": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 60,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"parameter_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"parameter_value": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters")),
-			},
-			"template_body": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
-				DiffSuppressOnRefresh: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 51200),
-					verify.ValidStringIsJSONOrYAML,
-				),
-				AtLeastOneOf: []string{"template_body", "template_s3_uri"},
-			},
-			"template_s3_uri": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexache.MustCompile(`^s3://`), "must begin with s3://"),
-				),
-				AtLeastOneOf: []string{"template_s3_uri", "template_body"},
-			},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 256),
+						lazyvalidation.StringMatch(`^[A-Za-z]`, "must begin with alphabetic character"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z-]+$`, "must contain only alphanumeric and hyphen characters")),
+				},
+				"template_body": {
+					Type:                  schema.TypeString,
+					Optional:              true,
+					DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
+					DiffSuppressOnRefresh: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 51200),
+						verify.ValidStringIsJSONOrYAML,
+					),
+					AtLeastOneOf: []string{"template_body", "template_s3_uri"},
+				},
+				"template_s3_uri": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 1024),
+						lazyvalidation.StringMatch(`^s3://`, "must begin with s3://"),
+					),
+					AtLeastOneOf: []string{"template_s3_uri", "template_body"},
+				},
+			}
 		},
 	}
 }

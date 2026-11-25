@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_codebuild_project: The `secondary_sources.auth` and `source.auth` attributes have been removed
-```

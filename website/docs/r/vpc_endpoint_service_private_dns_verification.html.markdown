@@ -3,11 +3,11 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service_private_dns_verification"
 description: |-
-  Terraform resource for managing an AWS VPC (Virtual Private Cloud) Endpoint Service Private DNS Verification.
+  Terraform resource for managing an AWS VPC Endpoint Service Private DNS Verification.
 ---
 # Resource: aws_vpc_endpoint_service_private_dns_verification
 
-Terraform resource for managing an AWS VPC (Virtual Private Cloud) Endpoint Service Private DNS Verification.
+Terraform resource for managing an AWS VPC Endpoint Service Private DNS Verification.
 This resource begins the verification process by calling the [`StartVpcEndpointServicePrivateDnsVerification`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_StartVpcEndpointServicePrivateDnsVerification.html) API.
 The service provider should add a record to the DNS server _before_ creating this resource.
 

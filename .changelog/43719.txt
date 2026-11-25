@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudwatch_log_group: Add resource identity support
-```

@@ -46,7 +46,7 @@ func normalizeCasingAndEscapeCodes(input string) string {
 				return b >= '0' && b <= '7' // Octal.
 			}) {
 				output.WriteRune(ch)
-				output.WriteString(string(bytes))
+				output.Write(bytes)
 				_, _ = br.Discard(lenOctalCode)
 				continue
 			}

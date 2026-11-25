@@ -35,7 +35,11 @@ import (
 
 // @FrameworkResource("aws_cloudwatch_log_delivery_destination", name="Delivery Destination")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("name")
 // @Testing(tagsTest=false)
+// @Testing(preIdentityVersion="v6.51.0")
+// @Testing(importStateIdAttribute="name")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types;awstypes;awstypes.DeliveryDestination")
 func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &deliveryDestinationResource{}
 
@@ -44,6 +48,7 @@ func newDeliveryDestinationResource(context.Context) (resource.ResourceWithConfi
 
 type deliveryDestinationResource struct {
 	framework.ResourceWithModel[deliveryDestinationResourceModel]
+	framework.WithImportByIdentity
 }
 
 func (r *deliveryDestinationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -133,7 +138,8 @@ func (r *deliveryDestinationResource) Create(ctx context.Context, request resour
 
 	conn := r.Meta().LogsClient(ctx)
 
-	input := cloudwatchlogs.PutDeliveryDestinationInput{}
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	var input cloudwatchlogs.PutDeliveryDestinationInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -145,7 +151,7 @@ func (r *deliveryDestinationResource) Create(ctx context.Context, request resour
 	output, err := conn.PutDeliveryDestination(ctx, &input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Destination (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 		return
 	}
@@ -166,7 +172,8 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 
 	conn := r.Meta().LogsClient(ctx)
 
-	output, err := findDeliveryDestinationByName(ctx, conn, data.Name.ValueString())
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	output, err := findDeliveryDestinationByName(ctx, conn, name)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -176,7 +183,7 @@ func (r *deliveryDestinationResource) Read(ctx context.Context, request resource
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Destination (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 		return
 	}
@@ -215,7 +222,8 @@ func (r *deliveryDestinationResource) Update(ctx context.Context, request resour
 	conn := r.Meta().LogsClient(ctx)
 
 	if !new.DeliveryDestinationConfiguration.Equal(old.DeliveryDestinationConfiguration) || !new.OutputFormat.Equal(old.OutputFormat) {
-		input := cloudwatchlogs.PutDeliveryDestinationInput{}
+		name := fwflex.StringValueFromFramework(ctx, new.Name)
+		var input cloudwatchlogs.PutDeliveryDestinationInput
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, &input)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -224,7 +232,7 @@ func (r *deliveryDestinationResource) Update(ctx context.Context, request resour
 		output, err := conn.PutDeliveryDestination(ctx, &input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Destination (%s)", new.Name.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 			return
 		}
@@ -247,23 +255,21 @@ func (r *deliveryDestinationResource) Delete(ctx context.Context, request resour
 
 	conn := r.Meta().LogsClient(ctx)
 
-	_, err := conn.DeleteDeliveryDestination(ctx, &cloudwatchlogs.DeleteDeliveryDestinationInput{
-		Name: fwflex.StringFromFramework(ctx, data.Name),
-	})
+	name := fwflex.StringValueFromFramework(ctx, data.Name)
+	input := cloudwatchlogs.DeleteDeliveryDestinationInput{
+		Name: aws.String(name),
+	}
+	_, err := conn.DeleteDeliveryDestination(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery Destination (%s)", data.Name.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Delivery Destination (%s)", name), err.Error())
 
 		return
 	}
-}
-
-func (r *deliveryDestinationResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrName), request, response)
 }
 
 func findDeliveryDestinationByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.DeliveryDestination, error) {

@@ -9,7 +9,6 @@ import (
 	"context"
 	"log"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -37,63 +37,65 @@ func resourcePrimaryContact() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAccountID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"address_line_1": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"address_line_2": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"address_line_3": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"city": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"company_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"country_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"district_or_county": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"full_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
-			},
-			"phone_number": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[+][0-9\s()-]+$`), "must be a valid phone number"),
-			},
-			"postal_code": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"state_or_region": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"website_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrAccountID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"address_line_1": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"address_line_2": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"address_line_3": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"city": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"company_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"country_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"district_or_county": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"full_name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
+				},
+				"phone_number": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: lazyvalidation.StringMatch(`^[+][0-9\s()-]+$`, "must be a valid phone number"),
+				},
+				"postal_code": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"state_or_region": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"website_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

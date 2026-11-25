@@ -13,9 +13,9 @@ on:
       - closed
 
 permissions:
-  contents: read
-  issues: write
-  pull-requests: write
+  contents: read        # required for checkout
+  issues: write         # required to remove labels and post comments on issues
+  pull-requests: write  # required to remove labels and post comments on pull requests
 
 jobs:
   process:
@@ -45,17 +45,45 @@ jobs:
           >
           > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed."
 
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         id: checkout
         if: github.event.pull_request.merged
         with:
-          sparse-checkout: .ci
+          # Explicitly check out the trusted base branch (not the fork PR head/merge
+          # commit). On a merged pull_request_target closed event, the default checkout
+          # ref resolves to github.sha, which equals pull_request.merge_commit_sha. Since
+          # checkout v7 (2026), that match on a fork PR is refused as a "pwn request".
+          # This workflow only needs the base repository's .ci scripts and Changie
+          # config/changes, so pin to the
+          # base ref, which is a branch name rather than a SHA and is always trusted.
+          ref: ${{ github.event.pull_request.base.ref }}
+          sparse-checkout: |
+            .ci
+            .changie.yaml
+            .changes/
+
+      # The milestone is the next minor version after the latest released version
+      # in the changes directory. This does not depend on the CHANGELOG.md heading,
+      # which only shows "(Unreleased)" once a change fragment has been merged.
+      - name: Get Next Minor Version
+        id: changie
+        if: steps.checkout.outcome != 'skipped'
+        uses: miniscruff/changie-action@3223cb29b92a0972dedc864ace3da01e04780ae4 # v3.1.0
+        with:
+          args: next minor
 
       - name: Get Current Milestone Name
         id: get-current-milestone
         if: steps.checkout.outcome != 'skipped'
+        env:
+          NEXT_MINOR: ${{ steps.changie.outputs.output }}
         shell: bash
-        run: echo "current_milestone=v$(head -1 CHANGELOG.md | cut -d " " -f 2)" >> "$GITHUB_OUTPUT"
+        run: |
+          if [[ ! "$NEXT_MINOR" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::Unexpected output from 'changie next minor': ${NEXT_MINOR}"
+            exit 1
+          fi
+          echo "current_milestone=v${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
 
       - name: Add Items to Milestone
         if: steps.checkout.outcome != 'skipped'

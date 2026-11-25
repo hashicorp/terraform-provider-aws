@@ -1,0 +1,281 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: schema-string-arn-requried
+    languages: [go]
+    message: ARN String attributes should use sdkschema.ArnStringSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Required:     true,
+            ValidateFunc: verify.ValidARN,
+          }
+    fix: sdkschema.ARNStringSchema(sdkschema.AttrRequired)
+    severity: WARNING
+
+  - id: schema-string-arn-optional
+    languages: [go]
+    message: ARN String attributes should use sdkschema.ArnStringSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Optional:     true,
+            ValidateFunc: verify.ValidARN,
+          }
+    fix: sdkschema.ARNStringSchema(sdkschema.AttrOptional)
+    severity: WARNING
+
+  - id: schema-string-len-between-required
+    languages: [go]
+    message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Required:     true,
+            ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+          }
+    fix: sdkschema.StringLenBetweenSchema(sdkschema.AttrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-string-len-between-optional
+    languages: [go]
+    message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeString,
+            Optional:     true,
+            ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+          }
+    fix: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptional, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-string-len-between-optionalcomputed
+    languages: [go]
+    message: String attributes with length validation should use sdkschema.StringLenBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-either:
+          - pattern: |
+              {
+                Type:         schema.TypeString,
+                Optional:     true,
+                Computed:     true,
+                ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+              }
+          - pattern: |
+              {
+                Type:         schema.TypeString,
+                Computed:     true,
+                Optional:     true,
+                ValidateFunc: validation.StringLenBetween($MIN, $MAX),
+              }
+    fix: sdkschema.StringLenBetweenSchema(sdkschema.AttrOptionalComputed, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-string-enum
+    languages: [go]
+    message: String attributes with enum validation should use sdkschema.StringEnumSchema[<type>](<required>)
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub/internal/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern-either:
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                $REQOPT:          true,
+                ValidateDiagFunc: $FUNC(),
+              }
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                Computed:         true,
+                $REQOPT:          true,
+                ValidateDiagFunc: $FUNC(),
+              }
+          - pattern: |
+              {
+                Type:             schema.TypeString,
+                $REQOPT:          true,
+                Computed:         true,
+                ValidateDiagFunc: $FUNC(),
+              }
+      - metavariable-regex:
+          metavariable: $REQOPT
+          regex: 'Required|Optional'
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: enum\.Validate # Semgrep doesn't seem to recognize the type specification
+    # Cannot be auto-fixed
+    severity: WARNING
+
+  - id: schema-int-between-required
+    languages: [go]
+    message: Int attributes with between validation should use sdkschema.IntBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeInt,
+            Required:     true,
+            ValidateFunc: validation.IntBetween($MIN, $MAX),
+          }
+    fix: sdkschema.IntBetweenSchema(sdkschema.AttrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-int-between-optional
+    languages: [go]
+    message: Int attributes with between validation should use sdkschema.IntBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeInt,
+            Optional:     true,
+            ValidateFunc: validation.IntBetween($MIN, $MAX),
+          }
+    fix: sdkschema.IntBetweenSchema(sdkschema.AttrOptional, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-float-between-required
+    languages: [go]
+    message: Float attributes with between validation should use sdkschema.FloatBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeFloat,
+            Required:     true,
+            ValidateFunc: validation.FloatBetween($MIN, $MAX),
+          }
+    fix: sdkschema.FloatBetweenSchema(sdkschema.AttrRequired, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-float-between-optional
+    languages: [go]
+    message: Float attributes with between validation should use sdkschema.FloatBetweenSchema
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:         schema.TypeFloat,
+            Optional:     true,
+            ValidateFunc: validation.FloatBetween($MIN, $MAX),
+          }
+    fix: sdkschema.FloatBetweenSchema(sdkschema.AttrOptional, $MIN, $MAX)
+    severity: WARNING
+
+  - id: schema-string-computed-only
+    languages: [go]
+    message: Computed-Only String attributes should use sdkschema.StringComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub/internal/schema"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeString,
+            Computed: true,
+          }
+    fix: sdkschema.StringComputedOnly()
+    severity: WARNING
+
+  - id: schema-bool-computed-only
+    languages: [go]
+    message: Computed-Only Bool attributes should use sdkschema.BoolComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeBool,
+            Computed: true,
+          }
+    fix: sdkschema.BoolComputedOnly()
+    severity: WARNING
+
+  - id: schema-int-computed-only
+    languages: [go]
+    message: Computed-Only Int attributes should use sdkschema.IntComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeInt,
+            Computed: true,
+          }
+    fix: sdkschema.IntComputedOnly()
+    severity: WARNING
+
+  - id: schema-float-computed-only
+    languages: [go]
+    message: Computed-Only Float attributes should use sdkschema.FloatComputedOnly
+    paths:
+      include:
+        - "/internal/service/quicksight/schema"
+        - "/internal/service/securityhub"
+    patterns:
+      - pattern-inside: "Schema: map[string]*schema.Schema{ ... }"
+      - pattern: |
+          {
+            Type:     schema.TypeFloat,
+            Computed: true,
+          }
+    fix: sdkschema.FloatComputedOnly()
+    severity: WARNING

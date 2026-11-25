@@ -227,20 +227,21 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the TLS inspection configuration.
 * `encryption_configuration` - (Optional) Encryption configuration block. Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Encryption Configuration
+### `encryption_configuration` Block
 
-* `key_id` - (Optional) ARN of the Amazon Web Services Key Management Service (KMS) customer managed key.
+* `key_id` - (Optional) ARN of the Amazon Web Services KMS customer managed key.
 * `type` - (Optional) Type of KMS key to use for encryption of your Network Firewall resources. Valid values: `AWS_OWNED_KMS_KEY`, `CUSTOMER_KMS`.
 
-### TLS Inspection Configuration
+### `tls_inspection_configuration` Block
 
 * `server_certificate_configuration` - (Required) Server certificate configurations that are associated with the TLS configuration. Detailed below.
 
-### Server Certificate Configuration
+### `server_certificate_configuration` Block
 
 The `server_certificate_configuration` block supports the following arguments:
 
@@ -249,52 +250,52 @@ The `server_certificate_configuration` block supports the following arguments:
 * `scope` (Required) - Scope block. Detailed below.
 * `server_certificate` - (Optional) Server certificates to use for inbound SSL/TLS inspection. See [Using SSL/TLS certificates with TLS inspection configurations](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html).
 
-### Check Certificate Revocation Status
+### `check_certificate_revocation_status` Block
 
 The `check_certificate_revocation_status` block supports the following arguments:
 
-~> **NOTE  To check the certificate revocation status, you must also specify a `certificate_authority_arn` in `server_certificate_configuration`.
+~> **NOTE:** To check the certificate revocation status, you must also specify a `certificate_authority_arn` in `server_certificate_configuration`.
 
-`revoked_status_action` - (Optional) how Network Firewall processes traffic when it determines that the certificate presented by the server in the SSL/TLS connection has a revoked status. See [Checking certificate revocation status](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html#tls-inspection-check-certificate-revocation-status) for details. Valid values: `PASS`, `DROP`, `REJECT`.
-`unknown_status_action` - (Optional) How Network Firewall processes traffic when it determines that the certificate presented by the server in the SSL/TLS connection has an unknown status, or a status that cannot be determined for any other reason, including when the service is unable to connect to the OCSP and CRL endpoints for the certificate. See [Checking certificate revocation status](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html#tls-inspection-check-certificate-revocation-status) for details. Valid values: `PASS`, `DROP`, `REJECT`.
+* `revoked_status_action` - (Optional) How Network Firewall processes traffic when it determines that the certificate presented by the server in the SSL/TLS connection has a revoked status. See [Checking certificate revocation status](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html#tls-inspection-check-certificate-revocation-status) for details. Valid values: `PASS`, `DROP`, `REJECT`.
+* `unknown_status_action` - (Optional) How Network Firewall processes traffic when it determines that the certificate presented by the server in the SSL/TLS connection has an unknown status, or a status that cannot be determined for any other reason, including when the service is unable to connect to the OCSP and CRL endpoints for the certificate. See [Checking certificate revocation status](https://docs.aws.amazon.com/network-firewall/latest/developerguide/tls-inspection-certificate-requirements.html#tls-inspection-check-certificate-revocation-status) for details. Valid values: `PASS`, `DROP`, `REJECT`.
 
-### Scopes
+### `scope` Block
 
 The `scope` block supports the following arguments:
 
-* `destination` - (Required) Set of configuration blocks describing the destination IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any destination address. See [Destination](#destination) below for details.
-* `destination_ports` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Ports](#destination-ports) below for details.
-* `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA). Network Firewall currently supports TCP only. Valid values: `6`
-* `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
-* `source_ports` - (Optional) Set of configuration blocks describing the source ports to inspect for. If not specified, this matches with any source port. See [Source Ports](#source-ports) below for details.
+* `destination` - (Required) Set of configuration blocks describing the destination IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any destination address. See [`destination` Block](#destination-block) below for details.
+* `destination_ports` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [`destination_ports` Block](#destination_ports-block) below for details.
+* `protocols` - (Required) Set of protocols to inspect for, specified using the protocol's assigned IP number (IANA). Network Firewall currently supports TCP only. Valid values: `6`
+* `source` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [`source` Block](#source-block) below for details.
+* `source_ports` - (Optional) Set of configuration blocks describing the source ports to inspect for. If not specified, this matches with any source port. See [`source_ports` Block](#source_ports-block) below for details.
 
-### Destination
+### `destination` Block
 
 The `destination` block supports the following argument:
 
-* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required) IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
-### Destination Ports
+### `destination_ports` Block
 
 The `destination_ports` block supports the following arguments:
 
-* `from_ports` - (Required) The lower limit of the port range. This must be less than or equal to the `to_port`.
-* `to_ports` - (Optional) The upper limit of the port range. This must be greater than or equal to the `from_port`.
+* `from_port` - (Required) Lower limit of the port range. This must be less than or equal to the `to_port`.
+* `to_port` - (Required) Upper limit of the port range. This must be greater than or equal to the `from_port`.
 
-### Source
+### `source` Block
 
 The `source` block supports the following argument:
 
-* `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
+* `address_definition` - (Required) IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
-### Source Ports
+### `source_ports` Block
 
 The `source_ports` block supports the following arguments:
 
-* `from_port` - (Required) The lower limit of the port range. This must be less than or equal to the `to_port`.
-* `to_port` - (Optional) The upper limit of the port range. This must be greater than or equal to the `from_port`.
+* `from_port` - (Required) Lower limit of the port range. This must be less than or equal to the `to_port`.
+* `to_port` - (Required) Upper limit of the port range. This must be greater than or equal to the `from_port`.
 
-### Server Certificates
+### `server_certificate` Block
 
 The `server_certificate` block supports the following arguments:
 
@@ -305,13 +306,13 @@ The `server_certificate` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the TLS Inspection Configuration.
-* `certificate_authority` - Certificate Manager certificate block. See [Certificate Authority](#certificate-authority) below for details.
-* `certificates` - List of certificate blocks describing certificates associated with the TLS inspection configuration. See [Certificates](#certificates) below for details.
+* `certificate_authority` - Certificate Manager certificate block. See [`certificate_authority` Block](#certificate_authority-block) below for details.
+* `certificates` - List of certificate blocks describing certificates associated with the TLS inspection configuration. See [`certificates` Block](#certificates-block) below for details.
 * `number_of_associations` - Number of firewall policies that use this TLS inspection configuration.
-* `tls_inspection_configuration_id` - A unique identifier for the TLS inspection configuration.
+* `tls_inspection_configuration_id` - Unique identifier for the TLS inspection configuration.
 * `update_token` - String token used when updating the rule group.
 
-### Certificate Authority
+### `certificate_authority` Block
 
 The `certificate_authority` block exports the following attributes:
 
@@ -320,7 +321,7 @@ The `certificate_authority` block exports the following attributes:
 * `status` - Status of the certificate.
 * `status_message` - Details about the certificate status, including information about certificate errors.
 
-### Certificates
+### `certificates` Block
 
 The `certificates` block exports the following attributes:
 
@@ -358,7 +359,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Network Firewall TLS inspection configuration.
+- `arn` (String) ARN of the Network Firewall TLS inspection configuration.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall TLS Inspection Configuration using the `arn`. For example:
 

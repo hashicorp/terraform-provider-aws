@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_iot_certificate: Add `ca_pem` argument, enabling the use of existing IoT certificates
-```

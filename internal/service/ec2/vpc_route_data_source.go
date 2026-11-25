@@ -28,84 +28,92 @@ func dataSourceRoute() *schema.Resource {
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"route_table_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"route_table_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
 
-			///
-			// Destinations.
-			///
-			"destination_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"destination_ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"destination_prefix_list_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				///
+				// Destinations.
+				///
+				"destination_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"destination_ipv6_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"destination_prefix_list_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 
-			//
-			// Targets.
-			//
-			"carrier_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"core_network_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"egress_only_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrInstanceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"local_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"nat_gateway_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrNetworkInterfaceID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			names.AttrTransitGatewayID: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"vpc_peering_connection_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
+				//
+				// Targets.
+				//
+				"carrier_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"core_network_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"egress_only_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"igw_firewall": routeIGWFirewallSchema(),
+				names.AttrInstanceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"local_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"nat_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrNetworkInterfaceID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"odb_network_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				names.AttrTransitGatewayID: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"vpc_peering_connection_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -179,6 +187,10 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 			continue
 		}
 
+		if v, ok := d.GetOk("odb_network_arn"); ok && aws.ToString(r.OdbNetworkArn) != v.(string) {
+			continue
+		}
+
 		if v, ok := d.GetOk(names.AttrTransitGatewayID); ok && aws.ToString(r.TransitGatewayId) != v.(string) {
 			continue
 		}
@@ -215,10 +227,14 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta any) 
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
 	d.Set("gateway_id", route.GatewayId)
+	if err := d.Set("igw_firewall", flattenIGWFirewall(route.IgwFirewall)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting igw_firewall: %s", err)
+	}
 	d.Set(names.AttrInstanceID, route.InstanceId)
 	d.Set("local_gateway_id", route.LocalGatewayId)
 	d.Set("nat_gateway_id", route.NatGatewayId)
 	d.Set(names.AttrNetworkInterfaceID, route.NetworkInterfaceId)
+	d.Set("odb_network_arn", route.OdbNetworkArn)
 	d.Set(names.AttrTransitGatewayID, route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
 

@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_cloudtrail : Add `sns_topic_arn` attribute
-```

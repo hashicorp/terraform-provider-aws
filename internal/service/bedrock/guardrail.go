@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -36,6 +36,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -74,8 +75,6 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 	const (
 		filtersConfigThresholdMin = 0.000000
 	)
-	guardrailNameRegex := regexache.MustCompile("^[0-9a-zA-Z-_]+$")
-	topicsConfigNameRegex := regexache.MustCompile("^[0-9a-zA-Z-_ !?.]+$")
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -120,7 +119,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 50),
-					stringvalidator.RegexMatches(guardrailNameRegex, ""),
+					lazystringvalidator.RegexMatches(`^[0-9a-zA-Z-_]+$`, ""),
 				},
 			},
 			names.AttrStatus: schema.StringAttribute{
@@ -132,6 +131,10 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			names.AttrVersion: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -147,7 +150,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"tier_config": framework.ResourceOptionalComputedListOfObjectsAttribute[guardrailContentFiltersTierConfigModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+						"tier_config": framework.ResourceOptionalComputedSingleNestedChildObjectAttribute[guardrailContentFiltersTierConfigModel](ctx),
 					},
 					Blocks: map[string]schema.Block{
 						"filters_config": schema.SetNestedBlock{
@@ -161,12 +164,12 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									"input_enabled": schema.BoolAttribute{
 										Optional: true,
 									},
-									"input_modalities": schema.ListAttribute{
+									"input_modalities": schema.SetAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.GuardrailModality](),
 										ElementType: types.StringType,
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
 										},
 									},
 									"input_strength": schema.StringAttribute{
@@ -180,12 +183,12 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 									"output_enabled": schema.BoolAttribute{
 										Optional: true,
 									},
-									"output_modalities": schema.ListAttribute{
+									"output_modalities": schema.SetAttribute{
 										Optional:    true,
-										CustomType:  fwtypes.ListOfStringEnumType[awstypes.GuardrailModality](),
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.GuardrailModality](),
 										ElementType: types.StringType,
-										Validators: []validator.List{
-											listvalidator.SizeAtLeast(1),
+										Validators: []validator.Set{
+											setvalidator.SizeAtLeast(1),
 										},
 									},
 									"output_strength": schema.StringAttribute{
@@ -368,7 +371,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"tier_config": framework.ResourceOptionalComputedListOfObjectsAttribute[guardrailTopicsTierConfigModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
+						"tier_config": framework.ResourceOptionalComputedSingleNestedChildObjectAttribute[guardrailTopicsTierConfigModel](ctx),
 					},
 					Blocks: map[string]schema.Block{
 						"topics_config": schema.ListNestedBlock{
@@ -403,7 +406,7 @@ func (r *guardrailResource) Schema(ctx context.Context, req resource.SchemaReque
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(1, 100),
-											stringvalidator.RegexMatches(topicsConfigNameRegex, ""),
+											lazystringvalidator.RegexMatches(`^[0-9a-zA-Z-_ !?.]+$`, ""),
 										},
 									},
 									names.AttrType: schema.StringAttribute{
@@ -639,21 +642,21 @@ func (r *guardrailResource) Update(ctx context.Context, req resource.UpdateReque
 			)
 			return
 		}
+	}
 
-		guardrail, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Bedrock, create.ErrActionSetting, ResNameGuardrail, plan.GuardrailID.String(), err),
-				err.Error(),
-			)
-			return
-		}
+	findOut, err := findGuardrailByTwoPartKey(ctx, conn, plan.GuardrailID.ValueString(), plan.Version.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Bedrock, create.ErrActionUpdating, ResNameGuardrail, plan.GuardrailID.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-		// Set values for unknowns.
-		resp.Diagnostics.Append(fwflex.Flatten(ctx, guardrail, &plan, r.flexOpt)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	// Set values for unknowns.
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, findOut, &plan, r.flexOpt)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -820,6 +823,7 @@ type guardrailResourceModel struct {
 	TagsAll                    tftags.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                     `tfsdk:"timeouts"`
 	TopicPolicy                fwtypes.ListNestedObjectValueOf[guardrailTopicPolicyConfigModel]   `tfsdk:"topic_policy_config"`
+	UpdatedAt                  timetypes.RFC3339                                                  `tfsdk:"updated_at"`
 	Version                    types.String                                                       `tfsdk:"version"`
 	WordPolicy                 fwtypes.ListNestedObjectValueOf[wordPolicyConfig]                  `tfsdk:"word_policy_config"`
 }
@@ -832,11 +836,11 @@ type guardrailContentPolicyConfigModel struct {
 type guardrailContentFilterConfigModel struct {
 	InputAction      fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"input_action"`
 	InputEnabled     types.Bool                                                `tfsdk:"input_enabled"`
-	InputModalities  fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"input_modalities"`
+	InputModalities  fwtypes.SetOfStringEnum[awstypes.GuardrailModality]       `tfsdk:"input_modalities"`
 	InputStrength    fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"input_strength"`
 	OutputAction     fwtypes.StringEnum[awstypes.GuardrailContentFilterAction] `tfsdk:"output_action"`
 	OutputEnabled    types.Bool                                                `tfsdk:"output_enabled"`
-	OutputModalities fwtypes.ListOfStringEnum[awstypes.GuardrailModality]      `tfsdk:"output_modalities"`
+	OutputModalities fwtypes.SetOfStringEnum[awstypes.GuardrailModality]       `tfsdk:"output_modalities"`
 	OutputStrength   fwtypes.StringEnum[awstypes.GuardrailFilterStrength]      `tfsdk:"output_strength"`
 	Type             fwtypes.StringEnum[awstypes.GuardrailContentFilterType]   `tfsdk:"type"`
 }

@@ -160,6 +160,11 @@ resource "null_resource" "compliance_gate" {
 ### External API Integration
 
 ```terraform
+variable "environment" {
+  description = "The environment name (e.g., dev, prod)"
+  type        = string
+}
+
 # Function that calls external APIs for configuration data
 ephemeral "aws_lambda_invocation" "external_config" {
   function_name = "config-fetcher"

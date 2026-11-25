@@ -39,46 +39,48 @@ func resourceSQLInjectionMatchSet() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"sql_injection_match_tuple": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      resourceSQLInjectionMatchSetTupleHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"field_to_match": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"data": {
-										Type:     schema.TypeString,
-										Optional: true,
-										StateFunc: func(v any) string {
-											value := v.(string)
-											return strings.ToLower(value)
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"sql_injection_match_tuple": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Set:      resourceSQLInjectionMatchSetTupleHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"field_to_match": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"data": {
+											Type:     schema.TypeString,
+											Optional: true,
+											StateFunc: func(v any) string {
+												value := v.(string)
+												return strings.ToLower(value)
+											},
 										},
-									},
-									names.AttrType: {
-										Type:     schema.TypeString,
-										Required: true,
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"text_transformation": {
-							Type:     schema.TypeString,
-							Required: true,
+							"text_transformation": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }

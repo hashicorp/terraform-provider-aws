@@ -170,24 +170,24 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `destination_config` - (Optional) Configuration block with destination configuration. [See below](#destination_config-configuration-block).
+* `destination_config` - (Optional) Configuration block with destination configuration. [See below](#destination_config-block).
 * `maximum_event_age_in_seconds` - (Optional) Maximum age of a request that Lambda sends to a function for processing in seconds. Valid values between 60 and 21600.
 * `maximum_retry_attempts` - (Optional) Maximum number of times to retry when the function returns an error. Valid values between 0 and 2. Defaults to 2.
 * `qualifier` - (Optional) Lambda Function published version, `$LATEST`, or Lambda Alias name.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### destination_config Configuration Block
+### `destination_config` Block
 
 ~> **Note:** At least one of `on_failure` or `on_success` must be configured when using this configuration block, otherwise remove it completely to prevent perpetual differences in Terraform runs.
 
-* `on_failure` - (Optional) Configuration block with destination configuration for failed asynchronous invocations. [See below](#destination_config-on_failure-configuration-block).
-* `on_success` - (Optional) Configuration block with destination configuration for successful asynchronous invocations. [See below](#destination_config-on_success-configuration-block).
+* `on_failure` - (Optional) Configuration block with destination configuration for failed asynchronous invocations. [See below](#on_failure-block).
+* `on_success` - (Optional) Configuration block with destination configuration for successful asynchronous invocations. [See below](#on_success-block).
 
-#### destination_config on_failure Configuration Block
+#### `on_failure` Block
 
 * `destination` - (Required) ARN of the destination resource. See the [Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations) for acceptable resource types and associated IAM permissions.
 
-#### destination_config on_success Configuration Block
+#### `on_success` Block
 
 * `destination` - (Required) ARN of the destination resource. See the [Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/invocation-async.html#invocation-async-destinations) for acceptable resource types and associated IAM permissions.
 

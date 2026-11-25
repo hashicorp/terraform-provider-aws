@@ -1,3 +1,0 @@
-```release-note:enhancement
-data-source/aws_rds_engine_version: Support `default_only`, `include_all`, and `filter`
-```

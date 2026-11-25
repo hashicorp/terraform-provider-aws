@@ -12,13 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	sdkretry "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -115,10 +114,7 @@ func resourceRepository() *schema.Resource {
 								Required: true,
 								ValidateDiagFunc: validation.AllDiag(
 									validation.ToDiagFunc(validation.StringLenBetween(1, 128)),
-									validation.ToDiagFunc(validation.StringMatch(
-										regexache.MustCompile(`^[a-zA-Z0-9._*-]+$`),
-										"must contain only letters, numbers, and special characters (._*-)",
-									)),
+									lazyvalidation.StringMatchDiag(`^[a-zA-Z0-9._*-]+$`, "must contain only letters, numbers, and special characters (._*-)"),
 									validateImageTagMutabilityExclusionFilter(),
 								),
 							},
@@ -144,7 +140,7 @@ func resourceRepository() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
@@ -328,9 +324,7 @@ func findRepositoryByName(ctx context.Context, conn *ecr.Client, name string) (*
 
 	// Eventual consistency check.
 	if aws.ToString(output.RepositoryName) != name {
-		return nil, &sdkretry.NotFoundError{
-			LastRequest: input,
-		}
+		return nil, &retry.NotFoundError{}
 	}
 
 	return output, nil

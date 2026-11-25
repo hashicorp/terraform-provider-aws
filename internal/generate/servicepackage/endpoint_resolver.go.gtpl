@@ -33,6 +33,7 @@ func newEndpointResolverV2() resolverV2 {
 
 func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package }}.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
+{{- if .EndpointFIPSSupport }}
 	useFIPS := aws.ToBool(params.UseFIPS)
 
 	if eps := params.Endpoint; aws.ToString(eps) != "" {
@@ -80,6 +81,7 @@ func (r resolverV2) ResolveEndpoint(ctx context.Context, params {{ .GoV2Package 
 			return endpoint, smarterr.NewError(err)
 		}
 	}
+{{- end }}
 
 	return r.defaultResolver.ResolveEndpoint(ctx, params)
 }

@@ -52,6 +52,39 @@ func virtualInterfaceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		}
 	}
 
+	if d.HasChanges("prefix_pool_allocated_count_ipv4", "prefix_pool_allocated_count_ipv6") {
+		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("prefix_pool_allocated_count_ipv4") {
+			input.PrefixPoolAllocatedCountIpv4 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv4").(int)))
+		}
+
+		if d.HasChange("prefix_pool_allocated_count_ipv6") {
+			input.PrefixPoolAllocatedCountIpv6 = aws.Int32(int32(d.Get("prefix_pool_allocated_count_ipv6").(int)))
+		}
+
+		_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) prefix pool allocation: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("rate_limit") {
+		input := &directconnect.UpdateVirtualInterfaceAttributesInput{
+			RateLimit:          aws.String(d.Get("rate_limit").(string)),
+			VirtualInterfaceId: aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateVirtualInterfaceAttributes(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Direct Connect Virtual Interface (%s) RateLimit attribute: %s", d.Id(), err)
+		}
+	}
+
 	return diags
 }
 

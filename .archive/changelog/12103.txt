@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_snapshot_create_volume_permission: Error if `account_id` is the snapshot's owner
-```

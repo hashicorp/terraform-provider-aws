@@ -43,76 +43,78 @@ func resourceProvisioningArtifact() *schema.Resource {
 			Delete: schema.DefaultTimeout(ProvisioningArtifactDeleteTimeout),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      acceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
-			},
-			"active": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			names.AttrCreatedTime: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"disable_template_validation": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-			"guidance": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.ProvisioningArtifactGuidanceDefault,
-				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactGuidance](),
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"product_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"provisioning_artifact_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"template_physical_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"template_url",
-					"template_physical_id",
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"accept_language": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      acceptLanguageEnglish,
+					ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 				},
-			},
-			"template_url": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ExactlyOneOf: []string{
-					"template_url",
-					"template_physical_id",
+				"active": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
 				},
-			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
-			},
+				names.AttrCreatedTime: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"disable_template_validation": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+					ForceNew: true,
+				},
+				"guidance": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Default:          awstypes.ProvisioningArtifactGuidanceDefault,
+					ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactGuidance](),
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"product_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"provisioning_artifact_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"template_physical_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"template_url",
+						"template_physical_id",
+					},
+				},
+				"template_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					ExactlyOneOf: []string{
+						"template_url",
+						"template_physical_id",
+					},
+				},
+				names.AttrType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.ProvisioningArtifactType](),
+				},
+			}
 		},
 	}
 }

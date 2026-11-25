@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_grafana_workspace_api_key
-```

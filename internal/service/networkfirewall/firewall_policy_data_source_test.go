@@ -225,6 +225,37 @@ func TestAccNetworkFirewallFirewallPolicyDataSource_statefulEngineOptions(t *tes
 	})
 }
 
+func TestAccNetworkFirewallFirewallPolicyDataSource_route53ResolvedIPValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
+	resourceName := "aws_networkfirewall_firewall_policy.test"
+	datasourceName := "data.aws_networkfirewall_firewall_policy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID, names.Route53ResolverServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallPolicyDataSourceConfig_route53ResolvedIPValidation(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.#", resourceName, "firewall_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.#", resourceName, "firewall_policy.0.route53_resolved_ip_validation.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.action", resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.action"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.#", resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.#"),
+					resource.TestCheckTypeSetElemAttr(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.bypass_destination_validation_ip_ranges.*", "192.0.2.0/24"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_expiry_exception_policy", resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_expiry_exception_policy"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_firewall_rule_group_id", resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.dns_firewall_rule_group_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.#", resourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.#"),
+					resource.TestCheckTypeSetElemAttr(datasourceName, "firewall_policy.0.route53_resolved_ip_validation.0.source_ip_ranges.*", "10.0.0.0/16"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccNetworkFirewallFirewallPolicyDataSource_multipleStatefulRuleGroupReferences(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "resource-test-terraform")
@@ -387,6 +418,35 @@ resource "aws_networkfirewall_firewall_policy" "test" {
     }
   }
 }
+data "aws_networkfirewall_firewall_policy" "test" {
+  arn = aws_networkfirewall_firewall_policy.test.arn
+}
+`, rName)
+}
+
+func testAccFirewallPolicyDataSourceConfig_route53ResolvedIPValidation(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_resolver_firewall_rule_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+    stateless_fragment_default_actions = ["aws:forward_to_sfe"]
+
+    route53_resolved_ip_validation {
+      action                                  = "DROP"
+      bypass_destination_validation_ip_ranges = ["192.0.2.0/24"]
+      dns_expiry_exception_policy             = "CONTINUE"
+      dns_firewall_rule_group_id              = aws_route53_resolver_firewall_rule_group.test.id
+      source_ip_ranges                        = ["10.0.0.0/16"]
+    }
+  }
+}
+
 data "aws_networkfirewall_firewall_policy" "test" {
   arn = aws_networkfirewall_firewall_policy.test.arn
 }

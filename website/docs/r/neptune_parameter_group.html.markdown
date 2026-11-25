@@ -28,27 +28,29 @@ resource "aws_neptune_parameter_group" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Optional, Forces new resource) The name of the Neptune parameter group.
+* `description` - (Optional) Description of the Neptune parameter group. Defaults to "Managed by Terraform".
+* `family` - (Required) Family of the Neptune parameter group.
+* `name` - (Optional, Forces new resource) Name of the Neptune parameter group.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `family` - (Required) The family of the Neptune parameter group.
-* `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
-* `parameter` - (Optional) A list of Neptune parameters to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `parameter` - (Optional) List of Neptune parameters to apply.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Parameter blocks support the following:
+### `parameter` Block
 
-* `name`  - (Required) The name of the Neptune parameter.
-* `value` - (Required) The value of the Neptune parameter.
-* `apply_method` - (Optional) The apply method of the Neptune parameter. Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
+The `parameter` block supports the following:
+
+* `apply_method` - (Optional) Apply method of the Neptune parameter. Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
+* `name` - (Required) Name of the Neptune parameter.
+* `value` - (Required) Value of the Neptune parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Neptune parameter group name.
-* `arn` - The Neptune parameter group Amazon Resource Name (ARN).
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - Neptune parameter group ARN.
+* `id` - Neptune parameter group name.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

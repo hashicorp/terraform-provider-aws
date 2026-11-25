@@ -75,7 +75,7 @@ The following arguments are optional:
 
 ### `cloudformation` Argument Reference
 
-* `stack_names` - (Required) Array of the names of the AWS CloudFormation stacks. If `type` is `AWS_SERVICE` (all acccount resources) this array should be a single item containing a wildcard (`"*"`).
+* `stack_names` - (Required) Array of the names of the AWS CloudFormation stacks. If `type` is `AWS_SERVICE` (all account resources) this array should be a single item containing a wildcard (`"*"`).
 
 ### `tags` Argument Reference
 

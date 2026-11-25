@@ -38,37 +38,39 @@ func resourceStudioSessionMapping() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"identity_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"identity_id", "identity_name"},
-			},
-			"identity_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ExactlyOneOf: []string{"identity_id", "identity_name"},
-			},
-			"identity_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IdentityType](),
-			},
-			"session_policy_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"studio_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"identity_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"identity_id", "identity_name"},
+				},
+				"identity_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Computed:     true,
+					ExactlyOneOf: []string{"identity_id", "identity_name"},
+				},
+				"identity_type": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.IdentityType](),
+				},
+				"session_policy_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"studio_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }
@@ -198,10 +200,8 @@ func resourceStudioSessionMappingDelete(ctx context.Context, d *schema.ResourceD
 
 const identityIDPattern = `([0-9a-f]{10}-|)[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}`
 
-var identityIDPatternRegexp = regexache.MustCompile(identityIDPattern)
-
 func isIdentityID(identityIdOrName string) bool {
-	return identityIDPatternRegexp.MatchString(identityIdOrName)
+	return regexache.MustCompile(identityIDPattern).MatchString(identityIdOrName)
 }
 
 const studioSessionMappingResourceIDSeparator = ":"

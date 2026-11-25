@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -90,13 +89,16 @@ func (l *secretVersionListResource) List(ctx context.Context, request list.ListR
 				rd.Set("secret_id", secretID)
 				rd.Set("version_id", versionID)
 
-				diags := resourceSecretVersionRead(ctx, rd, awsClient)
-				if diags.HasError() || rd.Id() == "" {
-					tflog.Error(ctx, "Reading Secrets Manager secret version", map[string]any{
-						names.AttrID: versionID,
-						"diags":      sdkdiag.DiagnosticsString(diags),
-					})
-					continue
+				if request.IncludeResource {
+					output, err := findSecretVersionByTwoPartKey(ctx, conn, secretID, versionID)
+					if err != nil {
+						tflog.Error(ctx, "Reading Secrets Manager secret version", map[string]any{
+							"error": err,
+						})
+						continue
+					}
+
+					resourceSecretVersionFlatten(rd, output)
 				}
 
 				result.DisplayName = versionID

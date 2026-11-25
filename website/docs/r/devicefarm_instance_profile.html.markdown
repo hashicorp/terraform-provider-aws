@@ -36,7 +36,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name of this instance profile.
+* `arn` - ARN of this instance profile.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -60,7 +60,7 @@ resource "aws_devicefarm_instance_profile" "example" {
 
 #### Required
 
-- `arn` (String) Amazon Resource Name (ARN) of the Device Farm instance profile.
+- `arn` (String) ARN of the Device Farm instance profile.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Instance Profiles using their ARN. For example:
 

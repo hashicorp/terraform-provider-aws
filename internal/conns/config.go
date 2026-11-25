@@ -18,6 +18,7 @@ import (
 	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -173,7 +174,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if customS3Endpoint := c.Endpoints[names.S3]; customS3Endpoint != "" {
 		if !inttypes.IsAWSRegion(cfg.Region) {
 			c.S3OriginalRegion = cfg.Region
-			cfg.Region = "us-east-1" // Use compliant dummy region for SDK initialization
+			cfg.Region = endpoints.UsEast1RegionID // Use compliant dummy region for SDK initialization
 			tflog.Info(ctx, "Substituting non-standard region for S3-compatible endpoint", map[string]any{
 				"original_region":    c.S3OriginalRegion,
 				"substitute_region":  cfg.Region,
@@ -232,6 +233,12 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.tagPolicyConfig = c.TagPolicyConfig
 	client.terraformVersion = c.TerraformVersion
 
+	// Register the apicall recording middleware on the base aws.Config.
+	// Per-service NewFromConfig() inherits cfg.APIOptions, so this single
+	// registration covers every service. The middleware is a no-op unless a
+	// *apicall.Recorder is attached to the request context.
+	cfg.APIOptions = append(cfg.APIOptions, apicall.Middleware())
+
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
 	client.clients = make(map[string]map[string]any, 0)
@@ -240,6 +247,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.s3OriginalRegion = c.S3OriginalRegion
 	client.s3UsePathStyle = c.S3UsePathStyle
 	client.s3USEast1RegionalEndpoint = c.S3USEast1RegionalEndpoint
+	client.skipRegionValidation = c.SkipRegionValidation
 	client.stsRegion = c.STSRegion
 
 	return client, diags

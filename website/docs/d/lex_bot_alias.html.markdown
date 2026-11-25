@@ -23,19 +23,17 @@ data "aws_lex_bot_alias" "order_flowers_prod" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `bot_name` - (Required) Name of the bot.
 * `name` - (Required) Name of the bot alias. The name is case sensitive.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the bot alias.
-* `bot_name` - Name of the bot.
 * `bot_version` - Version of the bot that the alias points to.
 * `checksum` - Checksum of the bot alias.
 * `created_date` - Date that the bot alias was created.
 * `description` - Description of the alias.
 * `last_updated_date` - Date that the bot alias was updated. When you create a resource, the creation date and the last updated date are the same.
-* `name` - Name of the alias. The name is not case sensitive.

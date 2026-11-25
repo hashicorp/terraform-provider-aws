@@ -35,16 +35,18 @@ func resourceVPCDHCPOptionsAssociation() *schema.Resource {
 			StateContext: resourceVPCDHCPOptionsAssociationImport,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"dhcp_options_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"dhcp_options_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				names.AttrVPCID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

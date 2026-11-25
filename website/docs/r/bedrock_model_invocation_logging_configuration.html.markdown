@@ -10,7 +10,7 @@ description: |-
 
 Manages Bedrock model invocation logging configuration.
 
-~> Model invocation logging is configured per AWS region. To avoid overwriting settings, this resource should not be defined in multiple configurations.
+~> **Note:** Model invocation logging is configured per AWS region. To avoid overwriting settings, this resource should not be defined in multiple configurations.
 
 ## Example Usage
 
@@ -19,7 +19,7 @@ Manages Bedrock model invocation logging configuration.
 ```terraform
 data "aws_caller_identity" "current" {}
 
-resource aws_s3_bucket example {
+resource "aws_s3_bucket" "example" {
   bucket        = "example"
   force_destroy = true
   lifecycle {
@@ -83,19 +83,19 @@ resource "aws_bedrock_model_invocation_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `logging_config` - (Required) Logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `logging_config` - (Required) The logging configuration values to set. See [`logging_config` Block](#logging_config-block) for details.
 
 ### `logging_config` Block
 
 The `logging_config` configuration block supports the following arguments:
 
 * `cloudwatch_config` - (Optional) CloudWatch logging configuration. See [`cloudwatch_config` Block](#cloudwatch_config-block) for details.
-* `embedding_data_delivery_enabled` - (Optional) Set to include embeddings data in the log delivery. Defaults to `true`.
-* `image_data_delivery_enabled` - (Optional) Set to include image data in the log delivery. Defaults to `true`.
+* `embedding_data_delivery_enabled` - (Optional) Whether to include embeddings data in the log delivery. Defaults to `true`.
+* `image_data_delivery_enabled` - (Optional) Whether to include image data in the log delivery. Defaults to `true`.
 * `s3_config` - (Optional) S3 configuration for storing log data. See [`s3_config` Block](#s3_config-block) for details.
-* `text_data_delivery_enabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
-* `video_data_delivery_enabled` - (Optional) Set to include text data in the log delivery. Defaults to `true`.
+* `text_data_delivery_enabled` - (Optional) Whether to include text data in the log delivery. Defaults to `true`.
+* `video_data_delivery_enabled` - (Optional) Whether to include video data in the log delivery. Defaults to `true`.
 
 ### `cloudwatch_config` Block
 
@@ -103,7 +103,7 @@ The `cloudwatch_config` configuration block supports the following arguments:
 
 * `large_data_delivery_s3_config` - (Optional) S3 configuration for delivering a large amount of data. See [`large_data_delivery_s3_config` Block](#large_data_delivery_s3_config-block) for details.
 * `log_group_name` - (Required) Log group name.
-* `role_arn` - (Required) The role ARN.
+* `role_arn` - (Required) Role ARN.
 
 ### `large_data_delivery_s3_config` Block
 
@@ -123,21 +123,43 @@ The `s3_config` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - AWS Region in which logging is configured.
+* `id` - (**Deprecated**) AWS Region in which logging is configured.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Invocation Logging Configuration using the `id` set to the AWS Region. For example:
+In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp.com/terraform/language/import) can be used with the `identity` attribute. For example:
 
 ```terraform
 import {
-  to = aws_bedrock_model_invocation_logging_configuration.my_config
+  to = aws_bedrock_model_invocation_logging_configuration.example
+  identity = {
+    region = "us-east-1"
+  }
+}
+
+resource "aws_bedrock_model_invocation_logging_configuration" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Optional
+
+* `account_id` (String) AWS Account where this resource is managed.
+* `region` (String) Region where this resource is managed.
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Model Invocation Logging Configuration using the `id` set to the AWS Region. For example:
+
+```terraform
+import {
+  to = aws_bedrock_model_invocation_logging_configuration.example
   id = "us-east-1"
 }
 ```
 
-Using `terraform import`, import Bedrock custom model using the `id` set to the AWS Region. For example:
+Using `terraform import`, import Bedrock Model Invocation Logging Configuration using the `id` set to the AWS Region. For example:
 
 ```console
-% terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1
+% terraform import aws_bedrock_model_invocation_logging_configuration.example us-east-1
 ```

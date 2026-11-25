@@ -7,11 +7,9 @@ package timestreaminfluxdb
 
 import (
 	"context"
-	"errors"
-	"math"
+	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
@@ -31,13 +29,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,8 +44,10 @@ import (
 
 // @FrameworkResource("aws_timestreaminfluxdb_db_instance", name="DB Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbInstanceOutput")
-// @Testing(importIgnore="bucket;username;organization;password")
+// @Testing(importIgnore="bucket;username;organization;password", plannableImportAction="Replace")
+// @Testing(preIdentityVersion="v6.43.0")
 func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbInstanceResource{}
 
@@ -58,14 +58,10 @@ func newDBInstanceResource(_ context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-const (
-	ResNameDBInstance = "DB Instance"
-)
-
 type dbInstanceResource struct {
 	framework.ResourceWithModel[dbInstanceResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -93,10 +89,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[^_][^\"]*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[^_][^\"]*$", ""),
 				},
 				Description: `The name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. 
 					A bucket combines the concept of a database and a retention period (the duration of time 
@@ -116,10 +109,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z0-9]+$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `The id of the DB parameter group assigned to your DB instance.`,
 			},
@@ -170,10 +160,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 40),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$", ""),
 				},
 				Description: `The name that uniquely identifies the DB instance when interacting with the 
 					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a 
@@ -192,8 +179,6 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate 
 					over both IPv4 and IPv6 protocols.`,
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"organization": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -213,7 +198,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(8, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `The password of the initial admin user created in InfluxDB. This password will 
 					allow you to access the InfluxDB UI to perform various administrative tasks and 
@@ -246,17 +231,15 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrUsername: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$"),
-						`Must start with a letter and can't end with a hyphen or contain two 
-						consecutive hyphens`,
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$", `Must start with a letter and can't end with a hyphen or contain two consecutive hyphens`),
 				},
 				Description: `The username of the initial admin user created in InfluxDB. 
 					Must start with a letter and can't end with a hyphen or contain two 
@@ -276,7 +259,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					setvalidator.SizeBetween(1, 5),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^sg-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^sg-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC security group IDs to associate with the DB instance.`,
@@ -291,7 +274,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 					setvalidator.SizeBetween(1, 3),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^subnet-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^subnet-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC subnet IDs to associate with the DB instance. Provide at least 
@@ -300,7 +283,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 		},
 		Blocks: map[string]schema.Block{
 			"log_delivery_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dbInstanceLogDeliveryConfigurationData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[logDeliveryConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -308,7 +291,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"s3_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[dbInstanceS3ConfigurationData](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -318,7 +301,7 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(3, 63),
-											stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$"), ""),
+											lazystringvalidator.RegexMatches("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$", ""),
 										},
 										Description: `The name of the S3 bucket to deliver logs to.`,
 									},
@@ -329,6 +312,31 @@ func (r *dbInstanceResource) Schema(ctx context.Context, req resource.SchemaRequ
 								},
 							},
 							Description: `Configuration for S3 bucket log delivery.`,
+						},
+					},
+				},
+			},
+			"maintenance_schedule": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[maintenanceScheduleModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: `The maintenance schedule for the DB instance.`,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrPreferredMaintenanceWindow: schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 64),
+								lazystringvalidator.RegexMatches(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`, ""),
+							},
+						},
+						"timezone": schema.StringAttribute{
+							Required: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(0, 19),
+								lazystringvalidator.RegexMatches(`^(UTC|[A-Za-z_]+/[A-Za-z0-9_]+(/[A-Za-z0-9_]+)?)$`, ""),
+							},
 						},
 					},
 				},
@@ -359,15 +367,16 @@ func dbInstanceDBParameterGroupIdentifierReplaceIf(ctx context.Context, req plan
 }
 
 func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var plan dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := timestreaminfluxdb.CreateDbInstanceInput{}
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	var input timestreaminfluxdb.CreateDbInstanceInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -377,32 +386,18 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 
 	out, err := conn.CreateDbInstance(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("creating Timestream InfluxDB DB Instance (%s)", name), err.Error())
 		return
 	}
 
-	if out == nil || out.Id == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBInstance, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
+	instanceID := aws.ToString(out.Id)
 	state := plan
-	state.ID = fwflex.StringToFramework(ctx, out.Id)
+	state.ID = fwflex.StringValueToFramework(ctx, instanceID)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := waitDBInstanceCreated(ctx, conn, state.ID.ValueString(), createTimeout)
+	output, err := waitDBInstanceCreated(ctx, conn, instanceID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.Id)...)
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDBInstance, plan.Name.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), instanceID)...)
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Instance (%s) create", instanceID), err.Error())
 		return
 	}
 
@@ -418,15 +413,16 @@ func (r *dbInstanceResource) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+	instanceID := fwflex.StringValueFromFramework(ctx, state.ID)
+	output, err := findDBInstanceByID(ctx, conn, instanceID)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -434,10 +430,7 @@ func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionSetting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading Timestream InfluxDB DB Instance (%s)", instanceID), err.Error())
 		return
 	}
 
@@ -453,14 +446,14 @@ func (r *dbInstanceResource) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var plan, state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state, fwflex.WithIgnoredField("SecondaryAvailabilityZone"))
 	resp.Diagnostics.Append(d...)
@@ -469,8 +462,9 @@ func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	if diff.HasChanges() {
+		instanceID := fwflex.StringValueFromFramework(ctx, plan.ID)
 		input := timestreaminfluxdb.UpdateDbInstanceInput{
-			Identifier: plan.ID.ValueStringPointer(),
+			Identifier: aws.String(instanceID),
 		}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
 		if resp.Diagnostics.HasError() {
@@ -479,20 +473,13 @@ func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequ
 
 		_, err := conn.UpdateDbInstance(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("updating Timestream InfluxDB DB Instance (%s)", instanceID), err.Error())
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		output, err := waitDBInstanceUpdated(ctx, conn, plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBInstance, plan.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Instance (%s) update", instanceID), err.Error())
 			return
 		}
 
@@ -512,65 +499,30 @@ func (r *dbInstanceResource) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *dbInstanceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var state dbInstanceResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &timestreaminfluxdb.DeleteDbInstanceInput{
-		Identifier: state.ID.ValueStringPointer(),
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+	instanceID := fwflex.StringValueFromFramework(ctx, state.ID)
+	input := timestreaminfluxdb.DeleteDbInstanceInput{
+		Identifier: aws.String(instanceID),
 	}
 
-	_, err := conn.DeleteDbInstance(ctx, in)
+	_, err := conn.DeleteDbInstance(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionDeleting, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting Timestream InfluxDB DB Instance (%s)", instanceID), err.Error())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForDeletion, ResNameDBInstance, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *dbInstanceResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var allocatedStorage types.Int64
-	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root(names.AttrAllocatedStorage), &allocatedStorage)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if allocatedStorage.IsNull() || allocatedStorage.IsUnknown() {
-		return
-	}
-
-	if allocatedStorage.ValueInt64() > math.MaxInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was greater than the maximum allowed value for int32",
-		)
-		return
-	}
-
-	if allocatedStorage.ValueInt64() < math.MinInt32 {
-		resp.Diagnostics.AddError(
-			"Invalid value for allocated_storage",
-			"allocated_storage was less than the minimum allowed value for int32",
-		)
+	if _, err := waitDBInstanceDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Instance (%s) delete", instanceID), err.Error())
 		return
 	}
 }
@@ -581,7 +533,6 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -599,7 +550,6 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(conn, id),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -643,10 +593,14 @@ func statusDBInstance(conn *timestreaminfluxdb.Client, id string) retry.StateRef
 }
 
 func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id string) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
-	in := &timestreaminfluxdb.GetDbInstanceInput{
+	in := timestreaminfluxdb.GetDbInstanceInput{
 		Identifier: aws.String(id),
 	}
 
+	return findDBInstance(ctx, conn, &in)
+}
+
+func findDBInstance(ctx context.Context, conn *timestreaminfluxdb.Client, in *timestreaminfluxdb.GetDbInstanceInput) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	out, err := conn.GetDbInstance(ctx, in)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -659,7 +613,7 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 		return nil, err
 	}
 
-	if out == nil || out.Id == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
@@ -668,38 +622,30 @@ func findDBInstanceByID(ctx context.Context, conn *timestreaminfluxdb.Client, id
 
 type dbInstanceResourceModel struct {
 	framework.WithRegionModel
-	AllocatedStorage              types.Int64                                                             `tfsdk:"allocated_storage"`
-	ARN                           types.String                                                            `tfsdk:"arn"`
-	AvailabilityZone              types.String                                                            `tfsdk:"availability_zone"`
-	Bucket                        types.String                                                            `tfsdk:"bucket"`
-	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                             `tfsdk:"db_instance_type"`
-	DBParameterGroupIdentifier    types.String                                                            `tfsdk:"db_parameter_group_identifier"`
-	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                              `tfsdk:"db_storage_type"`
-	DeploymentType                fwtypes.StringEnum[awstypes.DeploymentType]                             `tfsdk:"deployment_type"`
-	Endpoint                      types.String                                                            `tfsdk:"endpoint"`
-	ID                            types.String                                                            `tfsdk:"id"`
-	InfluxAuthParametersSecretARN types.String                                                            `tfsdk:"influx_auth_parameters_secret_arn"`
-	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[dbInstanceLogDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
-	Name                          types.String                                                            `tfsdk:"name"`
-	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                                `tfsdk:"network_type"`
-	Organization                  types.String                                                            `tfsdk:"organization"`
-	Password                      types.String                                                            `tfsdk:"password"`
-	Port                          types.Int32                                                             `tfsdk:"port"`
-	PubliclyAccessible            types.Bool                                                              `tfsdk:"publicly_accessible"`
-	SecondaryAvailabilityZone     types.String                                                            `tfsdk:"secondary_availability_zone"`
-	Tags                          tftags.Map                                                              `tfsdk:"tags"`
-	TagsAll                       tftags.Map                                                              `tfsdk:"tags_all"`
-	Timeouts                      timeouts.Value                                                          `tfsdk:"timeouts"`
-	Username                      types.String                                                            `tfsdk:"username"`
-	VPCSecurityGroupIDs           fwtypes.SetOfString                                                     `tfsdk:"vpc_security_group_ids"`
-	VPCSubnetIDs                  fwtypes.SetOfString                                                     `tfsdk:"vpc_subnet_ids"`
-}
-
-type dbInstanceLogDeliveryConfigurationData struct {
-	S3Configuration fwtypes.ListNestedObjectValueOf[dbInstanceS3ConfigurationData] `tfsdk:"s3_configuration"`
-}
-
-type dbInstanceS3ConfigurationData struct {
-	BucketName types.String `tfsdk:"bucket_name"`
-	Enabled    types.Bool   `tfsdk:"enabled"`
+	AllocatedStorage              types.Int64                                                    `tfsdk:"allocated_storage"`
+	ARN                           types.String                                                   `tfsdk:"arn"`
+	AvailabilityZone              types.String                                                   `tfsdk:"availability_zone"`
+	Bucket                        types.String                                                   `tfsdk:"bucket"`
+	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                    `tfsdk:"db_instance_type"`
+	DBParameterGroupIdentifier    types.String                                                   `tfsdk:"db_parameter_group_identifier"`
+	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                     `tfsdk:"db_storage_type"`
+	DeploymentType                fwtypes.StringEnum[awstypes.DeploymentType]                    `tfsdk:"deployment_type"`
+	Endpoint                      types.String                                                   `tfsdk:"endpoint"`
+	ID                            types.String                                                   `tfsdk:"id"`
+	InfluxAuthParametersSecretARN types.String                                                   `tfsdk:"influx_auth_parameters_secret_arn"`
+	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationModel] `tfsdk:"log_delivery_configuration"`
+	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[maintenanceScheduleModel]      `tfsdk:"maintenance_schedule"`
+	Name                          types.String                                                   `tfsdk:"name"`
+	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                       `tfsdk:"network_type"`
+	Organization                  types.String                                                   `tfsdk:"organization"`
+	Password                      types.String                                                   `tfsdk:"password"`
+	Port                          types.Int32                                                    `tfsdk:"port"`
+	PubliclyAccessible            types.Bool                                                     `tfsdk:"publicly_accessible"`
+	SecondaryAvailabilityZone     types.String                                                   `tfsdk:"secondary_availability_zone"`
+	Tags                          tftags.Map                                                     `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                     `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value                                                 `tfsdk:"timeouts"`
+	Username                      types.String                                                   `tfsdk:"username"`
+	VPCSecurityGroupIDs           fwtypes.SetOfString                                            `tfsdk:"vpc_security_group_ids"`
+	VPCSubnetIDs                  fwtypes.SetOfString                                            `tfsdk:"vpc_subnet_ids"`
 }

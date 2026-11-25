@@ -1,3 +1,0 @@
-```release-note:enhancement
-resource/aws_media_convert_queue: Add `concurrent_jobs` argument
-```

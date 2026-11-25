@@ -23,11 +23,18 @@ resource "aws_notifications_notification_hub" "example" {
 
 The following arguments are required:
 
-* `notification_hub_region` - Notification Hub region.
+* `notification_hub_region` - (Required) Notification Hub region.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `20m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

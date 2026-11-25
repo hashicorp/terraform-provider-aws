@@ -1,6 +1,0 @@
-```release-note:enhancement
-resource/aws_workspaces_directory: Add `tenancy` argument
-```
-```release-note:enhancement
-data-source/aws_workspaces_directory: Add `tenancy` attribute
-```

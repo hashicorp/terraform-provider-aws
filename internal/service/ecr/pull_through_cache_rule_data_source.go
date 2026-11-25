@@ -8,13 +8,13 @@ package ecr
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 // @SDKDataSource("aws_ecr_pull_through_cache_rule", name="Pull Through Cache Rule")
@@ -22,38 +22,38 @@ func dataSourcePullThroughCacheRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePullThroughCacheRuleRead,
 
-		Schema: map[string]*schema.Schema{
-			"credential_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"custom_role_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"ecr_repository_prefix": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(2, 30),
-					validation.StringMatch(
-						regexache.MustCompile(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`),
-						"must only include alphanumeric, underscore, period, hyphen, or slash characters"),
-				),
-			},
-			"registry_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"upstream_registry_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"upstream_repository_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"credential_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"custom_role_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"ecr_repository_prefix": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(2, 30),
+						lazyvalidation.StringMatch(`(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*`, "must only include alphanumeric, underscore, period, hyphen, or slash characters"),
+					),
+				},
+				"registry_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"upstream_registry_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"upstream_repository_prefix": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }

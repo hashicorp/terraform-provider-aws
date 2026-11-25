@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -63,48 +63,50 @@ func resourceMediaInsightsPipelineConfiguration() *schema.Resource {
 			Delete: schema.DefaultTimeout(30 * time.Second),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"elements": {
-				Type:     schema.TypeList,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrType: {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"elements": {
+					Type:     schema.TypeList,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrType: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.MediaInsightsPipelineConfigurationElementType](),
+							},
+							"amazon_transcribe_call_analytics_processor_configuration": AmazonTranscribeCallAnalyticsProcessorConfigurationSchema(),
+							"amazon_transcribe_processor_configuration":                AmazonTranscribeProcessorConfigurationSchema(),
+							"kinesis_data_stream_sink_configuration":                   BasicSinkConfigurationSchema(),
+							"lambda_function_sink_configuration":                       BasicSinkConfigurationSchema(),
+							"sns_topic_sink_configuration":                             BasicSinkConfigurationSchema(),
+							"sqs_queue_sink_configuration":                             BasicSinkConfigurationSchema(),
+							"s3_recording_sink_configuration":                          S3RecordingSinkConfigurationSchema(),
+							"voice_analytics_processor_configuration":                  VoiceAnalyticsProcessorConfigurationSchema(),
 						},
-						"amazon_transcribe_call_analytics_processor_configuration": AmazonTranscribeCallAnalyticsProcessorConfigurationSchema(),
-						"amazon_transcribe_processor_configuration":                AmazonTranscribeProcessorConfigurationSchema(),
-						"kinesis_data_stream_sink_configuration":                   BasicSinkConfigurationSchema(),
-						"lambda_function_sink_configuration":                       BasicSinkConfigurationSchema(),
-						"sns_topic_sink_configuration":                             BasicSinkConfigurationSchema(),
-						"sqs_queue_sink_configuration":                             BasicSinkConfigurationSchema(),
-						"s3_recording_sink_configuration":                          S3RecordingSinkConfigurationSchema(),
-						"voice_analytics_processor_configuration":                  VoiceAnalyticsProcessorConfigurationSchema(),
 					},
 				},
-			},
-			names.AttrID: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"resource_access_role_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
-			names.AttrTags:                  tftags.TagsSchema(),
-			names.AttrTagsAll:               tftags.TagsSchemaComputed(),
+				names.AttrID: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"resource_access_role_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"real_time_alert_configuration": RealTimeAlertConfigurationSchema(),
+				names.AttrTags:                  tftags.TagsSchema(),
+				names.AttrTagsAll:               tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+			}
 		},
 	}
 }
@@ -125,7 +127,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 						Type: schema.TypeString,
 						ValidateFunc: validation.All(
 							validation.StringLenBetween(1, 200),
-							validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid Category Name matching expression: ^[0-9A-Za-z_.-]+"),
+							lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid Category Name matching expression: ^[0-9A-Za-z_.-]+"),
 						),
 					},
 				},
@@ -157,7 +159,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid language model name matching expression: ^[0-9A-Za-z_.-]+"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid language model name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"partial_results_stability": {
@@ -170,8 +172,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 300),
-						validation.StringMatch(regexache.MustCompile(`^[A-Z_, ]+`),
-							"Must be a valid comma-separated list of entity types. For valid types see https://docs.aws.amazon.com/chime-sdk/latest/APIReference/API_media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration.html#chimesdk-Type-media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration-CallAnalyticsStreamCategories"),
+						lazyvalidation.StringMatch(`^[A-Z_, ]+`, "Must be a valid comma-separated list of entity types. For valid types see https://docs.aws.amazon.com/chime-sdk/latest/APIReference/API_media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration.html#chimesdk-Type-media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration-CallAnalyticsStreamCategories"),
 					),
 				},
 				"post_call_analytics_settings": PostCallAnalyticsSettingsSchema(),
@@ -185,7 +186,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary filter name matching expression: ^[0-9A-Za-z_.-]+"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid vocabulary filter name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"vocabulary_name": {
@@ -193,7 +194,7 @@ func AmazonTranscribeCallAnalyticsProcessorConfigurationSchema() *schema.Schema 
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary name matching expression: ^[0-9A-Za-z_.-]+"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid vocabulary name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 			},
@@ -226,7 +227,7 @@ func PostCallAnalyticsSettingsSchema() *schema.Schema {
 				"output_location": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`s3://+`), "Must begin with the prefix 's3://'"),
+					ValidateFunc: lazyvalidation.StringMatch(`s3://+`, "Must begin with the prefix 's3://'"),
 				},
 			},
 		},
@@ -268,7 +269,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid language model name matching expression: ^[0-9A-Za-z_.-]+"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid language model name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"partial_results_stability": {
@@ -281,8 +282,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 300),
-						validation.StringMatch(regexache.MustCompile(`^[A-Z_, ]+`),
-							"Must be a valid comma-separated list of entity types. For valid types see https://docs.aws.amazon.com/chime-sdk/latest/APIReference/API_media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration.html#chimesdk-Type-media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration-CallAnalyticsStreamCategories"),
+						lazyvalidation.StringMatch(`^[A-Z_, ]+`, "Must be a valid comma-separated list of entity types. For valid types see https://docs.aws.amazon.com/chime-sdk/latest/APIReference/API_media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration.html#chimesdk-Type-media-pipelines-chime_AmazonTranscribeCallAnalyticsProcessorConfiguration-CallAnalyticsStreamCategories"),
 					),
 				},
 				"show_speaker_label": {
@@ -299,7 +299,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary filter name matching expression: ^[0-9A-Za-z_.-]+"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid vocabulary filter name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 				"vocabulary_name": {
@@ -307,7 +307,7 @@ func AmazonTranscribeProcessorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(0, 200),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must be a valid vocabulary name matching expression: ^[0-9A-Za-z_.-]+"),
+						lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must be a valid vocabulary name matching expression: ^[0-9A-Za-z_.-]+"),
 					),
 				},
 			},
@@ -399,7 +399,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 										"rule_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must match the expression: ^[0-9A-Za-z_.-]+"),
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must match the expression: ^[0-9A-Za-z_.-]+"),
 										},
 									},
 								},
@@ -417,7 +417,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Schema{
 												Type:         schema.TypeString,
-												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z\s'-]+`), "Must match the expression: ^[0-9A-Za-z\\s'-]+"),
+												ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z\s'-]+`, "Must match the expression: ^[0-9A-Za-z\\s'-]+"),
 											},
 										},
 										"negate": {
@@ -428,7 +428,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 										"rule_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must match the expression: ^[0-9A-Za-z_.-]+"),
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must match the expression: ^[0-9A-Za-z_.-]+"),
 										},
 									},
 								},
@@ -442,7 +442,7 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 										"rule_name": {
 											Type:         schema.TypeString,
 											Required:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+`), "Must match the expression: ^[0-9A-Za-z_.-]+"),
+											ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]+`, "Must match the expression: ^[0-9A-Za-z_.-]+"),
 										},
 										"sentiment_type": {
 											Type:             schema.TypeString,
@@ -503,8 +503,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		var err error
 		out, err = conn.CreateMediaInsightsPipelineConfiguration(ctx, in)
 		if err != nil {
-			var forbiddenException *awstypes.ForbiddenException
-			if errors.As(err, &forbiddenException) {
+			if errs.IsA[*awstypes.ForbiddenException](err) {
 				return tfresource.RetryableError(err)
 			}
 			return tfresource.NonRetryableError(err)
@@ -587,8 +586,7 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 			var err error
 			_, err = conn.UpdateMediaInsightsPipelineConfiguration(ctx, in)
 			if err != nil {
-				var forbiddenException *awstypes.ForbiddenException
-				if errors.As(err, &forbiddenException) {
+				if errs.IsA[*awstypes.ForbiddenException](err) {
 					return tfresource.RetryableError(err)
 				}
 				return tfresource.NonRetryableError(err)

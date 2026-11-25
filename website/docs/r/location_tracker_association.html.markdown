@@ -32,7 +32,7 @@ resource "aws_location_tracker_association" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `consumer_arn` - (Required) The Amazon Resource Name (ARN) for the geofence collection to be associated to tracker resource. Used when you need to specify a resource across all AWS.
+* `consumer_arn` - (Required) ARN for the geofence collection to be associated to tracker resource. Used when you need to specify a resource across all AWS.
 * `tracker_name` - (Required) The name of the tracker resource to be associated with a geofence collection.
 
 ## Attribute Reference

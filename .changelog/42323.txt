@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_dx_gateway_association: `vpn_gateway_id` has been removed
-```

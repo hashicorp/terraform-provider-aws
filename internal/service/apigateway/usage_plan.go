@@ -40,107 +40,109 @@ func resourceUsagePlan() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"api_stages": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"api_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrStage: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"throttle": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"burst_limit": {
-										Type:     schema.TypeInt,
-										Default:  0,
-										Optional: true,
-									},
-									names.AttrPath: {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"rate_limit": {
-										Type:     schema.TypeFloat,
-										Default:  0,
-										Optional: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"api_stages": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"api_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrStage: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"throttle": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"burst_limit": {
+											Type:     schema.TypeInt,
+											Default:  0,
+											Optional: true,
+										},
+										names.AttrPath: {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"rate_limit": {
+											Type:     schema.TypeFloat,
+											Default:  0,
+											Optional: true,
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			names.AttrName: {
-				Type:     schema.TypeString,
-				Required: true, // Required since not addable nor removable afterwards
-			},
-			"product_code": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"quota_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"limit": {
-							Type:     schema.TypeInt,
-							Required: true, // Required as not removable singularly
-						},
-						"offset": {
-							Type:     schema.TypeInt,
-							Default:  0,
-							Optional: true,
-						},
-						"period": {
-							Type:             schema.TypeString,
-							Required:         true, // Required as not removable
-							ValidateDiagFunc: enum.Validate[types.QuotaPeriodType](),
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrDescription: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Required: true, // Required since not addable nor removable afterwards
+				},
+				"product_code": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"quota_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"limit": {
+								Type:     schema.TypeInt,
+								Required: true, // Required as not removable singularly
+							},
+							"offset": {
+								Type:     schema.TypeInt,
+								Default:  0,
+								Optional: true,
+							},
+							"period": {
+								Type:             schema.TypeString,
+								Required:         true, // Required as not removable
+								ValidateDiagFunc: enum.Validate[types.QuotaPeriodType](),
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"throttle_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"burst_limit": {
-							Type:         schema.TypeInt,
-							Default:      0,
-							Optional:     true,
-							AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
-						},
-						"rate_limit": {
-							Type:         schema.TypeFloat,
-							Default:      0,
-							Optional:     true,
-							AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+				"throttle_settings": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"burst_limit": {
+								Type:         schema.TypeInt,
+								Default:      0,
+								Optional:     true,
+								AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+							},
+							"rate_limit": {
+								Type:         schema.TypeFloat,
+								Default:      0,
+								Optional:     true,
+								AtLeastOneOf: []string{"throttle_settings.0.burst_limit", "throttle_settings.0.rate_limit"},
+							},
 						},
 					},
 				},
-			},
+			}
 		},
 	}
 }
@@ -261,7 +263,7 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		operations := make([]types.PatchOperation, 0)
+		var operations []types.PatchOperation
 
 		if d.HasChange(names.AttrName) {
 			operations = append(operations, types.PatchOperation{
@@ -323,16 +325,18 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 					if t, ok := m["throttle"].(*schema.Set); ok && t.Len() > 0 {
 						for _, throttle := range t.List() {
 							th := throttle.(map[string]any)
-							operations = append(operations, types.PatchOperation{
-								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
-								Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
-							})
-							operations = append(operations, types.PatchOperation{
-								Op:    types.OpReplace,
-								Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
-								Value: flex.IntValueToString(th["burst_limit"].(int)),
-							})
+							operations = append(operations,
+								types.PatchOperation{
+									Op:    types.OpReplace,
+									Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/rateLimit", id, th[names.AttrPath].(string))),
+									Value: flex.Float64ValueToString(th["rate_limit"].(float64)),
+								},
+								types.PatchOperation{
+									Op:    types.OpReplace,
+									Path:  aws.String(fmt.Sprintf("/apiStages/%s/throttle/%s/burstLimit", id, th[names.AttrPath].(string))),
+									Value: flex.IntValueToString(th["burst_limit"].(int)),
+								},
+							)
 						}
 					}
 				}
@@ -356,30 +360,34 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 				// Handle Replaces
 				if o != nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/throttle/rateLimit"),
-						Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/throttle/burstLimit"),
-						Value: flex.IntValueToString(d["burst_limit"].(int)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/throttle/rateLimit"),
+							Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
+						},
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/throttle/burstLimit"),
+							Value: flex.IntValueToString(d["burst_limit"].(int)),
+						},
+					)
 				}
 
 				// Handle Additions
 				if o == nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/throttle/rateLimit"),
-						Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/throttle/burstLimit"),
-						Value: flex.IntValueToString(d["burst_limit"].(int)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/throttle/rateLimit"),
+							Value: flex.Float64ValueToString(d["rate_limit"].(float64)),
+						},
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/throttle/burstLimit"),
+							Value: flex.IntValueToString(d["burst_limit"].(int)),
+						},
+					)
 				}
 			}
 		}
@@ -405,40 +413,44 @@ func resourceUsagePlanUpdate(ctx context.Context, d *schema.ResourceData, meta a
 
 				// Handle Replaces
 				if o != nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/quota/limit"),
-						Value: flex.IntValueToString(d["limit"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/quota/offset"),
-						Value: flex.IntValueToString(d["offset"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/quota/period"),
-						Value: aws.String(d["period"].(string)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/quota/limit"),
+							Value: flex.IntValueToString(d["limit"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/quota/offset"),
+							Value: flex.IntValueToString(d["offset"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpReplace,
+							Path:  aws.String("/quota/period"),
+							Value: aws.String(d["period"].(string)),
+						},
+					)
 				}
 
 				// Handle Additions
 				if o == nil && n != nil {
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/quota/limit"),
-						Value: flex.IntValueToString(d["limit"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/quota/offset"),
-						Value: flex.IntValueToString(d["offset"].(int)),
-					})
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpAdd,
-						Path:  aws.String("/quota/period"),
-						Value: aws.String(d["period"].(string)),
-					})
+					operations = append(operations,
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/quota/limit"),
+							Value: flex.IntValueToString(d["limit"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/quota/offset"),
+							Value: flex.IntValueToString(d["offset"].(int)),
+						},
+						types.PatchOperation{
+							Op:    types.OpAdd,
+							Path:  aws.String("/quota/period"),
+							Value: aws.String(d["period"].(string)),
+						},
+					)
 				}
 			}
 		}

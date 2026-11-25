@@ -34,7 +34,7 @@ AWS Budgets allows you to track and take action on your AWS costs and usage. You
 
 The example below shows how a check block can be used to assert that you remain in compliance for the budgets that have been established.
 
-```hcl
+```terraform
 check "check_budget_exceeded" {
   data "aws_budgets_budget" "example" {
     name = aws_budgets_budget.example.name
@@ -69,7 +69,7 @@ Amazon GuardDuty is a threat detection service that continuously monitors for ma
 
 The following example outlines how a check block can be utilized to assert that no threats have been identified from AWS GuardDuty.
 
-```hcl
+```terraform
 data "aws_guardduty_detector" "example" {}
 
 check "check_guardduty_findings" {
@@ -106,7 +106,7 @@ AWS IAM tracks role usage, including the [last used date and region](https://doc
 
 In the example below, the [`timecmp`](https://developer.hashicorp.com/terraform/language/functions/timecmp) function checks for a `last_used_date` more recent than the `unused_limit` local variable (30 days ago). The [`coalesce`](https://developer.hashicorp.com/terraform/language/functions/coalesce) function handles empty (`""`) `last_used_date` values safely, falling back to the `unused_limit` local, and automatically triggering a failed condition.
 
-```hcl
+```terraform
 locals {
   unused_limit = timeadd(timestamp(), "-720h")
 }
@@ -136,7 +136,7 @@ Amazon Elastic Kubernetes Service (Amazon EKS) is a managed Kubernetes service t
 
 The example below shows how a check block can be used to assert that your cluster is in good health and available.
 
-```hcl
+```terraform
 check "aws_eks_cluster_default" {
   assert {
     condition     = aws_eks_cluster.default.status == "ACTIVE"
@@ -151,7 +151,7 @@ Amazon Elastic Compute Cloud (Amazon EC2) is a web service that provides secure,
 
 The example below shows how a check block can be used to assert that your EC2 instances are stopped.
 
-```hcl
+```terraform
 check "aws_instances_stopped" {
   data "aws_instances" "example" {
     instance_state_names = "stopped"

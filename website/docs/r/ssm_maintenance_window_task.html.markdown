@@ -134,7 +134,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `window_id` - (Required) The Id of the maintenance window to register the task with.
+* `window_id` - (Required) The ID of the maintenance window to register the task with.
 * `max_concurrency` - (Optional) The maximum number of targets this task can be run for in parallel.
 * `max_errors` - (Optional) The maximum number of errors allowed before this task stops being scheduled.
 * `cutoff_behavior` - (Optional) Indicates whether tasks should continue to run after the cutoff time specified in the maintenance windows is reached. Valid values are `CONTINUE_TASK` and `CANCEL_TASK`.
@@ -143,7 +143,7 @@ This resource supports the following arguments:
 * `service_role_arn` - (Optional) The role that should be assumed when executing the task. If a role is not provided, Systems Manager uses your account's service-linked role. If no service-linked role for Systems Manager exists in your account, it is created for you.
 * `name` - (Optional) The name of the maintenance window task.
 * `description` - (Optional) The description of the maintenance window task.
-* `targets` - (Optional) The targets (either instances or window target ids). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target ids are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
+* `targets` - (Optional) The targets (either instances or window target IDs). Instances are specified using Key=InstanceIds,Values=instanceid1,instanceid2. Window target IDs are specified using Key=WindowTargetIds,Values=window target id1, window target id2.
 * `priority` - (Optional) The priority of the task in the Maintenance Window, the lower the number the higher the priority. Tasks in a Maintenance Window are scheduled in priority order with tasks that have the same priority scheduled in parallel.
 * `task_invocation_parameters` - (Optional) Configuration block with parameters for task execution.
 
@@ -174,7 +174,7 @@ This resource supports the following arguments:
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
-* `service_role_arn` - (Optional) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
+* `service_role_arn` - (Optional) ARN of the AWS Identity and Access Management (IAM) service role to use to publish Amazon Simple Notification Service (Amazon SNS) notifications for maintenance window Run Command tasks.
 * `timeout_seconds` - (Optional) If this time is reached and the command has not already started executing, it doesn't run.
 * `cloudwatch_config` - (Optional) Configuration options for sending command output to CloudWatch Logs. Documented below.
 
@@ -185,7 +185,7 @@ This resource supports the following arguments:
 
 `notification_config` supports the following:
 
-* `notification_arn` - (Optional) An Amazon Resource Name (ARN) for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
+* `notification_arn` - (Optional) ARN for a Simple Notification Service (SNS) topic. Run Command pushes notifications about command status changes to this topic.
 * `notification_events` - (Optional) The different events for which you can receive notifications. Valid values: `All`, `InProgress`, `Success`, `TimedOut`, `Cancelled`, and `Failed`
 * `notification_type` - (Optional) When specified with `Command`, receive notification when the status of a command changes. When specified with `Invocation`, for commands sent to multiple instances, receive notification on a per-instance basis when the status of a command changes. Valid values: `Command` and `Invocation`
 

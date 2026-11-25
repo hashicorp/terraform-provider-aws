@@ -112,7 +112,7 @@ func TestValidBusNameOrARN(t *testing.T) {
 		"HelloWorl_d",
 		"hello-world",
 		"hello.World0125",
-		"aws.partner/mongodb.com/stitch.trigger/something",                   // nosemgrep:ci.domain-names
+		"aws.partner/mongodb.com/stitch.trigger/something",                   // nosemgrep:ci.semgrep.domain-names.domain-names
 		"arn:aws:events:us-east-1:123456789012:event-bus/default",            // lintignore:AWSAT003,AWSAT005
 		"arn:aws-eusc:events:eusc-de-east-1:123456789012:event-bus/test-bus", // lintignore:AWSAT003,AWSAT005
 	}
@@ -146,7 +146,7 @@ func TestEventBusARNPattern(t *testing.T) {
 	}
 
 	for _, arn := range validARNs {
-		if !tfevents.EventBusARNPattern.MatchString(arn) {
+		if !tfevents.EventBusARNPattern().MatchString(arn) {
 			t.Errorf("Expected %q to match EventBusARNPattern", arn)
 		}
 	}
@@ -159,7 +159,7 @@ func TestEventBusARNPattern(t *testing.T) {
 	}
 
 	for _, arn := range invalidARNs {
-		if tfevents.EventBusARNPattern.MatchString(arn) {
+		if tfevents.EventBusARNPattern().MatchString(arn) {
 			t.Errorf("Expected %q to NOT match EventBusARNPattern", arn)
 		}
 	}
@@ -175,7 +175,7 @@ func TestPartnerEventBusPattern(t *testing.T) {
 	}
 
 	for _, pattern := range validPatterns {
-		if !tfevents.PartnerEventBusPattern.MatchString(pattern) {
+		if !tfevents.PartnerEventBusPattern().MatchString(pattern) {
 			t.Errorf("Expected %q to match PartnerEventBusPattern", pattern)
 		}
 	}
@@ -187,7 +187,7 @@ func TestPartnerEventBusPattern(t *testing.T) {
 	}
 
 	for _, pattern := range invalidPatterns {
-		if tfevents.PartnerEventBusPattern.MatchString(pattern) {
+		if tfevents.PartnerEventBusPattern().MatchString(pattern) {
 			t.Errorf("Expected %q to NOT match PartnerEventBusPattern", pattern)
 		}
 	}

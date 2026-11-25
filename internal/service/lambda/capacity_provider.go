@@ -71,8 +71,8 @@ func (r *resourceCapacityProvider) Schema(ctx context.Context, _ resource.Schema
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN:                      framework.ARNAttributeComputedOnly(),
-			"capacity_provider_scaling_config": framework.ResourceOptionalComputedListOfObjectsAttribute[capacityProviderScalingConfigModel](ctx, 1, nil, listplanmodifier.UseStateForUnknown()),
-			"instance_requirements":            framework.ResourceOptionalComputedListOfObjectsAttribute[instanceRequirementsModel](ctx, 1, nil, listplanmodifier.RequiresReplaceIfConfigured(), listplanmodifier.UseStateForUnknown()),
+			"capacity_provider_scaling_config": framework.ResourceOptionalComputedSingleNestedObjectAttribute[capacityProviderScalingConfigModel](ctx),
+			"instance_requirements":            framework.ResourceOptionalComputedForceNewSingleNestedObjectAttribute[instanceRequirementsModel](ctx),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{

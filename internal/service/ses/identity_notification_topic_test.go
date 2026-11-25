@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
@@ -17,7 +18,7 @@ import (
 
 func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	topicName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_notification_topic.test"
 
@@ -60,7 +61,7 @@ func TestAccSESIdentityNotificationTopic_basic(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/36275.
 func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomainName()
+	domain := acctest.RandomDomainName(t)
 	resourceName := "aws_ses_identity_notification_topic.test"
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
@@ -79,6 +80,14 @@ func TestAccSESIdentityNotificationTopic_Disappears_domainIdentity(t *testing.T)
 					acctest.CheckSDKResourceDisappears(ctx, t, tfses.ResourceDomainIdentity(), "aws_ses_domain_identity.test"),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})

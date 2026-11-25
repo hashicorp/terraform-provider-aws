@@ -7,11 +7,9 @@ package timestreaminfluxdb
 
 import (
 	"context"
-	"errors"
-	"math"
+	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb/types"
@@ -33,13 +31,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -48,8 +46,10 @@ import (
 
 // @FrameworkResource("aws_timestreaminfluxdb_db_cluster", name="DB Cluster")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb;timestreaminfluxdb.GetDbClusterOutput")
-// @Testing(importIgnore="bucket;username;organization;password")
+// @Testing(importIgnore="bucket;username;organization;password", plannableImportAction="Replace")
+// @Testing(preIdentityVersion="v6.43.0")
 func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dbClusterResource{}
 
@@ -60,14 +60,10 @@ func newDBClusterResource(_ context.Context) (resource.ResourceWithConfigure, er
 	return r, nil
 }
 
-const (
-	ResNameDBCluster = "DB Cluster"
-)
-
 type dbClusterResource struct {
 	framework.ResourceWithModel[dbClusterResourceModel]
 	framework.WithTimeouts
-	framework.WithImportByID
+	framework.WithImportByIdentity
 }
 
 func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -89,10 +85,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[^_][^\"]*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[^_][^\"]*$", ""),
 				},
 				Description: `Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket.
 					A bucket combines the concept of a database and a retention period (the duration of time
@@ -115,10 +108,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 64),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z0-9]+$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `The ID of the DB parameter group to assign to your DB cluster. 
 					DB parameter groups specify how the database is configured. For example, DB parameter groups 
@@ -148,19 +138,19 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: `Specifies the type of cluster to create. This field is forbidden for InfluxDB V3 clusters
 					(when using an InfluxDB V3 db parameter group).`,
 			},
-			"engine_type": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-				Description: `The database engine type of the DB cluster.`,
-			},
 			names.AttrEndpoint: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `The endpoint used to connect to InfluxDB. The default InfluxDB port is 8086.`,
+			},
+			"engine_type": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `The database engine type of the DB cluster.`,
 			},
 			"failover_mode": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.FailoverMode](),
@@ -190,10 +180,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 40),
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$"),
-						"",
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*$", ""),
 				},
 				Description: `The name that uniquely identifies the DB cluster when interacting with the 
 					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a 
@@ -212,8 +199,6 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate 
 					over both IPv4 and IPv6 protocols.`,
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"organization": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -236,7 +221,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(8, 64),
-					stringvalidator.RegexMatches(regexache.MustCompile("^[a-zA-Z0-9]+$"), ""),
+					lazystringvalidator.RegexMatches("^[a-zA-Z0-9]+$", ""),
 				},
 				Description: `Password of the initial admin user created in InfluxDB. This password will
 					allow you to access the InfluxDB UI to perform various administrative tasks and
@@ -274,17 +259,15 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				Description: `The endpoint used to connect to the Timestream for InfluxDB cluster for 
 					read-only operations.`,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			names.AttrUsername: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$"),
-						`Must start with a letter and can't end with a hyphen or contain two 
-						consecutive hyphens`,
-					),
+					lazystringvalidator.RegexMatches("^[a-zA-Z]([a-zA-Z0-9]*(-[a-zA-Z0-9]+)*)?$", `Must start with a letter and can't end with a hyphen or contain two consecutive hyphens`),
 				},
 				Description: `Username of the initial admin user created in InfluxDB. Must start with a letter
 					and can't end with a hyphen or contain two consecutive hyphens. This username will allow
@@ -303,7 +286,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					setvalidator.SizeBetween(1, 5),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^sg-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^sg-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC security group IDs to associate with the Timestream for InfluxDB cluster.`,
@@ -318,7 +301,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					setvalidator.SizeBetween(1, 3),
 					setvalidator.ValueStringsAre(
 						stringvalidator.LengthAtMost(64),
-						stringvalidator.RegexMatches(regexache.MustCompile("^subnet-[a-z0-9]+$"), ""),
+						lazystringvalidator.RegexMatches("^subnet-[a-z0-9]+$", ""),
 					),
 				},
 				Description: `A list of VPC subnet IDs to associate with the DB cluster. Provide at least 
@@ -327,7 +310,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 		},
 		Blocks: map[string]schema.Block{
 			"log_delivery_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dbClusterLogDeliveryConfigurationData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[logDeliveryConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -335,7 +318,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"s3_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[dbClusterS3ConfigurationData](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[s3ConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -345,7 +328,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 										Required: true,
 										Validators: []validator.String{
 											stringvalidator.LengthBetween(3, 63),
-											stringvalidator.RegexMatches(regexache.MustCompile("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$"), ""),
+											lazystringvalidator.RegexMatches("^[0-9a-z]+[0-9a-z\\.\\-]*[0-9a-z]+$", ""),
 										},
 										Description: `The name of the S3 bucket to deliver logs to.`,
 									},
@@ -361,7 +344,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"maintenance_schedule": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[dbClusterMaintenanceScheduleData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[maintenanceScheduleModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -374,10 +357,7 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 							Required: true,
 							Validators: []validator.String{
 								stringvalidator.LengthAtMost(19),
-								stringvalidator.RegexMatches(
-									regexache.MustCompile(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`),
-									"must be in the format ddd:HH:MM-ddd:HH:MM or an empty string",
-								),
+								lazystringvalidator.RegexMatches(`^$|^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d-(Mon|Tue|Wed|Thu|Fri|Sat|Sun):([01]\d|2[0-3]):[0-5]\d$`, "must be in the format ddd:HH:MM-ddd:HH:MM or an empty string"),
 							},
 							Description: `The preferred maintenance window in the format ddd:HH:MM-ddd:HH:MM.
 								Day must be one of Mon, Tue, Wed, Thu, Fri, Sat, or Sun. Provide an empty
@@ -421,15 +401,16 @@ func dbClusterDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planm
 }
 
 func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var plan dbClusterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := timestreaminfluxdb.CreateDbClusterInput{}
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+	name := fwflex.StringValueFromFramework(ctx, plan.Name)
+	var input timestreaminfluxdb.CreateDbClusterInput
 	resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -439,40 +420,18 @@ func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateReque
 
 	out, err := conn.CreateDbCluster(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBCluster, plan.Name.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("creating Timestream InfluxDB DB Cluster (%s)", name), err.Error())
 		return
 	}
 
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBCluster, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	if out.DbClusterId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionCreating, ResNameDBCluster, plan.Name.String(), nil),
-			errors.New("received response with nil DbClusterId").Error(),
-		)
-		return
-	}
-
+	clusterID := aws.ToString(out.DbClusterId)
 	state := plan
-	state.ID = fwflex.StringToFramework(ctx, out.DbClusterId)
+	state.ID = fwflex.StringValueToFramework(ctx, clusterID)
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	output, err := waitDBClusterCreated(ctx, conn, state.ID.ValueString(), createTimeout)
+	output, err := waitDBClusterCreated(ctx, conn, clusterID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
-		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), out.DbClusterId)...)
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForCreation, ResNameDBCluster, plan.Name.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrID), clusterID)...)
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Cluster (%s) create", clusterID), err.Error())
 		return
 	}
 
@@ -485,15 +444,16 @@ func (r *dbClusterResource) Create(ctx context.Context, req resource.CreateReque
 }
 
 func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var state dbClusterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findDBClusterByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+	clusterID := fwflex.StringValueFromFramework(ctx, state.ID)
+	output, err := findDBClusterByID(ctx, conn, clusterID)
 	if retry.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
@@ -501,10 +461,7 @@ func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionReading, ResNameDBCluster, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading Timestream InfluxDB DB Cluster (%s)", clusterID), err.Error())
 		return
 	}
 
@@ -517,14 +474,14 @@ func (r *dbClusterResource) Read(ctx context.Context, req resource.ReadRequest, 
 }
 
 func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var plan, state dbClusterResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
 	diff, d := fwflex.Diff(ctx, plan, state)
 	resp.Diagnostics.Append(d...)
@@ -533,8 +490,9 @@ func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	if diff.HasChanges() {
+		clusterID := fwflex.StringValueFromFramework(ctx, plan.ID)
 		input := timestreaminfluxdb.UpdateDbClusterInput{
-			DbClusterId: plan.ID.ValueStringPointer(),
+			DbClusterId: aws.String(clusterID),
 		}
 		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
 		if resp.Diagnostics.HasError() {
@@ -543,20 +501,13 @@ func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateReque
 
 		_, err := conn.UpdateDbCluster(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBCluster, plan.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("updating Timestream InfluxDB DB Cluster (%s)", clusterID), err.Error())
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		output, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		output, err := waitDBClusterUpdated(ctx, conn, plan.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForUpdate, ResNameDBCluster, plan.ID.String(), err),
-				err.Error(),
-			)
+			resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Cluster (%s) update", clusterID), err.Error())
 			return
 		}
 
@@ -570,37 +521,30 @@ func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *dbClusterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().TimestreamInfluxDBClient(ctx)
-
 	var state dbClusterResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &timestreaminfluxdb.DeleteDbClusterInput{
-		DbClusterId: state.ID.ValueStringPointer(),
+	conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+	clusterID := fwflex.StringValueFromFramework(ctx, state.ID)
+	input := timestreaminfluxdb.DeleteDbClusterInput{
+		DbClusterId: aws.String(clusterID),
 	}
 
-	_, err := conn.DeleteDbCluster(ctx, in)
+	_, err := conn.DeleteDbCluster(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionDeleting, ResNameDBCluster, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("deleting Timestream InfluxDB DB Cluster (%s)", clusterID), err.Error())
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDBClusterDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionWaitingForDeletion, ResNameDBCluster, state.ID.String(), err),
-			err.Error(),
-		)
+	if _, err := waitDBClusterDeleted(ctx, conn, state.ID.ValueString(), r.DeleteTimeout(ctx, state.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for Timestream InfluxDB DB Cluster (%s) delete", clusterID), err.Error())
 		return
 	}
 }
@@ -632,77 +576,47 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 	}
 }
 
-func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.Plan.Raw.IsNull() {
+		// Resource deletion.
+		return
+	}
+
 	var data dbClusterResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	isNullOrUnknown := func(val attr.Value) bool {
-		return val.IsNull() || val.IsUnknown()
-	}
-
-	if !isNullOrUnknown(data.AllocatedStorage) {
-		switch v := data.AllocatedStorage.ValueInt64(); {
-		case v > math.MaxInt32:
-			resp.Diagnostics.AddError(
-				"Invalid value for allocated_storage",
-				"allocated_storage was greater than the maximum allowed value for int32",
-			)
-			return
-		case v < math.MinInt32:
-			resp.Diagnostics.AddError(
-				"Invalid value for allocated_storage",
-				"allocated_storage was less than the minimum allowed value for int32",
-			)
-			return
-		}
-	}
-
-	hasV2Fields := !isNullOrUnknown(data.AllocatedStorage) ||
-		!isNullOrUnknown(data.Bucket) ||
-		!isNullOrUnknown(data.DeploymentType) ||
-		!isNullOrUnknown(data.Organization) ||
-		!isNullOrUnknown(data.Password) ||
-		!isNullOrUnknown(data.Username)
-
 	var isV3Cluster bool
-	if !isNullOrUnknown(data.DBParameterGroupIdentifier) {
-		meta := r.Meta()
-		if meta == nil {
-			return
-		}
-		paramGroupID := data.DBParameterGroupIdentifier.ValueString()
-		isV3, diags := isParameterGroupV3(ctx, meta.TimestreamInfluxDBClient(ctx), paramGroupID)
+	if !isNullOrUnknownValue(data.DBParameterGroupIdentifier) {
+		conn := r.Meta().TimestreamInfluxDBClient(ctx)
+
+		paramGroupID := fwflex.StringValueFromFramework(ctx, data.DBParameterGroupIdentifier)
+		isV3, diags := isParameterGroupV3(ctx, conn, paramGroupID)
 		resp.Diagnostics.Append(diags...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 		isV3Cluster = isV3
-
-		if !hasV2Fields && !isV3Cluster {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("db_parameter_group_identifier"),
-				"Invalid Parameter Group Type",
-				"An InfluxDB V2 parameter group requires InfluxDB V2 fields (allocated_storage, bucket, deployment_type, organization, password, username). Use an InfluxDB V3 parameter group or provide the V2 fields.",
-			)
-		}
 	}
 
+	v2Fields := []struct {
+		val  attr.Value
+		path string
+	}{
+		{data.AllocatedStorage, names.AttrAllocatedStorage},
+		{data.Bucket, names.AttrBucket},
+		{data.DeploymentType, "deployment_type"},
+		{data.Organization, "organization"},
+		{data.Password, names.AttrPassword},
+		{data.Username, names.AttrUsername},
+	}
+
+	// Validate V3-specific field restrictions
 	if isV3Cluster {
-		for _, v := range []struct {
-			val  attr.Value
-			path string
-		}{
-			{data.AllocatedStorage, names.AttrAllocatedStorage},
-			{data.Bucket, names.AttrBucket},
-			{data.DeploymentType, "deployment_type"},
-			{data.Organization, "organization"},
-			{data.Password, names.AttrPassword},
-			{data.Username, names.AttrUsername},
-		} {
-			if !isNullOrUnknown(v.val) {
+		for _, v := range v2Fields {
+			if !isNullOrUnknownValue(v.val) {
 				resp.Diagnostics.AddAttributeError(
 					path.Root(v.path),
 					"Invalid Configuration for InfluxDB V3",
@@ -711,55 +625,26 @@ func (r *dbClusterResource) ValidateConfig(ctx context.Context, req resource.Val
 			}
 		}
 	} else {
-		for _, v := range []struct {
-			val  attr.Value
-			path string
-		}{
-			{data.AllocatedStorage, names.AttrAllocatedStorage},
-			{data.Bucket, names.AttrBucket},
-			{data.Organization, "organization"},
-			{data.Password, names.AttrPassword},
-			{data.Username, names.AttrUsername},
-		} {
-			if isNullOrUnknown(v.val) {
-				resp.Diagnostics.AddAttributeError(
-					path.Root(v.path),
-					"Missing Required Configuration for InfluxDB V2",
-					v.path+" is required for InfluxDB V2 clusters",
-				)
+		for _, v := range v2Fields {
+			if isNullOrUnknownValue(v.val) {
+				if rootAttributeName := v.path; rootAttributeName == "deployment_type" {
+					resp.Plan.SetAttribute(ctx, path.Root(rootAttributeName), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
+				} else {
+					resp.Diagnostics.AddAttributeError(
+						path.Root(v.path),
+						"Missing Required Configuration for InfluxDB V2",
+						rootAttributeName+" is required for InfluxDB V2 clusters",
+					)
+				}
 			}
 		}
 
-		if !isNullOrUnknown(data.MaintenanceSchedule) {
+		if !isNullOrUnknownValue(data.MaintenanceSchedule) {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("maintenance_schedule"),
 				"Invalid Configuration for InfluxDB V2",
 				"maintenance_schedule is only supported for InfluxDB V3 clusters (when using an InfluxDB V3 db parameter group)",
 			)
-		}
-	}
-}
-
-func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.Plan.Raw.IsNull() {
-		var data dbClusterResourceModel
-		resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		var isV3Cluster bool
-		if !data.DBParameterGroupIdentifier.IsNull() {
-			isV3, diags := isParameterGroupV3(ctx, r.Meta().TimestreamInfluxDBClient(ctx), data.DBParameterGroupIdentifier.ValueString())
-			resp.Diagnostics.Append(diags...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			isV3Cluster = isV3
-		}
-
-		if !isV3Cluster && data.DeploymentType.IsUnknown() {
-			resp.Plan.SetAttribute(ctx, path.Root("deployment_type"), fwtypes.StringEnumValue(awstypes.ClusterDeploymentTypeMultiNodeReadReplicas))
 		}
 	}
 }
@@ -850,7 +735,7 @@ func findDBCluster(ctx context.Context, conn *timestreaminfluxdb.Client, in *tim
 		return nil, err
 	}
 
-	if out == nil || out.Id == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
@@ -878,7 +763,7 @@ func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, 
 		return nil, err
 	}
 
-	if out == nil || out.Id == nil {
+	if out == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
 
@@ -887,45 +772,49 @@ func findDBParameterGroup(ctx context.Context, conn *timestreaminfluxdb.Client, 
 
 type dbClusterResourceModel struct {
 	framework.WithRegionModel
-	AllocatedStorage              types.Int64                                                            `tfsdk:"allocated_storage"`
-	ARN                           types.String                                                           `tfsdk:"arn"`
-	Bucket                        types.String                                                           `tfsdk:"bucket"`
-	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                            `tfsdk:"db_instance_type"`
-	DBParameterGroupIdentifier    types.String                                                           `tfsdk:"db_parameter_group_identifier"`
-	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                             `tfsdk:"db_storage_type"`
-	DeploymentType                fwtypes.StringEnum[awstypes.ClusterDeploymentType]                     `tfsdk:"deployment_type"`
-	EngineType                    types.String                                                           `tfsdk:"engine_type"`
-	Endpoint                      types.String                                                           `tfsdk:"endpoint"`
-	FailoverMode                  fwtypes.StringEnum[awstypes.FailoverMode]                              `tfsdk:"failover_mode"`
-	ID                            types.String                                                           `tfsdk:"id"`
-	InfluxAuthParametersSecretARN types.String                                                           `tfsdk:"influx_auth_parameters_secret_arn"`
-	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[dbClusterLogDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
-	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[dbClusterMaintenanceScheduleData]      `tfsdk:"maintenance_schedule"`
-	Name                          types.String                                                           `tfsdk:"name"`
-	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                               `tfsdk:"network_type"`
-	Organization                  types.String                                                           `tfsdk:"organization"`
-	Password                      types.String                                                           `tfsdk:"password"`
-	Port                          types.Int32                                                            `tfsdk:"port"`
-	PubliclyAccessible            types.Bool                                                             `tfsdk:"publicly_accessible"`
-	ReaderEndpoint                types.String                                                           `tfsdk:"reader_endpoint"`
-	Tags                          tftags.Map                                                             `tfsdk:"tags"`
-	TagsAll                       tftags.Map                                                             `tfsdk:"tags_all"`
-	Timeouts                      timeouts.Value                                                         `tfsdk:"timeouts"`
-	Username                      types.String                                                           `tfsdk:"username"`
-	VPCSecurityGroupIDs           fwtypes.SetOfString                                                    `tfsdk:"vpc_security_group_ids"`
-	VPCSubnetIDs                  fwtypes.SetOfString                                                    `tfsdk:"vpc_subnet_ids"`
+	AllocatedStorage              types.Int64                                                    `tfsdk:"allocated_storage"`
+	ARN                           types.String                                                   `tfsdk:"arn"`
+	Bucket                        types.String                                                   `tfsdk:"bucket"`
+	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                    `tfsdk:"db_instance_type"`
+	DBParameterGroupIdentifier    types.String                                                   `tfsdk:"db_parameter_group_identifier"`
+	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                     `tfsdk:"db_storage_type"`
+	DeploymentType                fwtypes.StringEnum[awstypes.ClusterDeploymentType]             `tfsdk:"deployment_type"`
+	EngineType                    types.String                                                   `tfsdk:"engine_type"`
+	Endpoint                      types.String                                                   `tfsdk:"endpoint"`
+	FailoverMode                  fwtypes.StringEnum[awstypes.FailoverMode]                      `tfsdk:"failover_mode"`
+	ID                            types.String                                                   `tfsdk:"id"`
+	InfluxAuthParametersSecretARN types.String                                                   `tfsdk:"influx_auth_parameters_secret_arn"`
+	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationModel] `tfsdk:"log_delivery_configuration"`
+	MaintenanceSchedule           fwtypes.ListNestedObjectValueOf[maintenanceScheduleModel]      `tfsdk:"maintenance_schedule"`
+	Name                          types.String                                                   `tfsdk:"name"`
+	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                       `tfsdk:"network_type"`
+	Organization                  types.String                                                   `tfsdk:"organization"`
+	Password                      types.String                                                   `tfsdk:"password"`
+	Port                          types.Int32                                                    `tfsdk:"port"`
+	PubliclyAccessible            types.Bool                                                     `tfsdk:"publicly_accessible"`
+	ReaderEndpoint                types.String                                                   `tfsdk:"reader_endpoint"`
+	Tags                          tftags.Map                                                     `tfsdk:"tags"`
+	TagsAll                       tftags.Map                                                     `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value                                                 `tfsdk:"timeouts"`
+	Username                      types.String                                                   `tfsdk:"username"`
+	VPCSecurityGroupIDs           fwtypes.SetOfString                                            `tfsdk:"vpc_security_group_ids"`
+	VPCSubnetIDs                  fwtypes.SetOfString                                            `tfsdk:"vpc_subnet_ids"`
 }
 
-type dbClusterLogDeliveryConfigurationData struct {
-	S3Configuration fwtypes.ListNestedObjectValueOf[dbClusterS3ConfigurationData] `tfsdk:"s3_configuration"`
+type logDeliveryConfigurationModel struct {
+	S3Configuration fwtypes.ListNestedObjectValueOf[s3ConfigurationModel] `tfsdk:"s3_configuration"`
 }
 
-type dbClusterMaintenanceScheduleData struct {
+type s3ConfigurationModel struct {
+	BucketName types.String `tfsdk:"bucket_name"`
+	Enabled    types.Bool   `tfsdk:"enabled"`
+}
+
+type maintenanceScheduleModel struct {
 	PreferredMaintenanceWindow types.String `tfsdk:"preferred_maintenance_window"`
 	Timezone                   types.String `tfsdk:"timezone"`
 }
 
-type dbClusterS3ConfigurationData struct {
-	BucketName types.String `tfsdk:"bucket_name"`
-	Enabled    types.Bool   `tfsdk:"enabled"`
+func isNullOrUnknownValue(val attr.Value) bool {
+	return val.IsNull() || val.IsUnknown()
 }

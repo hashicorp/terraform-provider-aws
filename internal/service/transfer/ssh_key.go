@@ -36,33 +36,35 @@ func resourceSSHKey() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"body": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					old = cleanSSHKey(old)
-					new = cleanSSHKey(new)
-					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"body": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						old = cleanSSHKey(old)
+						new = cleanSSHKey(new)
+						return strings.Trim(old, "\n") == strings.Trim(new, "\n")
+					},
 				},
-			},
-			"server_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validServerID,
-			},
-			"ssh_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrUserName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validUserName,
-			},
+				"server_id": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validServerID,
+				},
+				"ssh_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrUserName: {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validUserName,
+				},
+			}
 		},
 	}
 }

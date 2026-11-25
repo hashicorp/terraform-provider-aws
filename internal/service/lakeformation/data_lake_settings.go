@@ -40,140 +40,142 @@ func ResourceDataLakeSettings() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			// admins
-			// allow_external_data_filtering
-			// allow_full_table_external_data_access
-			// authorized_session_tag_value_list
-			// catalog_id
-			// create_database_default_permissions
-			// create_table_default_permissions
-			// external_data_filtering_allow_list
-			// parameters
-			// read_only_admins
-			// trusted_resource_owners
-			"admins": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				// admins
+				// allow_external_data_filtering
+				// allow_full_table_external_data_access
+				// authorized_session_tag_value_list
+				// catalog_id
+				// create_database_default_permissions
+				// create_table_default_permissions
+				// external_data_filtering_allow_list
+				// parameters
+				// read_only_admins
+				// trusted_resource_owners
+				"admins": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"allow_external_data_filtering": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"allow_full_table_external_data_access": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"authorized_session_tag_value_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrCatalogID: {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"create_database_default_permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrPermissions: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
+				"allow_external_data_filtering": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"allow_full_table_external_data_access": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"authorized_session_tag_value_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrCatalogID: {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"create_database_default_permissions": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrPermissions: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.Permission](),
+								},
 							},
-						},
-						names.AttrPrincipal: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validPrincipal,
+							names.AttrPrincipal: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validPrincipal,
+							},
 						},
 					},
 				},
-			},
-			"create_table_default_permissions": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				MaxItems: 3,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrPermissions: {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.Permission](),
+				"create_table_default_permissions": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					MaxItems: 3,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrPermissions: {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type:             schema.TypeString,
+									ValidateDiagFunc: enum.Validate[awstypes.Permission](),
+								},
 							},
-						},
-						names.AttrPrincipal: {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validPrincipal,
+							names.AttrPrincipal: {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validPrincipal,
+							},
 						},
 					},
 				},
-			},
-			"external_data_filtering_allow_list": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validPrincipal,
+				"external_data_filtering_allow_list": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validPrincipal,
+					},
 				},
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// In fresh account, with empty config, API returns map[CROSS_ACCOUNT_VERSION:1 SET_CONTEXT:TRUE] by default
-					if k == "parameters.SET_CONTEXT" && old == "TRUE" && new == "" {
-						return true
-					}
-					if k == "parameters.CROSS_ACCOUNT_VERSION" && old == "1" && new == "" {
-						return true
-					}
+				names.AttrParameters: {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// In fresh account, with empty config, API returns map[CROSS_ACCOUNT_VERSION:1 SET_CONTEXT:TRUE] by default
+						if k == "parameters.SET_CONTEXT" && old == "TRUE" && new == "" {
+							return true
+						}
+						if k == "parameters.CROSS_ACCOUNT_VERSION" && old == "1" && new == "" {
+							return true
+						}
 
-					return old == new
+						return old == new
+					},
 				},
-			},
-			"read_only_admins": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+				"read_only_admins": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"trusted_resource_owners": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidAccountID,
+				"trusted_resource_owners": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidAccountID,
+					},
 				},
-			},
+			}
 		},
 	}
 }

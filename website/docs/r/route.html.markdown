@@ -26,7 +26,7 @@ resource "aws_route" "r" {
 }
 ```
 
-## Example IPv6 Usage
+### Example IPv6 Usage
 
 ```terraform
 resource "aws_vpc" "vpc" {
@@ -61,12 +61,13 @@ One of the following destination arguments must be supplied:
 One of the following target arguments must be supplied:
 
 * `carrier_gateway_id` - (Optional) Identifier of a carrier gateway. This attribute can only be used when the VPC contains a subnet which is associated with a Wavelength Zone.
-* `core_network_arn` - (Optional) The Amazon Resource Name (ARN) of a core network.
+* `core_network_arn` - (Optional) ARN of a core network.
 * `egress_only_gateway_id` - (Optional) Identifier of a VPC Egress Only Internet Gateway.
 * `gateway_id` - (Optional) Identifier of a VPC internet gateway or a virtual private gateway. Specify `local` when updating a previously [imported](#import) local route.
-* `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `local_gateway_id` - (Optional) Identifier of a Outpost local gateway.
+* `nat_gateway_id` - (Optional) Identifier of a VPC NAT gateway.
 * `network_interface_id` - (Optional) Identifier of an EC2 network interface.
+* `odb_network_arn` - (Optional) ARN of an ODB network.
 * `transit_gateway_id` - (Optional) Identifier of an EC2 Transit Gateway.
 * `vpc_endpoint_id` - (Optional) Identifier of a VPC Endpoint.
 * `vpc_peering_connection_id` - (Optional) Identifier of a VPC peering connection.
@@ -80,6 +81,9 @@ This resource exports the following attributes in addition to the arguments abov
 ~> **NOTE:** Only the arguments that are configured (one of the above) will be exported as an attribute once the resource is created.
 
 * `id` - Route identifier computed from the routing table identifier and route destination.
+* `igw_firewall` - Automated Internet Firewall that inspects traffic for the route. Only set for routes that target an internet gateway or egress-only internet gateway in a VPC that has a firewall. The route target stays the gateway.
+    * `firewall_arn` - ARN of the firewall.
+    * `status` - Status of the firewall: `active`, `pending` or `disabling`.
 * `instance_id` - Identifier of an EC2 instance.
 * `instance_owner_id` - The AWS account ID of the owner of the EC2 instance.
 * `origin` - How the route was created - `CreateRouteTable`, `CreateRoute` or `EnableVgwRoutePropagation`.

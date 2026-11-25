@@ -1,3 +1,0 @@
-```release-note:new-action
-aws_dms_start_replication_task_assessment_run
-```

@@ -10,7 +10,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,9 +50,7 @@ func networkInsightsPathFilterSchema() map[string]*schema.Schema {
 			Optional: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(0, 15),
-				validation.StringMatch(
-					regexache.MustCompile(`^([0-9]{1,3}.){3}[0-9]{1,3}$`),
-					"must be a valid IPv4 address"),
+				lazyvalidation.StringMatch(`^([0-9]{1,3}.){3}[0-9]{1,3}$`, "must be a valid IPv4 address"),
 			),
 		},
 		"destination_port_range": {
@@ -69,9 +67,7 @@ func networkInsightsPathFilterSchema() map[string]*schema.Schema {
 			Optional: true,
 			ValidateFunc: validation.All(
 				validation.StringLenBetween(0, 15),
-				validation.StringMatch(
-					regexache.MustCompile(`^([0-9]{1,3}.){3}[0-9]{1,3}$`),
-					"must be a valid IPv4 address"),
+				lazyvalidation.StringMatch(`^([0-9]{1,3}.){3}[0-9]{1,3}$`, "must be a valid IPv4 address"),
 			),
 		},
 		"source_port_range": {
@@ -100,74 +96,76 @@ func resourceNetworkInsightsPath() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestinationARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrDestination: {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentIDOrARN,
-			},
-			"destination_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"destination_port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-			},
-			"filter_at_destination": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: networkInsightsPathFilterSchema(),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"filter_at_source": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: networkInsightsPathFilterSchema(),
+				names.AttrDestinationARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			names.AttrProtocol: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
-			},
-			names.AttrSource: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: suppressEquivalentIDOrARN,
-			},
-			"source_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"source_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrDestination: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"destination_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				"destination_port": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					ForceNew: true,
+				},
+				"filter_at_destination": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: networkInsightsPathFilterSchema(),
+					},
+				},
+				"filter_at_source": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: networkInsightsPathFilterSchema(),
+					},
+				},
+				names.AttrProtocol: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
+				},
+				names.AttrSource: {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: suppressEquivalentIDOrARN,
+				},
+				"source_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"source_ip": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+			}
 		},
 	}
 }

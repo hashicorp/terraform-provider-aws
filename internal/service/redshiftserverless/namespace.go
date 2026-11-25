@@ -44,95 +44,97 @@ func resourceNamespace() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"admin_password_secret_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"admin_password_secret_kms_key_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidKMSKeyID,
-			},
-			"admin_user_password": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Sensitive:     true,
-				ConflictsWith: []string{"manage_admin_password", "admin_user_password_wo"},
-			},
-			"admin_user_password_wo": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				WriteOnly:     true,
-				ConflictsWith: []string{"admin_user_password", "manage_admin_password"},
-				RequiredWith:  []string{"admin_user_password_wo_version"},
-			},
-			"admin_user_password_wo_version": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				RequiredWith: []string{"admin_user_password_wo"},
-			},
-			"admin_username": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-				Computed:  true,
-			},
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"db_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
-			},
-			"default_iam_role_arn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"iam_roles": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"admin_password_secret_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"admin_password_secret_kms_key_id": {
 					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidKMSKeyID,
+				},
+				"admin_user_password": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					Sensitive:     true,
+					ConflictsWith: []string{"manage_admin_password", "admin_user_password_wo"},
+				},
+				"admin_user_password_wo": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					WriteOnly:     true,
+					ConflictsWith: []string{"admin_user_password", "manage_admin_password"},
+					RequiredWith:  []string{"admin_user_password_wo_version"},
+				},
+				"admin_user_password_wo_version": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					RequiredWith: []string{"admin_user_password_wo"},
+				},
+				"admin_username": {
+					Type:      schema.TypeString,
+					Optional:  true,
+					Sensitive: true,
+					Computed:  true,
+				},
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"db_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Computed: true,
+				},
+				"default_iam_role_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			names.AttrKMSKeyID: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-			"log_exports": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.LogExport](),
+				"iam_roles": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
 				},
-			},
-			"manage_admin_password": {
-				Type:          schema.TypeBool,
-				Optional:      true,
-				ConflictsWith: []string{"admin_user_password", "admin_user_password_wo"},
-			},
-			"namespace_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"namespace_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrKMSKeyID: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"log_exports": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:             schema.TypeString,
+						ValidateDiagFunc: enum.Validate[awstypes.LogExport](),
+					},
+				},
+				"manage_admin_password": {
+					Type:          schema.TypeBool,
+					Optional:      true,
+					ConflictsWith: []string{"admin_user_password", "admin_user_password_wo"},
+				},
+				"namespace_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"namespace_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+			}
 		},
 	}
 }
@@ -408,10 +410,6 @@ func waitNamespaceUpdated(ctx context.Context, conn *redshiftserverless.Client, 
 	return nil, err
 }
 
-var (
-	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
-)
-
 func flattenNamespaceIAMRoles(iamRoles []string) []string {
 	var tfList []string
 
@@ -422,7 +420,7 @@ func flattenNamespaceIAMRoles(iamRoles []string) []string {
 		}
 
 		// e.g. "IamRole(applyStatus=in-sync, iamRoleArn=arn:aws:iam::123456789012:role/service-role/test)"
-		if m := reIAMRole.FindStringSubmatch(iamRole); len(m) > 0 {
+		if m := regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`).FindStringSubmatch(iamRole); len(m) > 0 {
 			var key string
 			s := m[1]
 			for s != "" {

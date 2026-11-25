@@ -1,3 +1,0 @@
-```release-note:enhancement
-provider: Adds SSO API endpoint override parameter `endpoints.sso`
-```

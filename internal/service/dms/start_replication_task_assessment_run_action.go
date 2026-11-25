@@ -254,7 +254,6 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 		},
 	})
 	if err != nil {
-		var timeoutErr *actionwait.TimeoutError
 		var failureErr *actionwait.FailureStateError
 		var unexpectedErr *actionwait.UnexpectedStateError
 
@@ -269,7 +268,7 @@ func (a *startReplicationTaskAssessmentRunAction) Invoke(ctx context.Context, re
 		}
 
 		switch {
-		case errors.As(err, &timeoutErr):
+		case errs.IsA[*actionwait.TimeoutError](err):
 			resp.Diagnostics.AddError(
 				"Timeout Waiting for DMS Assessment Run",
 				fmt.Sprintf("DMS assessment run %s did not complete within %s.%s", assessmentRunName, timeout, suffix),

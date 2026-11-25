@@ -109,6 +109,14 @@ func TestAccMWAAEnvironment_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfmwaa.ResourceEnvironment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -265,7 +273,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.default_task_retries", "1"),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", "16"),
-					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.11.2"),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "airflow", "environment/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
@@ -451,10 +459,10 @@ func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.4.3"),
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.10.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment1),
-					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.10.3"),
 				),
 			},
 			{
@@ -463,11 +471,86 @@ func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.5.1"),
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.11.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment2),
 					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
-					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.5.1"),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.11.2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAirflowVersionChangeRequiresReplacement(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old, new string
+		want     bool
+	}{
+		{"", "2.11.2", false},
+		{"2.11.2", "", false},
+		{"2.4.3", "2.5.1", false},
+		{"2.11.2", "2.10.3", false},
+		{"3.2.1", "2.11.2", false},
+		{"1.10.12", "2.0.2", true},
+		{"1.10.12", "3.2.1", true},
+		{"2.10.3", "3.2.1", true},
+		{"2.11.0", "3.2.1", false},
+		{"2.11.2", "3.2.1", false},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.old+"->"+tc.new, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfmwaa.AirflowVersionChangeRequiresReplacement(tc.old, tc.new); got != tc.want {
+				t.Errorf("got %t, want %t", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestAccMWAAEnvironment_updateAirflowVersionMajor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var environment1, environment2 awstypes.Environment
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_mwaa_environment.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MWAAServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "2.11.2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.11.2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEnvironmentConfig_airflowVersion(rName, "3.2.1"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, t, resourceName, &environment2),
+					testAccCheckEnvironmentNotRecreated(&environment2, &environment1),
+					resource.TestCheckResourceAttr(resourceName, "airflow_version", "3.2.1"),
 				),
 			},
 		},
@@ -914,7 +997,7 @@ resource "aws_mwaa_environment" "test" {
     "core.parallelism"          = 16
   }
 
-  airflow_version    = "2.4.3"
+  airflow_version    = "2.11.2"
   dag_s3_path        = aws_s3_object.dags.key
   environment_class  = "mw1.medium"
   execution_role_arn = aws_iam_role.test.arn
@@ -1091,7 +1174,7 @@ resource "aws_mwaa_environment" "test" {
   }
 
   source_bucket_arn = aws_s3_bucket.test.arn
-  airflow_version   = "2.4.3"
+  airflow_version   = "2.11.2"
 }
 `, rName))
 }

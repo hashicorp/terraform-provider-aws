@@ -41,7 +41,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool" "example" {
-  name = "example"
+  name           = "example"
+  user_pool_tier = "PLUS"
 }
 
 resource "aws_cloudwatch_log_group" "example" {
@@ -120,7 +121,7 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
   log_configurations {
     event_source = "userAuthEvents"
-    log_level    = "ERROR"
+    log_level    = "INFO"
 
     firehose_configuration {
       stream_arn = aws_kinesis_firehose_delivery_stream.example.arn
@@ -133,7 +134,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
 
 ```terraform
 resource "aws_cognito_user_pool" "example" {
-  name = "example"
+  name           = "example"
+  user_pool_tier = "PLUS"
 }
 
 resource "aws_s3_bucket" "example" {
@@ -145,8 +147,8 @@ resource "aws_cognito_log_delivery_configuration" "example" {
   user_pool_id = aws_cognito_user_pool.example.id
 
   log_configurations {
-    event_source = "userNotification"
-    log_level    = "ERROR"
+    event_source = "userAuthEvents"
+    log_level    = "INFO"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.example.arn

@@ -1,3 +1,0 @@
-```release-note:breaking-change
-resource/aws_cloudfront_response_headers_policy: The `etag` argument is now computed only
-```

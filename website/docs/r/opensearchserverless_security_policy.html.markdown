@@ -14,7 +14,7 @@ Terraform resource for managing an AWS OpenSearch Serverless Security Policy. Se
 
 ### Encryption Security Policy
 
-#### Applies to a single collection
+#### Single Collection
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
@@ -35,7 +35,7 @@ resource "aws_opensearchserverless_security_policy" "example" {
 }
 ```
 
-#### Applies to multiple collections
+#### Multiple Collections
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
@@ -56,7 +56,7 @@ resource "aws_opensearchserverless_security_policy" "example" {
 }
 ```
 
-#### Using a customer managed key
+#### Customer Managed Key
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
@@ -80,7 +80,7 @@ resource "aws_opensearchserverless_security_policy" "example" {
 
 ### Network Security Policy
 
-#### Allow public access to the collection endpoint and the Dashboards endpoint
+#### Public Access
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
@@ -110,7 +110,7 @@ resource "aws_opensearchserverless_security_policy" "example" {
 }
 ```
 
-#### Allow VPC access to the collection endpoint and the Dashboards endpoint
+#### VPC Access
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
@@ -143,7 +143,7 @@ resource "aws_opensearchserverless_security_policy" "example" {
 }
 ```
 
-#### Mixed access for different collections
+#### Mixed Access by Collection
 
 ```terraform
 resource "aws_opensearchserverless_security_policy" "example" {
@@ -188,6 +188,54 @@ resource "aws_opensearchserverless_security_policy" "example" {
 }
 ```
 
+#### VPC Collection with Public Dashboards
+
+This example creates an OpenSearch Serverless VPC endpoint and references it in the policy, so the collection endpoint is reachable only from the VPC while the Dashboards endpoint remains public.
+
+```terraform
+resource "aws_opensearchserverless_vpc_endpoint" "example" {
+  name               = "example"
+  vpc_id             = aws_vpc.example.id
+  subnet_ids         = [aws_subnet.example.id]
+  security_group_ids = [aws_security_group.example.id]
+}
+
+resource "aws_opensearchserverless_security_policy" "example" {
+  name        = "example"
+  type        = "network"
+  description = "VPC access for collection endpoint, public access for Dashboards"
+  policy = jsonencode([
+    {
+      Description = "VPC access for collection endpoint",
+      Rules = [
+        {
+          ResourceType = "collection",
+          Resource = [
+            "collection/example-collection"
+          ]
+        }
+      ],
+      AllowFromPublic = false,
+      SourceVPCEs = [
+        aws_opensearchserverless_vpc_endpoint.example.id
+      ]
+    },
+    {
+      Description = "Public access for Dashboards",
+      Rules = [
+        {
+          ResourceType = "dashboard",
+          Resource = [
+            "collection/example-collection"
+          ]
+        }
+      ],
+      AllowFromPublic = true
+    }
+  ])
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -198,8 +246,8 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `description` - (Optional) Description of the policy. Typically used to store information about the permissions defined in the policy.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 

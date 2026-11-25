@@ -30,21 +30,26 @@ resource "aws_opensearch_vpc_endpoint" "foo" {
 
 This resource supports the following arguments:
 
+* `domain_arn` - (Required, Forces new resource) ARN of the domain to create the endpoint for.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `domain_arn` - (Required, Forces new resource) Specifies the Amazon Resource Name (ARN) of the domain to create the endpoint for
 * `vpc_options` - (Required) Options to specify the subnets and security groups for the endpoint.
 
-### vpc_options
+### `vpc_options` Block
 
-* `security_group_ids` - (Optional) The list of security group IDs associated with the VPC endpoints for the domain. If you do not provide a security group ID, OpenSearch Service uses the default security group for the VPC.
-* `subnet_ids` - (Required) A list of subnet IDs associated with the VPC endpoints for the domain. If your domain uses multiple Availability Zones, you need to provide two subnet IDs, one per zone. Otherwise, provide only one.
+* `security_group_ids` - (Optional) List of security group IDs associated with the VPC endpoints for the domain. If you do not provide a security group ID, OpenSearch Service uses the default security group for the VPC.
+* `subnet_ids` - (Required) List of subnet IDs associated with the VPC endpoints for the domain. If your domain uses multiple Availability Zones, you need to provide two subnet IDs, one per zone. Otherwise, provide only one.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier of the endpoint.
-* `endpoint` - The connection endpoint ID for connecting to the domain.
+* `endpoint` - Connection endpoint ID for connecting to the domain.
+* `id` - Unique identifier of the endpoint.
+
+### `vpc_options` Block
+
+* `availability_zones` - Availability Zones associated with the VPC endpoint.
+* `vpc_id` - ID of the VPC associated with the endpoint.
 
 ## Timeouts
 
@@ -56,17 +61,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch VPC endpoint connections using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearch VPC endpoints using the `id`. For example:
 
 ```terraform
 import {
-  to = aws_opensearch_vpc_endpoint_connection.example
+  to = aws_opensearch_vpc_endpoint.example
   id = "endpoint-id"
 }
 ```
 
-Using `terraform import`, import OpenSearch VPC endpoint connections using the `id`. For example:
+Using `terraform import`, import OpenSearch VPC endpoints using the `id`. For example:
 
 ```console
-% terraform import aws_opensearch_vpc_endpoint_connection.example endpoint-id
+% terraform import aws_opensearch_vpc_endpoint.example endpoint-id
 ```

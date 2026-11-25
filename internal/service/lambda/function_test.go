@@ -33,10 +33,10 @@ import (
 var (
 	// expectedSourceCodeHash is a lookup of expected hash values for each test fixture
 	expectedSourceCodeHash = map[string]string{
-		"lambda_func.js":          "8k4rLrkGteQRbNk8b1suO+fzwOMbF1/4jUoNm7LlWYM=",
-		"lambda_func_modified.js": "iuqvZS4PYKsiYL2YMow4YuB6ZdPzjDTiH5QhuQfLmdQ=",
-		"lambda_func.py":          "DhHL9LXWkDreFoZIv0PWn6wQx9ycpZSnt65JhKkkyRA=",
-		"lambda_func_modified.py": "9DEXvbwU6j4yE7XFZtj1MBTrhyHjwhdvOyuA8AhhhNE=",
+		"lambda_func.js":          "GE6Qb8Bc6vOrLX2zdQDa85S9hE5tLaROqDT1AYi5aNo=",
+		"lambda_func_modified.js": "VoHtznyW+n0Jl5nPJQ+iCDfxEc9ds08gXE0zZyjqnNw=",
+		"lambda_func.py":          "HhC4MioZePknwM5kl+H7LYI93B0jcpIjSuWcGYUk8Hg=",
+		"lambda_func_modified.py": "72Luil+w4xkC/VKGmTray6dpJhK6kmfqMO0G2JCRYPo=",
 	}
 )
 
@@ -79,6 +79,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "code_sha256"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
@@ -123,6 +124,14 @@ func TestAccLambdaFunction_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tflambda.ResourceFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -600,7 +609,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "lambda", "function:{function_name}"),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, "qualified_arn", "lambda", "function:{function_name}:{version}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
-					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs20x)),
+					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs24x)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -849,7 +858,7 @@ func TestAccLambdaFunction_nilDeadLetter(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_fileSystem(t *testing.T) {
+func TestAccLambdaFunction_efsFileSystem(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -867,7 +876,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda file system configuration can be created
 			{
-				Config: testAccFunctionConfig_fileSystem(rName),
+				Config: testAccFunctionConfig_efsFileSystem(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
@@ -886,7 +895,7 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 			},
 			// Ensure lambda file system configuration can be updated
 			{
-				Config: testAccFunctionConfig_fileSystemUpdate(rName),
+				Config: testAccFunctionConfig_efsFileSystemUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
@@ -906,29 +915,59 @@ func TestAccLambdaFunction_fileSystem(t *testing.T) {
 	})
 }
 
-func TestAccLambdaFunction_image(t *testing.T) {
+func TestAccLambdaFunction_s3FileSystem(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
-	imageLatestID := os.Getenv(key)
-	if imageLatestID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V1_ID"
-	imageV1ID := os.Getenv(key)
-	if imageV1ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
-	key = "AWS_LAMBDA_IMAGE_V2_ID"
-	imageV2ID := os.Getenv(key)
-	if imageV2ID == "" {
-		t.Skipf("Environment variable %s is not set", key)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
 	}
 
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source:            "hashicorp/time",
+				VersionConstraint: "0.12.1",
+			},
+		},
+		Steps: []resource.TestStep{
+			// Ensure a function with lambda file system configuration can be created
+			{
+				Config: testAccFunctionConfig_s3FileSystem(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					testAccCheckFunctionInvokeARN(resourceName, &conf),
+					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "file_system_config.0.arn", "aws_s3files_access_point.for_lambda", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/s3files"),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_image(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageLatestID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+	imageV1ID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_V1_ID")
+	imageV2ID := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_V2_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -980,15 +1019,10 @@ func TestAccLambdaFunction_image(t *testing.T) {
 
 func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
-	imageLatestID := os.Getenv(key)
-	if imageLatestID == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
 	var conf lambda.GetFunctionOutput
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -998,13 +1032,13 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 		Steps: []resource.TestStep{
 			// Ensure a function with lambda image configuration can be created
 			{
-				Config: testAccFunctionConfig_imageConfigNull(rName, imageLatestID),
+				Config: testAccFunctionConfig_imageConfigNull(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
-					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
 				),
 			},
 			// Ensure configuration can be imported
@@ -1015,13 +1049,13 @@ func TestAccLambdaFunction_imageConfigNull(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"filename", "publish"},
 			},
 			{
-				Config: testAccFunctionConfig_image(rName, imageLatestID),
+				Config: testAccFunctionConfig_image(rName, imageURI),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
 					testAccCheckFunctionInvokeARN(resourceName, &conf),
 					testAccCheckFunctionQualifiedInvokeARN(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeImage)),
-					resource.TestCheckResourceAttr(resourceName, "image_uri", imageLatestID),
+					resource.TestCheckResourceAttr(resourceName, "image_uri", imageURI),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
 					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
@@ -1440,44 +1474,6 @@ func TestAccLambdaFunction_tracing(t *testing.T) {
 	})
 }
 
-// This test is to verify the existing behavior in the Lambda API where the KMS Key ARN
-// is not returned if environment variables are not in use. If the API begins saving this
-// value and the kms_key_arn check begins failing, the documentation should be updated.
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6366
-func TestAccLambdaFunction_KMSKeyARN_noEnvironmentVariables(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var function1 lambda.GetFunctionOutput
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	resourceName := "aws_lambda_function.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFunctionExists(ctx, t, resourceName, &function1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"filename", "publish"},
-			},
-		},
-	})
-}
-
 func TestAccLambdaFunction_layers(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -1549,6 +1545,58 @@ func TestAccLambdaFunction_layersUpdate(t *testing.T) {
 					testAccCheckFunctionVersion(&conf, tflambda.FunctionVersionLatest),
 					resource.TestCheckResourceAttr(resourceName, "layers.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_useResourceTimeoutForPropagation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(t, 8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				Config: testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "use_resource_timeout_for_propagation", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -2450,6 +2498,9 @@ func TestAccLambdaFunction_runtimes(t *testing.T) {
 		// EOL runtimes.
 		// https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html#runtime-support-policy.
 		switch runtime {
+		// InvalidParameterValueException: RuntimeConfig is required when Runtime is 'custom'.
+		case awstypes.RuntimeCustom:
+			fallthrough
 		case awstypes.RuntimeDotnetcore21:
 			fallthrough
 		case awstypes.RuntimePython27:
@@ -2785,6 +2836,59 @@ func TestAccLambdaFunction_durableConfigForceNew(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_durableConfigKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	kmsResourceName := "aws_kms_key.test"
+	kmsResourceName2 := "aws_kms_key.test2"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID) // Durable Functions is only available in us-east-2
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_durableConfigKMSKey(rName, 300, 7, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.execution_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.retention_period", "7"),
+					resource.TestCheckResourceAttrPair(resourceName, "durable_config.0.kms_key_arn", kmsResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				// Rotating the customer managed key must update the function in place, not replace it.
+				Config: testAccFunctionConfig_durableConfigKMSKey(rName, 300, 7, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.execution_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "durable_config.0.retention_period", "7"),
+					resource.TestCheckResourceAttrPair(resourceName, "durable_config.0.kms_key_arn", kmsResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccLambdaFunction_resetNonRefreshableAttributesAfterUpdateFailure(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf lambda.GetFunctionOutput
@@ -2894,6 +2998,144 @@ func TestAccLambdaFunction_capacityProvider(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"filename", "publish", "publish_to"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_acceleratorConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_acceleratorConfig(rName, imageURI, 6),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "6"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish", "publish_to"},
+			},
+			{
+				// accelerator_memory_size is updated in place via UpdateFunctionConfiguration
+				// (not a replacement): only adding or removing the block forces a new resource.
+				Config: testAccFunctionConfig_acceleratorConfig(rName, imageURI, 3),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "3"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_acceleratorConfigAdd(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// A non-accelerator function on a CPU capacity provider.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "0"),
+				),
+			},
+			{
+				// Adding accelerator_config (switching to an accelerator capacity
+				// provider) is an immutable designation change and forces replacement.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "6"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_acceleratorConfigRemove(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+	imageURI := acctest.SkipIfEnvVarNotSet(t, "AWS_LAMBDA_IMAGE_LATEST_ID")
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccCapacityProviderPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// An accelerator function on an accelerator capacity provider.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.0.accelerator_memory_size", "6"),
+				),
+			},
+			{
+				// Removing accelerator_config (switching to a CPU capacity
+				// provider) is an immutable designation change and forces replacement.
+				Config: testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI, false),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckFunctionExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "accelerator_config.#", "0"),
+				),
 			},
 		},
 	})
@@ -3724,7 +3966,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_fileSystem(rName string) string {
+func testAccFunctionConfig_efsFileSystem(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -3781,7 +4023,7 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_fileSystemUpdate(rName string) string {
+func testAccFunctionConfig_efsFileSystemUpdate(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
 		fmt.Sprintf(`
@@ -3834,6 +4076,271 @@ resource "aws_lambda_function" "test" {
   }
 
   depends_on = [aws_efs_mount_target.test]
+}
+`, rName))
+}
+
+func testAccFunctionConfig_s3FileSystem(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "lambda_file_system" {
+  bucket           = "%[1]s-${data.aws_caller_identity.current.account_id}-${data.aws_region.current.name}-an"
+  bucket_namespace = "account-regional"
+  force_destroy    = true
+}
+
+resource "aws_s3_bucket_versioning" "lambda_file_system" {
+  bucket = aws_s3_bucket.lambda_file_system.bucket
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+data "aws_iam_policy_document" "s3files_policy" {
+  statement {
+    actions = [
+      "s3:ListBucket",
+      "s3:ListBucketVersions"
+    ]
+    effect = "Allow"
+    resources = [
+      aws_s3_bucket.lambda_file_system.arn
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+  statement {
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject*",
+      "s3:GetObject*",
+      "s3:List*",
+      "s3:PutObject*"
+    ]
+    effect = "Allow"
+    resources = [
+      "${aws_s3_bucket.lambda_file_system.arn}/*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "aws:ResourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+  statement {
+    actions = [
+      "kms:GenerateDataKey",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:ReEncryptFrom",
+      "kms:ReEncryptTo"
+    ]
+    effect    = "Allow"
+    resources = ["arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:*"]
+    condition {
+      test     = "StringLike"
+      variable = "kms:ViaService"
+      values   = ["s3.${data.aws_region.current.region}.amazonaws.com"]
+    }
+    condition {
+      test     = "StringLike"
+      variable = "kms:EncryptionContext:aws:s3:arn"
+      values = [
+        aws_s3_bucket.lambda_file_system.arn,
+        "${aws_s3_bucket.lambda_file_system.arn}/*"
+      ]
+    }
+  }
+  statement {
+    actions = [
+      "events:DeleteRule",
+      "events:DisableRule",
+      "events:EnableRule",
+      "events:PutRule",
+      "events:PutTargets",
+      "events:RemoveTargets"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:${data.aws_partition.current.partition}:events:*:*:rule/DO-NOT-DELETE-S3-Files*"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "events:ManagedBy"
+      values   = ["elasticfilesystem.amazonaws.com"]
+    }
+  }
+  statement {
+    actions = [
+      "events:DescribeRule",
+      "events:ListRuleNamesByTarget",
+      "events:ListRules",
+      "events:ListTargetsByRule"
+    ]
+    effect = "Allow"
+    resources = [
+      "arn:${data.aws_partition.current.partition}:events:*:*:rule/*"
+    ]
+  }
+}
+
+data "aws_iam_policy_document" "assume_role_s3files" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    effect  = "Allow"
+    principals {
+      type        = "Service"
+      identifiers = ["elasticfilesystem.amazonaws.com"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = ["arn:${data.aws_partition.current.partition}:s3files:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:file-system/*"]
+    }
+  }
+}
+
+resource "aws_iam_role" "s3files" {
+  assume_role_policy = data.aws_iam_policy_document.assume_role_s3files.json
+  name               = "%[1]s-s3files-lambda-role"
+}
+
+resource "aws_iam_role_policy" "s3files" {
+  policy = data.aws_iam_policy_document.s3files_policy.json
+  role   = aws_iam_role.s3files.name
+}
+
+resource "aws_s3files_file_system" "for_lambda" {
+  bucket   = aws_s3_bucket.lambda_file_system.arn
+  role_arn = aws_iam_role.s3files.arn
+
+  depends_on = [
+    aws_s3_bucket_versioning.lambda_file_system
+  ]
+}
+
+resource "aws_s3files_access_point" "for_lambda" {
+  file_system_id = aws_s3files_file_system.for_lambda.id
+
+  root_directory {
+    path = "/lambda"
+    creation_permissions {
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "755"
+    }
+  }
+
+  posix_user {
+    gid = 1000
+    uid = 1000
+  }
+}
+
+resource "aws_security_group" "s3files_mount_targets" {
+  name   = "%[1]s-s3files-mount-targets-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "s3files_mount_targets_nfs" {
+  ip_protocol                  = "tcp"
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.lambda_s3files.id
+  security_group_id            = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_s3files_mount_target" "for_lambda" {
+  file_system_id  = aws_s3files_file_system.for_lambda.id
+  subnet_id       = aws_subnet.subnet_for_lambda_az2.id
+  security_groups = [aws_security_group.s3files_mount_targets.id]
+}
+
+data "aws_iam_policy_document" "lambda_s3files" {
+  statement {
+    actions = [
+      "s3files:ClientMount",
+      "s3files:ClientWrite",
+      "s3files:ListFileSystems",
+      "s3files:ListAccessPoints",
+      "s3files:GetFileSystem",
+      "s3files:GetAccessPoint",
+      "s3files:CreateAccessPoint"
+    ]
+    effect    = "Allow"
+    resources = ["*"]
+  }
+  statement {
+    actions = [
+      "s3:GetObject",
+      "s3:GetObjectVersion"
+    ]
+    effect    = "Allow"
+    resources = ["${aws_s3_bucket.lambda_file_system.arn}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "lambda_s3files" {
+  policy = data.aws_iam_policy_document.lambda_s3files.json
+  role   = aws_iam_role.iam_for_lambda.name
+}
+
+# Use more restricted security groups than that provided by acctest.ConfigLambdaBase
+resource "aws_security_group" "lambda_s3files" {
+  name   = "%[1]s-lambda-s3files-sg"
+  vpc_id = aws_vpc.vpc_for_lambda.id
+}
+
+resource "aws_vpc_security_group_egress_rule" "lambda_s3files_nfs" {
+  ip_protocol                  = "tcp"
+  security_group_id            = aws_security_group.lambda_s3files.id
+  from_port                    = 2049
+  to_port                      = 2049
+  referenced_security_group_id = aws_security_group.s3files_mount_targets.id
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs24.x"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.subnet_for_lambda_az2.id]
+    security_group_ids = [aws_security_group.lambda_s3files.id]
+  }
+
+  file_system_config {
+    arn              = aws_s3files_access_point.for_lambda.arn
+    local_mount_path = "/mnt/s3files"
+  }
+  depends_on = [aws_s3files_mount_target.for_lambda]
+}
+
+# Wait for the Security Group attached to the Lambda Function
+# to eventually take effect before invoking it
+resource "time_sleep" "wait_for_sg_ready" {
+  create_duration = "10s"
+  depends_on      = [aws_lambda_function.test]
+}
+
+resource "aws_lambda_invocation" "test" {
+  function_name = aws_lambda_function.test.function_name
+  input         = jsonencode({})
+  depends_on    = [time_sleep.wait_for_sg_ready]
 }
 `, rName))
 }
@@ -4168,45 +4675,6 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-func testAccFunctionConfig_kmsKeyARNNoEnvironmentVariables(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-  enable_key_rotation     = true
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  handler       = "exports.example"
-  kms_key_arn   = aws_kms_key.test.arn
-  role          = aws_iam_role.iam_for_lambda.arn
-  runtime       = "nodejs24.x"
-}
-`, rName))
-}
-
 func testAccFunctionConfig_layers(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
@@ -4251,6 +4719,21 @@ resource "aws_lambda_function" "test" {
   layers        = aws_lambda_layer_version.test[*].arn
 }
 `, rName))
+}
+
+func testAccFunctionConfig_useResourceTimeoutForPropagation(funcName, policyName, roleName, sgName string, useResourceTimeoutForPropagation bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(policyName, roleName, sgName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                             = "test-fixtures/lambdatest.zip"
+  function_name                        = "%s"
+  role                                 = aws_iam_role.iam_for_lambda.arn
+  handler                              = "exports.example"
+  runtime                              = "nodejs24.x"
+  use_resource_timeout_for_propagation = %t
+}
+`, funcName, useResourceTimeoutForPropagation))
 }
 
 func testAccFunctionConfig_vpc(rName string) string {
@@ -4818,6 +5301,145 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
+func testAccFunctionConfig_acceleratorConfig(rName, imageURI string, acceleratorMemorySize int) string {
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[3]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.test.arn
+    }
+  }
+
+  accelerator_config {
+    accelerator_memory_size = %[2]d
+  }
+}
+
+resource "aws_lambda_capacity_provider" "test" {
+  name = %[1]q
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  instance_requirements {
+    architectures          = ["x86_64"]
+    allowed_instance_types = ["g4dn.xlarge", "g4dn.2xlarge"]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName, acceleratorMemorySize, imageURI))
+}
+
+func testAccFunctionConfig_acceleratorConfigForceNew(rName, imageURI string, accelerator bool) string {
+	functionConfig := fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[2]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.cpu.arn
+    }
+  }
+}
+`, rName, imageURI)
+
+	if accelerator {
+		functionConfig = fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  image_uri     = %[2]q
+  package_type  = "Image"
+  function_name = %[1]q
+  role          = aws_iam_role.test.arn
+  memory_size   = 2048
+
+  publish    = true
+  publish_to = "LATEST_PUBLISHED"
+
+  capacity_provider_config {
+    lambda_managed_instances_capacity_provider_config {
+      capacity_provider_arn = aws_lambda_capacity_provider.gpu.arn
+    }
+  }
+
+  accelerator_config {
+    accelerator_memory_size = 6
+  }
+}
+`, rName, imageURI)
+	}
+
+	return acctest.ConfigCompose(
+		testAccCapacityProviderConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lambda_capacity_provider" "cpu" {
+  name = "%[1]s-cpu"
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+
+resource "aws_lambda_capacity_provider" "gpu" {
+  name = "%[1]s-gpu"
+
+  vpc_config {
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = [aws_security_group.test.id]
+  }
+
+  permissions_config {
+    capacity_provider_operator_role_arn = aws_iam_role.test.arn
+  }
+
+  instance_requirements {
+    architectures          = ["x86_64"]
+    allowed_instance_types = ["g4dn.xlarge", "g4dn.2xlarge"]
+  }
+
+  depends_on = [
+    aws_iam_role_policy.iam_policy_for_lambda
+  ]
+}
+`, rName),
+		functionConfig)
+}
+
 func testAccFunctionConfig_resetNonRefreshableAttributesAfterUpdateFailure(rName, zipFileS3, zipFileLambda string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLambdaBase(rName, rName, rName),
@@ -4859,7 +5481,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "nodejs22.x"
+  runtime       = "nodejs24.x"
 %[2]s
   durable_config {
     execution_timeout = %[3]d
@@ -4871,4 +5493,103 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName, descriptionLine, executionTimeout, retentionPeriod))
+}
+
+func testAccFunctionConfig_durableConfigKMSKey(rName string, executionTimeout, retentionPeriod int, useSecondKey bool) string {
+	keyRef := "aws_kms_key.test.arn"
+	if useSecondKey {
+		keyRef = "aws_kms_key.test2.arn"
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "lambda-durable-kms"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowLambdaDurableService"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_kms_key" "test2" {
+  description             = "%[1]s-2"
+  deletion_window_in_days = 7
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Id      = "lambda-durable-kms"
+    Statement = [
+      {
+        Sid    = "EnableIAMUserPermissions"
+        Effect = "Allow"
+        Principal = {
+          AWS = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+        }
+        Action   = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid    = "AllowLambdaDurableService"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = [
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs24.x"
+
+  durable_config {
+    kms_key_arn       = %[4]s
+    execution_timeout = %[2]d
+    retention_period  = %[3]d
+  }
+
+  timeouts {
+    delete = "60m"
+  }
+}
+`, rName, executionTimeout, retentionPeriod, keyRef))
 }

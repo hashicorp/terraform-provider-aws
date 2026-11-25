@@ -1,3 +1,0 @@
-```release-note:new-data-source
-aws_networkmanager_core_network_policy_document
-```

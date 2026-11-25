@@ -12,6 +12,10 @@ Manages an Amazon Managed Service for Prometheus (AMP) Resource Policy.
 
 Resource-based policies allow you to grant permissions to other AWS accounts or services to access your Prometheus workspace. This enables cross-account access and fine-grained permissions for workspace sharing.
 
+The following actions are supported in resource policies for Prometheus workspaces: `aps:RemoteWrite`, `aps:QueryMetrics`, `aps:GetSeries`, `aps:GetLabels`, `aps:GetMetricMetadata`.
+
+~> **Note:** Only Prometheus-compatible APIs can be used for workspace sharing. Non-Prometheus-compatible APIs added to the policy will be ignored. If your workspace uses customer-managed KMS keys for encryption, you must grant the principals in your resource-based policy access to those KMS keys through KMS grants. The resource ARN in the policy document must match the workspace ARN that the policy is being attached to.
+
 ## Example Usage
 
 ### Basic Resource Policy
@@ -109,36 +113,19 @@ resource "aws_prometheus_resource_policy" "service_access" {
 
 This resource supports the following arguments:
 
-* `workspace_id` - (Required) The ID of the workspace to attach the resource-based policy to.
-* `policy_document` - (Required) The JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
+The following arguments are required:
+
+* `policy_document` - (Required) JSON policy document to use as the resource-based policy. This policy defines the permissions that other AWS accounts or services have to access your workspace.
+* `workspace_id` - (Required) ID of the workspace to attach the resource-based policy to.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `revision_id` - (Optional) Revision ID of the resource-based policy. When set, it is used for optimistic concurrency so a change is applied only if it matches the policy's current revision. If omitted, it is computed and exported after apply.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `policy_status` - The current status of the resource-based policy. Can be `CREATING`, `ACTIVE`, `UPDATING`, or `DELETING`.
-* `revision_id` - The revision ID of the current resource-based policy.
-
-## Supported Actions
-
-The following actions are supported in resource policies for Prometheus workspaces:
-
-* `aps:RemoteWrite` - Allows writing metrics to the workspace
-* `aps:QueryMetrics` - Allows querying metrics from the workspace  
-* `aps:GetSeries` - Allows retrieving time series data
-* `aps:GetLabels` - Allows retrieving label names and values
-* `aps:GetMetricMetadata` - Allows retrieving metric metadata
-
-## Notes
-
-* Only Prometheus-compatible APIs can be used for workspace sharing. Non-Prometheus-compatible APIs added to the policy will be ignored.
-* If your workspace uses customer-managed KMS keys for encryption, you must grant the principals in your resource-based policy access to those KMS keys through KMS grants.
-* The resource ARN in the policy document must match the workspace ARN that the policy is being attached to.
-* Resource policies enable cross-account access and fine-grained permissions for Prometheus workspaces.
+This resource exports no additional attributes.
 
 ## Timeouts
 

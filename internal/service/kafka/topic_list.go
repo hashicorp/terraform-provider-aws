@@ -19,6 +19,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -74,17 +75,20 @@ func (l *topicListResource) List(ctx context.Context, request list.ListRequest, 
 			arn := aws.ToString(item.TopicArn)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 
+			topicName := aws.ToString(item.TopicName)
+			out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
+			if retry.NotFound(err) {
+				continue
+			}
+			if err != nil {
+				yield(fwdiag.NewListResultErrorDiagnostic(err))
+				return
+			}
+
 			result := request.NewListResult(ctx)
 
 			var data topicResourceModel
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				topicName := aws.ToString(item.TopicName)
-				out, err := findTopicByTwoPartKey(ctx, conn, clusterARN, topicName)
-				if err != nil {
-					result.Diagnostics.AddError("Reading MSK Topic", err.Error())
-					return
-				}
-
 				data.ClusterARN = fwtypes.ARNValue(clusterARN)
 				result.Diagnostics.Append(l.flatten(ctx, out, &data, true)...)
 				if result.Diagnostics.HasError() {

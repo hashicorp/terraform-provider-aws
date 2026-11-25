@@ -32,25 +32,27 @@ func resourceListenerPolicy() *schema.Resource {
 		UpdateWithoutTimeout: resourceListenerPolicySet,
 		DeleteWithoutTimeout: resourceListenerPolicyDelete,
 
-		Schema: map[string]*schema.Schema{
-			"load_balancer_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"load_balancer_port": {
-				Type:     schema.TypeInt,
-				Required: true,
-			},
-			"policy_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTriggers: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"load_balancer_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"load_balancer_port": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"policy_names": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTriggers: {
+					Type:     schema.TypeMap,
+					Optional: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+			}
 		},
 	}
 }

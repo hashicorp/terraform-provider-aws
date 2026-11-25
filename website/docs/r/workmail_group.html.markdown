@@ -29,13 +29,13 @@ resource "aws_workmail_group" "example" {
 
 The following arguments are required:
 
-* `email` - Primary email address used to register the group with WorkMail.
-* `name` - Name of the group.
-* `organization_id` - Identifier of the WorkMail organization where the group is managed.
+* `email` - (Required) Primary email address used to register the group with WorkMail.
+* `name` - (Required) Name of the group.
+* `organization_id` - (Required) Identifier of the WorkMail organization where the group is managed.
 
 The following arguments are optional:
 
-* `hidden_from_global_address_list` - Whether to hide the group from the global address list.
+* `hidden_from_global_address_list` - (Optional) Whether to hide the group from the global address list.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference

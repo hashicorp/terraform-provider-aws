@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -245,6 +246,68 @@ func TestAccECSExpressGatewayService_update(t *testing.T) {
 					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
 					resource.TestCheckResourceAttr(resourceName, "primary_container.0.image", "public.ecr.aws/nginx/nginx:latest"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccECSExpressGatewayService_cpuArchitecture(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_cpuArchitecture(rName, string(awstypes.ExpressCpuArchitectureArm64)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_architecture"), tfknownvalue.StringExact(awstypes.ExpressCpuArchitectureArm64)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: "service_arn",
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "service_arn"),
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_steady_state",
+					"current_deployment",
+				},
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_cpuArchitecture(rName, string(awstypes.ExpressCpuArchitectureX8664)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cpu_architecture"), tfknownvalue.StringExact(awstypes.ExpressCpuArchitectureX8664)),
+				},
 			},
 		},
 	})
@@ -516,6 +579,90 @@ func TestAccECSExpressGatewayService_recreateAfterDeleting(t *testing.T) {
 	})
 }
 
+// TestAccECSExpressGatewayService_inactiveServiceDoesNotBlockCreate verifies that
+// an INACTIVE service returned by DescribeServices does not block recreation.
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/47438
+func TestAccECSExpressGatewayService_inactiveServiceDoesNotBlockCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var service1, service2 awstypes.ECSExpressGatewayService
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_express_gateway_service.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ECSEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExpressGatewayServiceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExpressGatewayServiceConfig_named(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service1),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_base(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceNotInState(ctx, t, resourceName),
+					testAccCheckServiceInactiveViaDescribeServices(ctx, t, rName, "default"),
+				),
+			},
+			{
+				Config: testAccExpressGatewayServiceConfig_named(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExpressGatewayServiceExists(ctx, t, resourceName, &service2),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckServiceInactiveViaDescribeServices(ctx context.Context, t *testing.T, serviceName, cluster string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
+
+		svc, err := tfecs.FindServiceNoTagsByTwoPartKey(ctx, conn, serviceName, cluster)
+		if err != nil {
+			t.Logf("Service %s not found via DescribeServices (may have been fully removed): %s", serviceName, err)
+			return nil
+		}
+
+		status := aws.ToString(svc.Status)
+		if status != "INACTIVE" {
+			return fmt.Errorf("expected service %s to be INACTIVE via DescribeServices, got %s", serviceName, status)
+		}
+
+		t.Logf("Service %s is INACTIVE but still discoverable via DescribeServices", serviceName)
+		return nil
+	}
+}
+
+func testAccExpressGatewayServiceConfig_named(rName string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  service_name            = %[1]q
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName))
+}
+
 func testAccCheckExpressGatewayServiceDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).ECSClient(ctx)
@@ -749,6 +896,25 @@ resource "aws_ecs_express_gateway_service" "test" {
   ]
 }
 `, rName, waitForSteadyStateConfig))
+}
+
+func testAccExpressGatewayServiceConfig_cpuArchitecture(rName, cpuArchitecture string) string {
+	return acctest.ConfigCompose(testAccExpressGatewayServiceConfig_base(rName, false), fmt.Sprintf(`
+resource "aws_ecs_express_gateway_service" "test" {
+  execution_role_arn      = aws_iam_role.execution.arn
+  infrastructure_role_arn = aws_iam_role.infrastructure.arn
+  cpu_architecture        = %[2]q
+
+  primary_container {
+    image = "public.ecr.aws/nginx/nginx:1.28-alpine3.21-slim"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.execution,
+    aws_iam_role_policy_attachment.infrastructure,
+  ]
+}
+`, rName, cpuArchitecture))
 }
 
 func testAccExpressGatewayServiceConfig_tags1(rName, tagKey1, tagValue1 string) string {

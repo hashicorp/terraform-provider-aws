@@ -39,8 +39,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `sending_status` – Current sending status of the tenant.
-* `tags_all` – Map of tags assigned to the tenant, including provider default tags.
+* `sending_status` - Current sending status of the tenant.
+* `tags_all` - Map of tags assigned to the tenant, including provider default tags.
 * `tenant_arn` - ARN of the Tenant.
 * `tenant_id` - ID of the Tenant.
 

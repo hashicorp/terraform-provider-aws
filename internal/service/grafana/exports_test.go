@@ -17,4 +17,7 @@ var (
 	FindWorkspaceByID                              = findWorkspaceByID
 	FindWorkspaceServiceAccountByTwoPartKey        = findWorkspaceServiceAccountByTwoPartKey
 	FindWorkspaceServiceAccountTokenByThreePartKey = findWorkspaceServiceAccountTokenByThreePartKey
+
+	ExpandNetworkAccessControl  = expandNetworkAccessControl
+	FlattenNetworkAccessControl = flattenNetworkAccessControl
 )

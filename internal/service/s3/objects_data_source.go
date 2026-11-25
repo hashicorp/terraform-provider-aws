@@ -28,61 +28,63 @@ func dataSourceObjects() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectsRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"common_prefixes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"delimiter": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"encoding_type": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.EncodingType](),
-			},
-			"fetch_owner": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-			"keys": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"max_keys": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1000,
-			},
-			"owners": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrPrefix: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"request_charged": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"request_payer": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.RequestPayer](),
-			},
-			"start_after": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"common_prefixes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"delimiter": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"encoding_type": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.EncodingType](),
+				},
+				"fetch_owner": {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
+				"keys": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"max_keys": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Default:  1000,
+				},
+				"owners": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrPrefix: {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"request_charged": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"request_payer": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.RequestPayer](),
+				},
+				"start_after": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			}
 		},
 	}
 }

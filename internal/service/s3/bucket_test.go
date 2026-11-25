@@ -56,6 +56,10 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	)
 }
 
+func checkBucketARN(name string) knownvalue.Check {
+	return tfknownvalue.GlobalARNNoAccountIDExact("s3", name)
+}
+
 func TestAccS3Bucket_Basic_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, "tf-test-bucket")
@@ -70,50 +74,70 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_basic(rName),
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "acceleration_status", ""),
-					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "s3", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
 					testAccCheckBucketDomainName(ctx, t, resourceName, "bucket_domain_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bucket_namespace", "global"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrBucketPrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "bucket_region", region),
-					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
-					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "grant.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "grant.*", map[string]string{
-						"permissions.#": "1",
-						names.AttrType:  "CanonicalUser",
-						names.AttrURI:   "",
-					}),
-					resource.TestCheckResourceAttr(resourceName, names.AttrHostedZoneID, hostedZoneID),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "logging.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
-					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "request_payer", "BucketOwner"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.kms_master_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.apply_server_side_encryption_by_default.0.sse_algorithm", "AES256"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption_configuration.0.rule.0.bucket_key_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "versioning.0.mfa_delete", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "website.#", "0"),
-					resource.TestCheckNoResourceAttr(resourceName, "website_domain"),
-					resource.TestCheckNoResourceAttr(resourceName, "website_endpoint"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("acceleration_status"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("acl"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrARN), checkBucketARN(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucket), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_namespace"), tfknownvalue.StringExact(types.BucketNamespaceGlobal)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrBucketPrefix), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_region"), knownvalue.StringExact(region)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("bucket_regional_domain_name"), knownvalue.StringExact(testAccBucketRegionalDomainName(rName, region))),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cors_rule"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrForceDestroy), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("grant"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrID: knownvalue.NotNull(),
+						names.AttrPermissions: knownvalue.SetExact([]knownvalue.Check{
+							tfknownvalue.StringExact(types.PermissionFullControl),
+						}),
+						names.AttrType: tfknownvalue.StringExact(types.TypeCanonicalUser),
+						names.AttrURI:  knownvalue.StringExact(""),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrHostedZoneID), knownvalue.StringExact(hostedZoneID)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("lifecycle_rule"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("logging"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("object_lock_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("object_lock_enabled"), knownvalue.Bool(false)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrPolicy), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("replication_configuration"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("request_payer"), tfknownvalue.StringExact(types.PayerBucketOwner)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("server_side_encryption_configuration"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrRule: knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"apply_server_side_encryption_by_default": knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+								"kms_master_key_id": knownvalue.StringExact(""),
+								"sse_algorithm":     tfknownvalue.StringExact(types.ServerSideEncryptionAes256),
+							})}),
+							"bucket_key_enabled": knownvalue.Bool(false),
+						})}),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("versioning"), knownvalue.ListExact([]knownvalue.Check{knownvalue.ObjectExact(map[string]knownvalue.Check{
+						names.AttrEnabled: knownvalue.Bool(false),
+						"mfa_delete":      knownvalue.Bool(false),
+					})})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("website"), knownvalue.ListSizeExact(0)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("website_domain"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("website_endpoint"), knownvalue.Null()),
+				},
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/Bucket/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -567,6 +591,14 @@ func TestAccS3Bucket_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_s3_bucket.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -628,7 +660,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
-				ExpectError: regexache.MustCompile(tfs3.ErrCodeBucketAlreadyExists),
+				ExpectError: regexache.MustCompile(tfs3.ErrCodeBucketAlreadyExists + "|" + tfs3.ErrCodeBucketAlreadyOwnedByYou),
 			},
 		},
 	})
@@ -675,7 +707,7 @@ func TestAccS3Bucket_tags_withSystemTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName),
+					acctest.CheckSDKResourceDisappears(ctx, t, tfs3.ResourceBucket(), resourceName), // nosemgrep:disappears-expect-resource-action
 					testAccCheckBucketCreateViaCloudFormation(ctx, t, bucketName, &stackID),
 				),
 			},
@@ -1327,7 +1359,7 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName),
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
@@ -1370,6 +1402,155 @@ func TestAccS3Bucket_Manage_objectLockWithVersioning_deprecatedEnabled(t *testin
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_objectLockWithVersioning_enableOnExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", "0"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_objectLockWithVersioning_enableDeprecatedOnExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioningDeprecatedEnabled(bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_objectLockWithVersioning_disableOnExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.rule.#", "0"),
+				),
+			},
+			{
+				// object_lock_enabled must be explicitly set to "false".
+				// Removing entirely marks the argument as Computed.
+				Config: testAccBucketConfig_objectLockEnabledVersioning(bucketName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtFalse),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccS3Bucket_Manage_objectLockWithVersioning_removeDeprecatedOnExisting(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, "tf-test-bucket")
+	resourceName := "aws_s3_bucket.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_objectLockEnabledVersioningDeprecatedEnabled(bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_configuration.0.object_lock_enabled", string(types.ObjectLockEnabledEnabled)),
+				),
+			},
+			{
+				// Removal of object_lock_configuration marks the block as Computed.
+				Config: testAccBucketConfig_forceDestroyObjectVersions(bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "object_lock_enabled", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
@@ -2170,6 +2351,92 @@ func TestAccS3Bucket_Replication_RTC_valid(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.0.destination.0.replication_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.0.destination.0.metrics.#", "1"),
 					testAccCheckBucketExistsWithProvider(ctx, "aws_s3_bucket.destination", acctest.RegionProviderFunc(ctx, alternateRegion, &providers)),
+				),
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/44192
+func TestAccS3Bucket_Replication_withReplicaModifications(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket.source"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_replicationWithReplicaModifications(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				Config: testAccBucketConfig_replicationWithReplicaModifications(rName, "test-value"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test-key", "test-value"),
+				),
+			},
+		},
+	})
+}
+
+// TestAccS3Bucket_Replication_inline verifies that the inline-only
+// workflow (no standalone aws_s3_bucket_replication_configuration) is
+// preserved by the deprecated-attribute gating in resourceBucketUpdate:
+// when the inline block is in HCL, deprecatedAttributeInRawConfig returns
+// true and bucket Update continues to manage replication. Adding tags
+// alongside an inline block must not cause spurious replication updates.
+// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/47962
+func TestAccS3Bucket_Replication_inline(t *testing.T) {
+	ctx := acctest.Context(t)
+	bucketName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	region := acctest.Region()
+	resourceName := "aws_s3_bucket.source"
+
+	var providers []*schema.Provider
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckBucketDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				// Add: inline replication_configuration with STANDARD storage.
+				Config: testAccBucketConfig_replicationInline(bucketName, string(types.StorageClassStandard), ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(ctx, resourceName, acctest.RegionProviderFunc(ctx, region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				// Modify the inline replication and add an unrelated tag in
+				// the same step. Verifies the gating logic still routes the
+				// inline block through PutBucketReplication and that tags
+				// updates don't break the inline replication.
+				Config: testAccBucketConfig_replicationInline(bucketName, string(types.StorageClassGlacier), "test-value"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketExistsWithProvider(ctx, resourceName, acctest.RegionProviderFunc(ctx, region, &providers)),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test-key", "test-value"),
 				),
 			},
 		},
@@ -3059,7 +3326,7 @@ func TestBucketNamespace(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		if got, want := tfs3.AccountRegionalBucketNameRegex.MatchString(tc.BucketName), tc.Expect; got != want {
+		if got, want := tfs3.AccountRegionalBucketNameRegex().MatchString(tc.BucketName), tc.Expect; got != want {
 			t.Errorf("MatchString(%q) = %v, want %v", tc.BucketName, got, want)
 		}
 	}
@@ -3748,6 +4015,45 @@ resource "aws_s3_bucket" "destination" {
   }
 }
 `, bucketName))
+}
+
+func testAccBucketConfig_replicationInline(bucketName, storageClass, tagValue string) string {
+	tags := ""
+	if tagValue != "" {
+		tags = fmt.Sprintf(`
+
+  tags = {
+    test-key = %[1]q
+  }`, tagValue)
+	}
+
+	return acctest.ConfigCompose(
+		testAccBucketConfig_ReplicationBase(bucketName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "source" {
+  bucket = "%[1]s-source"
+%[3]s
+
+  versioning {
+    enabled = true
+  }
+
+  replication_configuration {
+    role = aws_iam_role.role.arn
+
+    rules {
+      id     = "foobar"
+      prefix = "foo"
+      status = "Enabled"
+
+      destination {
+        bucket        = aws_s3_bucket.destination.arn
+        storage_class = %[2]q
+      }
+    }
+  }
+}
+`, bucketName, storageClass, tags))
 }
 
 func testAccBucketConfig_replication(bucketName, storageClass string) string {
@@ -4818,13 +5124,13 @@ resource "aws_s3_bucket" "test" {
 `, bucketName)
 }
 
-func testAccBucketConfig_objectLockEnabledVersioning(bucketName string) string {
+func testAccBucketConfig_objectLockEnabledVersioning(bucketName string, objectLockEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 
-  object_lock_enabled = true
+  object_lock_enabled = %[2]t
 }
 
 resource "aws_s3_bucket_versioning" "test" {
@@ -4833,7 +5139,7 @@ resource "aws_s3_bucket_versioning" "test" {
     status = "Enabled"
   }
 }
-`, bucketName)
+`, bucketName, objectLockEnabled)
 }
 
 func testAccBucketConfig_objectLockEnabledVersioningDeprecatedEnabled(bucketName string) string {
@@ -4929,6 +5235,97 @@ resource "aws_s3_bucket" "test" {
   bucket = ""
 }
 `
+
+func testAccBucketConfig_replicationWithReplicaModifications(rName, tagValue string) string {
+	tags := ""
+	if tagValue != "" {
+		tags = fmt.Sprintf(`
+
+  tags = {
+    test-key = %[1]q
+  }`, tagValue)
+	}
+
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_service_principal" "current" {
+  service_name = "s3"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Principal = {
+        Service = data.aws_service_principal.current.name
+      }
+      Effect = "Allow"
+    }]
+  })
+}
+
+resource "aws_s3_bucket" "destination" {
+  region = %[2]q
+  bucket = "%[1]s-destination"
+}
+
+resource "aws_s3_bucket_versioning" "destination" {
+  region = %[2]q
+  bucket = aws_s3_bucket.destination.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket = "%[1]s-source"
+%[3]s
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id     = "test"
+    status = "Enabled"
+
+    filter {
+      prefix = ""
+    }
+
+    source_selection_criteria {
+      replica_modifications {
+        status = "Disabled"
+      }
+    }
+
+    delete_marker_replication {
+      status = "Enabled"
+    }
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
+}
+`, rName, acctest.AlternateRegion(), tags)
+}
 
 func testAccBucketConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`

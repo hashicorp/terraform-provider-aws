@@ -8,7 +8,7 @@ description: |-
 
 # List Resource: aws_ec2_network_insights_access_scope
 
-Lists EC2 (Elastic Compute Cloud) Network Insights Access Scope resources.
+Lists EC2 Network Insights Access Scope resources.
 
 ## Example Usage
 

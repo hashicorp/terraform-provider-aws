@@ -35,144 +35,158 @@ func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"body": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"body_base64": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"bucket_key_enabled": {
-				Type:     schema.TypeBool,
-				Computed: true,
-			},
-			"cache_control": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_mode": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.ChecksumMode](),
-			},
-			"checksum_crc32": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_crc32c": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_crc64nvme": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_sha1": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"checksum_sha256": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_disposition": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_encoding": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_language": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"content_length": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			names.AttrContentType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"download_body": {
-				Type:         nullable.TypeNullableBool,
-				Optional:     true,
-				ValidateFunc: nullable.ValidateTypeStringNullableBool,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expiration": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"expires": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKey: {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"last_modified": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"object_lock_legal_hold_status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_lock_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"object_lock_retain_until_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"range": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"server_side_encryption": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"sse_kms_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrStorageClass: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags: tftags.TagsSchemaComputed(),
-			"version_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"website_redirect_location": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"body": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"body_base64": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrBucket: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"bucket_key_enabled": {
+					Type:     schema.TypeBool,
+					Computed: true,
+				},
+				"cache_control": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_mode": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[types.ChecksumMode](),
+				},
+				"checksum_crc32": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_crc32c": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_crc64nvme": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_sha1": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"checksum_sha256": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_disposition": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_encoding": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_language": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"content_length": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				names.AttrContentType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"download_body": {
+					Type:         nullable.TypeNullableBool,
+					Optional:     true,
+					ValidateFunc: nullable.ValidateTypeStringNullableBool,
+				},
+				"etag": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"expiration": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"expires": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrKey: {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"last_modified": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"metadata": {
+					Type:     schema.TypeMap,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"object_lock_event_hold": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_event_hold_duration_days": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"object_lock_event_hold_duration_years": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+				"object_lock_legal_hold_status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_mode": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"object_lock_retain_until_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"range": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"server_side_encryption": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"sse_kms_key_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrStorageClass: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+				"version_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
+				"website_redirect_location": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -251,6 +265,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta any)
 		d.Set("last_modified", nil)
 	}
 	d.Set("metadata", output.Metadata)
+	d.Set("object_lock_event_hold", output.ObjectLockEventHold)
+	d.Set("object_lock_event_hold_duration_days", output.ObjectLockEventHoldDurationDays)
+	d.Set("object_lock_event_hold_duration_years", output.ObjectLockEventHoldDurationYears)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
 	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))

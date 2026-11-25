@@ -25,8 +25,8 @@ resource "aws_route53_zone" "example" {
   force_destroy = true
 }
 
-resource "aws_route53_records_exclusive" "test" {
-  zone_id = aws_route53_zone.test.zone_id
+resource "aws_route53_records_exclusive" "example" {
+  zone_id = aws_route53_zone.example.zone_id
 
   resource_record_set {
     name = "subdomain.example.com"
@@ -50,8 +50,8 @@ To automatically remove any configured record sets, omit a `resource_record_set`
 ~> This will not __prevent__ record sets from being defined in a hosted zone via Terraform (or any other interface). This resource enables bringing record set definitions into a configured state, however, this reconciliation happens only when `apply` is proactively run.
 
 ```terraform
-resource "aws_route53_records_exclusive" "test" {
-  zone_id = aws_route53_zone.test.zone_id
+resource "aws_route53_records_exclusive" "example" {
+  zone_id = aws_route53_zone.example.zone_id
 }
 ```
 

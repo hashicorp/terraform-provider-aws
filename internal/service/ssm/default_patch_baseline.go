@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -60,23 +61,25 @@ func resourceDefaultPatchBaseline() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"baseline_id": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				DiffSuppressFunc: diffSuppressPatchBaselineID,
-				ValidateFunc: validation.Any(
-					validatePatchBaselineID,
-					validatePatchBaselineARN,
-				),
-			},
-			"operating_system": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"baseline_id": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					DiffSuppressFunc: diffSuppressPatchBaselineID,
+					ValidateFunc: validation.Any(
+						validatePatchBaselineID,
+						validatePatchBaselineARN,
+					),
+				},
+				"operating_system": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.OperatingSystem](),
+				},
+			}
 		},
 	}
 }
@@ -259,7 +262,7 @@ func diffSuppressPatchBaselineID(_, oldValue, newValue string, _ *schema.Resourc
 	return false
 }
 
-var validatePatchBaselineID = validation.StringMatch(regexache.MustCompile(`^`+patchBaselineIDRegexPattern+`$`), `must match "pb-" followed by 17 hexadecimal characters`)
+var validatePatchBaselineID = lazyvalidation.StringMatch(`^`+patchBaselineIDRegexPattern+`$`, `must match "pb-" followed by 17 hexadecimal characters`)
 
 func validatePatchBaselineARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)

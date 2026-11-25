@@ -35,7 +35,7 @@ var _ list.ListResource = &bucketLifecycleConfigurationListResource{}
 type bucketLifecycleConfigurationListResource struct {
 	bucketLifecycleConfigurationResource
 	framework.WithList
-	handler bucketPropertyListHandlerFramework
+	handler bucketPropertyListHandler
 }
 
 func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
@@ -79,9 +79,9 @@ func (l *bucketLifecycleConfigurationListResource) List(ctx context.Context, req
 	}
 }
 
-var _ bucketPropertyListHandlerFramework = bucketLifecycleConfigurationListHandler{}
+var _ bucketPropertyListHandler = bucketLifecycleConfigurationListHandler{}
 
-func newBucketLifecycleConfigurationListHandler(lister listResourceFramework) bucketPropertyListHandlerFramework {
+func newBucketLifecycleConfigurationListHandler(lister listResourceFramework) bucketPropertyListHandler {
 	return bucketLifecycleConfigurationListHandler{
 		baseBucketPropertyListHandlerFramework: newBaseBucketPropertyListHandlerFramework(lister),
 	}
@@ -124,7 +124,7 @@ func (l bucketLifecycleConfigurationListHandler) list(ctx context.Context, reque
 			var data bucketLifecycleConfigurationResourceModel
 
 			l.SetResult(ctx, l.Meta(), request.IncludeResource, &data, &result, func() {
-				flattenBucketLifecycleConfigurationResource(ctx, item, &data, &result.Diagnostics)
+				result.Diagnostics.Append(flattenBucketLifecycleConfigurationResource(ctx, item, &data)...)
 				data.Bucket = fwflex.StringValueToFramework(ctx, bucketName)
 				data.ID = data.Bucket
 

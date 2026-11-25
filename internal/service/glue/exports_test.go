@@ -5,7 +5,10 @@ package glue
 
 // Exports for use in tests only.
 var (
-	ResourceCatalogDatabase               = resourceCatalogDatabase
+	FlattenViewRepresentation  = flattenViewRepresentation
+	FlattenViewRepresentations = flattenViewRepresentations
+
+	ResourceCatalog                       = newCatalogResource
 	ResourceCatalogTable                  = resourceCatalogTable
 	ResourceCatalogTableOptimizer         = newCatalogTableOptimizerResource
 	ResourceClassifier                    = resourceClassifier
@@ -26,6 +29,7 @@ var (
 	ResourceUserDefinedFunction           = resourceUserDefinedFunction
 	ResourceWorkflow                      = resourceWorkflow
 
+	FindCatalogByName               = findCatalogByName
 	FindCatalogTableOptimizer       = findCatalogTableOptimizer
 	FindClassifierByName            = findClassifierByName
 	FindConnectionByTwoPartKey      = findConnectionByTwoPartKey

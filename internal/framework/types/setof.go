@@ -180,3 +180,7 @@ func NewSetValueOf[T attr.Value](ctx context.Context, elements []attr.Value) (Se
 func NewSetValueOfMust[T attr.Value](ctx context.Context, elements []attr.Value) SetValueOf[T] {
 	return fwdiag.Must(NewSetValueOf[T](ctx, elements))
 }
+
+func NewSetValueOfEmpty[T attr.Value](ctx context.Context) SetValueOf[T] {
+	return NewSetValueOfMust[T](ctx, []attr.Value{})
+}

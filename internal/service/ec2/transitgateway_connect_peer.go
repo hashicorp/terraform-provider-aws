@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,68 +48,70 @@ func resourceTransitGatewayConnectPeer() *schema.Resource {
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_asn": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.Valid4ByteASN,
-			},
-			"bgp_peer_address": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"bgp_transit_gateway_addresses": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"inside_cidr_blocks": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 2,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
-						validation.All(
-							validation.IsCIDRNetwork(29, 29),
-							validation.StringMatch(regexache.MustCompile(`^169\.254\.`), "IPv4 range must be from range 169.254.0.0/16"),
-							validation.StringDoesNotMatch(regexache.MustCompile(`^169\.254\.([0-5]\.0|169\.248)/29`), "IPv4 range must not be 169.254.([0-5].0|169.248)/29"),
-						),
-						validation.All(
-							validation.IsCIDRNetwork(125, 125),
-							validation.StringMatch(regexache.MustCompile(`^[fF][dD]`), "IPv6 range must be from fd00::/8"),
-						),
-					),
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				names.AttrARN: {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"peer_address": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPAddress,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"transit_gateway_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsIPAddress,
-			},
-			names.AttrTransitGatewayAttachmentID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"bgp_asn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.Valid4ByteASN,
+				},
+				"bgp_peer_address": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"bgp_transit_gateway_addresses": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"inside_cidr_blocks": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 2,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+						ValidateFunc: verify.IsIPv4CIDRBlockOrIPv6CIDRBlock(
+							validation.All(
+								validation.IsCIDRNetwork(29, 29),
+								lazyvalidation.StringMatch(`^169\.254\.`, "IPv4 range must be from range 169.254.0.0/16"),
+								lazyvalidation.StringDoesNotMatch(`^169\.254\.([0-5]\.0|169\.248)/29`, "IPv4 range must not be 169.254.([0-5].0|169.248)/29"),
+							),
+							validation.All(
+								validation.IsCIDRNetwork(125, 125),
+								lazyvalidation.StringMatch(`^[fF][dD]`, "IPv6 range must be from fd00::/8"),
+							),
+						),
+					},
+				},
+				"peer_address": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPAddress,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
+				"transit_gateway_address": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.IsIPAddress,
+				},
+				names.AttrTransitGatewayAttachmentID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 	}
 }

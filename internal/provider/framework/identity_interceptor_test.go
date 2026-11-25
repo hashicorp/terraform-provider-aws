@@ -397,6 +397,48 @@ func planFromSchema(ctx context.Context, schema schema.Schema, values map[string
 	}
 }
 
+func TestIdentityIsFullyNull_NonStringAttributes(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	attributes := []inttypes.IdentityAttribute{
+		inttypes.BoolIdentityAttribute("egress", true),
+		inttypes.IntIdentityAttribute("rule_number", true),
+	}
+
+	identitySchema := &identityschema.Schema{
+		Attributes: map[string]identityschema.Attribute{
+			"egress":      identityschema.BoolAttribute{},
+			"rule_number": identityschema.Int64Attribute{},
+		},
+	}
+
+	t.Run("all_null", func(t *testing.T) {
+		t.Parallel()
+
+		identity := emtpyIdentityFromSchema(ctx, identitySchema)
+		if got := identityIsFullyNull(ctx, identity, attributes); !got {
+			t.Errorf("expected identityIsFullyNull to return true for a fully-null non-string identity, got %v", got)
+		}
+	})
+
+	t.Run("bool_false_int_set", func(t *testing.T) {
+		t.Parallel()
+
+		identity := emtpyIdentityFromSchema(ctx, identitySchema)
+		if diags := identity.SetAttribute(ctx, path.Root("egress"), false); diags.HasError() {
+			t.Fatalf("unexpected error setting egress: %s", fwdiag.DiagnosticsError(diags))
+		}
+		if diags := identity.SetAttribute(ctx, path.Root("rule_number"), int64(100)); diags.HasError() {
+			t.Fatalf("unexpected error setting rule_number: %s", fwdiag.DiagnosticsError(diags))
+		}
+		if got := identityIsFullyNull(ctx, identity, attributes); got {
+			t.Errorf("expected identityIsFullyNull to return false when non-string attributes are set, got %v", got)
+		}
+	})
+}
+
 func emtpyIdentityFromSchema(ctx context.Context, schema *identityschema.Schema) *tfsdk.ResourceIdentity {
 	return &tfsdk.ResourceIdentity{
 		Raw:    tftypes.NewValue(schema.Type().TerraformType(ctx), nil),

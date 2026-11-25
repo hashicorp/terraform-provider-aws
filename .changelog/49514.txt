@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_windows_file_system: Add `network_type` argument
+```
+
+```release-note:enhancement
+data-source/aws_fsx_windows_file_system: Add `network_type` attribute
+```

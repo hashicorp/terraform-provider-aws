@@ -1,9 +1,0 @@
-```release-note:bug
-resource/aws_lexv2models_bot: Handle `PreconditionFailedException` on delete for resources deleted out-of-band
-```
-```release-note:bug
-resource/aws_lexv2models_bot_locale: Handle `PreconditionFailedException` on delete for resources deleted out-of-band
-```
-```release-note:bug
-resource/aws_lexv2models_bot_version: Handle `PreconditionFailedException` on delete for resources deleted out-of-band
-```

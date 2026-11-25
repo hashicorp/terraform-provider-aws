@@ -6,16 +6,14 @@ package ecs
 import (
 	"fmt"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 )
 
 func validateClusterName(v any, k string) (ws []string, errors []error) {
 	return validation.All(
 		validation.StringLenBetween(1, 255),
-		validation.StringMatch(
-			regexache.MustCompile("^[0-9A-Za-z_-]+$"),
-			"The cluster name must consist of alphanumerics, hyphens, and underscores."),
+		lazyvalidation.StringMatch("^[0-9A-Za-z_-]+$", "The cluster name must consist of alphanumerics, hyphens, and underscores."),
 	)(v, k)
 }
 

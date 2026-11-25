@@ -49,7 +49,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `availability_zone_id` - The AZ ID of the subnet
 * `cidr_block` - The IPv4 CIDR block assigned to the subnet
+* `network_firewall_connectivity_type` - Internet connectivity that the Automated Internet Firewall applies to the subnet: `az-unsupported`, `bidirectional`, `exclude`, `flexible` or `outbound-only`. Only set if the subnet's VPC has a firewall.
 * `vpc_id` - The ID of the VPC the subnet is in
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `delete` - (Default `20m`)
 
 ## Import
 

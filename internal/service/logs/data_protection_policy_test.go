@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -21,7 +23,7 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudwatchlogs.GetDataProtectionPolicyOutput
 	resourceName := "aws_cloudwatch_log_data_protection_policy.test"
-	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -30,7 +32,10 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProtectionPolicy_basic(name),
+				ConfigDirectory: config.StaticDirectory("testdata/DataProtectionPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(ctx, t, resourceName, &policy),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, "aws_cloudwatch_log_group.test", names.AttrName),
@@ -68,10 +73,14 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
  		}
  	]
  }
- `, name)),
+ `, rName)),
 				),
 			},
 			{
+				ConfigDirectory: config.StaticDirectory("testdata/DataProtectionPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -84,7 +93,7 @@ func TestAccLogsDataProtectionPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy cloudwatchlogs.GetDataProtectionPolicyOutput
 	resourceName := "aws_cloudwatch_log_data_protection_policy.test"
-	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -93,12 +102,23 @@ func TestAccLogsDataProtectionPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataProtectionPolicy_basic(name),
+				ConfigDirectory: config.StaticDirectory("testdata/DataProtectionPolicy/basic/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataProtectionPolicyExists(ctx, t, resourceName, &policy),
 					acctest.CheckSDKResourceDisappears(ctx, t, tflogs.ResourceDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -255,54 +275,6 @@ func testAccCheckDataProtectionPolicyExists(ctx context.Context, t *testing.T, n
 
 		return nil
 	}
-}
-
-func testAccDataProtectionPolicy_basic(name string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_s3_bucket" "test" {
-  bucket        = %[1]q
-  force_destroy = true
-}
-
-resource "aws_cloudwatch_log_data_protection_policy" "test" {
-  log_group_name = aws_cloudwatch_log_group.test.name
-  policy_document = jsonencode({
-    Name    = "Test"
-    Version = "2021-06-01"
-
-    Statement = [
-      {
-        Sid            = "Audit"
-        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
-        Operation = {
-          Audit = {
-            FindingsDestination = {
-              S3 = {
-                Bucket = aws_s3_bucket.test.bucket
-              }
-            }
-          }
-        }
-      },
-      {
-        Sid            = "Redact"
-        DataIdentifier = ["arn:${data.aws_partition.current.partition}:dataprotection::aws:data-identifier/EmailAddress"]
-        Operation = {
-          Deidentify = {
-            MaskConfig = {}
-          }
-        }
-      }
-    ]
-  })
-}
-`, name)
 }
 
 func testAccDataProtectionPolicy_policyDocument1(name string) string {

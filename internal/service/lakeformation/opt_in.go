@@ -10,7 +10,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
@@ -36,6 +35,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -153,7 +153,7 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 						setvalidator.SizeAtLeast(1),
 						setvalidator.ValueStringsAre(
 							stringvalidator.LengthBetween(1, 255),
-							stringvalidator.RegexMatches(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
+							lazystringvalidator.RegexMatches(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`, ""),
 						),
 					},
 					PlanModifiers: []planmodifier.Set{
@@ -337,6 +337,8 @@ func (r *optInResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakePrincipal](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtLeast(1),
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -427,7 +429,7 @@ func (r *optInResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	plan.LastModified = fwflex.TimeToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastModified)
-	plan.LastUpdatedBy = fwflex.StringValueToFramework(ctx, *lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
+	plan.LastUpdatedBy = fwflex.StringToFramework(ctx, lstrsc.LakeFormationOptInsInfoList[0].LastUpdatedBy)
 
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -538,7 +540,7 @@ func (r *optInResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	if _, err := conn.DeleteLakeFormationOptIn(ctx, in); err != nil {
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -572,7 +574,7 @@ func findOptIns(ctx context.Context, conn *lakeformation.Client, input *lakeform
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "resource does not exist") {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

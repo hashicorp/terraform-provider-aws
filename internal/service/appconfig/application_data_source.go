@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"iter"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,10 +49,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 				Optional: true,
 				Computed: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`^[0-9a-z]{4,7}$`),
-						"value must contain 4-7 lowercase letters or numbers",
-					),
+					lazystringvalidator.RegexMatches(`^[0-9a-z]{4,7}$`, "value must contain 4-7 lowercase letters or numbers"),
 				},
 			},
 			names.AttrName: schema.StringAttribute{
@@ -79,15 +76,15 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	var err error
 	var input appconfig.ListApplicationsInput
 	if !data.ID.IsNull() {
-		out, err = findApplicationWithFilter(ctx, conn, &input, func(v *awstypes.Application) bool {
+		out, err = findApplicationWithFilter(ctx, conn, &input, func(v awstypes.Application) bool {
 			return aws.ToString(v.Id) == data.ID.ValueString()
-		}, tfslices.WithReturnFirstMatch)
+		})
 	}
 
 	if !data.Name.IsNull() {
-		out, err = findApplicationWithFilter(ctx, conn, &input, func(v *awstypes.Application) bool {
+		out, err = findApplicationWithFilter(ctx, conn, &input, func(v awstypes.Application) bool {
 			return aws.ToString(v.Name) == data.Name.ValueString()
-		}, tfslices.WithReturnFirstMatch)
+		})
 	}
 
 	if err != nil {
@@ -122,39 +119,32 @@ type dataSourceApplicationModel struct {
 	Name        types.String `tfsdk:"name"`
 }
 
-func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, filter tfslices.Predicate[*awstypes.Application], optFns ...tfslices.FinderOptionsFunc) (*awstypes.Application, error) {
-	opts := tfslices.NewFinderOptions(optFns)
-	var output []awstypes.Application
-	for value, err := range listApplications(ctx, conn, input, filter) {
-		if err != nil {
-			return nil, err
-		}
+func findApplicationWithFilter(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, filter tfslices.Predicate[awstypes.Application]) (*awstypes.Application, error) {
+	output, err := findApplications(ctx, conn, input, tfslices.WithFilter(filter), tfslices.WithReturnFirstMatch[awstypes.Application]())
 
-		output = append(output, value)
-		if opts.ReturnFirstMatch() {
-			break
-		}
+	if err != nil {
+		return nil, err
 	}
 
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func listApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, filter tfslices.Predicate[*awstypes.Application]) iter.Seq2[awstypes.Application, error] {
-	return func(yield func(awstypes.Application, error) bool) {
+func findApplications(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...tfslices.FinderOptionsFunc[awstypes.Application]) ([]awstypes.Application, error) {
+	return tfslices.CollectAndConcatWithError(listApplicationPages(ctx, conn, input), optFns...)
+}
+
+func listApplicationPages(ctx context.Context, conn *appconfig.Client, input *appconfig.ListApplicationsInput, optFns ...func(*appconfig.Options)) iter.Seq2[[]awstypes.Application, error] {
+	return func(yield func([]awstypes.Application, error) bool) {
 		pages := appconfig.NewListApplicationsPaginator(conn, input)
 		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
+			page, err := pages.NextPage(ctx, optFns...)
 			if err != nil {
-				yield(awstypes.Application{}, fmt.Errorf("listing AppConfig Applications: %w", err))
+				yield(nil, fmt.Errorf("listing AppConfig Applications: %w", err))
 				return
 			}
 
-			for _, v := range page.Items {
-				if filter(&v) {
-					if !yield(v, nil) {
-						return
-					}
-				}
+			if !yield(page.Items, nil) {
+				return
 			}
 		}
 	}

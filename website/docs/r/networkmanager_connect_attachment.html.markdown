@@ -71,15 +71,15 @@ The following arguments are required:
 
 * `core_network_id` - (Required) ID of a core network where you want to create the attachment.
 * `edge_location` - (Required) Region where the edge is located.
-* `options` - (Required) Options block. See [options](#options) for more information.
+* `options` - (Required) Options block. See [options](#options-block) for more information.
 * `transport_attachment_id` - (Required) ID of the attachment between the two connections.
 
 The following arguments are optional:
 
-* `routing_policy_label` - (Optional) The routing policy label to apply to the Connect attachment for traffic routing decisions. Maximum length of 256 characters. Changing this value will force recreation of the resource.
+* `routing_policy_label` - (Optional) Routing policy label to apply to the Connect attachment for traffic routing decisions. Maximum length of 256 characters. Changing this value will force recreation of the resource.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### options
+### `options` Block
 
 * `protocol` - (Optional) Protocol used for the attachment connection. Valid values: `GRE`, `NO_ENCAP`.
 

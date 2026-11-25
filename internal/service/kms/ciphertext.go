@@ -28,43 +28,45 @@ func resourceCiphertext() *schema.Resource {
 		ReadWithoutTimeout:   schema.NoopContext,
 		DeleteWithoutTimeout: schema.NoopContext,
 
-		Schema: map[string]*schema.Schema{
-			"ciphertext_blob": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"context": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrKeyID: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"plaintext": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Sensitive:    true,
-				ExactlyOneOf: []string{"plaintext", "plaintext_wo"},
-			},
-			"plaintext_wo": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Sensitive:    true,
-				WriteOnly:    true,
-				ExactlyOneOf: []string{"plaintext", "plaintext_wo"},
-				RequiredWith: []string{"plaintext_wo_version"},
-			},
-			"plaintext_wo_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"plaintext_wo"},
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"ciphertext_blob": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"context": {
+					Type:     schema.TypeMap,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrKeyID: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"plaintext": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					Sensitive:    true,
+					ExactlyOneOf: []string{"plaintext", "plaintext_wo"},
+				},
+				"plaintext_wo": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Sensitive:    true,
+					WriteOnly:    true,
+					ExactlyOneOf: []string{"plaintext", "plaintext_wo"},
+					RequiredWith: []string{"plaintext_wo_version"},
+				},
+				"plaintext_wo_version": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ForceNew:     true,
+					RequiredWith: []string{"plaintext_wo"},
+				},
+			}
 		},
 	}
 }

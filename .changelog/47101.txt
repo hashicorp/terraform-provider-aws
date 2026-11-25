@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_glue_catalog_table: Detect and report failed view creation
-```

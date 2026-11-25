@@ -34,7 +34,6 @@ import (
 
 // @FrameworkResource("aws_vpc_block_public_access_exclusion", name="VPC Block Public Access Exclusion")
 // @Tags(identifierAttribute="id")
-// @Testing(tagsTest=true)
 // @Testing(generator=false)
 // @Testing(name="BlockPublicAccessExclusion")
 func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.ResourceWithConfigure, error) {

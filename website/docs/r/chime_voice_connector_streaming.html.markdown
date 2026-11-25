@@ -83,8 +83,11 @@ resource "aws_iam_role" "example" {
 }
 
 resource "aws_kinesis_stream" "example" {
-  name        = "ExampleStream"
-  shard_count = 2
+  name = "ExampleStream"
+
+  stream_mode_details {
+    stream_mode = "ON_DEMAND"
+  }
 }
 ```
 

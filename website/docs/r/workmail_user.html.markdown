@@ -55,9 +55,9 @@ The following arguments are optional:
 * `office` - (Optional) Office where the user is located.
 * `password` - (Optional, Sensitive) Password to set for the user.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `user_role` - (Optional) Role assigned to the user. Valid values are `USER`, `REMOTE_USER`, `RESOURCE`, and `SYSTEM_USER`.
 * `street` - (Optional) Street address of the user.
 * `telephone` - (Optional) Telephone number of the user.
+* `user_role` - (Optional) Role assigned to the user. Valid values are `USER`, `REMOTE_USER`, `RESOURCE`, and `SYSTEM_USER`.
 * `zip_code` - (Optional) ZIP or postal code of the user.
 
 ## Attribute Reference
@@ -71,12 +71,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `mailbox_provisioned_date` - Timestamp when the mailbox was created for the user.
 * `state` - Current WorkMail state of the user.
 * `user_id` - Identifier of the user.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-This resource does not support configurable timeouts.
 
 ## Import
 

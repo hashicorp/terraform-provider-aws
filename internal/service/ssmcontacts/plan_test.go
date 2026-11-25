@@ -14,9 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfssmcontacts "github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -98,6 +100,14 @@ func testAccPlan_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfssmcontacts.ResourcePlan(), planResourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(planResourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(planResourceName, plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -471,6 +481,7 @@ func testAccPlan_updateChannelTargetInfo(t *testing.T) {
 
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName(t)
 	escalationPlanResourceName := "aws_ssmcontacts_contact.test_escalation_plan_one"
 	planResourceName := "aws_ssmcontacts_plan.test"
 	contactChannelOneResourceName := "aws_ssmcontacts_contact_channel.test_channel_one"
@@ -492,6 +503,7 @@ func testAccPlan_updateChannelTargetInfo(t *testing.T) {
 				Config: testAccPlanConfig_channelTargetInfo(
 					rName,
 					contactChannelOneResourceName,
+					domain,
 					oldRetryIntervalInMinutes,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -520,6 +532,7 @@ func testAccPlan_updateChannelTargetInfo(t *testing.T) {
 				Config: testAccPlanConfig_channelTargetInfo(
 					rName,
 					contactChannelTwoResourceName,
+					domain,
 					newRetryIntervalInMinutes,
 				),
 				Check: resource.ComposeTestCheckFunc(
@@ -588,13 +601,7 @@ func testAccCheckPlanDestroy(ctx context.Context, t *testing.T) resource.TestChe
 			output, err := conn.GetContact(ctx, input)
 			if err != nil {
 				// Getting resources may return validation exception when the replication set has been destroyed
-				var ve *types.ValidationException
-				if errors.As(err, &ve) {
-					continue
-				}
-
-				var nfe *types.ResourceNotFoundException
-				if errors.As(err, &nfe) {
+				if errs.IsA[*types.ValidationException](err) || errs.IsA[*types.ResourceNotFoundException](err) {
 					continue
 				}
 
@@ -746,9 +753,7 @@ resource "aws_ssmcontacts_plan" "test" {
 `, isEssential, contactId))
 }
 
-func testAccPlanConfig_channelTargetInfo(rName, contactChannelResourceName string, retryIntervalInMinutes int) string {
-	domain := acctest.RandomDomainName()
-
+func testAccPlanConfig_channelTargetInfo(rName, contactChannelResourceName, domain string, retryIntervalInMinutes int) string {
 	return acctest.ConfigCompose(
 		testAccPlanConfig_base(rName),
 		fmt.Sprintf(`

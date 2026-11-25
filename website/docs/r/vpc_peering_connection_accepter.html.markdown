@@ -17,6 +17,8 @@ The requester can use the `aws_vpc_peering_connection` resource to manage its si
 and the accepter can use the `aws_vpc_peering_connection_accepter` resource to "adopt" its side of the
 connection into management.
 
+~> **Note:** AWS allows a cross-account VPC Peering Connection to be deleted from either the requester's or accepter's side. However, Terraform only allows the VPC Peering Connection to be deleted from the requester's side by removing the corresponding `aws_vpc_peering_connection` resource from your configuration. Removing a `aws_vpc_peering_connection_accepter` resource from your configuration will remove it from your statefile and management, **but will not destroy the VPC Peering Connection.**
+
 ## Example Usage
 
 ### Cross-Account Peering Or Cross-Region Peering Terraform AWS Provider v5 (and below)
@@ -119,39 +121,39 @@ resource "aws_vpc_peering_connection_accepter" "peer" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `vpc_peering_connection_id` - (Required) The VPC Peering Connection ID to manage.
+* `accepter` - (Optional) Configuration block for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to set for the VPC that accepts the peering connection (a maximum of one). See [`accepter` Block](#accepter-block) below.
 * `auto_accept` - (Optional) Whether or not to accept the peering request. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `requester` - (Optional) Configuration block for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to set for the VPC that requests the peering connection (a maximum of one). See [`requester` Block](#requester-block) below.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vpc_peering_connection_id` - (Required) VPC Peering Connection ID to manage.
 
-### Removing `aws_vpc_peering_connection_accepter` from your configuration
+### `accepter` Block
 
-AWS allows a cross-account VPC Peering Connection to be deleted from either the requester's or accepter's side.
-However, Terraform only allows the VPC Peering Connection to be deleted from the requester's side
-by removing the corresponding `aws_vpc_peering_connection` resource from your configuration.
-Removing a `aws_vpc_peering_connection_accepter` resource from your configuration will remove it
-from your statefile and management, **but will not destroy the VPC Peering Connection.**
+* `allow_remote_vpc_dns_resolution` - (Optional) Whether to allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
+
+### `requester` Block
+
+* `allow_remote_vpc_dns_resolution` - (Optional) Whether to allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the VPC Peering Connection.
-* `accept_status` - The status of the VPC Peering Connection request.
-* `vpc_id` - The ID of the accepter VPC.
-* `peer_vpc_id` - The ID of the requester VPC.
-* `peer_owner_id` - The AWS account ID of the owner of the requester VPC.
-* `peer_region` - The region of the accepter VPC.
-* `accepter` - A configuration block that describes [VPC Peering Connection]
-(https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
-* `requester` - A configuration block that describes [VPC Peering Connection]
-(https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `accept_status` - Status of the VPC Peering Connection request.
+* `id` - ID of the VPC Peering Connection.
+* `peer_owner_id` - AWS account ID of the owner of the requester VPC.
+* `peer_region` - Region of the accepter VPC.
+* `peer_vpc_id` - ID of the requester VPC.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `vpc_id` - ID of the accepter VPC.
 
-#### Accepter and Requester Attribute Reference
+## Timeouts
 
-* `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
-private IP addresses when queried from instances in a peer VPC.
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
 
 ## Import
 

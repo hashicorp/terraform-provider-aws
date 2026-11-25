@@ -1,7 +1,0 @@
-```release-note:new-resource
-aws_transfer_workflow
-```
-
-```release-note:enhancement
-resource/aws_transfer_server: Add `workflow_details` argument
-```

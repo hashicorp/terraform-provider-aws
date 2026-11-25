@@ -57,21 +57,23 @@ func resourceResource() *schema.Resource {
 			},
 		},
 
-		Schema: map[string]*schema.Schema{
-			"group_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResourceARN: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			names.AttrResourceType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"group_arn": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResourceARN: {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				names.AttrResourceType: {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 	}
 }
@@ -260,11 +262,7 @@ func failedResourcesError(apiObjects []types.FailedResource) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		err := failedResourceError(apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), failedResourceError(apiObject)))
 	}
 
 	return errors.Join(errs...)

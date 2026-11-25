@@ -1,0 +1,79 @@
+# Copyright IBM Corp. 2014, 2026
+# SPDX-License-Identifier: MPL-2.0
+
+resource "aws_lb_target_group_attachment" "test" {
+  count = var.resource_count
+
+  target_group_arn = aws_lb_target_group.test.arn
+  target_id        = aws_instance.test[count.index].id
+  port             = 80
+}
+
+data "aws_ami" "amzn2_ami" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["usw2-az4", "usgw1-az2"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  count = var.resource_count
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+
+resource "aws_instance" "test" {
+  count = var.resource_count
+
+  ami           = data.aws_ami.amzn2_ami.id
+  instance_type = "t3.micro"
+  subnet_id     = aws_subnet.test[count.index].id
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = var.rName
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+}
+
+variable "rName" {
+  description = "Name for resource"
+  type        = string
+  nullable    = false
+}
+
+variable "resource_count" {
+  description = "Number of resources to create"
+  type        = number
+  nullable    = false
+}

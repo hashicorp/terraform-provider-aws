@@ -24,16 +24,16 @@ data "aws_organizations_organizational_unit_descendant_accounts" "accounts" {
 
 This data source supports the following arguments:
 
-* `parent_id` - (Required) The parent ID of the accounts.
+* `parent_id` - (Required) Parent ID of the accounts.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
 * `accounts` - List of child accounts, which have the following attributes:
-    * `arn` - The Amazon Resource Name (ARN) of the account.
-    * `email` - The email address associated with the AWS account.
-    * `id` - The unique identifier (ID) of the account.
+    * `arn` - ARN of the account.
+    * `email` - Email address associated with the AWS account.
+    * `id` - Unique identifier (ID) of the account.
     * `joined_method` - Method by which the account joined the organization.
     * `joined_timestamp` - Date the account became a part of the organization.
     * `name` - Friendly name of the account.

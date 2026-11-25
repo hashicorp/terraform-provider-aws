@@ -44,11 +44,11 @@ resource "aws_workspacesweb_trust_store" "example" {
 
 The following arguments are optional:
 
+* `certificate` - (Optional) Set of certificates to include in the trust store. See [`certificate` Block](#certificate-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `certificate` - (Optional) Set of certificates to include in the trust store. See [Certificate](#certificate) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### Certificate
+### `certificate` Block
 
 * `body` - (Required) Certificate body in PEM format.
 
@@ -57,10 +57,10 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `associated_portal_arns` - List of ARNs of the web portals associated with the trust store.
-* `trust_store_arn` - ARN of the trust store.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `trust_store_arn` - ARN of the trust store.
 
-The `certificate` block exports the following additional attributes:
+### `certificate` Block
 
 * `issuer` - Certificate issuer.
 * `not_valid_after` - Date and time when the certificate expires in RFC3339 format.

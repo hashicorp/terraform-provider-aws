@@ -44,6 +44,81 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 }
 ```
 
+### Model Artifacts in Amazon S3
+
+This example uses a custom inference image from Amazon ECR and model artifacts uploaded to Amazon S3. The inference image must be pushed to the repository before the model is created, and the execution role must be able to pull the image and read the model artifacts.
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3_object" "example" {
+  bucket = aws_s3_bucket.example.bucket
+  key    = "model.tar.gz"
+  source = "model.tar.gz"
+}
+
+resource "aws_ecr_repository" "example" {
+  name = "example"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name               = "example-sagemaker-model"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "example" {
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
+  }
+
+  statement {
+    actions   = ["ecr:GetAuthorizationToken"]
+    resources = ["*"]
+  }
+
+  statement {
+    actions = [
+      "ecr:BatchCheckLayerAvailability",
+      "ecr:BatchGetImage",
+      "ecr:GetDownloadUrlForLayer",
+    ]
+    resources = [aws_ecr_repository.example.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  name   = "example-sagemaker-model"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.example.json
+}
+
+resource "aws_sagemaker_model" "example" {
+  name               = "example"
+  execution_role_arn = aws_iam_role.example.arn
+
+  primary_container {
+    image          = "${aws_ecr_repository.example.repository_url}:latest"
+    model_data_url = "s3://${aws_s3_object.example.bucket}/${aws_s3_object.example.key}"
+  }
+
+  depends_on = [aws_iam_role_policy.example]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -64,23 +139,23 @@ The `primary_container` and `container` block both support:
 * `container_hostname` - (Optional) DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
 * `image` - (Optional) Registry path where the inference code image is stored in Amazon ECR.
-* `image_config` - (Optional) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
+* `image_config` - (Optional) Whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. For more information see [Using a Private Docker Registry for Real-Time Inference Containers](https://docs.aws.amazon.com/sagemaker/latest/dg/your-algorithms-containers-inference-private.html). see [Image Config](#image-config).
 * `inference_specification_name` - (Optional) Inference specification name in the model package version.
 * `mode` - (Optional) Container hosts value. Allowed values are: `SingleModel` and `MultiModel`. The default value is `SingleModel`.
 * `model_data_source` - (Optional) Location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker AI Developer Guide_.
 * `model_data_url` - (Optional) URL for the S3 location where model artifacts are stored.
-* `model_package_name` - (Optional) Amazon Resource Name (ARN) of the model package to use to create the model.
+* `model_package_name` - (Optional) ARN of the model package to use to create the model.
    A list of key value pairs.
 * `multi_model_config` - (Optional) Specifies additional configuration for multi-model endpoints. see [Multi Model Config](#multi-model-config).
 
 ### Image Config
 
-* `repository_access_mode` - (Required) Specifies whether the model container is in Amazon ECR or a private Docker registry accessible from your Amazon Virtual Private Cloud (VPC). Allowed values are: `Platform` and `Vpc`.
-* `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified Vpc as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
+* `repository_access_mode` - (Required) Whether the model container is in Amazon ECR or a private Docker registry accessible from your VPC. Allowed values are: `Platform` and `Vpc`.
+* `repository_auth_config` - (Optional) Specifies an authentication configuration for the private docker registry where your model image is hosted. Specify a value for this property only if you specified `Vpc` as the value for the RepositoryAccessMode field, and the private Docker registry where the model image is hosted requires authentication. see [Repository Auth Config](#repository-auth-config).
 
 #### Repository Auth Config
 
-* `repository_credentials_provider_arn` - (Required) Amazon Resource Name (ARN) of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
+* `repository_credentials_provider_arn` - (Required) ARN of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
 
 ### Model Data Source
 
@@ -94,11 +169,16 @@ The `primary_container` and `container` block both support:
 #### S3 Data Source
 
 * `compression_type` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
-* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block]. See [Model Access Config](#model-access-config).
+* `hub_access_config` - (Optional) Configuration for deploying a model from a SageMaker JumpStart private hub. See [Hub Access Config](#hub-access-config).
+* `model_access_config` - (Optional) Specifies the access configuration file for the ML model. You can explicitly accept the model end-user license agreement (EULA) within the [`model_access_config` configuration block](#model-access-config). See [Model Access Config](#model-access-config).
 * `s3_data_type` - (Required) Type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
 * `s3_uri` - (Required) The S3 path of model data to deploy.
 
-##### Model Access Config
+#### Hub Access Config
+
+* `hub_content_arn` - (Required) Versioned ARN of the private hub content to deploy, such as the `versioned_hub_content_arn` of an [`aws_sagemaker_hub_content_reference`](sagemaker_hub_content_reference.html). `s3_uri` must match the hub content's hosting artifact URI.
+
+#### Model Access Config
 
 * `accept_eula` - (Required) Specifies agreement to the model end-user license agreement (EULA). The value must be set to `true` in order to accept the EULA that this model requires. You are responsible for reviewing and complying with any applicable license terms and making sure they are acceptable for your use case before downloading or using a model.
 
@@ -119,7 +199,7 @@ The `primary_container` and `container` block both support:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) assigned by AWS to this model.
+* `arn` - ARN assigned by AWS to this model.
 * `name` - Name of the model.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

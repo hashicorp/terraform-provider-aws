@@ -51,8 +51,35 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `cidr_block` - The primary IPv4 CIDR block for the VPC
 * `instance_tenancy` - The allowed tenancy of instances launched into the VPC
+* `network_firewall_association` - Automated Internet Firewall that AWS Network Security Manager manages for the VPC. Empty if the VPC doesn't have one. See [`aws_vpc`](/docs/providers/aws/r/vpc.html#network_firewall_association-block) for its attributes.
 
 ## Import
+
+In Terraform v1.12.0 and later, you can use an [`import` block](https://developer.hashicorp.com/terraform/language/import) with the `identity` attribute. For example:
+
+```terraform
+import {
+  to = aws_default_vpc.example
+  identity = {
+    id = "vpc-a01106c2"
+  }
+}
+
+resource "aws_default_vpc" "example" {
+  ### Configuration omitted for brevity ###
+}
+```
+
+### Identity Schema
+
+#### Required
+
+* `id` (String) VPC ID.
+
+#### Optional
+
+* `account_id` (String) AWS account ID for this resource.
+* `region` (String) AWS Region for this resource.
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Default VPCs using the VPC `id`. For example:
 

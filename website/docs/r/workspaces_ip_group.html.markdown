@@ -35,27 +35,23 @@ resource "aws_workspaces_ip_group" "contractors" {
 
 This resource supports the following arguments:
 
+* `description` - (Optional) Description of the IP group.
+* `name` - (Required) Name of the IP group.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name of the IP group.
-* `description` - (Optional) The description of the IP group.
 * `rules` - (Optional) One or more pairs specifying the IP group rule (in CIDR format) from which web requests originate.
-* `tags` - (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the WorkSpaces IP group. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Nested Blocks
+### `rules` Block
 
-### `rules`
-
-#### Arguments
-
-* `source` - (Required) The IP address range, in CIDR notation, e.g., `10.0.0.0/16`
-* `description` - (Optional) The description.
+* `description` - (Optional) Description of the IP rule.
+* `source` - (Required) IP address range, in CIDR notation, e.g., `10.0.0.0/16`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The IP group identifier.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - IP group identifier.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

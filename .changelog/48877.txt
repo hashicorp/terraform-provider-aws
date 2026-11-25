@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory: Change `indexed_key` from `List` to `Set` to ignore ordering
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_memory: Allow adding `indexed_key` entries in place instead of forcing a new resource
+```

@@ -1,3 +1,0 @@
-```release-note:bug
-resource/aws_organizations_organization: Ensure that the Organization ID specified in `terraform import` is the current Organization
-```

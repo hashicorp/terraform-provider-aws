@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
@@ -18,7 +19,7 @@ import (
 
 func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
@@ -46,7 +47,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_basic(t *testing.T) {
 
 func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	mailFromDomain := domain.Subdomain("test")
 
 	rName := domain.String()
@@ -65,6 +66,14 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentityMailFromAttributes(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_email_identity_mail_from_attributes.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_email_identity_mail_from_attributes.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -72,7 +81,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappears(t *testing.T) {
 
 func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := acctest.RandomDomainName()
+	rName := acctest.RandomDomainName(t)
 	resourceName := "aws_sesv2_email_identity_mail_from_attributes.test"
 	emailIdentityName := "aws_sesv2_email_identity.test"
 
@@ -89,6 +98,14 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 					acctest.CheckSDKResourceDisappears(ctx, t, tfsesv2.ResourceEmailIdentity(), emailIdentityName),
 				),
 				ExpectNonEmptyPlan: true,
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_email_identity_mail_from_attributes.test", plancheck.ResourceActionCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction("aws_sesv2_email_identity_mail_from_attributes.test", plancheck.ResourceActionCreate),
+					},
+				},
 			},
 		},
 	})
@@ -96,7 +113,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_disappearsEmailIdentity(t *test
 
 func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	mailFromDomain := domain.Subdomain("test")
 
 	rName := domain.String()
@@ -133,7 +150,7 @@ func TestAccSESV2EmailIdentityMailFromAttributes_behaviorOnMXFailure(t *testing.
 
 func TestAccSESV2EmailIdentityMailFromAttributes_mailFromDomain(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := acctest.RandomDomain()
+	domain := acctest.RandomDomain(t)
 	mailFromDomain1 := domain.Subdomain("test1")
 	mailFromDomain2 := domain.Subdomain("test2")
 

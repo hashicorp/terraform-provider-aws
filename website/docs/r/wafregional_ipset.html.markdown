@@ -32,27 +32,23 @@ resource "aws_wafregional_ipset" "ipset" {
 
 This resource supports the following arguments:
 
+* `ip_set_descriptor` - (Optional) One or more pairs specifying the IP address type (IPV4 or IPV6) and the IP address range (in CIDR notation) from which web requests originate. See [`ip_set_descriptor` Block](#ip_set_descriptor-block) below for details.
+* `name` - (Required) Name or description of the IPSet.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) The name or description of the IPSet.
-* `ip_set_descriptor` - (Optional) One or more pairs specifying the IP address type (IPV4 or IPV6) and the IP address range (in CIDR notation) from which web requests originate.
 
-## Nested Blocks
+### `ip_set_descriptor` Block
 
-### `ip_set_descriptor`
+The `ip_set_descriptor` block supports the following arguments:
 
-#### Arguments
-
-* `type` - (Required) The string like IPV4 or IPV6.
-* `value` - (Required) The CIDR notation.
-
-## Remarks
+* `type` - (Required) Type of the IP address, either `IPV4` or `IPV6`.
+* `value` - (Required) CIDR notation of the IP address range from which web requests originate.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF IPSet.
-* `arn` - The ARN of the WAF IPSet.
+* `arn` - ARN of the WAF IPSet.
+* `id` - ID of the WAF IPSet.
 
 ## Import
 
