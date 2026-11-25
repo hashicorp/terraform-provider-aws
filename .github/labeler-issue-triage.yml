@@ -58,6 +58,8 @@ service/apigatewaymanagementapi:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_apigatewaymanagementapi_'
 service/apigatewayv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_apigatewayv2_'
+service/apiportal:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_apiportal_'
 service/appautoscaling:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_appautoscaling_'
 service/appconfig:

@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:16:44.023451-05:00
+custom:
+  Body: Add `apiportal` to the `endpoints` configuration block for the new API Portal service client
+  Impact: provider
+  PullRequest: "51307"

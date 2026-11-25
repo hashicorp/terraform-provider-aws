@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/service/apiportal"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	"github.com/aws/aws-sdk-go-v2/service/appfabric"
 	"github.com/aws/aws-sdk-go-v2/service/appflow"
@@ -310,6 +311,10 @@ func (c *AWSClient) APIGatewayClient(ctx context.Context) *apigateway.Client {
 
 func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2.Client {
 	return errs.Must(c.client[*apigatewayv2.Client](ctx, names.APIGatewayV2, make(map[string]any)))
+}
+
+func (c *AWSClient) APIPortalClient(ctx context.Context) *apiportal.Client {
+	return errs.Must(c.client[*apiportal.Client](ctx, names.APIPortal, make(map[string]any)))
 }
 
 func (c *AWSClient) ARCRegionSwitchClient(ctx context.Context) *arcregionswitch.Client {

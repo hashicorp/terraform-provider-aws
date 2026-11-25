@@ -4,6 +4,7 @@ ACM PCA (Certificate Manager Private Certificate Authority)
 AMP (Managed Prometheus)
 API Gateway
 API Gateway V2
+API Portal
 ARC (Application Recovery Controller) Region Switch
 ARC (Application Recovery Controller) Zonal Shift
 Account Access

@@ -18,6 +18,7 @@ variable "service_labels" {
     "apigateway",
     "apigatewaymanagementapi",
     "apigatewayv2",
+    "apiportal",
     "appautoscaling",
     "appconfig",
     "appconfigdata",

@@ -355,6 +355,30 @@ service "apigatewayv2" {
   brand                    = "AWS"
 }
 
+service "apiportal" {
+  sdk {
+    id            = "APIPortal"
+    arn_namespace = "apiportal"
+  }
+
+  names {
+    provider_name_upper = "APIPortal"
+    human_friendly      = "API Portal"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListPortals"
+  }
+
+  resource_prefix {
+    correct = "aws_apiportal_"
+  }
+
+  provider_package_correct = "apiportal"
+  doc_prefix               = ["apiportal_"]
+  brand                    = "AWS"
+}
+
 service "appfabric" {
   sdk {
     id            = "AppFabric"
