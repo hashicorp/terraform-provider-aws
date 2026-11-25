@@ -1,0 +1,7 @@
+kind: enhancement
+time: 2026-11-24T16:00:00.000000-05:00
+custom:
+    Body: Add `context_provider` and `identity_center_instance_arn` arguments and `identity_store_arn` attribute to support trusted identity propagation
+    Impact: |-
+        resource/aws_iam_openid_connect_provider
+    PullRequest: "51353"

@@ -20,11 +20,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -40,6 +43,17 @@ func resourceSAMLProvider() *schema.Resource {
 		UpdateWithoutTimeout: resourceSAMLProviderUpdate,
 		DeleteWithoutTimeout: resourceSAMLProviderDelete,
 
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+			// An empty computed list is always planned as unknown. State written before
+			// saml_key_hashes existed has none until the next refresh, and the key hashes
+			// only change with the metadata document.
+			if diff.Id() != "" && !diff.HasChange("saml_metadata_document") {
+				return diff.Clear("saml_key_hashes")
+			}
+
+			return nil
+		},
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrARN: {
@@ -51,6 +65,34 @@ func resourceSAMLProvider() *schema.Resource {
 					Required:     true,
 					ForceNew:     true,
 					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"context_provider": contextProviderSchema(),
+				"identity_center_instance_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+					RequiredWith: []string{"context_provider"},
+				},
+				"identity_store_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"saml_key_hashes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"issuer_url": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"key_hashes": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
 				},
 				"saml_metadata_document": {
 					Type:         schema.TypeString,
@@ -82,6 +124,14 @@ func resourceSAMLProviderCreate(ctx context.Context, d *schema.ResourceData, met
 		Name:                 aws.String(name),
 		SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
 		Tags:                 getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("context_provider"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ContextProvider = expandContextProvider(v.([]any)[0].(map[string]any))
+	}
+
+	if v, ok := d.GetOk("identity_center_instance_arn"); ok {
+		input.IdentityCenterInstanceArn = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateSAMLProvider(ctx, input)
@@ -142,6 +192,14 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set(names.AttrARN, d.Id())
 	d.Set(names.AttrName, name)
+	if err := d.Set("context_provider", flattenContextProvider(output.ContextProvider)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting context_provider: %s", err)
+	}
+	d.Set("identity_center_instance_arn", output.IdentityCenterInstanceArn)
+	d.Set("identity_store_arn", output.IdentityStoreArn)
+	if err := d.Set("saml_key_hashes", flattenSAMLKeyHashEntries(output.SAMLKeyHashes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_key_hashes: %s", err)
+	}
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	d.Set("saml_provider_uuid", output.SAMLProviderUUID)
 	if output.ValidUntil != nil {
@@ -160,20 +218,79 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// UpdateSAMLProvider can't change the metadata and the context provider in
+	// one request, and the context provider can only be removed after the
+	// IAM Identity Center instance has been disassociated.
+	if d.HasChange("saml_metadata_document") {
 		input := &iam.UpdateSAMLProviderInput{
 			SAMLProviderArn:      aws.String(d.Id()),
 			SAMLMetadataDocument: aws.String(d.Get("saml_metadata_document").(string)),
 		}
 
-		_, err := conn.UpdateSAMLProvider(ctx, input)
-
-		if err != nil {
+		if _, err := conn.UpdateSAMLProvider(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM SAML Provider (%s): %s", d.Id(), err)
 		}
 	}
 
+	contextProviderChanged := d.HasChange("context_provider")
+	identityCenterChanged := d.HasChange("identity_center_instance_arn")
+	removingIdentityCenter := identityCenterChanged && d.Get("identity_center_instance_arn").(string) == ""
+
+	if contextProviderChanged && !removingIdentityCenter {
+		if err := updateSAMLProviderContextProvider(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if identityCenterChanged {
+		if err := updateSAMLProviderIdentityCenterInstance(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if contextProviderChanged && removingIdentityCenter {
+		if err := updateSAMLProviderContextProvider(ctx, conn, d); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
+}
+
+func updateSAMLProviderContextProvider(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	input := &iam.UpdateSAMLProviderInput{
+		SAMLProviderArn: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("context_provider"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.ContextProvider = expandContextProvider(v.([]any)[0].(map[string]any))
+	} else {
+		input.RemoveContextProvider = true
+	}
+
+	if _, err := conn.UpdateSAMLProvider(ctx, input); err != nil {
+		return fmt.Errorf("updating IAM SAML Provider (%s) context provider: %w", d.Id(), err)
+	}
+
+	return nil
+}
+
+func updateSAMLProviderIdentityCenterInstance(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
+	input := &iam.UpdateSAMLProviderInput{
+		SAMLProviderArn: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("identity_center_instance_arn"); ok {
+		input.IdentityCenterInstanceArn = aws.String(v.(string))
+	} else {
+		input.RemoveIdentityCenterInstance = true
+	}
+
+	if _, err := conn.UpdateSAMLProvider(ctx, input); err != nil {
+		return fmt.Errorf("updating IAM SAML Provider (%s) IAM Identity Center instance: %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -239,6 +356,142 @@ func samlProviderTags(ctx context.Context, conn *iam.Client, identifier string, 
 	}
 
 	return output, nil
+}
+
+// contextProviderSchema returns the schema of the trusted identity propagation
+// context provider block shared by SAML and OIDC providers.
+func contextProviderSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"key_definition": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					MaxItems: 10,
+					Set:      contextProviderKeyDefinitionHash,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_key": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validContextProviderKey,
+							},
+							"target_key": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validContextProviderKey,
+							},
+						},
+					},
+				},
+				"subject_source_key": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validContextProviderKey,
+				},
+				"subject_type_source_key": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ValidateFunc:  validContextProviderKey,
+					ConflictsWith: []string{"context_provider.0.subject_type_value"},
+				},
+				"subject_type_value": {
+					Type:          schema.TypeString,
+					Optional:      true,
+					ConflictsWith: []string{"context_provider.0.subject_type_source_key"},
+				},
+			},
+		},
+	}
+}
+
+// contextProviderKeyDefinitionHash hashes a key definition with an omitted
+// target key as if it were set to the source key, which is the value AWS
+// assigns, so that the configured and the returned element are the same.
+func contextProviderKeyDefinitionHash(v any) int {
+	tfMap := v.(map[string]any)
+	sourceKey := tfMap["source_key"].(string)
+	targetKey, _ := tfMap["target_key"].(string)
+	if targetKey == "" {
+		targetKey = sourceKey
+	}
+
+	return create.StringHashcode(sourceKey + "|" + targetKey)
+}
+
+func expandContextProvider(tfMap map[string]any) *awstypes.ContextProvider {
+	apiObject := &awstypes.ContextProvider{
+		SubjectSourceKey: aws.String(tfMap["subject_source_key"].(string)),
+	}
+
+	if v, ok := tfMap["key_definition"].(*schema.Set); ok {
+		for _, v := range v.List() {
+			tfMap, ok := v.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			keyDefinition := awstypes.ContextProviderKeyDefinition{
+				SourceKey: aws.String(tfMap["source_key"].(string)),
+			}
+
+			if v, ok := tfMap["target_key"].(string); ok && v != "" {
+				keyDefinition.TargetKey = aws.String(v)
+			}
+
+			apiObject.KeyDefinitionList = append(apiObject.KeyDefinitionList, keyDefinition)
+		}
+	}
+
+	if v, ok := tfMap["subject_type_source_key"].(string); ok && v != "" {
+		apiObject.SubjectTypeSourceKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["subject_type_value"].(string); ok && v != "" {
+		apiObject.SubjectTypeValue = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenContextProvider(apiObject *awstypes.ContextProvider) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"subject_source_key":      aws.ToString(apiObject.SubjectSourceKey),
+		"subject_type_source_key": aws.ToString(apiObject.SubjectTypeSourceKey),
+		"subject_type_value":      aws.ToString(apiObject.SubjectTypeValue),
+	}
+
+	var keyDefinitions []any
+	for _, v := range apiObject.KeyDefinitionList {
+		keyDefinitions = append(keyDefinitions, map[string]any{
+			"source_key": aws.ToString(v.SourceKey),
+			"target_key": aws.ToString(v.TargetKey),
+		})
+	}
+	tfMap["key_definition"] = keyDefinitions
+
+	return []any{tfMap}
+}
+
+func flattenSAMLKeyHashEntries(apiObjects []awstypes.SAMLKeyHashEntry) []any {
+	var tfList []any
+
+	for _, v := range apiObjects {
+		tfList = append(tfList, map[string]any{
+			"issuer_url": aws.ToString(v.IssuerURL),
+			"key_hashes": flex.FlattenStringValueList(v.KeyHashes),
+		})
+	}
+
+	return tfList
 }
 
 func nameFromSAMLProviderARN(v string) (string, error) {

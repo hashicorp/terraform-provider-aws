@@ -33,13 +33,39 @@ func dataSourceSAMLProvider() *schema.Resource {
 					Required:     true,
 					ValidateFunc: verify.ValidARN,
 				},
+				"context_provider": dataSourceContextProviderSchema(),
 				"create_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_center_instance_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_store_arn": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
 					Computed: true,
+				},
+				"saml_key_hashes": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"issuer_url": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"key_hashes": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
 				},
 				"saml_metadata_document": {
 					Type:     schema.TypeString,
@@ -77,12 +103,20 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.SetId(arn)
+	if err := d.Set("context_provider", flattenContextProvider(output.ContextProvider)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting context_provider: %s", err)
+	}
 	if output.CreateDate != nil {
 		d.Set("create_date", aws.ToTime(output.CreateDate).Format(time.RFC3339))
 	} else {
 		d.Set("create_date", nil)
 	}
+	d.Set("identity_center_instance_arn", output.IdentityCenterInstanceArn)
+	d.Set("identity_store_arn", output.IdentityStoreArn)
 	d.Set(names.AttrName, name)
+	if err := d.Set("saml_key_hashes", flattenSAMLKeyHashEntries(output.SAMLKeyHashes)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_key_hashes: %s", err)
+	}
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	d.Set("saml_provider_uuid", output.SAMLProviderUUID)
 	if output.ValidUntil != nil {
@@ -94,4 +128,46 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	setTagsOut(ctx, output.Tags)
 
 	return diags
+}
+
+// dataSourceContextProviderSchema returns the schema of the trusted identity
+// propagation context provider attribute shared by the SAML and OIDC provider
+// data sources.
+func dataSourceContextProviderSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Computed: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"key_definition": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"source_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"target_key": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"subject_source_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subject_type_source_key": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subject_type_value": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			},
+		},
+	}
 }
