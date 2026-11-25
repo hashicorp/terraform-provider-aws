@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-25T15:29:43.450574+01:00
+custom:
+    Body: Fix perpetual diff removing `target_object_key_format` when an S3-compatible backend returns the default `simple_prefix` without it being configured
+    Impact: resource/aws_s3_bucket_logging
+    PullRequest: "51370"
