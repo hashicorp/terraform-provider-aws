@@ -130,6 +130,11 @@ func resourceDefaultRouteTable() *schema.Resource {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
+							"odb_network_arn": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: verify.ValidARN,
+							},
 						},
 					},
 					Set: resourceRouteTableHash,
