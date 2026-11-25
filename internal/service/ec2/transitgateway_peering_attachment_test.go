@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -28,27 +29,77 @@ func TestFlattenTransitGatewayPeeringAttachmentOptions(t *testing.T) {
 		want      []any
 	}{
 		"nil": {
+			// The API omits Options while neither side allows multipath resilience and dynamic routing is disabled.
 			apiObject: nil,
-			want:      nil,
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValueDisable,
+			}},
 		},
 		"empty": {
-			// The API can return a present-but-empty Options object (for example when a field is in the wire response but not yet modeled in the SDK).
-			// This must flatten to no block, otherwise the provider would detect drift against a configuration with no options block and force a replacement.
 			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{},
-			want:      nil,
-		},
-		"empty dynamic_routing": {
-			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
-				DynamicRouting: "",
-			},
-			want: nil,
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValueDisable,
+			}},
 		},
 		"dynamic_routing enable": {
+			// The multipath resilience fields are omitted while neither side allows multipath resilience.
 			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
 				DynamicRouting: awstypes.DynamicRoutingValueEnable,
 			},
 			want: []any{map[string]any{
-				"dynamic_routing": awstypes.DynamicRoutingValueEnable,
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValueEnable,
+			}},
+		},
+		"dynamic_routing disable": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				DynamicRouting: awstypes.DynamicRoutingValueDisable,
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValueDisable,
+			}},
+		},
+		"multipath resilience disallowed": {
+			// Returned while multipath resilience is being disabled, before Options is omitted.
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(false),
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled,
+				RequesterAllowMultipathResilience: aws.Bool(false),
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValueDisable,
+			}},
+		},
+		"multipath resilience allowed by accepter": {
+			// A side's mode is returned only when that side allows multipath resilience.
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(true),
+				AccepterMultipathResilienceMode:   awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusPending,
+				RequesterAllowMultipathResilience: aws.Bool(false),
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+				"dynamic_routing":            awstypes.DynamicRoutingValueDisable,
+			}},
+		},
+		"multipath resilience allowed": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(true),
+				AccepterMultipathResilienceMode:   awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+				DynamicRouting:                    awstypes.DynamicRoutingValueEnable,
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled,
+				RequesterAllowMultipathResilience: aws.Bool(true),
+				RequesterMultipathResilienceMode:  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": true,
+				"dynamic_routing":            awstypes.DynamicRoutingValueEnable,
+				"multipath_resilience_mode":  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
 			}},
 		},
 	}
@@ -63,6 +114,95 @@ func TestFlattenTransitGatewayPeeringAttachmentOptions(t *testing.T) {
 				t.Errorf("unexpected diff (+want, -got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestFlattenTransitGatewayPeeringAttachmentAccepterOptions(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		apiObject *awstypes.TransitGatewayPeeringAttachmentOptions
+		want      []any
+	}{
+		"nil": {
+			// The API omits Options while neither side allows multipath resilience and dynamic routing is disabled.
+			apiObject: nil,
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+			}},
+		},
+		"dynamic_routing enable": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				DynamicRouting: awstypes.DynamicRoutingValueEnable,
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+			}},
+		},
+		"multipath resilience allowed by requester": {
+			// A side's mode is returned only when that side allows multipath resilience.
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(false),
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusPending,
+				RequesterAllowMultipathResilience: aws.Bool(true),
+				RequesterMultipathResilienceMode:  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": false,
+			}},
+		},
+		"multipath resilience allowed": {
+			apiObject: &awstypes.TransitGatewayPeeringAttachmentOptions{
+				AccepterAllowMultipathResilience:  aws.Bool(true),
+				AccepterMultipathResilienceMode:   awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+				MultipathResilienceStatus:         awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled,
+				RequesterAllowMultipathResilience: aws.Bool(true),
+				RequesterMultipathResilienceMode:  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+			},
+			want: []any{map[string]any{
+				"allow_multipath_resilience": true,
+				"multipath_resilience_mode":  awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn,
+			}},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfec2.FlattenTransitGatewayPeeringAttachmentAccepterOptions(testCase.apiObject)
+
+			if diff := cmp.Diff(got, testCase.want); diff != "" {
+				t.Errorf("unexpected diff (+want, -got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestTransitGatewayPeeringAttachmentOptionsWithDefaults(t *testing.T) {
+	t.Parallel()
+
+	got := tfec2.TransitGatewayPeeringAttachmentOptionsWithDefaults(nil)
+
+	if got.DynamicRouting != awstypes.DynamicRoutingValueDisable {
+		t.Errorf("DynamicRouting = %q, want %q", got.DynamicRouting, awstypes.DynamicRoutingValueDisable)
+	}
+	if v := got.AccepterAllowMultipathResilience; v == nil || *v {
+		t.Errorf("AccepterAllowMultipathResilience = %v, want false", v)
+	}
+	if v := got.RequesterAllowMultipathResilience; v == nil || *v {
+		t.Errorf("RequesterAllowMultipathResilience = %v, want false", v)
+	}
+	if got.MultipathResilienceStatus != awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled {
+		t.Errorf("MultipathResilienceStatus = %q, want %q", got.MultipathResilienceStatus, awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled)
+	}
+
+	// The API object isn't modified.
+	apiObject := &awstypes.TransitGatewayPeeringAttachmentOptions{}
+	tfec2.TransitGatewayPeeringAttachmentOptionsWithDefaults(apiObject)
+
+	if apiObject.DynamicRouting != "" || apiObject.RequesterAllowMultipathResilience != nil || apiObject.MultipathResilienceStatus != "" {
+		t.Errorf("API object modified: %+v", apiObject)
 	}
 }
 
@@ -90,7 +230,9 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
 					acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "ec2", "transit-gateway-attachment/{id}"),
-					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled)),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, names.AttrID),
@@ -141,6 +283,81 @@ func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsy
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringAttachment_multipathResilience(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGatewayPeeringAttachment awstypes.TransitGatewayPeeringAttachment
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+	accepterResourceName := "aws_ec2_transit_gateway_peering_attachment_accepter.peer"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtTrue),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "options.0.multipath_resilience_mode", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceModeAlwaysOn)),
+					// Accepting the attachment also allows multipath resilience for the accepter.
+					resource.TestCheckResourceAttr(accepterResourceName, "options.0.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(accepterResourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				// The requester's state predates the accept in the previous step.
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.TransitGatewayAttachmentStateAvailable)),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusEnabled)),
+				),
+			},
+			{
+				Config:            testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtTrue),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, acctest.CtFalse),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, t, resourceName, &transitGatewayPeeringAttachment),
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusPending)),
+				),
+			},
+			{
+				// Disallow on both sides, set explicitly. The API omits Options once neither side allows
+				// multipath resilience; the post-apply refresh and plan fail the step if that produces a diff.
+				Config: testAccTransitGatewayPeeringAttachmentConfig_multipathResilienceDisallowed(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(accepterResourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(accepterResourceName, "options.0.allow_multipath_resilience", acctest.CtFalse),
+					resource.TestCheckResourceAttr(accepterResourceName, "multipath_resilience_status", string(awstypes.TransitGatewayPeeringAttachmentMultipathResilienceStatusDisabled)),
+				),
 			},
 		},
 	})
@@ -433,4 +650,76 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   }
 }
 `, acctest.AlternateRegion(), tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+// testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience skips the test when the Region pair doesn't support multipath resilience.
+// A Region without multipath resilience support doesn't recognize the parameter at all; a supported Region rejects an unsupported peer Region.
+func testAccErrorCheckSkipTransitGatewayPeeringAttachmentMultipathResilience(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSequence(
+		acctest.ErrorCheck(t, names.EC2ServiceID),
+		acctest.ErrorCheckSkipMessagesContaining(t,
+			"MultipathResilience is not supported between",
+			"The parameter Options.AllowMultipathResilience is not recognized",
+		),
+	)
+}
+
+func testAccTransitGatewayPeeringAttachmentConfig_multipathResilience(rName, allow string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[2]q
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
+
+  options {
+    allow_multipath_resilience = %[3]s
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "peer" {
+  provider = "awsalternate"
+
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.AlternateRegion(), allow))
+}
+
+func testAccTransitGatewayPeeringAttachmentConfig_multipathResilienceDisallowed(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[2]q
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
+
+  options {
+    allow_multipath_resilience = false
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "peer" {
+  provider = "awsalternate"
+
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.test.id
+
+  options {
+    allow_multipath_resilience = false
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, acctest.AlternateRegion()))
 }

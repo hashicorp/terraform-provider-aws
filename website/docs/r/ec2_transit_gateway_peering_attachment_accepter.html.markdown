@@ -90,14 +90,23 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
 This resource supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `options` - (Optional) Block describing the multipath resilience options for the accepter's side of the attachment. If not configured, the value is populated from the API. See [options](#options) below.
 * `transit_gateway_attachment_id` - (Required) The ID of the EC2 Transit Gateway Peering Attachment to manage.
 * `tags` - (Optional) Key-value tags for the EC2 Transit Gateway Peering Attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### options
+
+The `options` block supports the following:
+
+* `allow_multipath_resilience` - (Optional) Whether to allow [multipath resilience](https://docs.aws.amazon.com/vpc/latest/tgw/enable-multipath-resilience-tgw.html) for the accepter's side of a cross-Region attachment. Multipath resilience takes effect only when both sides allow it, and additional charges apply. If not set, the current setting is left unchanged. Accepting an attachment whose requester allows multipath resilience also allows it for the accepter.
+* `multipath_resilience_mode` - (Optional) Multipath resilience mode. Valid values: `always-on`. Can only be set when `allow_multipath_resilience` is `true`. Defaults to `always-on` when multipath resilience is allowed.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway Attachment identifier
+* `multipath_resilience_status` - Multipath resilience status of the attachment. Values are `enabled` (both sides allow multipath resilience), `pending` (only one side allows it, or it is being enabled) and `disabled` (neither side allows it).
 * `transit_gateway_id` - Identifier of EC2 Transit Gateway.
 * `peer_transit_gateway_id` - Identifier of EC2 Transit Gateway to peer with.
 * `peer_account_id` - Identifier of the AWS account that owns the EC2 TGW peering.

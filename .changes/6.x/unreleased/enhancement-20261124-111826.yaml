@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:18:26.881861+01:00
+custom:
+    Body: Add `options` argument with `allow_multipath_resilience` and `multipath_resilience_mode`, and `multipath_resilience_status` attribute
+    Impact: resource/aws_ec2_transit_gateway_peering_attachment_accepter
+    PullRequest: "51089"
