@@ -21,9 +21,9 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
-			"serial":        testAccEC2EBSEBSEncryptionByDefault_identitySerial,
-			"v6_74_0":       testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
+			acctest.CtBasic:   testAccEBSEncryptionByDefault_basic,
+			"identity":        testAccEC2EBSEBSEncryptionByDefault_identitySerial,
+			"v6_74_0_upgrade": testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
@@ -129,7 +129,7 @@ func testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "6.73.0",
+						VersionConstraint: "6.74.0",
 					},
 				},
 				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
