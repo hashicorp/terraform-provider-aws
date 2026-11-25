@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-25T17:37:33.905045832Z
+custom:
+    Body: Add `domain_name_id` attribute to support routing rules for private REST APIs with custom domains
+    Impact: resource/aws_apigatewayv2_routing_rule
+    PullRequest: "46920"
