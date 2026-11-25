@@ -11,30 +11,44 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	listschema "github.com/hashicorp/terraform-plugin-framework/list/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_vpc_endpoint")
 func newVPCEndpointResourceAsListResource() inttypes.ListResourceForSDK {
-	l := vpcEndpointListResource{}
-	l.SetResourceSchema(resourceVPCEndpoint())
-	return &l
-}
+	return framework.NewSDKListResource(resourceVPCEndpoint(), framework.SDKListSpec[awstypes.VpcEndpoint, listVPCEndpointModel]{
+		ConfigSchema: listVPCEndpointConfigSchema,
+		Items: func(ctx context.Context, c *conns.AWSClient, query listVPCEndpointModel) (iter.Seq2[awstypes.VpcEndpoint, error], diag.Diagnostics) {
+			var input ec2.DescribeVpcEndpointsInput
+			if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
+				return nil, diags
+			}
 
-var _ list.ListResource = &vpcEndpointListResource{}
-
-type vpcEndpointListResource struct {
-	framework.ListResourceWithSDKv2Resource
+			return listVPCEndpoints(ctx, c.EC2Client(ctx), &input), nil
+		},
+		ID: func(v awstypes.VpcEndpoint, _ listVPCEndpointModel) string {
+			return aws.ToString(v.VpcEndpointId)
+		},
+		Prepare: func(ctx context.Context, v awstypes.VpcEndpoint, _ listVPCEndpointModel, _ *schema.ResourceData) {
+			setTagsOut(ctx, v.Tags)
+		},
+		Flatten: resourceVPCEndpointFlatten,
+		// Flatten looks up the service's prefix list and the endpoint's subnet
+		// configurations, so gate it. Identity is the resource ID.
+		FlattenWhenRequested: true,
+		DisplayName: func(v awstypes.VpcEndpoint) string {
+			return listDisplayName(v.Tags, aws.ToString(v.VpcEndpointId))
+		},
+	})
 }
 
 type listVPCEndpointModel struct {
@@ -43,8 +57,8 @@ type listVPCEndpointModel struct {
 	Filters        customListFilters                 `tfsdk:"filter"`
 }
 
-func (l *vpcEndpointListResource) ListResourceConfigSchema(ctx context.Context, request list.ListResourceSchemaRequest, response *list.ListResourceSchemaResponse) {
-	response.Schema = listschema.Schema{
+func listVPCEndpointConfigSchema(ctx context.Context) listschema.Schema {
+	return listschema.Schema{
 		Attributes: map[string]listschema.Attribute{
 			"vpc_endpoint_ids": listschema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -69,70 +83,6 @@ func (l *vpcEndpointListResource) ListResourceConfigSchema(ctx context.Context, 
 				},
 			},
 		},
-	}
-}
-
-func (l *vpcEndpointListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	conn := l.Meta().EC2Client(ctx)
-
-	var query listVPCEndpointModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
-	var input ec2.DescribeVpcEndpointsInput
-	if diags := fwflex.Expand(ctx, query, &input); diags.HasError() {
-		stream.Results = list.ListResultsStreamDiagnostics(diags)
-		return
-	}
-
-	tflog.Info(ctx, "Listing Resources")
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listVPCEndpoints(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-			id := aws.ToString(item.VpcEndpointId)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), id)
-
-			result := request.NewListResult(ctx)
-
-			tags := keyValueTags(ctx, item.Tags)
-			setTagsOut(ctx, item.Tags)
-
-			rd := l.ResourceData()
-			rd.SetId(id)
-
-			if request.IncludeResource {
-				if err := resourceVPCEndpointFlatten(ctx, l.Meta(), &item, rd); err != nil {
-					tflog.Error(ctx, "Reading EC2 VPC Endpoint", map[string]any{
-						"error": err.Error(),
-					})
-					continue
-				}
-			}
-
-			if v, ok := tags["Name"]; ok {
-				result.DisplayName = fmt.Sprintf("%s (%s)", v.ValueString(), id)
-			} else {
-				result.DisplayName = id
-			}
-
-			l.SetResult(ctx, l.Meta(), request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
 	}
 }
 

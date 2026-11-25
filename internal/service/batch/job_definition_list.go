@@ -11,74 +11,33 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
-	"github.com/hashicorp/terraform-plugin-framework/list"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfiter "github.com/hashicorp/terraform-provider-aws/internal/iter"
 	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKListResource("aws_batch_job_definition")
 func newJobDefinitionResourceAsListResource() inttypes.ListResourceForSDK {
-	l := jobDefinitionListResource{}
-	l.SetResourceSchema(resourceJobDefinition())
-	return &l
-}
+	return framework.NewSDKListResource(resourceJobDefinition(), framework.SDKListSpec[awstypes.JobDefinition, framework.RegionQuery]{
+		Items: func(ctx context.Context, c *conns.AWSClient, _ framework.RegionQuery) (iter.Seq2[awstypes.JobDefinition, error], diag.Diagnostics) {
+			var input batch.DescribeJobDefinitionsInput
 
-type jobDefinitionListResource struct {
-	framework.ListResourceWithSDKv2Resource
-}
-
-func (l *jobDefinitionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
-	awsClient := l.Meta()
-	conn := awsClient.BatchClient(ctx)
-
-	var input batch.DescribeJobDefinitionsInput
-
-	tflog.Info(ctx, "Listing Batch job definitions")
-
-	stream.Results = func(yield func(list.ListResult) bool) {
-		for item, err := range listJobDefinitions(ctx, conn, &input) {
-			if err != nil {
-				result := fwdiag.NewListResultErrorDiagnostic(err)
-				yield(result)
-				return
-			}
-
-			if status := aws.ToString(item.Status); status == jobDefinitionStatusInactive {
-				continue
-			}
-
-			arn := aws.ToString(item.JobDefinitionArn)
-			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrID), arn)
-
-			result := request.NewListResult(ctx)
-			rd := l.ResourceData()
-			rd.SetId(arn)
-
-			tflog.Info(ctx, "Reading Batch job definition")
-			diags := resourceJobDefinitionFlatten(ctx, &item, rd)
-			if diags.HasError() {
-				result = fwdiag.NewListResultSDKDiagnostics(diags)
-				yield(result)
-				return
-			}
-
-			result.DisplayName = aws.ToString(item.JobDefinitionName)
-
-			l.SetResult(ctx, awsClient, request.IncludeResource, rd, &result)
-			if result.Diagnostics.HasError() {
-				yield(result)
-				return
-			}
-
-			if !yield(result) {
-				return
-			}
-		}
-	}
+			// Deregistered revisions linger in the API but are not resources
+			// anyone can manage.
+			return tfiter.FilterValues(listJobDefinitions(ctx, c.BatchClient(ctx), &input), func(jd awstypes.JobDefinition) bool {
+				return aws.ToString(jd.Status) != jobDefinitionStatusInactive
+			}), nil
+		},
+		ID: func(jd awstypes.JobDefinition, _ framework.RegionQuery) string {
+			return aws.ToString(jd.JobDefinitionArn)
+		},
+		Flatten: resourceJobDefinitionFlatten,
+		DisplayName: func(jd awstypes.JobDefinition) string {
+			return aws.ToString(jd.JobDefinitionName)
+		},
+	})
 }
 
 func listJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) iter.Seq2[awstypes.JobDefinition, error] {

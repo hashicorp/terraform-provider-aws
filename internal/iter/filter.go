@@ -20,3 +20,18 @@ func Filter[T any](seq iter.Seq[T], pred Predicate[T]) iter.Seq[T] {
 		}
 	}
 }
+
+// FilterValues returns an iterator over seq without the values pred rejects.
+// Pairs carrying an error always pass, so a filter cannot quietly turn a failed
+// listing into a short one.
+func FilterValues[T any](seq iter.Seq2[T, error], pred Predicate[T]) iter.Seq2[T, error] {
+	return func(yield func(T, error) bool) {
+		for v, err := range seq {
+			if err != nil || pred(v) {
+				if !yield(v, err) {
+					return
+				}
+			}
+		}
+	}
+}
