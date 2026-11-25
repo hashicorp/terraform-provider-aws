@@ -356,11 +356,23 @@ func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
+	// replication_instance_arn is empty in state when create fails after the instance exists (e.g. on the create wait)
+	// and destroy runs without a refresh, so look up the ARN.
+	instance, err := findReplicationInstanceByID(ctx, conn, d.Id())
+
+	if retry.NotFound(err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", d.Id(), err)
+	}
+
 	log.Printf("[DEBUG] Deleting DMS Replication Instance: %s", d.Id())
 	input := dms.DeleteReplicationInstanceInput{
-		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
+		ReplicationInstanceArn: instance.ReplicationInstanceArn,
 	}
-	_, err := conn.DeleteReplicationInstance(ctx, &input)
+	_, err = conn.DeleteReplicationInstance(ctx, &input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
 		return diags
