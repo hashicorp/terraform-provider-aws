@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_proxy: Fix updates to `auth.client_password_auth_type` not being detected or applied
+```
