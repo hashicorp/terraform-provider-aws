@@ -9,6 +9,8 @@ var (
 	ResourceAMICopy                                       = resourceAMICopy
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
+	ResourceApplicationStatusCheck                        = newApplicationStatusCheckResource
+	ResourceApplicationStatusCheckAssociation             = newApplicationStatusCheckAssociationResource
 	ResourceAvailabilityZoneGroup                         = resourceAvailabilityZoneGroup
 	ResourceCapacityManager                               = newCapacityManagerResource
 	ResourceCapacityReservation                           = resourceCapacityReservation
@@ -155,6 +157,8 @@ var (
 	ErrCodeInvalidSpotDatafeedNotFound                          = errCodeInvalidSpotDatafeedNotFound
 	ExpandIPPerms                                               = expandIPPerms
 	FindAllowedImagesSettings                                   = findAllowedImagesSettings
+	FindApplicationStatusCheckAssociationByKey                  = findApplicationStatusCheckAssociationByKey
+	FindApplicationStatusCheckByID                              = findApplicationStatusCheckByID
 	FindAvailabilityZones                                       = findAvailabilityZones
 	FindCapacityManagerAttributes                               = findCapacityManagerAttributes
 	FindCapacityReservationByID                                 = findCapacityReservationByID
