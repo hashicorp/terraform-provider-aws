@@ -1,0 +1,5 @@
+kind: feature
+time: 2026-11-25T21:48:18.000000+01:00
+custom:
+    Name: aws_route53_health_check_source
+    NewType: New List Resource

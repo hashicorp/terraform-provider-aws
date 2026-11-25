@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,6 +23,14 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_route53_health_check", &resource.Sweeper{
 		Name: "aws_route53_health_check",
 		F:    sweepHealthChecks,
+	})
+
+	resource.AddTestSweepers("aws_route53_health_check_source", &resource.Sweeper{
+		Name: "aws_route53_health_check_source",
+		F:    sweepHealthCheckSources,
+		Dependencies: []string{
+			"aws_route53_health_check",
+		},
 	})
 
 	resource.AddTestSweepers("aws_route53_key_signing_key", &resource.Sweeper{
@@ -104,6 +113,41 @@ func sweepHealthChecks(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("sweeping Route 53 Health Checks (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepHealthCheckSources(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.Route53Client(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	sources, err := findHealthCheckSources(ctx, conn)
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Route 53 Health Check Source sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing Route 53 Health Check Sources (%s): %w", region, err)
+	}
+
+	for _, v := range sources {
+		sweepResources = append(sweepResources, framework.NewSweepResource(newHealthCheckSourceResource, client,
+			framework.NewAttribute(names.AttrID, aws.ToString(v.HealthCheckSourceId)),
+		))
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Route 53 Health Check Sources (%s): %w", region, err)
 	}
 
 	return nil
