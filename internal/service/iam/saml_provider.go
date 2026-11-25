@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -41,6 +42,17 @@ func resourceSAMLProvider() *schema.Resource {
 		ReadWithoutTimeout:   resourceSAMLProviderRead,
 		UpdateWithoutTimeout: resourceSAMLProviderUpdate,
 		DeleteWithoutTimeout: resourceSAMLProviderDelete,
+
+		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, _ any) error {
+			// An empty computed list is always planned as unknown. State written before
+			// saml_key_hashes existed has none until the next refresh, and the key hashes
+			// only change with the metadata document.
+			if diff.Id() != "" && !diff.HasChange("saml_metadata_document") {
+				return diff.Clear("saml_key_hashes")
+			}
+
+			return nil
+		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
@@ -356,29 +368,35 @@ func contextProviderSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"key_definition": {
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					Optional: true,
 					MaxItems: 10,
+					Set:      contextProviderKeyDefinitionHash,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"source_key": {
-								Type:     schema.TypeString,
-								Required: true,
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validContextProviderKey,
 							},
 							"target_key": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validContextProviderKey,
 							},
 						},
 					},
 				},
 				"subject_source_key": {
-					Type:     schema.TypeString,
-					Required: true,
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validContextProviderKey,
 				},
 				"subject_type_source_key": {
 					Type:          schema.TypeString,
 					Optional:      true,
+					ValidateFunc:  validContextProviderKey,
 					ConflictsWith: []string{"context_provider.0.subject_type_value"},
 				},
 				"subject_type_value": {
@@ -391,13 +409,27 @@ func contextProviderSchema() *schema.Schema {
 	}
 }
 
+// contextProviderKeyDefinitionHash hashes a key definition with an omitted
+// target key as if it were set to the source key, which is the value AWS
+// assigns, so that the configured and the returned element are the same.
+func contextProviderKeyDefinitionHash(v any) int {
+	tfMap := v.(map[string]any)
+	sourceKey := tfMap["source_key"].(string)
+	targetKey, _ := tfMap["target_key"].(string)
+	if targetKey == "" {
+		targetKey = sourceKey
+	}
+
+	return create.StringHashcode(sourceKey + "|" + targetKey)
+}
+
 func expandContextProvider(tfMap map[string]any) *awstypes.ContextProvider {
 	apiObject := &awstypes.ContextProvider{
 		SubjectSourceKey: aws.String(tfMap["subject_source_key"].(string)),
 	}
 
-	if v, ok := tfMap["key_definition"].([]any); ok {
-		for _, v := range v {
+	if v, ok := tfMap["key_definition"].(*schema.Set); ok {
+		for _, v := range v.List() {
 			tfMap, ok := v.(map[string]any)
 			if !ok {
 				continue
