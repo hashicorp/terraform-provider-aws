@@ -79,6 +79,60 @@ resource "aws_s3tables_table_bucket" "example" {
 }
 ```
 
+### With Metadata Schema and Partition Spec
+
+```terraform
+resource "aws_s3tables_table" "example" {
+  name             = "example_table"
+  namespace        = aws_s3tables_namespace.example.namespace
+  table_bucket_arn = aws_s3tables_namespace.example.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "long"
+          required = true
+        }
+        field {
+          name     = "event_date"
+          type     = "date"
+          required = true
+        }
+        field {
+          name = "category"
+          type = "string"
+        }
+      }
+
+      partition_spec {
+        field {
+          name      = "date_partition"
+          source_id = 2
+          transform = "month"
+        }
+        field {
+          name      = "category_partition"
+          source_id = 3
+          transform = "identity"
+        }
+      }
+    }
+  }
+}
+
+resource "aws_s3tables_namespace" "example" {
+  namespace        = "example_namespace"
+  table_bucket_arn = aws_s3tables_table_bucket.example.arn
+}
+
+resource "aws_s3tables_table_bucket" "example" {
+  name = "example-bucket"
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -147,6 +201,7 @@ The `metadata` configuration block supports the following argument:
 
 The `iceberg` configuration block supports the following arguments:
 
+* `partition_spec` - (Optional, Forces new resource) Partition specification for the Iceberg table. [See `partition_spec` below](#partition_spec-block).
 * `properties` - (Optional, Forces new resource) Map of configuration properties for the Iceberg table, for example `write.distribution-mode` and `write.sort-order`.
 * `schema` - (Required) Schema configuration for the Iceberg table. [See `schema` below](#schema-block).
 
@@ -154,15 +209,30 @@ The `iceberg` configuration block supports the following arguments:
 
 The `schema` configuration block supports the following argument:
 
-* `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema. [See `field` below](#field-block).
+* `field` - (Required) List of schema fields for the Iceberg table. Each field defines a column in the table schema. [See `schema.field` below](#schemafield-block).
 
-### `field` Block
+### `schema.field` Block
 
-The `field` configuration block supports the following arguments:
+The `schema.field` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the field.
 * `required` - (Optional) Boolean value that specifies whether values are required for each row in this field. Defaults to `false`.
 * `type` - (Required) Field type. S3 Tables supports all Apache Iceberg primitive types including: `boolean`, `int`, `long`, `float`, `double`, `decimal(precision,scale)`, `date`, `time`, `timestamp`, `timestamptz`, `string`, `uuid`, `fixed(length)`, `binary`.
+
+### `partition_spec` Block
+
+The `partition_spec` configuration block supports the following argument:
+
+* `field` - (Required) List of partition fields that define how the table data is partitioned. At least one field must be specified. [See `partition_spec.field` below](#partition_specfield-block).
+
+### `partition_spec.field` Block
+
+The `partition_spec.field` configuration block supports the following arguments:
+
+* `field_id` - (Optional, Forces new resource) Unique identifier for this partition field. If not specified, S3 Tables assigns one automatically. Because S3 Tables does not return metadata on read, an automatically assigned value is not tracked in state.
+* `name` - (Required, Forces new resource) Name of the partition field. This name is used in the partitioned file paths.
+* `source_id` - (Required, Forces new resource) ID of the source schema field to partition by. S3 Tables assigns schema field IDs sequentially starting at `1`, in the order the fields are declared in `schema`.
+* `transform` - (Required, Forces new resource) Partition transform to apply to the source field. Supported transforms include `identity`, `year`, `month`, `day`, `hour`, `bucket[N]`, and `truncate[W]`, where `N` and `W` are integers, for example `bucket[16]`.
 
 ## Attribute Reference
 

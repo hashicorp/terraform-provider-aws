@@ -628,6 +628,73 @@ func TestAccS3TablesTable_properties(t *testing.T) {
 	})
 }
 
+func TestAccS3TablesTable_partitionSpec(t *testing.T) {
+	ctx := acctest.Context(t)
+	var table s3tables.GetTableOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	bucketName := rName
+	nsName := strings.ReplaceAll(rName, "-", "_")
+	tableName := strings.ReplaceAll(rName, "-", "_")
+	resourceName := "aws_s3tables_table.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3TablesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_partitionSpec(tableName, nsName, bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.name", "date_partition"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.source_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.transform", "month"),
+					resource.TestCheckNoResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.field_id"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.name", "category_partition"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.source_id", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.transform", "identity"),
+					resource.TestCheckNoResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.field_id"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccTableImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{"metadata"},
+			},
+			{
+				Config: testAccTableConfig_partitionSpecFieldIDs(tableName, nsName, bucketName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, t, resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.schema.0.field.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.name", "date_partition"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.source_id", "2"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.transform", "month"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.0.field_id", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.name", "category_partition"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.source_id", "3"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.transform", "identity"),
+					resource.TestCheckResourceAttr(resourceName, "metadata.0.iceberg.0.partition_spec.0.field.1.field_id", "5001"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckTableDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).S3TablesClient(ctx)
@@ -883,6 +950,98 @@ resource "aws_s3tables_table" "test" {
       properties = {
         "write.distribution-mode" = "range"
         "write.sort-order"        = "id"
+      }
+    }
+  }
+}
+`, tableName))
+}
+
+func testAccTableConfig_partitionSpec(tableName, nsName, bucketName string) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name     = "event_date"
+          type     = "date"
+          required = true
+        }
+        field {
+          name = "category"
+          type = "string"
+        }
+      }
+
+      partition_spec {
+        field {
+          name      = "date_partition"
+          source_id = 2
+          transform = "month"
+        }
+        field {
+          name      = "category_partition"
+          source_id = 3
+          transform = "identity"
+        }
+      }
+    }
+  }
+}
+`, tableName))
+}
+
+func testAccTableConfig_partitionSpecFieldIDs(tableName, nsName, bucketName string) string {
+	return acctest.ConfigCompose(testAccTableConfig_base(nsName, bucketName), fmt.Sprintf(`
+resource "aws_s3tables_table" "test" {
+  name             = %[1]q
+  namespace        = aws_s3tables_namespace.test.namespace
+  table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
+  format           = "ICEBERG"
+
+  metadata {
+    iceberg {
+      schema {
+        field {
+          name     = "id"
+          type     = "int"
+          required = true
+        }
+        field {
+          name     = "event_date"
+          type     = "date"
+          required = true
+        }
+        field {
+          name = "category"
+          type = "string"
+        }
+      }
+
+      partition_spec {
+        field {
+          name      = "date_partition"
+          source_id = 2
+          transform = "month"
+          field_id  = 5000
+        }
+        field {
+          name      = "category_partition"
+          source_id = 3
+          transform = "identity"
+          field_id  = 5001
+        }
       }
     }
   }
