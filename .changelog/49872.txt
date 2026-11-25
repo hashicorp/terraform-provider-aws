@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_backup_tiering_configuration
+```
+
+```release-note:new-list-resource
+aws_backup_tiering_configuration
+```
