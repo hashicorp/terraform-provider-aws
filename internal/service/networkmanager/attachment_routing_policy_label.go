@@ -243,6 +243,58 @@ func findAttachmentByTwoPartKey(ctx context.Context, conn *networkmanager.Client
 	}))
 }
 
+func findAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.Attachment, error) {
+	// Network Manager has no type-agnostic GetAttachment, and ListAttachments has no attachment ID filter.
+	var input networkmanager.ListAttachmentsInput
+	output, err := findAttachments(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output, func(v awstypes.Attachment) bool {
+		return aws.ToString(v.AttachmentId) == id
+	}))
+}
+
+func statusAttachmentByID(conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findAttachmentByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+// waitAttachmentStable waits for an attachment of any type to settle in AVAILABLE.
+// A change made through another service, such as an EC2 flow log on the attachment,
+// moves it to UPDATING a few seconds after the call returns, so a single AVAILABLE reading isn't enough.
+func waitAttachmentStable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.Attachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:                    enum.Slice(awstypes.AttachmentStateAvailable),
+		Timeout:                   timeout,
+		PollInterval:              5 * time.Second,
+		ContinuousTargetOccurence: 3,
+		Refresh:                   statusAttachmentByID(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Attachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func statusAttachment(conn *networkmanager.Client, coreNetworkID, attachmentID string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findAttachmentByTwoPartKey(ctx, conn, coreNetworkID, attachmentID)
