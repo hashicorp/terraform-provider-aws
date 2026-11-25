@@ -1,11 +1,13 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package permissions
 
 import (
 	"slices"
 	"strings"
+
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
 // unresolvedReason explains why an SDK call could not be mapped to IAM
@@ -42,7 +44,7 @@ type OperationIndex struct {
 
 // NewOperationIndex indexes the operations of every service in refs by the
 // Boto3 client names that implement them.
-func NewOperationIndex(refs ServiceRefs) *OperationIndex {
+func NewOperationIndex(refs serviceref.ServiceRefs) *OperationIndex {
 	idx := &OperationIndex{
 		permissions: make(map[operationKey][]string),
 		clients:     make(map[string]struct{}),
@@ -94,7 +96,7 @@ func (idx *OperationIndex) Resolve(sdkCall string) ([]string, unresolvedReason) 
 	return nil, reasonServiceHasNoOperations
 }
 
-func iamActions(op Operation) []string {
+func iamActions(op serviceref.Operation) []string {
 	actions := make([]string, 0, len(op.AuthorizedActions))
 	for _, aa := range op.AuthorizedActions {
 		actions = append(actions, aa.IAMAction())

@@ -26,22 +26,22 @@ e.g. Insert IAM permissions for a service `sns`:
 
 ```bash
 go run tools/sdkmap/main.go
-go -C tools/injectr run . -insert-service sns
+go -C tools/injectr run main.go -insert-service sns
 ```
 
-`injectr` is its own Go module, made up of several files, so run it as a package. `go run tools/injectr/main.go` does not work.
+`injectr` is its own Go module, so run it from `tools/injectr`, e.g. with `go -C tools/injectr`. Running `go run tools/injectr/main.go` from the repository root does not work, because the root module cannot resolve `injectr`'s packages.
 
 To skip checking for updated service reference files, e.g. when re-running after a recent sync:
 
 ```bash
-go -C tools/injectr run . -skip-sync
+go -C tools/injectr run main.go -skip-sync
 ```
 
 To add IAM permissions to the docs of services, or specific docs, from the existing `permissions_map.json`, `service-data` and `service-urls-cache.json`:
 
 ```bash
-go -C tools/injectr run . -skip-sync -skip-generate -insert-service sqs,sns
-go -C tools/injectr run . -skip-sync -skip-generate -insert-file website/docs/r/sqs_queue.html.markdown,website/docs/d/sqs_queue.html.markdown
+go -C tools/injectr run main.go -skip-sync -skip-generate -insert-service sqs,sns
+go -C tools/injectr run main.go -skip-sync -skip-generate -insert-file website/docs/r/sqs_queue.html.markdown,website/docs/d/sqs_queue.html.markdown
 ```
 
 ## Options
@@ -69,3 +69,12 @@ Docs are only changed when at least one of `-insert-file`, `-insert-service`, or
 - `-insert-service NAMES` - Comma-separated service packages to add IAM permissions to, e.g. `s3,sqs`
 - `-insert-all` - Add IAM permissions to every resource and data source doc (default: `false`)
 - `-dry-run` - Report doc changes without writing them (default: `false`)
+
+## Packages
+
+- `main.go` - The CLI, which runs the steps below in order.
+- `serviceref` - Downloads the AWS Service Reference files and parses them.
+- `permissions` - Reads `sdkmap.json`, maps each SDK call to its IAM actions using the service reference data, and writes `permissions_map.json`.
+- `docs` - Adds the `## IAM Permissions` section to resource and data source docs, using `permissions_map.json`.
+
+Test fixtures are in each package's `testdata` directory. The `permissions` tests use the service reference fixtures in `serviceref/testdata`. The `docs` tests use `permissions/testdata/permissions_map.json`. To regenerate that file, run `go test ./permissions -run TestGeneratePermissionsMap -update` from `tools/injectr`.

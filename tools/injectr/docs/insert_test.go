@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package docs
 
 import (
 	"os"
@@ -9,6 +9,8 @@ import (
 	"slices"
 	"testing"
 )
+
+const testPermissionsMapFile = "../permissions/testdata/permissions_map.json"
 
 func TestSelectDocs(t *testing.T) {
 	t.Parallel()

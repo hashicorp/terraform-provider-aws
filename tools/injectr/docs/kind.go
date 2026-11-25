@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package docs
 
 import (
 	"path"
@@ -15,7 +15,7 @@ import (
 //
 //  1. Add it to PermissionsMap once sdkmap reports it.
 //  2. Define its docKind below.
-//  3. Add a function returning its docPermissions in docs_permissions.go.
+//  3. Add a function returning its docPermissions in permissions.go.
 //  4. Add its docs in allDocs.
 type docKind struct {
 	dir   string // directory under website/docs

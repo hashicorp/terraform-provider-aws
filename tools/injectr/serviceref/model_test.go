@@ -1,7 +1,7 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-package main
+package serviceref
 
 import (
 	"maps"
@@ -13,7 +13,7 @@ import (
 
 const (
 	testServiceDataDir = "testdata/service-data"
-	realServiceDataDir = "service-data"
+	realServiceDataDir = "../service-data"
 )
 
 func TestLoadServiceRefs(t *testing.T) {
@@ -101,13 +101,11 @@ func BenchmarkLoadServiceRefs(b *testing.B) {
 }
 
 // skipWithoutRealData skips tb unless the tool has been run, so that the real
-// service-data and sdkmap.json exist.
+// service-data exists.
 func skipWithoutRealData(tb testing.TB) {
 	tb.Helper()
 
-	for _, path := range []string{realServiceDataDir, realSDKMapFile} {
-		if _, err := os.Stat(path); err != nil {
-			tb.Skipf("%s not found; run the tool first", path)
-		}
+	if _, err := os.Stat(realServiceDataDir); err != nil {
+		tb.Skipf("%s not found; run the tool first", realServiceDataDir)
 	}
 }
