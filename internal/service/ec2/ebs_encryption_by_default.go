@@ -1,8 +1,6 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
-
 package ec2
 
 import (
@@ -71,7 +69,7 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
 
-	if err := resourceEBSEncryptionByDefaultFlatten(resp, d); err != nil {
+	if err := d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault); err != nil {
 		return sdkdiag.AppendErrorf(diags, "flattening EBS encryption by default: %s", err)
 	}
 
@@ -114,35 +112,4 @@ func setEBSEncryptionByDefault(ctx context.Context, conn *ec2.Client, enabled bo
 	}
 
 	return err
-}
-
-func resourceEBSEncryptionByDefaultFlatten(resp *ec2.GetEbsEncryptionByDefaultOutput, d *schema.ResourceData) error {
-	return d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
-}
-
-// resourceEBSEncryptionByDefaultV0 returns the previous schema (v0) for state upgrading.
-func resourceEBSEncryptionByDefaultV0() *schema.Resource {
-	return &schema.Resource{
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				names.AttrEnabled: {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  true,
-				},
-			}
-		},
-	}
-}
-
-// ebsEncryptionByDefaultStateUpgradeV0 upgrades the state from v0 (pre-identity) to v1 (identity).
-// It converts the legacy ID (generated UUID or "default") to the regional identity format.
-func ebsEncryptionByDefaultStateUpgradeV0(ctx context.Context, rawState map[string]any, meta any) (map[string]any, error) {
-	if rawState == nil {
-		rawState = map[string]any{}
-	}
-
-	rawState[names.AttrID] = meta.(*conns.AWSClient).Region(ctx)
-
-	return rawState, nil
 }
