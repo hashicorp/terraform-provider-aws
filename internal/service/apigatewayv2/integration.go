@@ -378,17 +378,27 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		o, n := d.GetChange("request_parameters")
 		add, del, nop := flex.DiffStringValueMaps(o.(map[string]any), n.(map[string]any))
 
-		// Parameters are removed by setting the associated value to "".
-		for k := range del {
-			del[k] = ""
+		variables := make(map[string]string)
+		// For integrations without a subtype (e.g. HTTP API parameter mappings), parameters are removed by setting the associated value to "".
+		// For AWS service integrations (integration_subtype is set), parameters are action parameters and setting "" causes a BadRequestException.
+		if _, ok := d.GetOk("integration_subtype"); !ok {
+			for k := range del {
+				del[k] = ""
+			}
+			variables = del
 		}
-		variables := del
+
 		maps.Copy(variables, add)
 		// Also specify any request parameters that are unchanged as for AWS service integrations some parameters are always required:
 		// https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-aws-services-reference.html
 		maps.Copy(variables, nop)
 
 		input.RequestParameters = variables
+	} else if _, ok := d.GetOk("integration_subtype"); ok {
+		// AWS service integrations require RequestParameters to always be specified on update:
+		if v, ok := d.GetOk("request_parameters"); ok {
+			input.RequestParameters = flex.ExpandStringValueMap(v.(map[string]any))
+		}
 	}
 
 	if d.HasChange("request_templates") {
