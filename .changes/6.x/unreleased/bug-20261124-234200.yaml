@@ -1,8 +1,8 @@
 kind: bug
 time: 2026-11-24T23:42:00.000000-00:00
 custom:
-    Body: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration
-    Impact: |-
-        resource/aws_s3_object
-        resource/aws_s3_object_copy
-    PullRequest: ""
+  Body: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration
+  Impact: |-
+    resource/aws_s3_object
+    resource/aws_s3_object_copy
+  PullRequest: "51355"

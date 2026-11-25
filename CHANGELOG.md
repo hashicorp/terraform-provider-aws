@@ -23,6 +23,8 @@ BUG FIXES:
 * resource/aws_cognito_user_pool_domain: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
 * resource/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
 * resource/aws_s3_bucket: Fall back to S3 list and update tagging APIs if the corresponding S3 Control APIs fail with `AccessDenied` (e.g. Ceph Object Gateway)
+* resource/aws_s3_object: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration ([#51355](https://github.com/hashicorp/terraform-provider-aws/issues/51355))
+* resource/aws_s3_object_copy: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration ([#51355](https://github.com/hashicorp/terraform-provider-aws/issues/51355))
 
 ## 6.74.0 (November 23, 2026)
 
