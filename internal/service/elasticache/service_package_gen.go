@@ -56,6 +56,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Service Updates",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newSnapshotDataSource,
+			TypeName: "aws_elasticache_snapshot",
+			Name:     "Snapshot",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
