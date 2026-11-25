@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-25T10:49:24.381324+01:00
+custom:
+    Body: Add `nat_gateway_create_mapping`, `proxy_settings`, `transparent_filtering_nat_scope`, and `delete_associated_nat_gateways` arguments and `firewall_status.sync_states.attachment.dns_name`, `firewall_status.sync_states.attachment.status`, `firewall_status.sync_states.attachment.status_message`, and `firewall_status.sync_states.nat_gateway_attachment` attributes to support proxy firewalls
+    Impact: resource/aws_networkfirewall_firewall
