@@ -38,6 +38,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "Authorize VPC Endpoint Access",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newDomainReplicationResource,
+			TypeName: "aws_opensearch_domain_replication",
+			Name:     "Domain Replication",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 

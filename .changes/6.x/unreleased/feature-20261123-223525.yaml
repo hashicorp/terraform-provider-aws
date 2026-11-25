@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-23T22:35:25.690016+00:00
+custom:
+    Name: aws_opensearch_domain_replication
+    NewType: New Resource
+    PullRequest: "50859"
