@@ -150,6 +150,23 @@ func waitGSIActive(ctx context.Context, conn *dynamodb.Client, tableName, indexN
 	return nil, err
 }
 
+func waitGSIExists(ctx context.Context, conn *dynamodb.Client, tableName, indexName string, timeout time.Duration) (*awstypes.GlobalSecondaryIndexDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.IndexStatusUpdating),
+		Target:  enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusActive),
+		Refresh: statusGSI(conn, tableName, indexName),
+		Timeout: max(updateTableTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.GlobalSecondaryIndexDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitAllGSIActive(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.IndexStatusCreating, awstypes.IndexStatusUpdating),
