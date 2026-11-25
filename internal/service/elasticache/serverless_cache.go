@@ -416,6 +416,9 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	name := new.ID.ValueString()
 	deadline := inttypes.NewDeadline(r.UpdateTimeout(ctx, new.Timeouts))
 
+	// Track whether any non-tag attribute was modified; tag-only updates run no per-field wait.
+	var modified bool
+
 	if !new.Description.Equal(old.Description) {
 		input := elasticache.ModifyServerlessCacheInput{
 			ServerlessCacheName: new.ServerlessCacheName.ValueStringPointer(),
@@ -425,6 +428,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
+		modified = true
 	}
 
 	if !new.DailySnapshotTime.Equal(old.DailySnapshotTime) {
@@ -436,6 +440,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
+		modified = true
 	}
 
 	if !new.SnapshotRetentionLimit.Equal(old.SnapshotRetentionLimit) {
@@ -447,6 +452,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
+		modified = true
 	}
 
 	if !new.CacheUsageLimits.Equal(old.CacheUsageLimits) {
@@ -477,6 +483,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
+		modified = true
 	}
 
 	if !new.SecurityGroupIDs.Equal(old.SecurityGroupIDs) {
@@ -491,6 +498,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
+		modified = true
 	}
 
 	if !new.UserGroupID.Equal(old.UserGroupID) {
@@ -506,6 +514,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		if response.Diagnostics.HasError() {
 			return
 		}
+		modified = true
 	}
 
 	// Engine and MajorEngineVersion must be sent together when engine changes.
@@ -530,6 +539,15 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		}
 		response.Diagnostics.Append(updateServerlessCache(ctx, conn, name, &input, deadline.Remaining())...)
 		if response.Diagnostics.HasError() {
+			return
+		}
+		modified = true
+	}
+
+	// Tag-only updates are applied by the tagging interceptor without waiting; wait for available so the computed status stays consistent with the plan.
+	if !modified {
+		if _, err := waitServerlessCacheAvailable(ctx, conn, name, deadline.Remaining()); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for ElastiCache Serverless Cache (%s) update", name), err.Error())
 			return
 		}
 	}
