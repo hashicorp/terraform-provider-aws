@@ -316,6 +316,160 @@ func TestAccIAMOpenIDConnectProvider_clientIDModification(t *testing.T) {
 	})
 }
 
+func TestAccIAMOpenIDConnectProvider_contextProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := acctest.RandString(t, 5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProvider(rString, "sub", "user"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "sub"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_type_value", "user"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": names.AttrEmail,
+						"target_key": "Email",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProvider(rString, "oid", "workload"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "oid"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_type_value", "workload"),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_basic(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_identityCenterInstance(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := acctest.RandString(t, 5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProvider(rString, "sub", "user"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_identityCenterInstance(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_center_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
+					resource.TestCheckResourceAttrSet(resourceName, "identity_store_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_identityCenterInstanceSubject(rString, "oid"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_center_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "oid"),
+				),
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_basic(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_contextProviderKeyDefinitions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := acctest.RandString(t, 5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsThree(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": names.AttrEmail,
+						"target_key": names.AttrEmail, // Defaults to the source key when omitted.
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "department",
+						"target_key": "Department",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "groups",
+						"target_key": "Groups",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsTwo(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "title",
+						"target_key": "Title",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).IAMClient(ctx)
@@ -476,6 +630,138 @@ resource "aws_iam_openid_connect_provider" "test" {
   ]
 
   thumbprint_list = ["oif8192f189fa2178f-testle.thumbprint.com"]
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_contextProvider(rName, subjectSourceKey, subjectTypeValue string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  context_provider {
+    subject_source_key = %[2]q
+    subject_type_value = %[3]q
+
+    key_definition {
+      source_key = "email"
+      target_key = "Email"
+    }
+  }
+}
+`, rName, subjectSourceKey, subjectTypeValue)
+}
+
+func testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsThree(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  context_provider {
+    subject_source_key = "sub"
+    subject_type_value = "user"
+
+    key_definition {
+      source_key = "email"
+    }
+
+    key_definition {
+      source_key = "department"
+      target_key = "Department"
+    }
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsTwo(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  context_provider {
+    subject_source_key = "sub"
+    subject_type_value = "user"
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+
+    key_definition {
+      source_key = "title"
+      target_key = "Title"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_identityCenterInstanceSubject(rName, subjectSourceKey string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  context_provider {
+    subject_source_key = %[2]q
+    subject_type_value = "user"
+  }
+}
+`, rName, subjectSourceKey)
+}
+
+func testAccOpenIDConnectProviderConfig_identityCenterInstance(rName string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  context_provider {
+    subject_source_key = "sub"
+    subject_type_value = "user"
+  }
 }
 `, rName)
 }

@@ -228,3 +228,39 @@ func TestValidPolicyPath(t *testing.T) {
 		})
 	}
 }
+
+func TestValidContextProviderKey(t *testing.T) {
+	t.Parallel()
+
+	validKeys := []string{
+		names.AttrEmail,
+		"custom:department",
+		"https://example.com/claims/groups",
+		"user name",
+		"a_b.c:d/e=f+g-h@i#j",
+	}
+
+	for _, s := range validKeys {
+		_, errors := validContextProviderKey(s, "source_key")
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid context provider key: %v", s, errors)
+		}
+	}
+
+	invalidKeys := []string{
+		"",
+		" email",
+		"email ",
+		"user  name",
+		"user!name",
+		"naïve",
+		"user\tname",
+	}
+
+	for _, s := range invalidKeys {
+		_, errors := validContextProviderKey(s, "source_key")
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid context provider key", s)
+		}
+	}
+}
