@@ -12,7 +12,7 @@ Terraform resource for managing an AWS Pricing Plan Manager Subscription. A subs
 
 ~> Destroying this resource cancels the subscription. For active paid subscriptions, AWS schedules the cancellation to take effect at the end of the current billing period, so the subscription remains visible (and billed) in AWS until that date. Subscriptions in `PENDING_APPROVAL` status (and free-tier subscriptions) are deleted immediately. If a scheduled change (such as a downgrade) is pending, it is reverted automatically before the cancellation is requested.
 
-~> While a distribution is covered by a subscription, CloudFront blocks removing or replacing its web ACL and blocks deleting the distribution — including after cancellation, until the cancellation takes effect at the end of the billing cycle.
+~> While a distribution is covered by a subscription, CloudFront blocks removing or replacing its web ACL and blocks deleting the distribution. Once the cancellation has been requested (for example, by destroying this resource), the distribution and web ACL can be deleted, even though an active paid subscription remains billed until the end of the current billing period.
 
 ~> Resources must meet the plan family's eligibility requirements or `CreateSubscription` fails with a `ValidationException`. For the `CloudFront` plan family, distributions using legacy cache settings (`forwarded_values`) are rejected as not eligible — use [cache policies](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/working-with-policies.html) instead.
 
@@ -59,7 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `approval_mode` - (Optional) Whether the subscription requires explicit approval before billing starts. Valid values: `MANUAL`, `IMMEDIATE`. If not set, AWS defaults to `MANUAL` for paid-tier subscriptions and `IMMEDIATE` for `FREE` tier subscriptions. With `MANUAL`, paid-tier subscriptions remain in `PENDING_APPROVAL` (unbilled, and unmodifiable) until approved with a separate `ApprovePaidSubscription` API call. This value is used only at creation time and is not returned by the AWS API. Changing this argument creates a new resource.
+* `approval_mode` - (Optional) Whether the subscription requires explicit approval before billing starts. Valid values: `MANUAL`, `IMMEDIATE`. If not set, AWS defaults to `MANUAL` for paid-tier subscriptions and `IMMEDIATE` for `FREE` tier subscriptions. With `MANUAL`, paid-tier subscriptions remain in `PENDING_APPROVAL` (unbilled, and unmodifiable) until approved with a separate `ApprovePaidSubscription` API call. This value is used only at creation time and is not returned by the AWS API. Changing this argument after it has been set creates a new resource; setting it on a subscription that was created or imported without it updates only the Terraform state.
 * `usage_level` - (Optional) Usage level within the plan tier. Specify `DEFAULT` for the base configuration, or a higher level if the plan tier supports it. If omitted on an update, the usage level is reset to the plan tier's default.
 
 ## Attribute Reference

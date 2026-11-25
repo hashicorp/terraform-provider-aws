@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T11:36:46.643413-05:00
+custom:
+  Body: Fix replacement planned on import when `approval_mode` is set in configuration
+  Impact: resource/aws_pricingplanmanager_subscription
+  PullRequest: "50498"
