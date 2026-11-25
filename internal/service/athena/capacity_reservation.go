@@ -75,7 +75,7 @@ func (r *capacityReservationResource) Schema(ctx context.Context, req resource.S
 			"target_dpus": schema.Int32Attribute{
 				Required: true,
 				Validators: []validator.Int32{
-					int32validator.AtLeast(24),
+					int32validator.AtLeast(4),
 				},
 			},
 		},
