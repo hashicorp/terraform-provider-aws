@@ -432,21 +432,7 @@ func TestAccIAMOpenIDConnectProvider_contextProviderKeyDefinitions(t *testing.T)
 		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitions(rString, `
-    key_definition {
-      source_key = "email"
-    }
-
-    key_definition {
-      source_key = "department"
-      target_key = "Department"
-    }
-
-    key_definition {
-      source_key = "groups"
-      target_key = "Groups"
-    }
-`),
+				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsThree(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "3"),
@@ -470,17 +456,7 @@ func TestAccIAMOpenIDConnectProvider_contextProviderKeyDefinitions(t *testing.T)
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitions(rString, `
-    key_definition {
-      source_key = "groups"
-      target_key = "Groups"
-    }
-
-    key_definition {
-      source_key = "title"
-      target_key = "Title"
-    }
-`),
+				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsTwo(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "2"),
@@ -682,7 +658,7 @@ resource "aws_iam_openid_connect_provider" "test" {
 `, rName, subjectSourceKey, subjectTypeValue)
 }
 
-func testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitions(rName, keyDefinitions string) string {
+func testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsThree(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
   url = "https://accounts.testle.com/%[1]s"
@@ -696,9 +672,52 @@ resource "aws_iam_openid_connect_provider" "test" {
   context_provider {
     subject_source_key = "sub"
     subject_type_value = "user"
-%[2]s  }
+
+    key_definition {
+      source_key = "email"
+    }
+
+    key_definition {
+      source_key = "department"
+      target_key = "Department"
+    }
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+  }
 }
-`, rName, keyDefinitions)
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitionsTwo(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  context_provider {
+    subject_source_key = "sub"
+    subject_type_value = "user"
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+
+    key_definition {
+      source_key = "title"
+      target_key = "Title"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccOpenIDConnectProviderConfig_identityCenterInstanceSubject(rName, subjectSourceKey string) string {
