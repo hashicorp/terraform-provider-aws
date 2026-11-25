@@ -4,6 +4,8 @@
 package route53
 
 import (
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -62,6 +64,43 @@ func checkFlattenResourceRecords(t *testing.T, recordType awstypes.RRType, expan
 		if result[i] != e {
 			t.Fatalf("expected %v, got %v", expected, result)
 		}
+	}
+}
+
+func TestTxtCharacterStringLengths(t *testing.T) {
+	t.Parallel()
+
+	long := strings.Repeat("a", 255)
+
+	cases := []struct {
+		Input    string
+		Expected []int
+	}{
+		{``, []int{0}},
+		{`abc`, []int{3}},
+		{`abc def`, []int{7}},
+		{`abc" "def`, []int{3, 3}},
+		{`abc""defg`, []int{3, 4}},
+		{`abc"  "de" "f`, []int{3, 2, 1}},
+		{`abc" "`, []int{3, 0}},
+		{`a\"b`, []int{3}},
+		{`a\\" "b`, []int{2, 1}},
+		{`a\065b`, []int{3}},
+		{`a\06`, []int{3}},
+		{long, []int{255}},
+		{long + `a`, []int{256}},
+		{long + `""` + long, []int{255, 255}},
+		{long + `" "` + long + `a`, []int{255, 256}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.Input, func(t *testing.T) {
+			t.Parallel()
+
+			if got := txtCharacterStringLengths(tc.Input); !slices.Equal(got, tc.Expected) {
+				t.Errorf("input: %s\nexpected: %v\ngot: %v", tc.Input, tc.Expected, got)
+			}
+		})
 	}
 }
 
