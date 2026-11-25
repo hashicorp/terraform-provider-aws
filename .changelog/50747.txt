@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Fix `ValidationError` on update when the instance was created with `deployment_targets` organizational unit IDs; `UpdateStackInstances` now sends `DeploymentTargets` instead of `Accounts`
+```
+
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Fix deletion of instances imported by account ID on `SERVICE_MANAGED` stack sets by sending `DeploymentTargets`
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Record the resource ID by account ID when `deployment_targets` selects exactly one account with `account_filter_type = "INTERSECTION"`
+```
+
+```release-note:enhancement
+resource/aws_cloudformation_stack_set_instance: Accept a `deployment_targets` block that selects the imported stack instance(s) without forcing replacement
+```
