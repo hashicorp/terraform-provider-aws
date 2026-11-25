@@ -1,0 +1,5 @@
+kind: bug
+time: 2026-11-26T01:50:47.742986+09:00
+custom:
+    Body: Skip unnecessary `ModifyDBInstance` calls when only `force_destroy` changes
+    Impact: resource/aws_rds_cluster_instance

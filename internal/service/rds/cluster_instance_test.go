@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns/apicall"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -318,6 +319,46 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 					names.AttrApplyImmediately,
 					names.AttrForceDestroy,
 				},
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterInstance_forceDestroy(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	var updateMark apicall.Cursor
+	factories, rec := acctest.ProtoV5ProviderFactoriesWithCallRecorder(ctx, t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: factories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_forceDestroy(rName, false),
+				Check:  resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
+			},
+			{
+				PreConfig: func() { updateMark = rec.Mark() },
+				Config:    testAccClusterInstanceConfig_forceDestroy(rName, true),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtTrue),
+					acctest.CheckAPICallMade(rec, &updateMark, names.RDSServiceID, "DescribeDBInstances"),
+					acctest.CheckAPICallNotMade(rec, &updateMark, names.RDSServiceID, "ModifyDBInstance"),
+				),
 			},
 		},
 	})
@@ -1435,6 +1476,18 @@ resource "aws_db_parameter_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccClusterInstanceConfig_forceDestroy(rName string, forceDestroy bool) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = %[1]q
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  force_destroy      = %[2]t
+}
+`, rName, forceDestroy))
 }
 
 func testAccClusterInstanceConfig_warningEventCategories(rName, categories string) string {

@@ -459,7 +459,11 @@ func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(
+		names.AttrTags,
+		names.AttrTagsAll,
+		names.AttrForceDestroy,
+	) {
 		input := &rds.ModifyDBInstanceInput{
 			ApplyImmediately:     aws.Bool(d.Get(names.AttrApplyImmediately).(bool)),
 			DBInstanceIdentifier: aws.String(d.Id()),
