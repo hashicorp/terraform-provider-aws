@@ -20,6 +20,7 @@ var (
 	ValidPrincipal = validPrincipal
 
 	IncludePrincipalIdentifierInList = includePrincipalIdentifierInList
+	ListPermissionsInput             = listPermissionsInput
 
 	FilterCatalogPermissions          = filterCatalogPermissions
 	FilterDataCellsFilter             = filterDataCellsFilter

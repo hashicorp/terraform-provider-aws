@@ -71,6 +71,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		"PermissionsTable": {
 			acctest.CtBasic:      testAccPermissions_tableBasic,
 			"iamAllowed":         testAccPermissions_tableIAMAllowed,
+			"iamAllowedWithRole": testAccPermissions_tableIAMAllowedWithRole,
 			"iamPrincipals":      testAccPermissions_tableIAMPrincipals,
 			"implicit":           testAccPermissions_tableImplicit,
 			"multipleRoles":      testAccPermissions_tableMultipleRoles,
