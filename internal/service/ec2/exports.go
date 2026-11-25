@@ -6,11 +6,13 @@ package ec2
 // Exports for use in other modules.
 var (
 	CustomFiltersBlock                                                      = customFiltersBlock
+	DeleteNATGateway                                                        = deleteNATGateway
 	DeleteNetworkInterface                                                  = deleteNetworkInterface
 	DetachNetworkInterface                                                  = detachNetworkInterface
 	FindImageByID                                                           = findImageByID
 	FindInstanceByID                                                        = findInstanceByID
 	FindIPAMPoolAllocationsByIPAMPoolIDAndResourceID                        = findIPAMPoolAllocationsByIPAMPoolIDAndResourceID
+	FindNATGatewayByID                                                      = findNATGatewayByID
 	FindNetworkInterfaces                                                   = findNetworkInterfaces
 	FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription          = findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription
 	FindSecurityGroupByDescriptionAndVPCID                                  = findSecurityGroupByDescriptionAndVPCID

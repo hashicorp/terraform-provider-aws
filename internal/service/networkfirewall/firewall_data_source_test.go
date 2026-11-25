@@ -195,6 +195,82 @@ func TestAccNetworkFirewallFirewallDataSource_transitGatewayAttachment(t *testin
 	})
 }
 
+func TestAccNetworkFirewallFirewallDataSource_proxy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	dataSourceName := "data.aws_networkfirewall_firewall.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallDataSourceConfig_proxy(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
+					resource.TestCheckResourceAttr(dataSourceName, "nat_gateway_create_mapping.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "subnet_mapping.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.0.certificate_arn", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.0.domain_name", ""),
+					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.0.listener.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "proxy_settings.0.listener.*", map[string]string{
+						names.AttrPort: "3128",
+						names.AttrType: "HTTP",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "proxy_settings.0.listener.*", map[string]string{
+						names.AttrPort: "8443",
+						names.AttrType: "HTTPS",
+					}),
+					resource.TestCheckResourceAttr(dataSourceName, "transparent_filtering_nat_scope", "NAT_ALL"),
+					resource.TestCheckResourceAttr(dataSourceName, "firewall_status.0.sync_states.#", "2"),
+					testAccCheckFirewallProxyAvailabilityZone(dataSourceName, 0, "10.0.10.10"),
+					testAccCheckFirewallProxyAvailabilityZone(dataSourceName, 1, "10.0.11.10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewallDataSource_proxyCustomDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	dataSourceName := "data.aws_networkfirewall_firewall.test"
+	domainName := acctest.RandomDomainName(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallDataSourceConfig_proxyCustomDomain(rName, domainName, certificate, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "proxy_settings.0.certificate_arn", "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(dataSourceName, "proxy_settings.0.listener.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "proxy_settings.0.listener.*", map[string]string{
+						names.AttrPort: "8443",
+						names.AttrType: "HTTPS",
+					}),
+					resource.TestCheckResourceAttr(dataSourceName, "transparent_filtering_nat_scope", "NAT_NONE"),
+					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "firewall_status.0.sync_states.*", map[string]string{
+						"attachment.0.dns_name": domainName,
+					}),
+					testAccCheckFirewallProxyAvailabilityZone(dataSourceName, 0, "10.0.10.10"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFirewallDataSourceConfig_baseVPC(rName string) string {
 	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_firewall" "test" {
@@ -285,4 +361,20 @@ data "aws_networkfirewall_firewall" "test" {
   firewall_type = "IGW_FIREWALL"
 }
 `, vpcID)
+}
+
+func testAccFirewallDataSourceConfig_proxy(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_proxy(rName, 2, 3128, 8443, 10), `
+data "aws_networkfirewall_firewall" "test" {
+  arn = aws_networkfirewall_firewall.test.arn
+}
+`)
+}
+
+func testAccFirewallDataSourceConfig_proxyCustomDomain(rName, domainName, certificate, key string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_proxyCustomDomain(rName, domainName, certificate, key, 0), `
+data "aws_networkfirewall_firewall" "test" {
+  arn = aws_networkfirewall_firewall.test.arn
+}
+`)
 }

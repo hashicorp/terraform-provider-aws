@@ -7,12 +7,17 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/go-cty/cty/msgpack"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -590,6 +595,327 @@ func TestAccNetworkFirewallFirewall_disappears(t *testing.T) {
 	})
 }
 
+func TestAccNetworkFirewallFirewall_proxy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	importStep := resource.TestStep{
+		ResourceName:      resourceName,
+		ImportState:       true,
+		ImportStateVerify: true,
+	}
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_proxy(rName, 1, 3128, 8443, 10),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				Check: testAccCheckFirewallProxy(ctx, t, resourceName, 1, 3128, 8443, 10),
+			},
+			importStep,
+			{
+				// The only AZ can't be removed and added again, so changing it
+				// replaces the firewall.
+				Config: testAccFirewallConfig_proxy(rName, 1, 3128, 8443, 11),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				Check: testAccCheckFirewallProxy(ctx, t, resourceName, 1, 3128, 8443, 11),
+			},
+			importStep,
+			{
+				// Add an AZ and change the listeners in place.
+				Config: testAccFirewallConfig_proxy(rName, 2, 0, 9443, 11),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: testAccCheckFirewallProxy(ctx, t, resourceName, 2, 0, 9443, 11),
+			},
+			importStep,
+			{
+				// Change the first AZ's NAT gateway in place, reusing its Elastic
+				// IP. The released NAT gateway must be deleted first to free it.
+				Config: testAccFirewallConfig_proxy(rName, 2, 0, 9443, 12),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: testAccCheckFirewallProxy(ctx, t, resourceName, 2, 0, 9443, 12),
+			},
+			importStep,
+			{
+				// Remove the second AZ in place. Its released NAT gateway is deleted.
+				Config: testAccFirewallConfig_proxy(rName, 1, 0, 9443, 12),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: testAccCheckFirewallProxy(ctx, t, resourceName, 1, 0, 9443, 12),
+			},
+			importStep,
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_proxyAvailabilityZoneValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Create the subnets first, so that the plan can check how the
+				// endpoint subnets and NAT gateway mappings pair up by AZ.
+				Config: testAccFirewallConfig_baseProxyAvailabilityZoneValidation(rName),
+			},
+			{
+				Config:      testAccFirewallConfig_proxyAvailabilityZoneValidation(rName, []string{"aws_subnet.endpoint[0]", "aws_subnet.endpoint[1]"}, []string{"aws_subnet.nat[0]"}),
+				ExpectError: regexache.MustCompile(`"subnet_mapping" in .+ has no "nat_gateway_create_mapping" in the same Availability Zone`),
+			},
+			{
+				Config:      testAccFirewallConfig_proxyAvailabilityZoneValidation(rName, []string{"aws_subnet.endpoint[0]"}, []string{"aws_subnet.nat[0]", "aws_subnet.nat[1]"}),
+				ExpectError: regexache.MustCompile(`"nat_gateway_create_mapping" in .+ has no "subnet_mapping" in the same Availability Zone`),
+			},
+			{
+				Config:      testAccFirewallConfig_proxyAvailabilityZoneValidation(rName, []string{"aws_subnet.endpoint[0]"}, []string{"aws_subnet.nat[0]", "aws_subnet.extra"}),
+				ExpectError: regexache.MustCompile(`can have only one "nat_gateway_create_mapping" per Availability Zone`),
+			},
+			{
+				Config:      testAccFirewallConfig_proxyAvailabilityZoneValidation(rName, []string{"aws_subnet.endpoint[0]", "aws_subnet.extra"}, []string{"aws_subnet.nat[0]"}),
+				ExpectError: regexache.MustCompile(`can have only one "subnet_mapping" per Availability Zone`),
+			},
+		},
+	})
+}
+
+// testAccCheckFirewallProxy checks every attribute of a proxy firewall created
+// by testAccFirewallConfig_proxy: the subnets and NAT gateway mapping of each
+// AZ, the listeners, and the per-AZ status. A port of 0 means no listener.
+func testAccCheckFirewallProxy(ctx context.Context, t *testing.T, resourceName string, azCount, httpPort, httpsPort, firstPrivateIPHost int) resource.TestCheckFunc {
+	listenerCount := 0
+	checks := []resource.TestCheckFunc{
+		testAccCheckFirewallExists(ctx, t, resourceName),
+		acctest.CheckResourceAttrRegionalARNFormat(ctx, resourceName, names.AttrARN, "network-firewall", "firewall/{name}"),
+		resource.TestCheckResourceAttr(resourceName, "delete_associated_nat_gateways", acctest.CtTrue),
+		resource.TestCheckResourceAttr(resourceName, "nat_gateway_create_mapping.#", strconv.Itoa(azCount)),
+		resource.TestCheckResourceAttr(resourceName, "proxy_settings.#", "1"),
+		resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.certificate_arn", ""),
+		resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.domain_name", ""),
+		resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", strconv.Itoa(azCount)),
+		resource.TestCheckResourceAttr(resourceName, "transparent_filtering_nat_scope", string(awstypes.TransparentFilteringNatScopeNatAll)),
+		resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
+		resource.TestCheckResourceAttr(resourceName, "firewall_status.#", "1"),
+		resource.TestCheckResourceAttr(resourceName, "firewall_status.0.sync_states.#", strconv.Itoa(azCount)),
+		resource.TestCheckResourceAttrSet(resourceName, "update_token"),
+	}
+	for typ, port := range map[awstypes.ListenerPropertyType]int{awstypes.ListenerPropertyTypeHttp: httpPort, awstypes.ListenerPropertyTypeHttps: httpsPort} {
+		if port == 0 {
+			continue
+		}
+		listenerCount++
+		checks = append(checks, resource.TestCheckTypeSetElemNestedAttrs(resourceName, "proxy_settings.0.listener.*", map[string]string{
+			names.AttrPort: strconv.Itoa(port),
+			names.AttrType: string(typ),
+		}))
+	}
+	checks = append(checks, resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.listener.#", strconv.Itoa(listenerCount)))
+
+	for i := range azCount {
+		host := 10
+		if i == 0 {
+			host = firstPrivateIPHost
+		}
+		checks = append(checks,
+			resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_mapping.*.subnet_id", fmt.Sprintf("aws_subnet.endpoint.%d", i), names.AttrID),
+			testAccCheckFirewallProxyAvailabilityZone(resourceName, i, fmt.Sprintf("10.0.%d.%d", 10+i, host)),
+		)
+	}
+
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
+// testAccCheckFirewallProxyAvailabilityZone checks the NAT gateway mapping and
+// the status of the AZ of aws_subnet.endpoint[index] and aws_subnet.nat[index].
+func testAccCheckFirewallProxyAvailabilityZone(resourceName string, index int, privateIP string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attrs := func(name string) (map[string]string, error) {
+			rs, ok := s.RootModule().Resources[name]
+			if !ok {
+				return nil, fmt.Errorf("not found: %s", name)
+			}
+			return rs.Primary.Attributes, nil
+		}
+
+		firewall, err := attrs(resourceName)
+		if err != nil {
+			return err
+		}
+		endpointSubnet, err := attrs(fmt.Sprintf("aws_subnet.endpoint.%d", index))
+		if err != nil {
+			return err
+		}
+		natSubnet, err := attrs(fmt.Sprintf("aws_subnet.nat.%d", index))
+		if err != nil {
+			return err
+		}
+		eip, err := attrs(fmt.Sprintf("aws_eip.test.%d", index))
+		if err != nil {
+			return err
+		}
+
+		mappingFound := false
+		for i := range atoi(firewall["nat_gateway_create_mapping.#"]) {
+			key := fmt.Sprintf("nat_gateway_create_mapping.%d.", i)
+			if firewall[key+names.AttrSubnetID] != natSubnet[names.AttrID] {
+				continue
+			}
+			mappingFound = true
+			if got, want := firewall[key+"allocation_ids.#"], "1"; got != want {
+				return fmt.Errorf("%s: %sallocation_ids.# = %q, want %q", resourceName, key, got, want)
+			}
+			if got, want := firewall[key+"allocation_ids.0"], eip["allocation_id"]; got != want {
+				return fmt.Errorf("%s: %sallocation_ids.0 = %q, want %q", resourceName, key, got, want)
+			}
+			if got, want := firewall[key+"private_ips.#"], "1"; got != want {
+				return fmt.Errorf("%s: %sprivate_ips.# = %q, want %q", resourceName, key, got, want)
+			}
+			if got, want := firewall[key+"private_ips.0"], privateIP; got != want {
+				return fmt.Errorf("%s: %sprivate_ips.0 = %q, want %q", resourceName, key, got, want)
+			}
+		}
+		if !mappingFound {
+			return fmt.Errorf("%s: no nat_gateway_create_mapping for subnet %s", resourceName, natSubnet[names.AttrID])
+		}
+
+		for i := range atoi(firewall["firewall_status.0.sync_states.#"]) {
+			key := fmt.Sprintf("firewall_status.0.sync_states.%d.", i)
+			if firewall[key+"attachment.0.subnet_id"] != endpointSubnet[names.AttrID] {
+				continue
+			}
+			want := map[string]string{
+				key + names.AttrAvailabilityZone:        endpointSubnet[names.AttrAvailabilityZone],
+				key + "attachment.0.status":             string(awstypes.AttachmentStatusReady),
+				key + "nat_gateway_attachment.#":        "1",
+				key + "nat_gateway_attachment.0.status": string(awstypes.NatGatewayAttachmentStatusReady),
+			}
+			for k, v := range want {
+				if firewall[k] != v {
+					return fmt.Errorf("%s: %s = %q, want %q", resourceName, k, firewall[k], v)
+				}
+			}
+			if firewall[key+"attachment.0.dns_name"] == "" {
+				return fmt.Errorf("%s: %sattachment.0.dns_name is empty", resourceName, key)
+			}
+			if !strings.HasPrefix(firewall[key+"attachment.0.endpoint_id"], "vpce-") {
+				return fmt.Errorf("%s: %sattachment.0.endpoint_id = %q, want a VPC endpoint ID", resourceName, key, firewall[key+"attachment.0.endpoint_id"])
+			}
+			if !strings.HasPrefix(firewall[key+"nat_gateway_attachment.0.nat_gateway_id"], "nat-") {
+				return fmt.Errorf("%s: %snat_gateway_attachment.0.nat_gateway_id = %q, want a NAT gateway ID", resourceName, key, firewall[key+"nat_gateway_attachment.0.nat_gateway_id"])
+			}
+			return nil
+		}
+
+		return fmt.Errorf("%s: no firewall_status.0.sync_states entry for subnet %s", resourceName, endpointSubnet[names.AttrID])
+	}
+}
+
+func atoi(s string) int {
+	n, _ := strconv.Atoi(s)
+	return n
+}
+
+func TestAccNetworkFirewallFirewall_proxyCustomDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_firewall.test"
+	domainName := acctest.RandomDomainName(t)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	// ACM lists an imported certificate's common name among its subject
+	// alternative names, which Network Firewall checks against domain_name.
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, domainName)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFirewallConfig_proxyCustomDomain(rName, domainName, certificate, key, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "proxy_settings.0.certificate_arn", "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.listener.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "transparent_filtering_nat_scope", string(awstypes.TransparentFilteringNatScopeNatNone)),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_status.0.sync_states.*", map[string]string{
+						"attachment.0.dns_name": domainName,
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				// Adding a listener must resend the unchanged certificate and domain name.
+				Config: testAccFirewallConfig_proxyCustomDomain(rName, domainName, certificate, key, 3128),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFirewallExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "proxy_settings.0.listener.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallFirewall_proxyValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFirewallDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccFirewallConfig_proxySettingsWithoutNATGateway(rName),
+				ExpectError: regexache.MustCompile(`"proxy_settings" requires "nat_gateway_create_mapping"`),
+			},
+			{
+				Config:      testAccFirewallConfig_proxy(rName, 1, 3128, 3128, 10),
+				ExpectError: regexache.MustCompile(`"listener" ports must be different`),
+			},
+		},
+	})
+}
+
 func testAccCheckFirewallDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
@@ -904,4 +1230,315 @@ resource "aws_networkfirewall_firewall" "test" {
   }
 }
 `, rName, changeProtection, availabilityZoneStartIndex, availabilityZoneEndIndex))
+}
+
+// testAccFirewallConfig_baseProxy creates, per Availability Zone, an endpoint
+// subnet, a NAT subnet and an Elastic IP. Two AZs are always created so that
+// tests can grow the firewall without destroying resources still in use.
+func testAccFirewallConfig_baseProxy(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "endpoint" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "nat" {
+  count = 2
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 10)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  count = 2
+
+  domain = "vpc"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_networkfirewall_firewall_policy" "test" {
+  name = %[1]q
+
+  firewall_policy {
+    stateless_fragment_default_actions = ["aws:drop"]
+    stateless_default_actions          = ["aws:forward_to_sfe"]
+  }
+}
+`, rName))
+}
+
+// testAccFirewallConfig_proxy creates a proxy firewall in azCount Availability
+// Zones. A port of 0 omits that listener. firstPrivateIPHost sets the first
+// AZ's NAT gateway private IP, to change that AZ in place.
+func testAccFirewallConfig_proxy(rName string, azCount, httpPort, httpsPort, firstPrivateIPHost int) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseProxy(rName), fmt.Sprintf(`
+locals {
+  http_port  = %[3]d
+  https_port = %[4]d
+  listeners  = [for l in [{ type = "HTTP", port = local.http_port }, { type = "HTTPS", port = local.https_port }] : l if l.port != 0]
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  dynamic "subnet_mapping" {
+    for_each = slice(aws_subnet.endpoint, 0, %[2]d)
+    content {
+      subnet_id = subnet_mapping.value.id
+    }
+  }
+
+  dynamic "nat_gateway_create_mapping" {
+    for_each = slice(aws_subnet.nat, 0, %[2]d)
+    content {
+      subnet_id      = nat_gateway_create_mapping.value.id
+      allocation_ids = [aws_eip.test[nat_gateway_create_mapping.key].allocation_id]
+      private_ips    = [cidrhost(nat_gateway_create_mapping.value.cidr_block, nat_gateway_create_mapping.key == 0 ? %[5]d : 10)]
+    }
+  }
+
+  proxy_settings {
+    dynamic "listener" {
+      for_each = local.listeners
+      content {
+        port = listener.value.port
+        type = listener.value.type
+      }
+    }
+  }
+}
+`, rName, azCount, httpPort, httpsPort, firstPrivateIPHost))
+}
+
+// testAccFirewallConfig_baseProxyAvailabilityZoneValidation adds a third subnet,
+// in the first AZ, to testAccFirewallConfig_baseProxy.
+func testAccFirewallConfig_baseProxyAvailabilityZoneValidation(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseProxy(rName), fmt.Sprintf(`
+resource "aws_subnet" "extra" {
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 20)
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
+}
+
+// testAccFirewallConfig_proxyAvailabilityZoneValidation creates a proxy firewall
+// with the given endpoint subnets and NAT gateway subnets, by resource address.
+func testAccFirewallConfig_proxyAvailabilityZoneValidation(rName string, endpointSubnets, natSubnets []string) string {
+	var blocks strings.Builder
+	for _, subnet := range endpointSubnets {
+		fmt.Fprintf(&blocks, `
+  subnet_mapping {
+    subnet_id = %[1]s.id
+  }
+`, subnet)
+	}
+	for i, subnet := range natSubnets {
+		fmt.Fprintf(&blocks, `
+  nat_gateway_create_mapping {
+    subnet_id      = %[1]s.id
+    allocation_ids = [aws_eip.test[%[2]d].allocation_id]
+    private_ips    = [cidrhost(%[1]s.cidr_block, 10)]
+  }
+`, subnet, i)
+	}
+
+	return acctest.ConfigCompose(testAccFirewallConfig_baseProxyAvailabilityZoneValidation(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+%[2]s
+  proxy_settings {
+    listener {
+      port = 3128
+      type = "HTTP"
+    }
+  }
+}
+`, rName, blocks.String()))
+}
+
+func testAccFirewallConfig_proxySettingsWithoutNATGateway(rName string) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseVPC(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_firewall" "test" {
+  name                = %[1]q
+  firewall_policy_arn = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id              = aws_vpc.test.id
+
+  subnet_mapping {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  proxy_settings {
+    listener {
+      port = 3128
+      type = "HTTP"
+    }
+  }
+}
+`, rName))
+}
+
+// testAccFirewallConfig_proxyCustomDomain creates a single-AZ proxy firewall
+// with a custom domain and an HTTPS listener. An httpPort of 0 omits the HTTP listener.
+func testAccFirewallConfig_proxyCustomDomain(rName, domainName, certificate, key string, httpPort int) string {
+	return acctest.ConfigCompose(testAccFirewallConfig_baseProxy(rName), fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[3]s"
+  private_key      = "%[4]s"
+}
+
+locals {
+  http_port = %[5]d
+}
+
+resource "aws_networkfirewall_firewall" "test" {
+  name                            = %[1]q
+  firewall_policy_arn             = aws_networkfirewall_firewall_policy.test.arn
+  vpc_id                          = aws_vpc.test.id
+  transparent_filtering_nat_scope = "NAT_NONE"
+
+  subnet_mapping {
+    subnet_id = aws_subnet.endpoint[0].id
+  }
+
+  nat_gateway_create_mapping {
+    subnet_id      = aws_subnet.nat[0].id
+    allocation_ids = [aws_eip.test[0].allocation_id]
+    private_ips    = [cidrhost(aws_subnet.nat[0].cidr_block, 10)]
+  }
+
+  proxy_settings {
+    certificate_arn = aws_acm_certificate.test.arn
+    domain_name     = %[2]q
+
+    listener {
+      port = 8443
+      type = "HTTPS"
+    }
+
+    dynamic "listener" {
+      for_each = local.http_port == 0 ? [] : [local.http_port]
+      content {
+        port = listener.value
+        type = "HTTP"
+      }
+    }
+  }
+}
+`, rName, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key), httpPort))
+}
+
+// TestFirewallPlanNATGatewayCreateMappingUnknown checks that planning a new
+// proxy firewall whose NAT mapping has values unknown at plan time doesn't add
+// an empty element to the set, which would end up in state after create.
+func TestFirewallPlanNATGatewayCreateMappingUnknown(t *testing.T) {
+	t.Parallel()
+
+	ctx := acctest.Context(t)
+	r := tfnetworkfirewall.ResourceFirewall()
+	server := schema.NewGRPCProviderServer(&schema.Provider{
+		ResourcesMap: map[string]*schema.Resource{"aws_networkfirewall_firewall": r},
+	})
+	ty := r.CoreConfigSchema().ImpliedType()
+
+	object := func(ty cty.Type, attrs map[string]cty.Value) cty.Value {
+		vals := make(map[string]cty.Value)
+		for name, at := range ty.AttributeTypes() {
+			if v, ok := attrs[name]; ok {
+				vals[name] = v
+			} else {
+				vals[name] = cty.NullVal(at)
+			}
+		}
+		return cty.ObjectVal(vals)
+	}
+	config := object(ty, map[string]cty.Value{
+		names.AttrName:        cty.StringVal("test"),
+		"firewall_policy_arn": cty.StringVal("arn:aws:network-firewall:us-west-2:123456789012:firewall-policy/test"),
+		names.AttrVPCID:       cty.StringVal("vpc-12345678"),
+		"subnet_mapping": cty.SetVal([]cty.Value{object(ty.AttributeType("subnet_mapping").ElementType(), map[string]cty.Value{
+			names.AttrSubnetID: cty.StringVal("subnet-12345678"),
+		})}),
+		"nat_gateway_create_mapping": cty.SetVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+			names.AttrSubnetID: cty.UnknownVal(cty.String),
+			"allocation_ids":   cty.ListVal([]cty.Value{cty.UnknownVal(cty.String)}),
+			"private_ips":      cty.ListVal([]cty.Value{cty.StringVal("10.0.10.10")}),
+		})}),
+		"proxy_settings": cty.ListVal([]cty.Value{object(ty.AttributeType("proxy_settings").ElementType(), map[string]cty.Value{
+			"listener": cty.SetVal([]cty.Value{cty.ObjectVal(map[string]cty.Value{
+				names.AttrPort: cty.NumberIntVal(3128),
+				names.AttrType: cty.StringVal("HTTP"),
+			})}),
+		})}),
+	})
+
+	encode := func(v cty.Value) *tfprotov5.DynamicValue {
+		b, err := msgpack.Marshal(v, ty)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return &tfprotov5.DynamicValue{MsgPack: b}
+	}
+
+	resp, err := server.PlanResourceChange(ctx, &tfprotov5.PlanResourceChangeRequest{
+		TypeName:         "aws_networkfirewall_firewall",
+		PriorState:       encode(cty.NullVal(ty)),
+		ProposedNewState: encode(config),
+		Config:           encode(config),
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, d := range resp.Diagnostics {
+		t.Errorf("plan diagnostic: %s: %s", d.Summary, d.Detail)
+	}
+
+	planned, err := msgpack.Unmarshal(resp.PlannedState.MsgPack, ty)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := planned.GetAttr("nat_gateway_create_mapping").LengthInt(); got != 1 {
+		t.Errorf("planned nat_gateway_create_mapping has %d elements, want 1", got)
+	}
 }

@@ -83,11 +83,16 @@ This data source exports the following attributes in addition to the arguments a
     * `status` - Current status of the firewall.
     * `sync_states` - Set of subnets configured for use by the firewall.
         * `attachment` - Nested list describing the attachment status of the firewall's association with a single VPC subnet.
+            * `dns_name` - For a proxy firewall, proxy DNS name that clients use.
             * `endpoint_id` - Identifier of the firewall endpoint that AWS Network Firewall has instantiated in the subnet. You use this to identify the firewall endpoint in the VPC route tables, when you redirect the VPC traffic through the endpoint.
             * `status` - Current status of the firewall endpoint instantiation in the subnet.
             * `status_message` - Reason for the error or failure and how to resolve it. A FAILED status indicates a non-recoverable state, and an ERROR status indicates an issue that you can fix.
             * `subnet_id` - Unique identifier of the subnet that you've specified to be used for a firewall endpoint.
         * `availability_zone` - Availability Zone where the subnet is configured.
+        * `nat_gateway_attachment` - For a proxy firewall, list of NAT gateways attached in the Availability Zone.
+            * `nat_gateway_id` - ID of the NAT gateway.
+            * `status` - Status of the NAT gateway attachment.
+            * `status_message` - Details about the status, such as the reason for a failure.
     * `transit_gateway_attachment_sync_states` - Set of transit gateway configured for use by the firewall.
         * `attachment_id` - Unique identifier of the transit gateway attachment.
         * `status_message` - Message providing additional information about the current status.
@@ -95,11 +100,22 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN that identifies the firewall.
 * `igw_firewall_configuration` - Internet gateway firewall settings. Only set for internet gateway firewalls.
     * `enforcement_mode` - How the internet gateway firewall enforces its rules. `POLICY_CONTROLLED` means the firewall policy that AWS Network Security Manager associates with the firewall sets the enforcement mode.
+* `nat_gateway_create_mapping` - For a proxy firewall, set of the NAT gateways that Network Firewall created, one per Availability Zone, read from the NAT gateways themselves (requires `ec2:DescribeNatGateways`).
+    * `allocation_ids` - List of Elastic IP allocation IDs of a public NAT gateway.
+    * `private_ips` - List of private IPv4 addresses of the NAT gateway, primary address first. For a public NAT gateway, each one belongs to the Elastic IP at the same position in `allocation_ids`.
+    * `subnet_id` - ID of the subnet of the NAT gateway.
+* `proxy_settings` - For a proxy firewall, listener configuration of its proxy.
+    * `certificate_arn` - ARN of the ACM certificate that the HTTPS listener serves for `domain_name`.
+    * `domain_name` - Custom hostname of the proxy.
+    * `listener` - Set of listeners.
+        * `port` - Port that the listener accepts proxy requests on.
+        * `type` - Protocol of the listener.
 * `subnet_change_protection` - Whether the firewall is protected against changes to the subnet associations.
 * `subnet_mapping` - Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet.
     * `subnet_id` - Unique identifier for the subnet.
 * `tags` - Map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_id` - Unique identifier of the transit gateway associated with this firewall.
 * `transit_gateway_owner_account_id` - AWS account ID that owns the transit gateway.
+* `transparent_filtering_nat_scope` - For a proxy firewall, how traffic that reaches the firewall but isn't sent to the proxy listener leaves it: `NAT_ALL` or `NAT_NONE`.
 * `update_token` - String token used when updating a firewall.
 * `vpc_id` - Unique identifier of the VPC where AWS Network Firewall should create the firewall.

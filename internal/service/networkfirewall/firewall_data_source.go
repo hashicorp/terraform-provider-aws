@@ -149,6 +149,10 @@ func dataSourceFirewall() *schema.Resource {
 											Computed: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
+													names.AttrDNSName: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
 													"endpoint_id": {
 														Type:     schema.TypeString,
 														Computed: true,
@@ -171,6 +175,26 @@ func dataSourceFirewall() *schema.Resource {
 										names.AttrAvailabilityZone: {
 											Type:     schema.TypeString,
 											Computed: true,
+										},
+										"nat_gateway_attachment": {
+											Type:     schema.TypeList,
+											Computed: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"nat_gateway_id": {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrStatus: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+													names.AttrStatusMessage: {
+														Type:     schema.TypeString,
+														Computed: true,
+													},
+												},
+											},
 										},
 									},
 								},
@@ -223,6 +247,64 @@ func dataSourceFirewall() *schema.Resource {
 					AtLeastOneOf: []string{names.AttrARN, names.AttrName},
 					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z-]{1,128}$`, "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 				},
+				"nat_gateway_create_mapping": {
+					Type:     schema.TypeSet,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allocation_ids": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"private_ips": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							names.AttrSubnetID: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
+				"proxy_settings": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrCertificateARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrDomainName: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"listener": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrPort: {
+											Type:     schema.TypeInt,
+											Computed: true,
+										},
+										names.AttrType: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
 				"subnet_change_protection": {
 					Type:     schema.TypeBool,
 					Computed: true,
@@ -245,6 +327,10 @@ func dataSourceFirewall() *schema.Resource {
 					Computed: true,
 				},
 				"transit_gateway_owner_account_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"transparent_filtering_nat_scope": {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
@@ -309,12 +395,28 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "setting igw_firewall_configuration: %s", err)
 	}
 	d.Set(names.AttrName, firewall.FirewallName)
+	// DescribeFirewall doesn't return NatGatewayCreateMappings; rebuild them
+	// from the NAT gateways the firewall created.
+	natGatewayCreateMappings := firewall.NatGatewayCreateMappings
+	if len(natGatewayCreateMappings) == 0 {
+		natGatewayCreateMappings, err = findFirewallNATGatewayCreateMappings(ctx, meta.(*conns.AWSClient), output.FirewallStatus, nil)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s) NAT gateways: %s", d.Id(), err)
+		}
+	}
+	if err := d.Set("nat_gateway_create_mapping", flattenNatGatewayCreateMappings(natGatewayCreateMappings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting nat_gateway_create_mapping: %s", err)
+	}
+	if err := d.Set("proxy_settings", flattenProxySettings(firewall.ProxySettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting proxy_settings: %s", err)
+	}
 	d.Set("subnet_change_protection", firewall.SubnetChangeProtection)
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_mappings: %s", err)
 	}
 	d.Set(names.AttrTransitGatewayID, firewall.TransitGatewayId)
 	d.Set("transit_gateway_owner_account_id", firewall.TransitGatewayOwnerAccountId)
+	d.Set("transparent_filtering_nat_scope", firewall.TransparentFilteringNatScope)
 	d.Set("update_token", output.UpdateToken)
 	d.Set(names.AttrVPCID, firewall.VpcId)
 
@@ -411,6 +513,7 @@ func flattenDataSourceSyncStates(apiObject map[string]awstypes.SyncState) []any 
 		tfMap := map[string]any{
 			"attachment":               flattenDataSourceAttachment(v.Attachment),
 			names.AttrAvailabilityZone: k,
+			"nat_gateway_attachment":   flattenNatGatewayAttachments(v.NatGatewayAttachments),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -425,6 +528,7 @@ func flattenDataSourceAttachment(apiObject *awstypes.Attachment) []any {
 	}
 
 	tfMap := map[string]any{
+		names.AttrDNSName:       aws.ToString(apiObject.DnsName),
 		"endpoint_id":           aws.ToString(apiObject.EndpointId),
 		names.AttrStatus:        apiObject.Status,
 		names.AttrStatusMessage: aws.ToString(apiObject.StatusMessage),
