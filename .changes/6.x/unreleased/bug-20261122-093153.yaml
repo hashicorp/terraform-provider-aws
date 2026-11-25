@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-22T09:31:53.105354+05:30
+custom:
+    Body: Fix embedded_destination_settings being silently dropped from state when configured and triggering a perpetual diff
+    Impact: resource/aws_medialive_channel
+    PullRequest: "51110"
