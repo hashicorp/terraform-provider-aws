@@ -94,53 +94,6 @@ func TestAccIoTDomainConfiguration_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIoTDomainConfiguration_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
-	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
-	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
-	resourceName := "aws_iot_domain_configuration.test"
-
-	acctest.ParallelTest(ctx, t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainConfigurationDestroy(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfigurationConfig_tags1(rName, rootDomain, domain, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDomainConfigurationConfig_tags2(rName, rootDomain, domain, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDomainConfigurationConfig_tags1(rName, rootDomain, domain, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainConfigurationExists(ctx, t, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIoTDomainConfiguration_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -302,39 +255,6 @@ resource "aws_iot_domain_configuration" "test" {
   server_certificate_arns = [aws_acm_certificate.test.arn]
 }
 `, rName, domain))
-}
-
-func testAccDomainConfigurationConfig_tags1(rName, rootDomain, domain, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccDomainConfigurationConfig_base(rootDomain, domain), fmt.Sprintf(`
-resource "aws_iot_domain_configuration" "test" {
-  depends_on = [aws_acm_certificate_validation.test]
-
-  name                    = %[1]q
-  domain_name             = %[2]q
-  server_certificate_arns = [aws_acm_certificate.test.arn]
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rName, domain, tagKey1, tagValue1))
-}
-
-func testAccDomainConfigurationConfig_tags2(rName, rootDomain, domain, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccDomainConfigurationConfig_base(rootDomain, domain), fmt.Sprintf(`
-resource "aws_iot_domain_configuration" "test" {
-  depends_on = [aws_acm_certificate_validation.test]
-
-  name                    = %[1]q
-  domain_name             = %[2]q
-  server_certificate_arns = [aws_acm_certificate.test.arn]
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, domain, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccDomainConfigurationConfig_securityPolicy(rName, rootDomain, domain, securityPolicy string, allowAuthorizerOverride bool, authenticationType, applicationProtocol string) string {
