@@ -101,3 +101,16 @@ func validTopicRuleName(v any, s string) ([]string, []error) {
 
 	return nil, nil
 }
+
+// validTopicRuleCloudWatchMetricTimestamp accepts an IoT substitution template expression
+// (e.g. "${timestamp()}") as a metric_timestamp value. Used alongside verify.ValidUTCTimestamp
+// via validation.Any so that both static UTC timestamps and dynamic expressions are accepted.
+// https://docs.aws.amazon.com/iot/latest/developerguide/iot-substitution-templates.html
+func validTopicRuleCloudWatchMetricTimestamp(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^\$\{.+\}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be an IoT substitution template (e.g. ${timestamp()}), got: %q", k, value))
+	}
+	return
+}
