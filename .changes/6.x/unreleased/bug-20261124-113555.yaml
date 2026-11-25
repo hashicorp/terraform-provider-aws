@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T11:35:55.147586-05:00
+custom:
+  Body: Fix the Shield Advanced automatic application layer DDoS mitigation rule being removed when a web ACL that uses `rule_json` is updated
+  Impact: resource/aws_wafv2_web_acl
+  PullRequest: "50496"
