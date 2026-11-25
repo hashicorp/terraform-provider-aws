@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_volume_attachment: Fix immediate failure with `unexpected state 'attached'` when waiting for detachment during delete
+```
