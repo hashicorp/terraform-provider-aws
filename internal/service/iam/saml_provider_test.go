@@ -260,21 +260,7 @@ func TestAccIAMSAMLProvider_contextProviderKeyDefinitions(t *testing.T) {
 		CheckDestroy:             testAccCheckSAMLProviderDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSAMLProviderConfig_contextProviderKeyDefinitions(rName, idpEntityId, `
-    key_definition {
-      source_key = "email"
-    }
-
-    key_definition {
-      source_key = "department"
-      target_key = "Department"
-    }
-
-    key_definition {
-      source_key = "groups"
-      target_key = "Groups"
-    }
-`),
+				Config: testAccSAMLProviderConfig_contextProviderKeyDefinitionsThree(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "3"),
@@ -298,17 +284,7 @@ func TestAccIAMSAMLProvider_contextProviderKeyDefinitions(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSAMLProviderConfig_contextProviderKeyDefinitions(rName, idpEntityId, `
-    key_definition {
-      source_key = "groups"
-      target_key = "Groups"
-    }
-
-    key_definition {
-      source_key = "title"
-      target_key = "Title"
-    }
-`),
+				Config: testAccSAMLProviderConfig_contextProviderKeyDefinitionsTwo(rName, idpEntityId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSAMLProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "2"),
@@ -427,7 +403,7 @@ resource "aws_iam_saml_provider" "test" {
 `, rName, idpEntityId, subjectSourceKey, subjectTypeValue)
 }
 
-func testAccSAMLProviderConfig_contextProviderKeyDefinitions(rName, idpEntityId, keyDefinitions string) string {
+func testAccSAMLProviderConfig_contextProviderKeyDefinitionsThree(rName, idpEntityId string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_saml_provider" "test" {
   name                   = %[1]q
@@ -436,9 +412,47 @@ resource "aws_iam_saml_provider" "test" {
   context_provider {
     subject_source_key = "subject"
     subject_type_value = "user"
-%[3]s  }
+
+    key_definition {
+      source_key = "email"
+    }
+
+    key_definition {
+      source_key = "department"
+      target_key = "Department"
+    }
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+  }
 }
-`, rName, idpEntityId, keyDefinitions)
+`, rName, idpEntityId)
+}
+
+func testAccSAMLProviderConfig_contextProviderKeyDefinitionsTwo(rName, idpEntityId string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_saml_provider" "test" {
+  name                   = %[1]q
+  saml_metadata_document = templatefile("./test-fixtures/saml-metadata.xml.tpl", { entity_id = %[2]q })
+
+  context_provider {
+    subject_source_key = "subject"
+    subject_type_value = "user"
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+
+    key_definition {
+      source_key = "title"
+      target_key = "Title"
+    }
+  }
+}
+`, rName, idpEntityId)
 }
 
 func testAccSAMLProviderConfig_identityCenterInstanceSubject(rName, idpEntityId, subjectSourceKey string) string {
