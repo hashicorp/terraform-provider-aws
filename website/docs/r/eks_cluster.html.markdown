@@ -94,6 +94,12 @@ resource "aws_eks_cluster" "example" {
   kubernetes_network_config {
     elastic_load_balancing {
       enabled = true
+
+      gateway_api {
+        crds {
+          managed = true
+        }
+      }
     }
   }
 
@@ -511,6 +517,19 @@ The `kubernetes_network_config` configuration block supports the following argum
 The `elastic_load_balancing` configuration block supports the following arguments:
 
 * `enabled` - (Optional) Indicates if the load balancing capability is enabled on your EKS Auto Mode cluster. If the load balancing capability is enabled, EKS Auto Mode will create and delete load balancers in your Amazon Web Services account.
+* `gateway_api` - (Optional) Configuration block for Kubernetes Gateway API support. Detailed below.
+
+#### gateway_api
+
+The `gateway_api` configuration block supports the following arguments:
+
+* `crds` - (Required) Configuration block for Gateway API custom resource definition (CRD) management. Detailed below.
+
+#### crds
+
+The `crds` configuration block supports the following arguments:
+
+* `managed` - (Required) Whether Amazon EKS manages the Gateway API CRDs. Set to `false` to manage the CRDs yourself.
 
 ### outpost_config
 

@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T12:48:04.08964+01:00
+custom:
+    Body: Add `gateway_api` configuration block
+    Impact: resource/aws_eks_cluster
+    PullRequest: "50737"
