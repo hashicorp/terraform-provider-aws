@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridgev2"
@@ -25,12 +24,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -42,7 +43,7 @@ import (
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridgev2;eventbridgev2.DescribeEventBusOutput")
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccEventBusPreCheck")
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(importIgnore="storage_configuration")
 func newEventBusResource(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -95,7 +96,7 @@ func (r *eventBusResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 256),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z][0-9A-Za-z._-]*$`), "must start with an alphanumeric character and contain only alphanumeric characters, periods, hyphens, and underscores"),
+					lazystringvalidator.RegexMatches(`^[0-9A-Za-z][0-9A-Za-z._-]*$`, "must start with an alphanumeric character and contain only alphanumeric characters, periods, hyphens, and underscores"),
 				},
 			},
 			names.AttrState: schema.StringAttribute{
@@ -139,6 +140,8 @@ func (r *eventBusResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	// Additional fields.
+	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateEventBus(ctx, &input)
@@ -159,6 +162,7 @@ func (r *eventBusResource) Create(ctx context.Context, req resource.CreateReques
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, r.flatten(ctx, output, &plan))
 	if resp.Diagnostics.HasError() {
+		smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.SetAttribute(ctx, path.Root(names.AttrARN), arn))
 		return
 	}
 
@@ -413,8 +417,11 @@ func findEventBusByARN(ctx context.Context, conn *eventbridgev2.Client, arn stri
 	input := eventbridgev2.DescribeEventBusInput{
 		EventBusArn: aws.String(arn),
 	}
+	return findEventBus(ctx, conn, &input)
+}
 
-	out, err := conn.DescribeEventBus(ctx, &input)
+func findEventBus(ctx context.Context, conn *eventbridgev2.Client, input *eventbridgev2.DescribeEventBusInput) (*eventbridgev2.DescribeEventBusOutput, error) {
+	out, err := conn.DescribeEventBus(ctx, input)
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, smarterr.NewError(&retry.NotFoundError{
 			LastError: err,

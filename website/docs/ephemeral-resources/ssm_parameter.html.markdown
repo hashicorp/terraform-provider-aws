@@ -40,4 +40,3 @@ This ephemeral resource exports the following attributes in addition to the argu
 * `type` - Type of parameter.
 * `value` - Parameter value.
 * `version` - Parameter version.
-* `with_decryption` - Whether the secure string parameters were decrypted.

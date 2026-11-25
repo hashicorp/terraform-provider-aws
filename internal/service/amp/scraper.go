@@ -413,6 +413,11 @@ func (r *scraperResource) Update(ctx context.Context, request resource.UpdateReq
 		}
 		input.ScraperId = aws.String(scraperID)
 
+		// CloudWatch scrapers reject Destination on update, even if unchanged.
+		if new.Destination.Equal(old.Destination) {
+			input.Destination = nil
+		}
+
 		_, err := conn.UpdateScraper(ctx, &input)
 
 		if err != nil {

@@ -17,7 +17,7 @@ CloudHSM API Reference](https://docs.aws.amazon.com/cloudhsm/latest/APIReference
 ~> **NOTE:** A CloudHSM Cluster can take several minutes to set up.
 Practically no single attribute can be updated, except for `tags`.
 If you need to delete a cluster, you have to remove its HSM modules first.
-To initialize cluster, you have to add an HSM instance to the cluster, then sign CSR and upload it.
+To initialize cluster, you have to add an HSM instance to the cluster, then sign CSR and upload it. See the [`aws_cloudhsm_v2_hsm` resource](/docs/providers/aws/r/cloudhsm_v2_hsm.html#cluster-certificate-signing-request) for an example of retrieving the CSR.
 
 ## Example Usage
 
@@ -75,9 +75,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `cluster_id` - The id of the CloudHSM cluster.
+* `cluster_id` - The ID of the CloudHSM cluster.
 * `cluster_state` - The state of the CloudHSM cluster.
-* `vpc_id` - The id of the VPC that the CloudHSM cluster resides in.
+* `vpc_id` - The ID of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - The ID of the security group associated with the CloudHSM cluster.
 * `cluster_certificates` - The list of cluster certificates.
     * `cluster_certificates.0.cluster_certificate` - The cluster certificate issued (signed) by the issuing certificate authority (CA) of the cluster's owner.

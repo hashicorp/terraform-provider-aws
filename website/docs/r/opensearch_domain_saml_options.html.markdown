@@ -55,20 +55,20 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `saml_options` - (Optional) SAML authentication options for an AWS OpenSearch Domain.
 
-### saml_options
+### `saml_options` Block
 
-* `enabled` - (Required) Whether SAML authentication is enabled.
+* `enabled` - (Optional) Whether SAML authentication is enabled.
 * `idp` - (Optional) Information from your identity provider.
-* `master_backend_role` - (Optional) This backend role from the SAML IdP receives full permissions to the cluster, equivalent to a new master user.
-* `master_user_name` - (Optional) This username from the SAML IdP receives full permissions to the cluster, equivalent to a new master user.
+* `master_backend_role` - (Optional) Backend role from the SAML IdP that receives full permissions to the cluster, equivalent to a new master user.
+* `master_user_name` - (Optional) Username from the SAML IdP that receives full permissions to the cluster, equivalent to a new master user.
 * `roles_key` - (Optional) Element of the SAML assertion to use for backend roles. Default is roles.
 * `session_timeout_minutes` - (Optional) Duration of a session in minutes after a user logs in. Default is 60. Maximum value is 1,440.
 * `subject_key` - (Optional) Element of the SAML assertion to use for username. Default is NameID.
 
-#### idp
+#### `idp` Block
 
 * `entity_id` - (Required) Unique Entity ID of the application in SAML Identity Provider.
-* `metadata_content` - (Required) Metadata of the SAML application in xml format.
+* `metadata_content` - (Required) Metadata of the SAML application in XML format.
 
 ## Attribute Reference
 

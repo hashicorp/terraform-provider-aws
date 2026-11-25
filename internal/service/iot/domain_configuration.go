@@ -113,7 +113,7 @@ func resourceDomainConfiguration() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.DomainConfigurationStatus](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tls_config": {
 					Type:     schema.TypeList,
 					Optional: true,

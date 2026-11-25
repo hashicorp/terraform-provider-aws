@@ -95,7 +95,7 @@ func resourceNetworkInsightsAnalysis() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"wait_for_completion": {
 					Type:     schema.TypeBool,
 					Optional: true,

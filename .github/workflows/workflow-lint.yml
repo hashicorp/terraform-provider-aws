@@ -9,8 +9,9 @@ on:
       - "release/**"
   pull_request:
     paths:
-      - .github/workflows/*
+      - GNUmakefile
       - .ci/tools/go.mod
+      - .github/workflows/*
 
 ## NOTE: !!!
 ## When changing these workflows, ensure that the following is updated:
@@ -28,6 +29,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/tools_cache
         with:
-          tools: github.com/rhysd/actionlint/cmd/actionlint
+          tools: github.com/katbyte/actionlint/cmd/actionlint
       - name: Run actionlint on workflow files
         run: actionlint -shellcheck=

@@ -30,35 +30,25 @@ resource "aws_waf_sql_injection_match_set" "sql_injection_match_set" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name or description of the SQL Injection Match Set.
-* `sql_injection_match_tuples` - (Optional) The parts of web requests that you want AWS WAF to inspect for malicious SQL code and, if you want AWS WAF to inspect a header, the name of the header.
+* `name` - (Required) Name or description of the SQL Injection Match Set.
+* `sql_injection_match_tuples` - (Optional) Parts of web requests for AWS WAF to inspect for malicious SQL code and, if AWS WAF inspects a header, the name of the header. See [`sql_injection_match_tuples` Block](#sql_injection_match_tuples-block) below for details.
 
-### `sql_injection_match_tuples`
+### `sql_injection_match_tuples` Block
 
-* `field_to_match` - (Required) Specifies where in a web request to look for snippets of malicious SQL code.
-* `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
-  If you specify a transformation, AWS WAF performs the transformation on `field_to_match` before inspecting a request for a match.
-  e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
-  See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_SqlInjectionMatchTuple.html#WAF-Type-SqlInjectionMatchTuple-TextTransformation)
-  for all supported values.
+* `field_to_match` - (Required) Where in a web request to look for snippets of malicious SQL code. See [`field_to_match` Block](#field_to_match-block) below for details.
+* `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF. If you specify a transformation, AWS WAF performs the transformation on `field_to_match` before inspecting a request for a match. e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`. See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_SqlInjectionMatchTuple.html#WAF-Type-SqlInjectionMatchTuple-TextTransformation) for all supported values.
 
-### `field_to_match`
+### `field_to_match` Block
 
-#### Arguments
-
-* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g., `User-Agent` or `Referer`.
-  If `type` is any other value, omit this field.
-* `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
-  e.g., `HEADER`, `METHOD` or `BODY`.
-  See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
-  for all supported values.
+* `data` - (Optional) When `type` is `HEADER`, the name of the header to search, e.g., `User-Agent` or `Referer`. If `type` is any other value, omit this field.
+* `type` - (Required) Part of the web request that you want AWS WAF to search for a specified string. e.g., `HEADER`, `METHOD` or `BODY`. See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html) for all supported values.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF SQL Injection Match Set.
 * `arn` - ARN of the SQL injection match set.
+* `id` - ID of the WAF SQL Injection Match Set.
 
 ## Import
 

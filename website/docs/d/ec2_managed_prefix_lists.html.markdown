@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_ec2_managed_prefix_lists
 
-This resource can be useful for getting back a list of managed prefix list ids to be referenced elsewhere.
+This resource can be useful for getting back a list of managed prefix list IDs to be referenced elsewhere.
 
 ## Example Usage
 
@@ -49,4 +49,4 @@ which take the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
-* `ids` - List of all the managed prefix list ids found.
+* `ids` - List of all the managed prefix list IDs found.

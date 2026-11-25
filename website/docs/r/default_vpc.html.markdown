@@ -51,6 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `cidr_block` - The primary IPv4 CIDR block for the VPC
 * `instance_tenancy` - The allowed tenancy of instances launched into the VPC
+* `network_firewall_association` - Automated Internet Firewall that AWS Network Security Manager manages for the VPC. Empty if the VPC doesn't have one. See [`aws_vpc`](/docs/providers/aws/r/vpc.html#network_firewall_association-block) for its attributes.
 
 ## Import
 

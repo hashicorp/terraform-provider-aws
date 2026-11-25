@@ -41,27 +41,34 @@ resource "aws_neptunegraph_graph" "example" {
 
 The following arguments are required:
 
-- `provisioned_memory` (Number, Forces new reource) The provisioned memory-optimized Neptune Capacity Units (m-NCUs) to use for the graph.
+* `provisioned_memory` - (Required) Provisioned memory-optimized Neptune Capacity Units (m-NCUs) to use for the graph.
 
 The following arguments are optional:
 
-- `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-- `deletion_protection` (Boolean, Default: `true`) Value that indicates whether the Graph has deletion protection enabled. The graph can't be deleted when deletion protection is enabled.
-- `graph_name` (String, Forces new resource) Contains a user-supplied name for the Graph. If omitted, Terraform will assign a random, unique identifier.
-- `public_connectivity` (Boolean, Default: `false`) Specifies whether the Graph can be reached over the internet. Access to all graphs requires IAM authentication.  When the Graph is publicly reachable, its DNS endpoint resolves to the public IP address from the internet.  When the Graph isn't publicly reachable, you need to create a PrivateGraphEndpoint in a given VPC to ensure the DNS name resolves to a private IP address that is reachable from the VPC.
-- `replica_count` (Number, Default: `1`, Forces new resource) Specifies the number of replicas you want when finished. All replicas will be provisioned in different availability zones.  Replica Count should always be less than or equal to 2.
-- `kms_key_identifier` (String) The ARN for the KMS encryption key. By Default, Neptune Analytics will use an AWS provided key ("AWS_OWNED_KEY"). This parameter is used if you want to encrypt the graph using a KMS Customer Managed Key (CMK).
-- `vector_search_configuration` (Block, Forces new resource) Vector Search Configuration (see below for nested schema of vector_search_configuration)
-- `tags` - (Optional) Key-value tags for the graph. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `deletion_protection` - (Optional) Value that indicates whether the Graph has deletion protection enabled. The graph can't be deleted when deletion protection is enabled. Default: `true`.
+* `graph_name` - (Optional, Forces new resource) User-supplied name for the Graph. If omitted, Terraform will assign a random, unique identifier. Conflicts with `graph_name_prefix`.
+* `graph_name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `graph_name`.
+* `kms_key_identifier` - (Optional, Forces new resource) ARN for the KMS encryption key. By Default, Neptune Analytics will use an AWS provided key ("AWS_OWNED_KEY"). This parameter is used if you want to encrypt the graph using a KMS Customer Managed Key (CMK).
+* `public_connectivity` - (Optional) Whether the Graph can be reached over the internet. Access to all graphs requires IAM authentication. When the Graph is publicly reachable, its DNS endpoint resolves to the public IP address from the internet. When the Graph isn't publicly reachable, you need to create a PrivateGraphEndpoint in a given VPC to ensure the DNS name resolves to a private IP address that is reachable from the VPC. Default: `false`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `replica_count` - (Optional, Forces new resource) Number of replicas you want when finished. All replicas will be provisioned in different availability zones. Replica Count should always be less than or equal to 2. Default: `1`.
+* `tags` - (Optional) Key-value tags for the graph. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `vector_search_configuration` - (Optional, Forces new resource) Vector search configuration for the graph. See [`vector_search_configuration` Block](#vector_search_configuration-block) for details.
+
+### `vector_search_configuration` Block
+
+The `vector_search_configuration` block supports the following:
+
+* `vector_search_dimension` - (Optional, Forces new resource) Number of dimensions for vector embeddings. Value must be between 1 and 65,535.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-- `endpoint` (String) The connection endpoint for the graph. For example: `g-12a3bcdef4.us-east-1.neptune-graph.amazonaws.com`
-- `arn` (String) Graph resource ARN
-- `id` (String) The auto-generated id assigned by the service.
-- `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - Graph resource ARN.
+* `endpoint` - Connection endpoint for the graph. For example: `g-12a3bcdef4.us-east-1.neptune-graph.amazonaws.com`
+* `id` - Auto-generated ID assigned by the service.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -70,19 +77,6 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
 - `delete` - (Default `30m`)
-
-### Nested Schema for `tags`
-
-Optional:
-
-- `key` (String) The key name of the tag. You can specify a value that is 1 to 128 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.
-- `value` (String) The value for the tag. You can specify a value that is 0 to 256 Unicode characters in length and cannot be prefixed with aws:. You can use any of the following characters: the set of Unicode letters, digits, whitespace, _, ., /, =, +, and -.
-
-### Nested Schema for `vector_search_configuration`
-
-Optional:
-
-- `vector_search_dimension` (Number, Forces new resource) Specifies the number of dimensions for vector embeddings.  Value must be between 1 and 65,535.
 
 ## Import
 

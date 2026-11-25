@@ -33,7 +33,7 @@ func TestAccEventBridgeV2EventSource_Identity_basic(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventSourceDestroy(ctx, t),
@@ -121,7 +121,7 @@ func TestAccEventBridgeV2EventSource_Identity_regionOverride(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             acctest.CheckDestroyNoop,

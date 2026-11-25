@@ -146,6 +146,10 @@ func resourceDefaultSubnet() *schema.Resource {
 					Optional: true,
 					Default:  true,
 				},
+				"network_firewall_connectivity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -161,7 +165,7 @@ func resourceDefaultSubnet() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.HostnameType](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Computed: true,

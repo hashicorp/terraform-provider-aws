@@ -41,12 +41,12 @@ This data source exports the following attributes in addition to the arguments a
 * `type` - Type of device.
 * `vendor` - Vendor of the device.
 
-The `aws_location` object supports the following:
+### `aws_location` Block
 
 * `subnet_arn` - ARN of the subnet that the device is located in.
 * `zone` - Zone that the device is located in.
 
-The `location` object supports the following:
+### `location` Block
 
 * `address` - Physical address.
 * `latitude` - Latitude.

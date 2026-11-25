@@ -78,7 +78,7 @@ The `vpc_config` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the appstream image builder.
+* `arn` - ARN of the AppStream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
 * `id` - Name of the image builder.
 * `state` - State of the image builder. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_ImageBuilder.html#AppStream2-Type-ImageBuilder-State).

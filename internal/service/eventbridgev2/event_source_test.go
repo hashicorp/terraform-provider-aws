@@ -43,7 +43,7 @@ func TestAccEventBridgeV2EventSource_basic(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -91,7 +91,7 @@ func TestAccEventBridgeV2EventSource_disappears(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -124,7 +124,7 @@ func TestAccEventBridgeV2EventSource_update(t *testing.T) {
 	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -236,6 +236,20 @@ func testAccCheckEventSourceExists(ctx context.Context, t *testing.T, n string, 
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccEventSourcePreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.ProviderMeta(ctx, t).EventBridgeV2Client(ctx)
+
+	var input eventbridgev2.ListEventSourcesInput
+	_, err := conn.ListEventSources(ctx, &input)
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

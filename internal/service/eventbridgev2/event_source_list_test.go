@@ -32,7 +32,7 @@ func TestAccEventBridgeV2EventSource_List_basic(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{tfversion.SkipBelow(tfversion.Version1_14_0)},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventSourceDestroy(ctx, t),
@@ -83,7 +83,7 @@ func TestAccEventBridgeV2EventSource_List_includeResource(t *testing.T) {
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{tfversion.SkipBelow(tfversion.Version1_14_0)},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventSourceDestroy(ctx, t),
@@ -144,7 +144,7 @@ func TestAccEventBridgeV2EventSource_List_regionOverride(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
-			testAccPreCheck(ctx, t)
+			testAccEventSourcePreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventSourceDestroy(ctx, t),

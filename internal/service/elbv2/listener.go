@@ -33,6 +33,7 @@ import (
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -217,7 +218,7 @@ func resourceListener() *schema.Resource {
 											Type:         schema.TypeString,
 											Optional:     true,
 											Computed:     true,
-											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
+											ValidateFunc: lazyvalidation.StringMatch(`^[245]\d\d$`, ""),
 										},
 									},
 								},
@@ -575,7 +576,7 @@ func resourceListener() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tcp_idle_timeout_seconds": {
 					Type:         schema.TypeInt,
 					Optional:     true,

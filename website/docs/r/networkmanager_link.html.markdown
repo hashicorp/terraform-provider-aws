@@ -30,7 +30,7 @@ resource "aws_networkmanager_link" "example" {
 
 The following arguments are required:
 
-* `bandwidth` - (Required) Upload speed and download speed in Mbps. [See below](#bandwidth).
+* `bandwidth` - (Required) Upload speed and download speed in Mbps. [See below](#bandwidth-block).
 * `global_network_id` - (Required) ID of the global network.
 * `site_id` - (Required) ID of the site.
 
@@ -41,7 +41,7 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value tags for the link. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of the link.
 
-### bandwidth
+### `bandwidth` Block
 
 * `download_speed` - (Optional) Download speed in Mbps.
 * `upload_speed` - (Optional) Upload speed in Mbps.

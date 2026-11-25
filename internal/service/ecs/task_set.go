@@ -237,7 +237,7 @@ func resourceTaskSet() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"task_definition": {
 					Type:     schema.TypeString,
 					Required: true,

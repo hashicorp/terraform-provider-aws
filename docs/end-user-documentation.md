@@ -12,26 +12,27 @@ All end user documentation is found in the `/website` folder of the repository.
 │   ├── actions/               # Documentation for actions
 │   ├── d/                     # Documentation for data sources
 │   ├── ephemeral-resources/   # Documentation for ephemeral resources
-│   ├── function/              # Documentation for provider functions
+│   ├── functions/             # Documentation for provider functions
 │   ├── guides/                # Long format guides for provider level configuration or provider upgrades
 │   ├── index.html.markdown    # Home page and all provider level documentation, including provider configuration
 │   ├── list-resources/        # Documentation for list resources
 │   └── r/                     # Documentation for resources
-└── examples/                  # Large example configurations
 ```
 
 ## Guidelines
 
 Follow these guidelines to keep [provider documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs) consistent. Unless noted otherwise, _resource_ refers to resources, data sources, list resources, ephemeral resources and provider functions.
 
+CI checks documentation with [`swissshepherd`](https://github.com/YakDriver/swissshepherd). Run `make swissshepherd` before opening a PR. When sources conflict, `swissshepherd` wins, then the `skaff` templates (`skaff/*/websitedoc.gtpl`), then this guide.
+
 ### Examples
 
 Each resource must include at least one example Terraform configuration.
 
 - Examples must be functional.
-- Examples that includes several resource definitions should be added to the repository `examples` directory instead of an individual resource documentation page. Each directory under `examples` should be self-contained; if a user run `terraform plan` on the example, no errors should be returned.
+- Examples that include several resource definitions, such as cross-account configurations, should be added as an additional `###` subsection under Example Usage on the primary resource's documentation page. Related resource pages can link to that subsection instead of duplicating it.
 - Terraform configuration should use `terraform` code fences. Do not use `hcl` code fences.
-- Examples should not define `terraform` or `provider` blocks.
+- Examples should not define `terraform` or `provider` blocks. The exception is multi-account examples, which can define aliased `provider` blocks with comments in place of credentials.
 - Examples should refrain from highlighting particular Terraform configuration language syntax workarounds or features such as `variable`, `local`, `count`, and built-in functions.
 - Generally the resource instance name should simply be `example`, e.g. `resource "aws_instance" "example"`.
 - All name arguments within the example configuration should use simple example values that match the resource being defined. Where attribute validation allows, prefer values prefixed with `example-`, e.g. `name = "example-instance"`. Avoid overly complex naming.
@@ -41,20 +42,20 @@ Each resource must include at least one example Terraform configuration.
 
 Every argument must be documented.
 
-#### Ordering
+#### Lists and Bylines
 
-In documentation, the order of arguments is:
+Sort arguments alphabetically.
 
-1. Any arguments that make up the resource's identity.
-1. Required arguments, sorted alphabetically.
-1. Optional arguments, sorted alphabetically.
+With 5 or more arguments, including at least 2 required and 2 optional, split them into two lists:
 
-#### Bylines
+- "The following arguments are required:"
+- "The following arguments are optional:"
 
-Valid bylines are:
+Otherwise, use one list: "This resource supports the following arguments:".
 
-- "This resource supports the following arguments:" if required and optional arguments are in one list, or
-- "The following arguments are required:" and "The following arguments are optional:" if required and optional arguments are split into separate lists.
+With no arguments: "This resource does not support any arguments."
+
+In bylines, replace "resource" with the documentation type, such as "data source".
 
 #### Description
 
@@ -77,42 +78,40 @@ Each block argument must have two entries in the documentation:
 1. The initial entry, with a link to the subsection describing the block's arguments. e.g. `` `ip_rule` - (Optional) IP rules. See [`ip_rule` Block](#ip_rule-block) below. ``.
 1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
 
-Within the subsection, arguments follow the ordering rules above. Additionally any Computed attributes are listed alphabetically after any Optional arguments.
+Within the subsection, arguments follow the ordering rules above.
+
+Title each subsection `` ### `ip_rule` Block ``. If two blocks named `ip_rule` have different fields, qualify the heading with an ancestor: `` ### `rule.ip_rule` Block ``.
+
+Use `(Read-Only)` only for read-only fields in a block subsection that also has arguments. Document all other read-only fields in [Attribute Reference](#attributes).
 
 For example:
 
 ```
 ## Argument Reference
 
-* `name` - (Required) Name of the thing.
 * `ip_rule` - (Optional) IP rules. See [`ip_rule` Block](#ip_rule-block) below.
+* `name` - (Required) Name of the thing.
 
 ### `ip_rule` Block
 
 The `ip_rule` block supports:
 
 * `ip_range` - (Required) IP range of the rule.
-* `description` - (Optional) Description of the rule.
-* `status` - (Computed) Status of the rule.
+* `priority` - (Optional) Priority of the rule.
+* `status` - (Read-Only) Status of the rule.
 ```
 
 ### Attributes
 
 Every attribute must be documented.
 
-#### Ordering
+#### Lists and Bylines
 
-In documentation, the order of attributes is:
+Sort attributes alphabetically, including `id`.
 
-1. Any `id` attribute
-1. The remaining attributes, sorted alphabetically.
+Use "This resource exports the following attributes in addition to the arguments above:", or "This resource exports no additional attributes." In bylines, replace "resource" with the documentation type.
 
-#### Bylines
-
-Valid bylines are:
-
-- "In addition to all arguments above, the following attributes are exported:", or
-- "This resource exports no additional attributes." if no attributes are exported.
+List resources and actions have no Attribute Reference.
 
 #### Description
 
@@ -126,7 +125,7 @@ Every attribute must have a description.
 
 Each block attribute must have two entries in the documentation:
 
-1. The initial entry, with a link to the subsection describing the block's attributes. e.g. `` `health` - Health status. See [`health`](#health) below. ``.
+1. The initial entry, with a link to the subsection describing the block's attributes. e.g. `` `health` - Health status. See [`health` Block](#health-block) below. ``.
 1. A subsection, added after all top-level arguments. If the resource has multiple blocks, these subsections should be ordered alphabetically.
 
 Within the subsection, arguments follow the ordering rules above.
@@ -138,12 +137,12 @@ For example:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `health` - Health status. See [`health` Block](#health-block) below.
 * `id` - ID of the thing.
-* `health` - Health status. See [`health`](#health) below.
 
-### `health`
+### `health` Block
 
-`health` supports:
+The `health` block exports:
 
 * `status_code` - Health status code.
 * `status_message` - Health status message.

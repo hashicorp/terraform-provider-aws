@@ -55,7 +55,7 @@ func resourceTransitGatewayConnect() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.ProtocolValue](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transit_gateway_default_route_table_association": {
 					Type:     schema.TypeBool,
 					Optional: true,

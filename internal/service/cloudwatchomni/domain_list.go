@@ -47,6 +47,11 @@ func (l *domainListResource) List(ctx context.Context, request list.ListRequest,
 			}
 
 			arn := aws.ToString(item.DomainArn)
+			// ListDomains also returns organization domains, which aws_cloudwatchomni_organization_domain manages.
+			if isOrganizationDomainARN(arn) {
+				continue
+			}
+
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey(names.AttrARN), arn)
 			id := aws.ToString(item.DomainId)
 

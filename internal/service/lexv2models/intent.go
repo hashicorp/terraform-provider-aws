@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
@@ -32,9 +31,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -505,19 +506,13 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"deletion_character": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^[A-D0-9#*]{1}$`),
-							"alphanumeric characters",
-						),
+						lazystringvalidator.RegexMatches(`^[A-D0-9#*]{1}$`, "alphanumeric characters"),
 					},
 				},
 				"end_character": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^[A-D0-9#*]{1}$`),
-							"alphanumeric characters",
-						),
+						lazystringvalidator.RegexMatches(`^[A-D0-9#*]{1}$`, "alphanumeric characters"),
 					},
 				},
 				"end_timeout_ms": schema.Int64Attribute{
@@ -838,19 +833,13 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 2048),
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^(([a-z0-9]+)|(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:[0-9]{12}:guardrail/[a-z0-9]+))$`),
-							("Must be a lowercase string or a valid Bedrock guardrail ARN"),
-						),
+						lazystringvalidator.RegexMatches(`^(([a-z0-9]+)|(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:[0-9]{12}:guardrail/[a-z0-9]+))$`, "Must be a lowercase string or a valid Bedrock guardrail ARN"),
 					},
 				},
 				names.AttrVersion: schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^(([1-9][0-9]{0,7})|(DRAFT))$`),
-							("Must be a positive integer or the string 'DRAFT'."),
-						),
+						lazystringvalidator.RegexMatches(`^(([1-9][0-9]{0,7})|(DRAFT))$`, "Must be a positive integer or the string 'DRAFT'."),
 					},
 				},
 			},
@@ -873,10 +862,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"model_arn": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}::foundation-model\/[a-z0-9-]{1,63}[.]{1}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2}$`),
-							("ARN must match Bedrock foundation model ARN pattern"),
-						),
+						lazystringvalidator.RegexMatches(`^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}::foundation-model\/[a-z0-9-]{1,63}[.]{1}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2}$`, "ARN must match Bedrock foundation model ARN pattern"),
 					},
 				},
 				"trace_status": schema.StringAttribute{
@@ -921,10 +907,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 200),
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,40}:[0-9]{12}:knowledge-base\/[A-Za-z0-9]{10}$|^[A-Za-z0-9]{10}$`),
-							("Must be an ARN of the bedrock knowledge base"),
-						),
+						lazystringvalidator.RegexMatches(`^arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,40}:[0-9]{12}:knowledge-base\/[A-Za-z0-9]{10}$|^[A-Za-z0-9]{10}$`, "Must be an ARN of the bedrock knowledge base"),
 					},
 				},
 				"exact_response": schema.BoolAttribute{
@@ -953,10 +936,7 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(32, 2048),
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^arn:aws(-[^:]+)?:kendra:[a-z]+-[a-z]+-[0-9]:[0-9]{12}:index\/[a-zA-Z0-9][a-zA-Z0-9_-]*$`),
-							"Must be a valid Kendra index ARN",
-						),
+						lazystringvalidator.RegexMatches(`^arn:aws(-[^:]+)?:kendra:[a-z]+-[a-z]+-[0-9]:[0-9]{12}:index\/[a-zA-Z0-9][a-zA-Z0-9_-]*$`, "Must be a valid Kendra index ARN"),
 					},
 				},
 				"exact_response": schema.BoolAttribute{
@@ -1010,20 +990,14 @@ func (r *intentResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				"domain_endpoint": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^(http|https):\/\/+[^\s]+[\w]`),
-							"Must be a valid OpenSearch domain endpoint URL",
-						),
+						lazystringvalidator.RegexMatches(`^(http|https):\/\/+[^\s]+[\w]`, "Must be a valid OpenSearch domain endpoint URL"),
 					},
 				},
 				"index_name": schema.StringAttribute{
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.LengthBetween(1, 255),
-						stringvalidator.RegexMatches(
-							regexache.MustCompile(`^[a-z0-9][a-z0-9_\-]{0,254}$`),
-							"Must be a valid OpenSearch index name",
-						),
+						lazystringvalidator.RegexMatches(`^[a-z0-9][a-z0-9_\-]{0,254}$`, "Must be a valid OpenSearch index name"),
 					},
 				},
 				"exact_response": schema.BoolAttribute{
@@ -1352,13 +1326,9 @@ func (r *intentResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	_, err := conn.DeleteIntent(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException // lexv2models does not seem to use this approach like other services
-		if errors.As(err, &nfe) {
-			return
-		}
-
-		var pfe *awstypes.PreconditionFailedException // PreconditionFailedException: Failed to retrieve resource since it does not exist
-		if errors.As(err, &pfe) {
+		// lexv2models does not seem to use this approach like other services
+		// PreconditionFailedException: Failed to retrieve resource since it does not exist
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.IsA[*awstypes.PreconditionFailedException](err) {
 			return
 		}
 
@@ -1466,8 +1436,7 @@ func findIntentByIDs(ctx context.Context, conn *lexmodelsv2.Client, intentID, bo
 
 	out, err := conn.DescribeIntent(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError: err,
 			}

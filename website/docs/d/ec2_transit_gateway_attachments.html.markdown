@@ -39,6 +39,7 @@ This data source supports the following arguments:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
+* `tags` - (Optional) Map of tags, each pair of which must exactly match a pair on the desired transit gateway attachments.
 
 ### filter Argument Reference
 
@@ -49,7 +50,7 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `ids` A list of all attachments ids matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_attachment) data source, searching by identifier.
+* `ids` A list of all attachments IDs matching the filter. You can retrieve more information about the attachment using the [aws_ec2_transit_gateway_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ec2_transit_gateway_attachment) data source, searching by identifier.
 
 ## Timeouts
 

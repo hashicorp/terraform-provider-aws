@@ -37,6 +37,12 @@ func TestAccBedrock_serial(t *testing.T) {
 			"pluralDataSourceBasic":                 testAccCustomModelsDataSource_basic,
 			"Identity":                              testAccBedrockCustomModel_identitySerial,
 		},
+		"EnforcedGuardrailConfiguration": {
+			acctest.CtBasic:      testAccEnforcedGuardrailConfiguration_basic,
+			acctest.CtDisappears: testAccEnforcedGuardrailConfiguration_disappears,
+			"update":             testAccEnforcedGuardrailConfiguration_update,
+			"Identity":           testAccBedrockEnforcedGuardrailConfiguration_identitySerial,
+		},
 		"ModelInvocationLoggingConfiguration": {
 			acctest.CtBasic:      testAccModelInvocationLoggingConfiguration_basic,
 			acctest.CtDisappears: testAccModelInvocationLoggingConfiguration_disappears,
@@ -47,6 +53,10 @@ func TestAccBedrock_serial(t *testing.T) {
 			acctest.CtBasic:      testAccBedrockFoundationModelAgreement_basic,
 			acctest.CtDisappears: testAccBedrockFoundationModelAgreement_disappears,
 			"Identity":           testAccBedrockFoundationModelAgreement_identitySerial,
+		},
+		// Guardrail profiles are system-defined and shared across the account and Region.
+		"GuardrailResourcePolicy": {
+			"guardrailProfile": testAccGuardrailResourcePolicy_guardrailProfile,
 		},
 		"UseCaseForModelAccess": {
 			acctest.CtBasic: testAccBedrockUseCaseForModelAccess_basic,

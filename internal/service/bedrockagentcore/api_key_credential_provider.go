@@ -8,7 +8,6 @@ package bedrockagentcore
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagentcorecontrol"
@@ -30,6 +29,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfstringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -38,10 +38,7 @@ import (
 )
 
 // Standard Bedrock AgentCore outbound auth provider resource name validator.
-var validOutboundAuthProviderResourceName validator.String = stringvalidator.RegexMatches(
-	regexache.MustCompile(`^[a-zA-Z0-9\-_]{1,128}$`),                                                            // AWS API definition.
-	`Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters.`, // AWS Console text.
-)
+var validOutboundAuthProviderResourceName validator.String = lazystringvalidator.RegexMatches(`^[a-zA-Z0-9\-_]{1,128}$`, `Valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 50 characters.`)
 
 // @FrameworkResource("aws_bedrockagentcore_api_key_credential_provider", name="API Key Credential Provider")
 // @IdentityAttribute("name")

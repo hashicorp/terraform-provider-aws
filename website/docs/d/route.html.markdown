@@ -14,7 +14,7 @@ This resource can prove useful when finding the resource associated with a CIDR.
 
 ## Example Usage
 
-The following example shows how one might use a CIDR value to find a network interface id and use this to create a data source of that network interface.
+The following example shows how one might use a CIDR value to find a network interface ID and use this to create a data source of that network interface.
 
 ```terraform
 variable "subnet_id" {}
@@ -58,7 +58,11 @@ The arguments of this data source act as filters for querying the available Rout
 
 ## Attribute Reference
 
-This data source exports no additional attributes.
+This data source exports the following attributes in addition to the arguments above:
+
+* `igw_firewall` - Automated Internet Firewall that inspects traffic for the route. Only set for routes that target an internet gateway or egress-only internet gateway in a VPC that has a firewall.
+    * `firewall_arn` - ARN of the firewall.
+    * `status` - Status of the firewall: `active`, `pending` or `disabling`.
 
 ## Timeouts
 

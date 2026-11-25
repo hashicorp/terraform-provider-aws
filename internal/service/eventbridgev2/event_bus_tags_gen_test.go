@@ -33,7 +33,7 @@ func TestAccEventBridgeV2EventBus_tags(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -242,7 +242,7 @@ func TestAccEventBridgeV2EventBus_Tags_null(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -314,7 +314,7 @@ func TestAccEventBridgeV2EventBus_Tags_emptyMap(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -374,7 +374,7 @@ func TestAccEventBridgeV2EventBus_Tags_addOnUpdate(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -466,7 +466,7 @@ func TestAccEventBridgeV2EventBus_Tags_EmptyTag_onCreate(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -573,7 +573,7 @@ func TestAccEventBridgeV2EventBus_Tags_EmptyTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -729,7 +729,7 @@ func TestAccEventBridgeV2EventBus_Tags_EmptyTag_OnUpdate_replace(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy:             testAccCheckEventBusDestroy(ctx, t),
@@ -831,7 +831,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_providerOnly(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1039,7 +1039,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_nonOverlapping(t *testing.T) 
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1221,7 +1221,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_overlapping(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1419,7 +1419,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_updateToProviderOnly(t *testi
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1521,7 +1521,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_updateToResourceOnly(t *testi
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1622,7 +1622,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_emptyResourceTag(t *testing.T
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1700,7 +1700,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_emptyProviderOnlyTag(t *testi
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1770,7 +1770,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_nullOverlappingResourceTag(t 
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1849,7 +1849,7 @@ func TestAccEventBridgeV2EventBus_Tags_DefaultTags_nullNonOverlappingResourceTag
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1930,7 +1930,7 @@ func TestAccEventBridgeV2EventBus_Tags_ComputedTag_onCreate(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -1997,7 +1997,7 @@ func TestAccEventBridgeV2EventBus_Tags_ComputedTag_OnUpdate_add(t *testing.T) {
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -2106,7 +2106,7 @@ func TestAccEventBridgeV2EventBus_Tags_ComputedTag_OnUpdate_replace(t *testing.T
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -2205,7 +2205,7 @@ func TestAccEventBridgeV2EventBus_Tags_IgnoreTags_Overlap_defaultTag(t *testing.
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),
@@ -2374,7 +2374,7 @@ func TestAccEventBridgeV2EventBus_Tags_IgnoreTags_Overlap_resourceTag(t *testing
 		},
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
+			testAccEventBusPreCheck(ctx, t)
 		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.EventBridgeV2ServiceID),
 		CheckDestroy: testAccCheckEventBusDestroy(ctx, t),

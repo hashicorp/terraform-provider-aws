@@ -12,7 +12,7 @@ description: |-
 
 ## Example Usage
 
-The following example shows how to get Route53 Resolver Firewall rules based on its associated firewall group id.
+The following example shows how to get Route53 Resolver Firewall rules based on its associated firewall group ID.
 
 ```terraform
 data "aws_route53_resolver_firewall_rules" "example" {

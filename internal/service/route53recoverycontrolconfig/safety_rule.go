@@ -105,7 +105,7 @@ func resourceSafetyRule() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_controls": {
 					Type:     schema.TypeList,
 					Optional: true,

@@ -7,7 +7,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchomni"
@@ -28,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -41,7 +41,6 @@ import (
 // @Testing(hasNoPreExistingResource=true)
 // @Testing(serialize=true)
 // @Testing(importStateIdAttribute="domain_id")
-// @Testing(tagsTest=false)
 func newDomainResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &domainResource{}, nil
 }
@@ -80,7 +79,7 @@ func (r *domainResource) Schema(ctx context.Context, req resource.SchemaRequest,
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z]+(-[0-9a-z]+)*$`), "must contain only lowercase letters, numbers, and single hyphens, and must begin and end with a letter or number"),
+					lazystringvalidator.RegexMatches(`^[a-z0-9]+(-[a-z0-9]+)*$`, "use lowercase letters, numbers, and hyphens. Start and end with a letter or number."),
 				},
 			},
 		},
@@ -253,12 +252,13 @@ func (r *domainResource) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r *domainResource) flatten(ctx context.Context, domain *awstypes.Domain, data *domainResourceModel) diag.Diagnostics {
+	var diags diag.Diagnostics
 	// IAM-only domains return an empty identity provider configuration; treat it as absent.
 	if v := domain.IdentityProviderConfiguration; v != nil && v.IdentityCenterConfiguration == nil {
 		domain.IdentityProviderConfiguration = nil
 	}
-
-	return fwflex.Flatten(ctx, domain, data, fwflex.WithIgnoredFieldNamesAppend("Region"))
+	diags.Append(fwflex.Flatten(ctx, domain, data, fwflex.WithIgnoredFieldNamesAppend("Region"))...)
+	return diags
 }
 
 func findDomainByID(ctx context.Context, conn *cloudwatchomni.Client, id string) (*awstypes.Domain, error) {

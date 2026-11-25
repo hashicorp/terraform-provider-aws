@@ -52,7 +52,7 @@ const eventSourceCreatingTimeout = 2 * time.Minute
 // @Tags(identifierAttribute="arn")
 // @ArnIdentity
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridgev2;eventbridgev2.DescribeEventSourceOutput")
-// @Testing(preCheck="testAccPreCheck")
+// @Testing(preCheck="testAccEventSourcePreCheck")
 // @Testing(hasNoPreExistingResource=true)
 func newEventSourceResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &eventSourceResource{}

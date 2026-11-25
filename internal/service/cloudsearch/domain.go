@@ -18,13 +18,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -129,7 +129,7 @@ func resourceDomain() *schema.Resource {
 							"source_fields": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
+								ValidateFunc: lazyvalidation.StringDoesNotMatch(`score`, "Cannot be set to reserved field score"),
 							},
 							names.AttrType: {
 								Type:             schema.TypeString,
@@ -148,7 +148,7 @@ func resourceDomain() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+					ValidateFunc: lazyvalidation.StringMatch(`^[a-z]([0-9a-z-]){2,27}$`, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 				},
 				"scaling_parameters": {
 					Type:     schema.TypeList,
@@ -184,12 +184,6 @@ func resourceDomain() *schema.Resource {
 		},
 	}
 }
-
-var (
-	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
-	nameRegex      = regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`)
-	scoreRegex     = regexache.MustCompile(`score`)
-)
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -497,6 +491,7 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta any)
 func validateIndexName(v any, k string) (ws []string, es []error) {
 	value := v.(string)
 
+	indexNameRegex := regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
 	if !indexNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))

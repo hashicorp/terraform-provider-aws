@@ -10,6 +10,7 @@ var (
 	ResourceAMIFromInstance                               = resourceAMIFromInstance
 	ResourceAMILaunchPermission                           = resourceAMILaunchPermission
 	ResourceAvailabilityZoneGroup                         = resourceAvailabilityZoneGroup
+	ResourceCapacityManager                               = newCapacityManagerResource
 	ResourceCapacityReservation                           = resourceCapacityReservation
 	ResourceCarrierGateway                                = resourceCarrierGateway
 	ResourceClientVPNAuthorizationRule                    = resourceClientVPNAuthorizationRule
@@ -155,6 +156,7 @@ var (
 	ExpandIPPerms                                               = expandIPPerms
 	FindAllowedImagesSettings                                   = findAllowedImagesSettings
 	FindAvailabilityZones                                       = findAvailabilityZones
+	FindCapacityManagerAttributes                               = findCapacityManagerAttributes
 	FindCapacityReservationByID                                 = findCapacityReservationByID
 	FindCarrierGatewayByID                                      = findCarrierGatewayByID
 	FindClientVPNAuthorizationRuleByThreePartKey                = findClientVPNAuthorizationRuleByThreePartKey
@@ -291,6 +293,7 @@ var (
 	FindVolumeAttachmentInstanceByID                            = findVolumeAttachmentInstanceByID
 	FlattenNetworkInterfacePrivateIPAddresses                   = flattenNetworkInterfacePrivateIPAddresses
 	FlattenSecurityGroups                                       = flattenSecurityGroups
+	FlattenTransitGatewayPeeringAttachmentOptions               = flattenTransitGatewayPeeringAttachmentOptions
 	FlowLogStateUpgradeV0                                       = flowLogStateUpgradeV0
 	IPAMServicePrincipal                                        = ipamServicePrincipal
 	InstanceMigrateState                                        = instanceMigrateState

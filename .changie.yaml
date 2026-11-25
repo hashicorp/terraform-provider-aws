@@ -28,6 +28,7 @@ changeFormat: |-
 
 kinds:
   - key: breaking-change
+    format: "BREAKING CHANGES:"
     label: Breaking Change
     skipBody: true
     additionalChoices:
@@ -57,6 +58,7 @@ kinds:
         minInt: 9999
 
   - key: note
+    format: "NOTES:"
     label: Note
     skipBody: true
     additionalChoices:
@@ -69,7 +71,7 @@ kinds:
     label: "Resource, Data Source, Ephemeral Resource, Function, List Resource, Action"
     skipBody: true
     changeFormat: |-
-      {{- printf "* **%s**: `%s`" .Custom.NewType .Custom.Name }}
+      {{- printf "* **%s:** `%s`" .Custom.NewType .Custom.Name }}
       {{- with .Custom.PullRequest }}
       {{- printf " ([#%s](https://github.com/hashicorp/terraform-provider-aws/issues/%s))" . . -}}
       {{ end }}
@@ -94,6 +96,7 @@ kinds:
       - *PullRequest
 
   - key: enhancement
+    format: "ENHANCEMENTS:"
     label: Enhancement
     skipBody: true
     additionalChoices:

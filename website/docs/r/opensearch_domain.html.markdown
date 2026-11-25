@@ -305,32 +305,30 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `aiml_options` - (Optional) Configuration block for parameters required to enable all machine learning features. Detailed below.
 * `access_policies` - (Optional) IAM policy document specifying the access policies for the domain.
 * `advanced_options` - (Optional) Key-value string pairs to specify advanced configuration options. Note that the values for these configuration options must be strings (wrapped in quotes) or they may be wrong and cause a perpetual diff, causing Terraform to want to recreate your OpenSearch domain on every apply.
 * `advanced_security_options` - (Optional) Configuration block for [fine-grained access control](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/fgac.html). Detailed below.
+* `aiml_options` - (Optional) Configuration block for parameters required to enable all machine learning features. Detailed below.
 * `auto_tune_options` - (Optional) Configuration block for the Auto-Tune options of the domain. Detailed below.
 * `cluster_config` - (Optional) Configuration block for the cluster of the domain. Detailed below.
 * `cognito_options` - (Optional) Configuration block for authenticating dashboard with Cognito. Detailed below.
 * `deployment_strategy_options` - (Optional) Configuration block for the deployment strategy options of the domain. Detailed below.
 * `domain_endpoint_options` - (Optional) Configuration block for domain endpoint HTTP(S) related options. Detailed below.
 * `ebs_options` - (Optional) Configuration block for EBS related options, may be required based on chosen [instance size](https://aws.amazon.com/opensearch-service/pricing/). Detailed below.
-* `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`.
-  See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains).
-  Defaults to the lastest version of OpenSearch.
-* `identity_center_options` - (Optional) Configuration block for enabling and managing IAM Identity Center integration within a domain. Detailed below.
-* `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `encrypt_at_rest` - (Optional) Configuration block for encrypt at rest options. Only available for [certain instance types](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/encryption-at-rest.html). Detailed below.
+* `engine_version` - (Optional) Either `Elasticsearch_X.Y` or `OpenSearch_X.Y` to specify the engine version for the Amazon OpenSearch Service domain. For example, `OpenSearch_1.0` or `Elasticsearch_7.9`. See [Creating and managing Amazon OpenSearch Service domains](http://docs.aws.amazon.com/opensearch-service/latest/developerguide/createupdatedomains.html#createdomains). Defaults to the latest version of OpenSearch.
+* `identity_center_options` - (Optional) Configuration block for enabling and managing IAM Identity Center integration within a domain. Detailed below.
+* `ip_address_type` - (Optional) IP address type for the endpoint. Valid values are `ipv4` and `dualstack`.
 * `log_publishing_options` - (Optional) Configuration block for publishing slow and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource. Detailed below.
 * `node_to_node_encryption` - (Optional) Configuration block for node-to-node encryption options. Detailed below.
+* `off_peak_window_options` - (Optional) Configuration to add Off Peak update options. ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)). Detailed below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `snapshot_options` - (Optional) Configuration block for snapshot related options. Detailed below. DEPRECATED. For domains running OpenSearch 5.3 and later, Amazon OpenSearch takes hourly automated snapshots, making this setting irrelevant. For domains running earlier versions, OpenSearch takes daily automated snapshots.
 * `software_update_options` - (Optional) Software update options for the domain. Detailed below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_options` - (Optional) Configuration block for VPC related options. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/vpc.html)). Detailed below.
-* `off_peak_window_options` - (Optional) Configuration to add Off Peak update options. ([documentation](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)). Detailed below.
 
-### advanced_security_options
+### `advanced_security_options` Block
 
 * `anonymous_auth_enabled` - (Optional) Whether Anonymous auth is enabled. Enables fine-grained access control on an existing domain. Ignored unless `advanced_security_options` are enabled. _Can only be enabled on an existing domain._
 * `enabled` - (Required, Forces new resource when changing from `true` to `false`) Whether advanced security is enabled.
@@ -338,7 +336,7 @@ The following arguments are optional:
 * `jwt_options` - (Optional) Configuration block for JWT authentication. Requires OpenSearch 2.11 or later. Detailed below.
 * `master_user_options` - (Optional) Configuration block for the main user. Detailed below.
 
-#### jwt_options
+#### `jwt_options` Block
 
 * `enabled` - (Optional) Whether JWT authentication is enabled.
 * `jwks_url` - (Optional) URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures. This argument can be specified only with OpenSearch versions 3.3 and later. At least one of `jwks_url` or `public_key` must be specified when `enabled` is set to `true`.
@@ -346,51 +344,51 @@ The following arguments are optional:
 * `roles_key` - (Optional) Element of the JWT assertion to use for roles. Default is `roles`.
 * `subject_key` - (Optional) Element of the JWT assertion to use for the user name. Default is `sub`.
 
-#### master_user_options
+#### `master_user_options` Block
 
 * `master_user_arn` - (Optional) ARN for the main user. Only specify if `internal_user_database_enabled` is not set or set to `false`.
 * `master_user_name` - (Optional) Main user's username, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
 * `master_user_password` - (Optional) Main user's password, which is stored in the Amazon OpenSearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.
 
-### aiml_options
+### `aiml_options` Block
 
 * `natural_language_query_generation_options` - (Optional) Configuration block for parameters required for natural language query generation on the specified domain.
 * `s3_vectors_engine` - (Optional) Configuration block for parameters required to enable S3 vectors engine features on the specified domain.
 * `serverless_vector_acceleration` - (Optional) Configuration block for parameters required to enable GPU-accelerated vector search on the specified domain.
 
-#### natural_language_query_generation_options
+#### `natural_language_query_generation_options` Block
 
-* `desired_state` - (Optional)  The desired state of the natural language query generation feature. Valid values are `ENABLED` and `DISABLED`.
+* `desired_state` - (Optional) Desired state of the natural language query generation feature. Valid values are `ENABLED` and `DISABLED`.
 
-#### s3_vectors_engine
+#### `s3_vectors_engine` Block
 
 * `enabled` - (Optional) Enables S3 vectors engine features.
 
-#### serverless_vector_acceleration
+#### `serverless_vector_acceleration` Block
 
 * `enabled` - (Optional) Enables GPU-accelerated vector search for improved performance on vector workloads.
 
-### auto_tune_options
+### `auto_tune_options` Block
 
 * `desired_state` - (Required) Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
-* `maintenance_schedule` - (Required if `rollback_on_disable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
+* `maintenance_schedule` - (Optional) Configuration block for Auto-Tune maintenance windows. Required if `rollback_on_disable` is set to `DEFAULT_ROLLBACK`. Can be specified multiple times for each maintenance window. Detailed below.
 
   **NOTE:** Maintenance windows are deprecated and have been replaced with [off-peak windows](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html). Consequently, `maintenance_schedule` configuration blocks cannot be specified when `use_off_peak_window` is set to `true`.
 * `rollback_on_disable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
 * `use_off_peak_window` - (Optional) Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window. Defaults to `false`.
 
-#### maintenance_schedule
+#### `maintenance_schedule` Block
 
-* `start_at` - (Required) Date and time at which to start the Auto-Tune maintenance schedule in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `cron_expression_for_recurrence` - (Required) Cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
 * `duration` - (Required) Configuration block for the duration of the Auto-Tune maintenance window. Detailed below.
-* `cron_expression_for_recurrence` - (Required) A cron expression specifying the recurrence pattern for an Auto-Tune maintenance schedule.
+* `start_at` - (Required) Date and time at which to start the Auto-Tune maintenance schedule in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
-#### duration
+#### `duration` Block
 
-* `value` - (Required) An integer specifying the value of the duration of an Auto-Tune maintenance window.
 * `unit` - (Required) Unit of time specifying the duration of an Auto-Tune maintenance window. Valid values: `HOURS`.
+* `value` - (Required) Integer specifying the value of the duration of an Auto-Tune maintenance window.
 
-### cluster_config
+### `cluster_config` Block
 
 * `cold_storage_options` - (Optional) Configuration block containing cold storage configuration. Detailed below.
 * `dedicated_master_count` - (Optional) Number of dedicated main nodes in the cluster.
@@ -406,28 +404,28 @@ The following arguments are optional:
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Detailed below.
 * `zone_awareness_enabled` - (Optional) Whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 
-#### node_options
+#### `node_options` Block
 
 Container object to specify configuration for a node type.
 
 * `node_config` - (Optional) Container to specify sizing of a node type.
 * `node_type` - (Optional) Type of node this configuration describes. Valid values: `coordinator`.
 
-#### node_config
+#### `node_config` Block
 
 * `count` - (Optional) Number of nodes of a particular node type in the cluster.
 * `enabled` - (Optional) Whether a particular node type is enabled.
-* `type` - (Optional) The instance type of a particular node type in the cluster.
+* `type` - (Optional) Instance type of a particular node type in the cluster.
 
-#### cold_storage_options
+#### `cold_storage_options` Block
 
 * `enabled` - (Optional) Boolean to enable cold storage for an OpenSearch domain. Defaults to `false`. Master and ultrawarm nodes must be enabled for cold storage.
 
-#### zone_awareness_config
+#### `zone_awareness_config` Block
 
 * `availability_zone_count` - (Optional) Number of Availability Zones for the domain to use with `zone_awareness_enabled`. Defaults to `2`. Valid values: `2` or `3`.
 
-### cognito_options
+### `cognito_options` Block
 
 AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-cognito-auth.html)
 
@@ -436,61 +434,61 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `role_arn` - (Required) ARN of the IAM role that has the AmazonOpenSearchServiceCognitoAccess policy attached.
 * `user_pool_id` - (Required) ID of the Cognito User Pool to use.
 
-### deployment_strategy_options
+### `deployment_strategy_options` Block
 
-* `deployment_strategy` - (Optional) Deployment strategy for the domain. Valid values: `Default` and `CapacityOptimized`.
+* `deployment_strategy` - (Required) Deployment strategy for the domain. Valid values: `Default` and `CapacityOptimized`.
 
-### domain_endpoint_options
+### `domain_endpoint_options` Block
 
+* `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `custom_endpoint_certificate_arn` - (Optional) ACM certificate ARN for your custom endpoint.
 * `custom_endpoint_enabled` - (Optional) Whether to enable custom endpoint for the OpenSearch domain.
-* `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforce_https` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
 * `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_DomainEndpointOptions.html#opensearchservice-Type-DomainEndpointOptions-TLSSecurityPolicy). Terraform will only perform drift detection if a configuration value is provided.
 
-### ebs_options
+### `ebs_options` Block
 
 * `ebs_enabled` - (Required) Whether EBS volumes are attached to data nodes in the domain.
 * `iops` - (Optional) Baseline input/output (I/O) performance of EBS volumes attached to data nodes. Applicable only for the GP3 and Provisioned IOPS EBS volume types.
-* `throughput` - (Required if `volume_type` is set to `gp3`) Specifies the throughput (in MiB/s) of the EBS volumes attached to data nodes. Applicable only for the gp3 volume type.
-* `volume_size` - (Required if `ebs_enabled` is set to `true`.) Size of EBS volumes attached to data nodes (in GiB).
+* `throughput` - (Optional) Throughput (in MiB/s) of the EBS volumes attached to data nodes. Required if `volume_type` is set to `gp3`. Applicable only for the gp3 volume type.
+* `volume_size` - (Optional) Size of EBS volumes attached to data nodes (in GiB). Required if `ebs_enabled` is set to `true`.
 * `volume_type` - (Optional) Type of EBS volumes attached to data nodes.
 
-### identity_center_options
+### `identity_center_options` Block
 
 * enabled_api_access - (Optional) Boolean that indicates whether IAM Identity Center is enabled for API access. [Fine-grained access control](#enabling-fine-grained-access-control-on-an-existing-domain) must be enabled to use this feature. To disable it after enabling, set this argument to `false` or remove the `identity_center_options` block entirely.
 * identity_center_instance_arn - (Optional) ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication. Required if `enabled_api_access` is set to `true`.
 * roles_key - (Optional) Attribute that contains the backend role identifier in IAM Identity Center. Valid values: `GroupName`, `GroupId`. Defaults to `GroupId`.
 * subject_key - (Optional) Attribute that contains the subject identifier in IAM Identity Center. Valid values: `UserName`, `UserId`, `Email`. Defaults to `UserId`.
 
-### encrypt_at_rest
+### `encrypt_at_rest` Block
 
 ~> **Note:** You can enable `encrypt_at_rest` _in place_ for an existing, unencrypted domain only if you are using OpenSearch or your Elasticsearch version is 6.7 or greater. For other versions, if you enable `encrypt_at_rest`, Terraform with recreate the domain, potentially causing data loss. For any version, if you disable `encrypt_at_rest` for an existing, encrypted domain, Terraform will recreate the domain, potentially causing data loss. If you change the `kms_key_id`, Terraform will also recreate the domain, potentially causing data loss.
 
 * `enabled` - (Required) Whether to enable encryption at rest. If the `encrypt_at_rest` block is not provided then this defaults to `false`. Enabling encryption on new domains requires an `engine_version` of `OpenSearch_X.Y` or `Elasticsearch_5.1` or greater.
 * `kms_key_id` - (Optional) KMS key ARN to encrypt the Elasticsearch domain with. If not specified then it defaults to using the `aws/es` service KMS key. Note that KMS will accept a KMS key ID but will return the key ARN. To prevent Terraform detecting unwanted changes, use the key ARN instead.
 
-### log_publishing_options
+### `log_publishing_options` Block
 
-* `cloudwatch_log_group_arn` - (Required) ARN of the Cloudwatch log group to which log needs to be published.
+* `cloudwatch_log_group_arn` - (Required) ARN of the CloudWatch log group to which log needs to be published.
 * `enabled` - (Optional, Default: true) Whether given log publishing option is enabled or not.
 * `log_type` - (Required) Type of OpenSearch log. Valid values: `INDEX_SLOW_LOGS`, `SEARCH_SLOW_LOGS`, `ES_APPLICATION_LOGS`, `AUDIT_LOGS`.
 
-### node_to_node_encryption
+### `node_to_node_encryption` Block
 
 ~> **Note:** You can enable `node_to_node_encryption` _in place_ for an existing, unencrypted domain only if you are using OpenSearch or your Elasticsearch version is 6.7 or greater. For other versions, if you enable `node_to_node_encryption`, Terraform will recreate the domain, potentially causing data loss. For any version, if you disable `node_to_node_encryption` for an existing, node-to-node encrypted domain, Terraform will recreate the domain, potentially causing data loss.
 
 * `enabled` - (Required) Whether to enable node-to-node encryption. If the `node_to_node_encryption` block is not provided then this defaults to `false`. Enabling node-to-node encryption of a new domain requires an `engine_version` of `OpenSearch_X.Y` or `Elasticsearch_6.0` or greater.
 
-### snapshot_options
+### `snapshot_options` Block
 
 * `automated_snapshot_start_hour` - (Required) Hour during which the service takes an automated daily snapshot of the indices in the domain.
 
-### software_update_options
+### `software_update_options` Block
 
 * `auto_software_update_enabled` - (Optional) Whether automatic service software updates are enabled for the domain. Defaults to `false`.
 
-### vpc_options
+### `vpc_options` Block
 
 AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/es-vpc.html)
 
@@ -499,33 +497,41 @@ AWS documentation: [VPC Support for Amazon OpenSearch Service Domains](https://d
 -> Security Groups and Subnets referenced in these attributes must all be within the same VPC. This determines what VPC the endpoints are created in.
 
 * `security_group_ids` - (Optional) List of VPC Security Group IDs to be applied to the OpenSearch domain endpoints. If omitted, the default Security Group for the VPC will be used.
-* `subnet_ids` - (Required) List of VPC Subnet IDs for the OpenSearch domain endpoints to be created in.
+* `subnet_ids` - (Optional) List of VPC Subnet IDs for the OpenSearch domain endpoints to be created in.
 
-### off_peak_window_options
+### `off_peak_window_options` Block
 
 AWS documentation: [Off Peak Hours Support for Amazon OpenSearch Service Domains](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html)
 
 * `enabled` - (Optional) Enabled disabled toggle for off-peak update window.
-* `off_peak_window` - (Optional)
-    * `window_start_time` - (Optional) 10h window for updates
-        * `hours` - (Required) Starting hour of the 10-hour window for updates
-        * `minutes` - (Required) Starting minute of the 10-hour window for updates
+* `off_peak_window` - (Optional) Configuration block for the off-peak window. Detailed below.
+
+#### `off_peak_window` Block
+
+* `window_start_time` - (Optional) Configuration block for the 10-hour window for updates. Detailed below.
+
+#### `window_start_time` Block
+
+* `hours` - (Optional) Starting hour of the 10-hour window for updates.
+* `minutes` - (Optional) Starting minute of the 10-hour window for updates.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain.
-* `domain_endpoint_v2_hosted_zone_id` -  Dual stack hosted zone ID for the domain.
+* `dashboard_endpoint` - Domain-specific endpoint for Dashboard without HTTPS scheme.
+* `dashboard_endpoint_v2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without HTTPS scheme.
+* `domain_endpoint_v2_hosted_zone_id` - Dual stack hosted zone ID for the domain.
 * `domain_id` - Unique identifier for the domain.
-* `domain_name` - Name of the OpenSearch domain.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `endpoint_v2` - V2 domain endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
-* `dashboard_endpoint` - Domain-specific endpoint for Dashboard without https scheme.
-* `dashboard_endpoint_v2` - V2 domain endpoint for Dashboard that works with both IPv4 and IPv6 addresses, without https scheme.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
-* `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
+
+### `vpc_options` Block
+
+* `availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
+* `vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
 
 ## Timeouts
 

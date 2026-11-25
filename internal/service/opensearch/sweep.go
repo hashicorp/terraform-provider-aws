@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/opensearch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -110,10 +111,19 @@ func sweepInboundConnections(ctx context.Context, client *conns.AWSClient) ([]sw
 				continue
 			}
 
+			orphaned, err := connectionDomainMissing(ctx, conn, client, v.LocalDomainInfo, v.RemoteDomainInfo)
+			if err != nil {
+				return nil, err
+			}
+
+			if orphaned {
+				log.Printf("[INFO] Skipping OpenSearch Inbound Connection %s: Status=%s, domain no longer exists", id, status)
+				continue
+			}
+
 			r := resourceInboundConnectionAccepter()
 			d := r.Data(nil)
 			d.SetId(id)
-			d.Set("connection_status", status)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -137,8 +147,19 @@ func sweepOutboundConnections(ctx context.Context, client *conns.AWSClient) ([]s
 		for _, v := range page.Connections {
 			id := aws.ToString(v.ConnectionId)
 
-			if status := v.ConnectionStatus.StatusCode; status == awstypes.OutboundConnectionStatusCodeDeleted {
+			status := v.ConnectionStatus.StatusCode
+			if status == awstypes.OutboundConnectionStatusCodeDeleted {
 				log.Printf("[INFO] Skipping OpenSearch Outbound Connection %s: Status=%s", id, status)
+				continue
+			}
+
+			orphaned, err := connectionDomainMissing(ctx, conn, client, v.LocalDomainInfo, v.RemoteDomainInfo)
+			if err != nil {
+				return nil, err
+			}
+
+			if orphaned {
+				log.Printf("[INFO] Skipping OpenSearch Outbound Connection %s: Status=%s, domain no longer exists", id, status)
 				continue
 			}
 
@@ -151,4 +172,37 @@ func sweepOutboundConnections(ctx context.Context, client *conns.AWSClient) ([]s
 	}
 
 	return sweepResources, nil
+}
+
+// connectionDomainMissing reports whether any of a cross-cluster connection's
+// domains in the current account and Region no longer exists. AWS refuses to
+// delete such connections (they stay VALIDATING indefinitely), so sweeping them
+// only produces errors.
+func connectionDomainMissing(ctx context.Context, conn *opensearch.Client, client *conns.AWSClient, domains ...*awstypes.DomainInformationContainer) (bool, error) {
+	for _, v := range domains {
+		if v == nil || v.AWSDomainInformation == nil {
+			continue
+		}
+
+		info := v.AWSDomainInformation
+		if aws.ToString(info.OwnerId) != client.AccountID(ctx) || aws.ToString(info.Region) != client.Region(ctx) {
+			continue
+		}
+
+		domain, err := findDomainByName(ctx, conn, aws.ToString(info.DomainName))
+
+		if retry.NotFound(err) {
+			return true, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if aws.ToBool(domain.Deleted) {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

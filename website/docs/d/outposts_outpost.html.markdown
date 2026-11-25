@@ -22,11 +22,11 @@ data "aws_outposts_outpost" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `arn` - (Optional) ARN.
 * `id` - (Optional) Identifier of the Outpost.
 * `name` - (Optional) Name of the Outpost.
-* `arn` - (Optional) ARN.
 * `owner_id` - (Optional) AWS Account identifier of the Outpost owner.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -34,9 +34,9 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availability_zone` - Availability Zone name.
 * `availability_zone_id` - Availability Zone identifier.
-* `description` - The description of the Outpost.
-* `lifecycle_status` - The life cycle status.
+* `description` - Description of the Outpost.
+* `lifecycle_status` - Life cycle status.
 * `site_arn` - ARN of the site.
-* `site_id` - The ID of the site.
-* `supported_hardware_type` - The hardware type.
-* `tags` - The Outpost tags.
+* `site_id` - ID of the site.
+* `supported_hardware_type` - Hardware type.
+* `tags` - Outpost tags.

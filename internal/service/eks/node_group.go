@@ -315,7 +315,7 @@ func resourceNodeGroup() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"taint": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -877,11 +877,7 @@ func issuesError(apiObjects []types.Issue) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		err := issueError(apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), issueError(apiObject)))
 	}
 
 	return errors.Join(errs...)

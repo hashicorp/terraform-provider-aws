@@ -71,7 +71,7 @@ This data source exports the following attributes in addition to the arguments a
 * `carrier_ip` - Carrier IP address.
 * `customer_owned_ip` - Customer Owned IP.
 * `customer_owned_ipv4_pool` - The ID of a Customer Owned IP Pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
-* `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
+* `domain` - Whether the address is for use in EC2-Classic (`standard`) or in a VPC (`vpc`).
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
 * `instance_id` - ID of the instance that the address is associated with (if any).
 * `ipam_pool_id`- The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
