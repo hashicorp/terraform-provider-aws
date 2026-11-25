@@ -5269,6 +5269,70 @@ func findTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, c
 	return nil, tfresource.NewEmptyResultError()
 }
 
+func findTransitGatewayNetworkFunctionAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayNetworkFunctionAttachmentsInput) (*awstypes.TransitGatewayNetworkFunctionAttachment, error) {
+	output, err := findTransitGatewayNetworkFunctionAttachments(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTransitGatewayNetworkFunctionAttachments(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayNetworkFunctionAttachmentsInput) ([]awstypes.TransitGatewayNetworkFunctionAttachment, error) {
+	var output []awstypes.TransitGatewayNetworkFunctionAttachment
+
+	err := describeTransitGatewayNetworkFunctionAttachmentsPages(ctx, conn, input, func(page *ec2.DescribeTransitGatewayNetworkFunctionAttachmentsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.TransitGatewayNetworkFunctionAttachments...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findTransitGatewayNetworkFunctionAttachmentByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayNetworkFunctionAttachment, error) {
+	input := ec2.DescribeTransitGatewayNetworkFunctionAttachmentsInput{
+		TransitGatewayAttachmentIds: []string{id},
+	}
+
+	output, err := findTransitGatewayNetworkFunctionAttachment(ctx, conn, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch state := output.State; state {
+	case awstypes.TransitGatewayAttachmentStateDeleted,
+		awstypes.TransitGatewayAttachmentStateFailed,
+		awstypes.TransitGatewayAttachmentStateRejected:
+		return nil, &retry.NotFoundError{
+			Message: string(state),
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.TransitGatewayAttachmentId) != id {
+		return nil, &retry.NotFoundError{}
+	}
+
+	return output, nil
+}
+
 func findTransitGatewayPeeringAttachment(ctx context.Context, conn *ec2.Client, input *ec2.DescribeTransitGatewayPeeringAttachmentsInput) (*awstypes.TransitGatewayPeeringAttachment, error) {
 	output, err := findTransitGatewayPeeringAttachments(ctx, conn, input)
 
