@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 )
 
 // Shared by aws_s3_object and aws_s3_object_copy.
@@ -43,6 +44,9 @@ func configuredString(raw cty.Value, key string) (string, attrState) {
 }
 
 // configuredInt32 is configuredString for a top-level integer attribute.
+// SDKv2 stores unset TypeInt attributes as 0 in state, and Terraform forwards
+// prior state in RawConfig when lifecycle.ignore_changes is set; both duration
+// schemas require values >= 1, so 0 is treated as absent.
 func configuredInt32(raw cty.Value, key string) (int32, attrState) {
 	if raw.IsNull() || !raw.IsKnown() {
 		return 0, attrAbsent
@@ -55,6 +59,9 @@ func configuredInt32(raw cty.Value, key string) (int32, attrState) {
 		return 0, attrUnknown
 	default:
 		i, _ := v.AsBigFloat().Int64()
+		if i == 0 {
+			return 0, attrAbsent
+		}
 		return int32(i), attrSet
 	}
 }
@@ -63,7 +70,7 @@ func configuredInt32(raw cty.Value, key string) (int32, attrState) {
 // days/years switch leaves the old one in state, where d.GetOk would find it.
 // With neither configured it falls back to state, preserving an inherited
 // duration - S3 rejects EventHold:ON without one.
-func expandObjectEventHoldDuration(d *schema.ResourceData) *types.EventHoldDuration {
+func expandObjectEventHoldDuration(d sdkv2.ResourceDiffer) *types.EventHoldDuration {
 	raw := d.GetRawConfig()
 
 	if v, state := configuredInt32(raw, "object_lock_event_hold_duration_days"); state == attrSet {
@@ -83,7 +90,7 @@ func expandObjectEventHoldDuration(d *schema.ResourceData) *types.EventHoldDurat
 	return nil
 }
 
-func validateObjectEventHold(d *schema.ResourceDiff) error {
+func validateObjectEventHold(d sdkv2.ResourceDiffer) error {
 	raw := d.GetRawConfig()
 
 	_, days := configuredInt32(raw, "object_lock_event_hold_duration_days")
