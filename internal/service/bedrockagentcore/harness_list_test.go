@@ -157,6 +157,7 @@ func TestAccBedrockAgentCoreHarness_List_includeResource(t *testing.T) {
 						tfquerycheck.KnownValueCheck(tfjsonpath.New(names.AttrExecutionRoleARN), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_id"), knownvalue.NotNull()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("harness_name"), knownvalue.StringExact(rName+"_0")),
+						tfquerycheck.KnownValueCheck(tfjsonpath.New("hook"), knownvalue.ListSizeExact(0)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("max_iterations"), knownvalue.Int32Exact(75)),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("max_tokens"), knownvalue.Null()),
 						tfquerycheck.KnownValueCheck(tfjsonpath.New("memory"), knownvalue.ListExact([]knownvalue.Check{

@@ -143,6 +143,65 @@ resource "aws_bedrockagentcore_harness" "example" {
 }
 ```
 
+### With Lifecycle Hooks
+
+The execution role must allow `lambda:InvokeFunction`, `sns:Publish`, or `events:PutEvents` on each Lambda, SNS, or EventBridge target, respectively. For a target in another account, the target's resource-based policy must also allow the execution role.
+
+```terraform
+resource "aws_bedrockagentcore_harness" "example" {
+  harness_name       = "example_with_hooks"
+  execution_role_arn = aws_iam_role.example.arn
+
+  model {
+    bedrock_model_config {
+      model_id = "anthropic.claude-sonnet-4-20250514"
+    }
+  }
+
+  system_prompt {
+    text = "You are a helpful assistant."
+  }
+
+  hook {
+    before_tool_call {
+      name = "validate_tool_call"
+
+      target {
+        lambda {
+          arn             = aws_lambda_function.example.arn
+          failure_mode    = "deny"
+          timeout_seconds = 5
+        }
+      }
+    }
+  }
+
+  hook {
+    after_tool_call {
+      name = "record_tool_result"
+
+      target {
+        sns {
+          arn = aws_sns_topic.example.arn
+        }
+      }
+    }
+  }
+
+  hook {
+    after_invocation {
+      name = "record_invocation"
+
+      target {
+        eventbridge {
+          arn = aws_cloudwatch_event_bus.example.arn
+        }
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -159,6 +218,7 @@ The following arguments are optional:
 * `environment` - (Optional) Compute environment configuration. See [`environment` Block](#environment-block) below. If not specified, configured values can be found in `environment_actual`. Clearing this value will leave the environment configuration as is, but Terraform will not track changes.
 * `environment_artifact` - (Optional) Environment artifact configuration. See [`environment_artifact` Block](#environment_artifact-block) below.
 * `environment_variables` - (Optional, Sensitive) Map of environment variables. Set to an empty map (`{}`) to remove all environment variables.
+* `hook` - (Optional) Lifecycle hooks that send an event to a Lambda function, SNS topic, or EventBridge event bus at defined points in the agent loop. Up to 20 can be specified. The execution role must allow the harness to call each target. If no `hook` blocks are configured, Terraform removes all hooks from the harness, including hooks added outside Terraform. To keep hooks that are managed outside Terraform, add `hook` to `ignore_changes` in a [`lifecycle` block](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle). See [`hook` Block](#hook-block) below.
 * `max_iterations` - (Optional) Maximum number of iterations the agent loop can perform.
 * `max_tokens` - (Optional) Maximum total number of output tokens the agent can generate across all model calls within a single invocation.
 * `memory` - (Optional) Memory configuration. See [`memory` Block](#memory-block) below. If not specified, configured values can be found in `memory_actual`. Clearing this value will reset the memory configuration to default values.
@@ -461,6 +521,59 @@ The `claim_match_value` block supports the following:
 
 * `match_value_string` - (Optional) String value to match for. Must be specified when `claim_match_operator` is `EQUALS` or `CONTAINS`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
 * `match_value_string_list` - (Optional) List of strings to check for a match. Must be specified when `claim_match_operator` is `CONTAINS_ANY`. Exactly one of `match_value_string` or `match_value_string_list` must be specified.
+
+### `hook` Block
+
+Lambda hooks for the same event run concurrently. If more than one of them denies the event, the first denying hook in the list supplies the reason.
+
+The `hook` block supports exactly one of the following:
+
+* `after_invocation` - (Optional) Hook that runs after an invocation completes. See [`after_invocation` Block](#after_invocation-block) below.
+* `after_tool_call` - (Optional) Hook that runs after a tool call completes. See [`after_tool_call` Block](#after_tool_call-block) below.
+* `before_invocation` - (Optional) Hook that runs before an invocation begins. See [`before_invocation` Block](#before_invocation-block) below.
+* `before_tool_call` - (Optional) Hook that runs before the agent calls a tool. See [`before_tool_call` Block](#before_tool_call-block) below.
+
+### `after_invocation` Block
+
+* `name` - (Required) Name of the hook. Must be 1-64 characters and contain only alphanumeric characters, hyphens, and underscores. Must be unique within the harness.
+* `target` - (Required) Target that receives the hook event. See [`target` Block](#target-block) below.
+
+### `after_tool_call` Block
+
+* `name` - (Required) Name of the hook. Must be 1-64 characters and contain only alphanumeric characters, hyphens, and underscores. Must be unique within the harness.
+* `target` - (Required) Target that receives the hook event. See [`target` Block](#target-block) below.
+
+### `before_invocation` Block
+
+* `name` - (Required) Name of the hook. Must be 1-64 characters and contain only alphanumeric characters, hyphens, and underscores. Must be unique within the harness.
+* `target` - (Required) Target that receives the hook event. See [`target` Block](#target-block) below.
+
+### `before_tool_call` Block
+
+* `name` - (Required) Name of the hook. Must be 1-64 characters and contain only alphanumeric characters, hyphens, and underscores. Must be unique within the harness.
+* `target` - (Required) Target that receives the hook event. See [`target` Block](#target-block) below.
+
+### `target` Block
+
+The `target` block supports exactly one of the following:
+
+* `eventbridge` - (Optional) EventBridge event bus that receives the hook event. The harness does not wait for a response. See [`eventbridge` Block](#eventbridge-block) below.
+* `lambda` - (Optional) Lambda function that the harness invokes synchronously. The function returns an `allow` or `deny` decision. See [`lambda` Block](#lambda-block) below.
+* `sns` - (Optional) SNS topic that receives the hook event. The harness does not wait for a response. See [`sns` Block](#sns-block) below.
+
+### `eventbridge` Block
+
+* `arn` - (Required) ARN of the EventBridge event bus.
+
+### `lambda` Block
+
+* `arn` - (Required) ARN of the Lambda function.
+* `failure_mode` - (Optional) Decision to apply when the Lambda function times out, returns an error, or returns an invalid response. Valid values are `allow` and `deny`. Defaults to `deny`.
+* `timeout_seconds` - (Optional) Maximum number of seconds to wait for the Lambda function response. Valid value is between `1` and `900`. Defaults to `60`.
+
+### `sns` Block
+
+* `arn` - (Required) ARN of the SNS topic.
 
 ### `memory` Block
 
