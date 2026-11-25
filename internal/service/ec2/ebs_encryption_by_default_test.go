@@ -22,6 +22,8 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
+			"serial": testAccEC2EBSEBSEncryptionByDefault_identitySerial,
+			"v6_74_0": testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
@@ -30,12 +32,6 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 			acctest.CtBasic:   testAccEC2EBSEncryptionByDefault_List_basic,
 			"includeResource": testAccEC2EBSEncryptionByDefault_List_includeResource,
 			"regionOverride":  testAccEC2EBSEncryptionByDefault_List_regionOverride,
-		},
-		"Identity": {
-			"serial": testAccEC2EBSEBSEncryptionByDefault_identitySerial,
-		},
-		"Upgrade": {
-			"v6_74_0": testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
 		},
 	}
 
@@ -147,8 +143,8 @@ func testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade(t *testing.T) {
 				Config:                   testAccEBSEncryptionByDefaultConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrRegion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
 				),
 			},
 		},
