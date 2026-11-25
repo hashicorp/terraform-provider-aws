@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_metadata_configuration: Retry creation on `NoSuchBucket` while the bucket is propagating
+```
