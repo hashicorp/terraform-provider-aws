@@ -14,6 +14,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -229,15 +230,25 @@ func (r *healthCheckSourceResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Flatten(ctx, source.HealthCheckSourceConfig, &data), smerr.ID, id)
+	smerr.AddEnrich(ctx, &response.Diagnostics, r.flatten(ctx, source, &data), smerr.ID, id)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.ARN = fwflex.StringValueToFramework(ctx, r.healthCheckSourceARN(ctx, id))
+	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+}
+
+// flatten sets data from source. data.ID must already be set.
+func (r *healthCheckSourceResource) flatten(ctx context.Context, source *awstypes.HealthCheckSource, data *healthCheckSourceResourceModel) diag.Diagnostics {
+	diags := fwflex.Flatten(ctx, source.HealthCheckSourceConfig, data)
+	if diags.HasError() {
+		return diags
+	}
+
+	data.ARN = fwflex.StringValueToFramework(ctx, r.healthCheckSourceARN(ctx, data.ID.ValueString()))
 	data.Status = fwtypes.StringEnumValue(source.HealthCheckSourceStatus)
 
-	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.Set(ctx, &data))
+	return diags
 }
 
 func (r *healthCheckSourceResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
