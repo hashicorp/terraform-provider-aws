@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T21:17:57.000000+01:00
+custom:
+    Body: Add `priority` argument and support in-place update of `name` and `priority`
+    Impact: resource/aws_route53profiles_association
+    PullRequest: "51274"
