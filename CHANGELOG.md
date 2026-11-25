@@ -3,7 +3,9 @@
 FEATURES:
 
 * **New List Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New List Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
 * **New Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
 
 ENHANCEMENTS:
 
