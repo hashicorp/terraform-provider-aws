@@ -1,0 +1,7 @@
+kind: breaking-change
+time: 2026-11-24T15:17:04.011387-06:00
+custom:
+    Body: Newly created resources now use the AWS Region as the `id` attribute value instead of a generated identifier. The `id` for existing resources is updated to the AWS region when upgrading to `v6.75.0` or higher.
+    Impact: |
+        resource/aws_ebs_encryption_by_default
+    PullRequest: "50866"
