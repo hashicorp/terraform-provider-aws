@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:16:38.879361-05:00
+custom:
+  Body: Add `analytics_config` argument
+  Impact: resource/aws_wafv2_web_acl
+  PullRequest: "51303"
