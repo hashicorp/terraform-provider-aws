@@ -468,6 +468,51 @@ func TestAccDMSS3Endpoint_kmsKeyARN(t *testing.T) {
 	})
 }
 
+func TestAccDMSS3Endpoint_glueCatalogGenerationUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_s3_endpoint.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccS3EndpointConfig_glueCatalogGeneration(rName, "folder", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "parquet"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrTarget),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtFalse),
+				),
+			},
+			{
+				Config: testAccS3EndpointConfig_glueCatalogGeneration(rName, "folder", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder"),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "parquet"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrTarget),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccS3EndpointConfig_glueCatalogGeneration(rName, "folder2", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "bucket_folder", "folder2"),
+					resource.TestCheckResourceAttr(resourceName, "data_format", "parquet"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEndpointType, names.AttrTarget),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckS3EndpointDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return testAccCheckEndpointDestroy(ctx, t)
 }
@@ -886,4 +931,22 @@ resource "aws_dms_s3_endpoint" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName))
+}
+
+func testAccS3EndpointConfig_glueCatalogGeneration(rName, bucketFolder string, glueCatalogGeneration bool) string {
+	return acctest.ConfigCompose(
+		testAccS3EndpointConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_dms_s3_endpoint" "test" {
+  endpoint_id             = %[1]q
+  endpoint_type           = "target"
+  bucket_folder           = %[2]q
+  bucket_name             = "beckut_name"
+  data_format             = "parquet"
+  glue_catalog_generation = %[3]t
+  service_access_role_arn = aws_iam_role.test.arn
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, bucketFolder, glueCatalogGeneration))
 }

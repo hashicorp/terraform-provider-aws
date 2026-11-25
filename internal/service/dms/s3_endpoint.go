@@ -483,9 +483,8 @@ func resourceS3EndpointUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			input.CertificateArn = aws.String(d.Get(names.AttrCertificateARN).(string))
 		}
 
-		if d.HasChange(names.AttrEndpointType) {
-			input.EndpointType = awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string))
-		}
+		// Without EndpointType, DMS checks S3Settings as if the endpoint were a source (#34029).
+		input.EndpointType = awstypes.ReplicationEndpointTypeValue(d.Get(names.AttrEndpointType).(string))
 
 		input.EngineName = aws.String(engineNameS3)
 
