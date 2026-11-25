@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-24T23:07:16.945352445Z
+custom:
+    Name: aws_ec2_public_ipv4_pool
+    NewType: New Resource
+    PullRequest: "51351"

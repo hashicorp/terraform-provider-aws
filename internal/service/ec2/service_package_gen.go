@@ -200,6 +200,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			},
 		},
 		{
+			Factory:  newPublicIPv4PoolResource,
+			TypeName: "aws_ec2_public_ipv4_pool",
+			Name:     "Public IPv4 Pool",
+			Tags:     inttypes.ResourceTagsAttribute("pool_id"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("pool_id", true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newSecondaryNetworkResource,
 			TypeName: "aws_ec2_secondary_network",
 			Name:     "SecondaryNetwork",
@@ -412,6 +423,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
 			Region:   inttypes.ResourceRegionDefault(),
 			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+		},
+		{
+			Factory:  newPublicIPv4PoolResourceAsListResource,
+			TypeName: "aws_ec2_public_ipv4_pool",
+			Name:     "Public IPv4 Pool",
+			Tags:     inttypes.ResourceTagsAttribute("pool_id"),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute("pool_id", true)),
 		},
 		{
 			Factory:  newSecondaryNetworkResourceAsListResource,
