@@ -20,6 +20,78 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestSuppressEquivalentDocumentPermissions(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		key      string
+		old      string
+		new      string
+		expected bool
+	}{
+		{
+			name:     "same order",
+			key:      "permissions.account_ids",
+			old:      "123456789012,123456789013",
+			new:      "123456789012,123456789013",
+			expected: true,
+		},
+		{
+			name:     "different order",
+			key:      "permissions.account_ids",
+			old:      "123456789012,123456789013",
+			new:      "123456789013,123456789012",
+			expected: true,
+		},
+		{
+			name:     "different account IDs",
+			key:      "permissions.account_ids",
+			old:      "123456789012,123456789013",
+			new:      "123456789012,123456789014",
+			expected: false,
+		},
+		{
+			name:     "account ID added",
+			key:      "permissions.account_ids",
+			old:      acctest.Ct12Digit,
+			new:      "123456789013,123456789012",
+			expected: false,
+		},
+		{
+			name:     "from empty",
+			key:      "permissions.account_ids",
+			old:      "",
+			new:      acctest.Ct12Digit,
+			expected: false,
+		},
+		{
+			name:     "all",
+			key:      "permissions.account_ids",
+			old:      "all",
+			new:      "all",
+			expected: true,
+		},
+		{
+			name:     "other key",
+			key:      "permissions.type",
+			old:      "Share",
+			new:      "Other",
+			expected: false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfssm.SuppressEquivalentDocumentPermissions(tc.key, tc.old, tc.new, nil); got != tc.expected {
+				t.Errorf("suppressEquivalentDocumentPermissions(%q, %q, %q) = %t, expected %t", tc.key, tc.old, tc.new, got, tc.expected)
+			}
+		})
+	}
+}
+
 func TestAccSSMDocument_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -286,6 +358,43 @@ func TestAccSSMDocument_Permission_batching(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSMDocument_Permission_unordered(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_document.test"
+	idsUnordered := "123456789014,123456789012,123456789013"
+	idsReordered := "123456789013,123456789014,123456789012"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDocumentDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDocumentConfig_privatePermission(rName, idsUnordered),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDocumentExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccDocumentConfig_privatePermission(rName, idsReordered),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
 			},
 		},
 	})
