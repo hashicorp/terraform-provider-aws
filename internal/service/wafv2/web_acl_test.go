@@ -3496,6 +3496,8 @@ func TestAccWAFV2WebACL_associationConfigRegional(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "association_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.agentcore_gateway.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.agentcore_gateway.0.default_size_inspection_limit", "KB_32"),
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.api_gateway.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.api_gateway.0.default_size_inspection_limit", "KB_16"),
 					resource.TestCheckResourceAttr(resourceName, "association_config.0.request_body.0.cognito_user_pool.#", "1"),
@@ -7751,6 +7753,9 @@ resource "aws_wafv2_web_acl" "test" {
 
   association_config {
     request_body {
+      agentcore_gateway {
+        default_size_inspection_limit = "KB_32"
+      }
       api_gateway {
         default_size_inspection_limit = "KB_16"
       }
