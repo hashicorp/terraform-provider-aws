@@ -9,6 +9,7 @@ var (
 	ResourcePolicy       = resourcePolicy
 	ResourceSet          = newResourceSetResource
 
+	ExpandPolicy              = expandPolicy
 	FindAdminAccount          = findAdminAccount
 	FindPolicyByID            = findPolicyByID
 	FindResourceSetByID       = findResourceSetByID
