@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-25T23:11:51.576373+01:00
+custom:
+    Body: removes schema-level defaults on origins set-element sub-attributes that were causing flip-flopping plans
+    Impact: resource/aws_cloudfront_multitenant_distribution
+    PullRequest: "47754"
