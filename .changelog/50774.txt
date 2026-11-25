@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_bedrockagentcore_agent_runtime: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo` and `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo_version` arguments
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_gateway: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo` and `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo_version` arguments
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_harness: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo` and `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo_version` arguments
+```
+
+```release-note:enhancement
+resource/aws_bedrockagentcore_registry: Add `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo` and `authorizer_configuration.custom_jwt_authorizer.custom_claim_match_values_wo_version` arguments
+```
+
+```release-note:bug
+resource/aws_bedrockagentcore_harness: Preserve `authorizer_configuration.custom_jwt_authorizer.private_endpoint` and `private_endpoint_overrides` after update
+```

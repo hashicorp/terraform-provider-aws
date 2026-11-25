@@ -285,8 +285,16 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 
 	conn := r.Meta().BedrockAgentCoreClient(ctx)
 
+	inputAuthorizerConfiguration, d := withCustomClaimMatchValuesWO(ctx, request.Config, data.AuthorizerConfiguration)
+	smerr.AddEnrich(ctx, &response.Diagnostics, d)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	inputData := data
+	inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 	var input bedrockagentcorecontrol.CreateGatewayInput
-	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, data, &input))
+	smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, inputData, &input))
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -339,7 +347,7 @@ func (r *gatewayResource) Create(ctx context.Context, request resource.CreateReq
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, data.AuthorizerConfiguration, plannedAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -376,7 +384,7 @@ func (r *gatewayResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
-	authorizerConfiguration, d := preserveAuthorizerPrivateEndpoints(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
+	authorizerConfiguration, d := preserveAuthorizerConfiguration(ctx, data.AuthorizerConfiguration, priorAuthorizerConfiguration)
 	smerr.AddEnrich(ctx, &response.Diagnostics, d)
 	if response.Diagnostics.HasError() {
 		return
@@ -404,8 +412,16 @@ func (r *gatewayResource) Update(ctx context.Context, request resource.UpdateReq
 
 	if diff.HasChanges() {
 		gatewayID := fwflex.StringValueFromFramework(ctx, new.GatewayID)
+		inputAuthorizerConfiguration, inputDiags := withCustomClaimMatchValuesWO(ctx, request.Config, new.AuthorizerConfiguration)
+		smerr.AddEnrich(ctx, &response.Diagnostics, inputDiags)
+		if response.Diagnostics.HasError() {
+			return
+		}
+		inputData := new
+		inputData.AuthorizerConfiguration = inputAuthorizerConfiguration
+
 		var input bedrockagentcorecontrol.UpdateGatewayInput
-		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, new, &input))
+		smerr.AddEnrich(ctx, &response.Diagnostics, fwflex.Expand(ctx, inputData, &input))
 		if response.Diagnostics.HasError() {
 			return
 		}
