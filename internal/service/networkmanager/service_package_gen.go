@@ -22,6 +22,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newAttachmentsDataSource,
+			TypeName: "aws_networkmanager_attachments",
+			Name:     "Attachments",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newCoreNetworkDataSource,
 			TypeName: "aws_networkmanager_core_network",
 			Name:     "Core Network",
