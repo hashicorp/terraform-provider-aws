@@ -72,6 +72,82 @@ func Test_StripRevision(t *testing.T) {
 	}
 }
 
+func TestSuppressTaskDefinitionCPUDiffs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old, new string
+		want     bool
+	}{
+		{old: "256", new: "256", want: true},
+		{old: "4096", new: "4 vCPU", want: true},
+		{old: "4096", new: "4 vcpu", want: true},
+		{old: "4096", new: "4vCPU", want: true},
+		{old: "4096", new: " 4 VCPU ", want: true},
+		{old: "256", new: ".25 vCPU", want: true},
+		{old: "512", new: "0.5 vCPU", want: true},
+		{old: "16384", new: "16 vCPU", want: true},
+		{old: "4 vCPU", new: "4096", want: true},
+		{old: "4096", new: "2 vCPU"},
+		{old: "4096", new: "2048"},
+		{old: "4096", new: "4 GB"},
+		{old: "4096", new: "4"},
+		{old: "102", new: "0.1 vCPU"},
+		{old: "4096", new: "four vCPU"},
+		{old: "4096", new: "vCPU"},
+		{old: "4096", new: "-4 vCPU"},
+		{old: "4096", new: ""},
+		{old: "", new: "4 vCPU"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("%q/%q", testCase.old, testCase.new), func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfecs.SuppressTaskDefinitionCPUDiffs("cpu", testCase.old, testCase.new, nil), testCase.want; got != want {
+				t.Errorf("SuppressTaskDefinitionCPUDiffs(%q, %q) = %t, want %t", testCase.old, testCase.new, got, want)
+			}
+		})
+	}
+}
+
+func TestSuppressTaskDefinitionMemoryDiffs(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		old, new string
+		want     bool
+	}{
+		{old: "512", new: "512", want: true},
+		{old: "8192", new: "8 GB", want: true},
+		{old: "8192", new: "8GB", want: true},
+		{old: "8192", new: "8 gb", want: true},
+		{old: "8192", new: "8 GiB", want: true},
+		{old: "512", new: "0.5 GB", want: true},
+		{old: "512", new: ".5GB", want: true},
+		{old: "30720", new: "30 GB", want: true},
+		{old: "8 GB", new: "8192", want: true},
+		{old: "8192", new: "4 GB"},
+		{old: "8192", new: "8"},
+		{old: "8192", new: "8 vCPU"},
+		{old: "8192", new: "8 MB"},
+		{old: "102", new: "0.1 GB"},
+		{old: "8192", new: "eight GB"},
+		{old: "8192", new: ""},
+		{old: "", new: "8 GB"},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("%q/%q", testCase.old, testCase.new), func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfecs.SuppressTaskDefinitionMemoryDiffs("memory", testCase.old, testCase.new, nil), testCase.want; got != want {
+				t.Errorf("SuppressTaskDefinitionMemoryDiffs(%q, %q) = %t, want %t", testCase.old, testCase.new, got, want)
+			}
+		})
+	}
+}
+
 func TestValidTaskDefinitionContainerDefinitions(t *testing.T) {
 	t.Parallel()
 
@@ -1191,6 +1267,66 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 					},
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_Fargate_cpuMemoryStrings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_fargateCPUMemory(rName, ".25 vCPU", "0.5 GB"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
+					resource.TestCheckResourceAttr(resourceName, "memory", "512"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_fargateCPUMemory(rName, "256", "512"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+			{
+				Config: testAccTaskDefinitionConfig_fargateCPUMemory(rName, "1 vcpu", "2GB"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "cpu", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "memory", "2048"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
 					},
 				},
 			},
@@ -2320,6 +2456,31 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 }
 `, rName, portMappings)
+}
+
+func testAccTaskDefinitionConfig_fargateCPUMemory(rName, cpu, memory string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = %[2]q
+  memory                   = %[3]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+}
+`, rName, cpu, memory)
 }
 
 func testAccTaskDefinitionConfig_fargateEphemeralStorage(rName, portMappings string) string {
