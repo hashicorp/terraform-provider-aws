@@ -466,6 +466,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				ExpectError: regexache.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
 			},
 			{
+				Config:      testAccMetricAlarmConfig_badMetricQuerySelectExpression(rName),
+				ExpectError: regexache.MustCompile("No metric_query may have both `expression` and a `metric` specified"),
+			},
+			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionQuery(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
@@ -1218,6 +1222,34 @@ resource "aws_cloudwatch_metric_alarm" "test" {
       dimensions = {
         InstanceId = "i-abcd1234"
       }
+    }
+  }
+}
+`, rName)
+}
+
+// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/41680
+// Validates that a SELECT expression with a period alongside a metric block is rejected at plan time.
+func testAccMetricAlarmConfig_badMetricQuerySelectExpression(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name          = %[1]q
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 2
+  threshold           = 90
+  treat_missing_data  = "missing"
+
+  metric_query {
+    id          = "high1"
+    return_data = false
+    expression  = "SELECT AVG(CPUUtilization) FROM AWS/EC2 GROUP BY InstanceId"
+    period      = 10
+
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = 10
+      stat        = "Average"
     }
   }
 }
