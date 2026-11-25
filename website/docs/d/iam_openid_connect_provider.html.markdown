@@ -38,5 +38,20 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `client_id_list` - List of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
+* `context_provider` - Trusted identity propagation context provider configuration. See [`context_provider`](#context_provider) below.
+* `identity_center_instance_arn` - ARN of the IAM Identity Center instance that validates the identity.
+* `identity_store_arn` - ARN of the identity store associated with the IAM Identity Center instance.
 * `thumbprint_list` - List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
 * `tags` - Map of resource tags for the IAM OIDC provider.
+
+### context_provider
+
+* `key_definition` - Mappings from keys in the OIDC token to trusted context keys. See [`key_definition`](#key_definition) below.
+* `subject_source_key` - Key in the OIDC token that supplies the subject.
+* `subject_type_source_key` - Key in the OIDC token that supplies the subject type.
+* `subject_type_value` - Static value for the subject type.
+
+### key_definition
+
+* `source_key` - Key in the OIDC token the value is read from.
+* `target_key` - Trusted context key the value is mapped into.

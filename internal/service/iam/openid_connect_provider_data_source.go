@@ -46,6 +46,15 @@ func dataSourceOpenIDConnectProvider() *schema.Resource {
 					Computed: true,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
+				"context_provider": dataSourceContextProviderSchema(),
+				"identity_center_instance_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"identity_store_arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"thumbprint_list": {
 					Type:     schema.TypeList,
@@ -95,6 +104,11 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	d.SetId(arn)
 	d.Set(names.AttrARN, arn)
 	d.Set("client_id_list", output.ClientIDList)
+	if err := d.Set("context_provider", flattenContextProvider(output.ContextProvider)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting context_provider: %s", err)
+	}
+	d.Set("identity_center_instance_arn", output.IdentityCenterInstanceArn)
+	d.Set("identity_store_arn", output.IdentityStoreArn)
 	d.Set("thumbprint_list", output.ThumbprintList)
 	d.Set(names.AttrURL, output.Url)
 
