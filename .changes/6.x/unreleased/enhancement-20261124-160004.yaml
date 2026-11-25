@@ -1,0 +1,8 @@
+kind: enhancement
+time: 2026-11-24T16:30:00.000000-05:00
+custom:
+    Body: Add `context_provider`, `identity_center_instance_arn` and `identity_store_arn` attributes, and `saml_key_hashes` for SAML providers, to support trusted identity propagation
+    Impact: |-
+        data-source/aws_iam_saml_provider
+        data-source/aws_iam_openid_connect_provider
+    PullRequest: "51356"
