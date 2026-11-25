@@ -31,6 +31,7 @@ var (
 	WaitCacheClusterDeleted              = waitCacheClusterDeleted
 	WaitCacheClusterAvailable            = waitCacheClusterAvailable
 	WaitReplicationGroupAvailable        = waitReplicationGroupAvailable
+	WaitServerlessCacheAvailable         = waitServerlessCacheAvailable
 
 	DeleteCacheCluster                                = deleteCacheCluster
 	DiffVersion                                       = diffVersion
