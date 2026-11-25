@@ -243,7 +243,7 @@ This resource supports the following arguments:
 
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
 
-* `source_dest_check` - (Optional) Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
+* `source_dest_check` - (Optional) Controls if traffic is routed to the instance when the destination address does not match the instance. Used for NAT or VPNs. Defaults true. Cannot be used together with `network_interface` or `primary_network_interface`; when the primary network interface is managed as a separate [`aws_network_interface`](network_interface.html) resource, set `source_dest_check` on that resource instead.
 * `subnet_id` - (Optional) VPC Subnet ID to launch in.
 * `tags` - (Optional) Map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of `dedicated` runs on single-tenant hardware. The `host` tenancy is not supported for the import-instance command. Valid values are `default`, `dedicated`, and `host`.
