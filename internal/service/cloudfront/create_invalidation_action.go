@@ -65,7 +65,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 			},
 			"paths": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
-				Description: "List of file paths or patterns to invalidate. Use /* to invalidate all files",
+				Description: "List of file paths or patterns to invalidate, or cache tags prefixed with #. Use /* to invalidate all files",
 				Required:    true,
 				ElementType: types.StringType,
 				Validators: []validator.List{
@@ -73,7 +73,7 @@ func (a *createInvalidationAction) Schema(ctx context.Context, req action.Schema
 					listvalidator.SizeAtMost(3000), // CloudFront limit
 					listvalidator.ValueStringsAre(
 						stringvalidator.LengthAtLeast(1),
-						lazystringvalidator.RegexMatches(`^(/.*|\*)$`, "must start with '/' or be '*'"),
+						lazystringvalidator.RegexMatches(`^(/.*|\*|#[\x21-\x2B\x2D-\x7E]{1,256})$`, "must start with '/', be '*', or be a cache tag prefixed with '#'"),
 					),
 				},
 			},
