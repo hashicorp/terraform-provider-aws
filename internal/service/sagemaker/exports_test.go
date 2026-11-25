@@ -56,6 +56,7 @@ var (
 	ResourceAppImageConfig                         = resourceAppImageConfig
 	ResourceAlgorithm                              = newAlgorithmResource
 	ResourceCodeRepository                         = resourceCodeRepository
+	ResourceComputeQuota                           = newComputeQuotaResource
 	ResourceDataQualityJobDefinition               = resourceDataQualityJobDefinition
 	ResourceDevice                                 = resourceDevice
 	ResourceDeviceFleet                            = resourceDeviceFleet
@@ -94,6 +95,7 @@ var (
 	FindAlgorithmByName                       = findAlgorithmByName
 	FindAppImageConfigByName                  = findAppImageConfigByName
 	FindCodeRepositoryByName                  = findCodeRepositoryByName
+	FindComputeQuotaByID                      = findComputeQuotaByID
 	FindDataQualityJobDefinitionByName        = findDataQualityJobDefinitionByName
 	FindDeviceByName                          = findDeviceByName
 	FindDeviceFleetByName                     = findDeviceFleetByName
