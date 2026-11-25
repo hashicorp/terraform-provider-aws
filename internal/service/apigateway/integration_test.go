@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	tfterraform "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -209,6 +210,152 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAPIGatewayIntegration_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf apigateway.GetIntegrationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_integration.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntegrationConfig_httpMethodPassthroughBehavior(rName, "GET", "WHEN_NO_MATCH"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "WHEN_NO_MATCH"),
+				),
+			},
+			{
+				Config: testAccIntegrationConfig_httpMethodPassthroughBehavior(rName, "POST", "NEVER"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntegrationExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "passthrough_behavior", "NEVER"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccIntegrationImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// TestIntegrationDiff_updateInPlace checks the planned action without calling AWS:
+// integration_http_method and passthrough_behavior are updated in place, except
+// integration_http_method on MOCK integrations, which UpdateIntegration cannot patch.
+func TestIntegrationDiff_updateInPlace(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]struct {
+		integrationType  string
+		oldHTTPMethod    string
+		newHTTPMethod    string
+		oldPassthrough   string
+		newPassthrough   string
+		wantRequiresNew  bool
+		wantChangedAttrs []string
+	}{
+		"http integration_http_method": {
+			integrationType:  "HTTP",
+			oldHTTPMethod:    "GET",
+			newHTTPMethod:    "POST",
+			oldPassthrough:   "WHEN_NO_MATCH",
+			newPassthrough:   "WHEN_NO_MATCH",
+			wantChangedAttrs: []string{"integration_http_method"},
+		},
+		"aws passthrough_behavior": {
+			integrationType:  "AWS",
+			oldHTTPMethod:    "POST",
+			newHTTPMethod:    "POST",
+			oldPassthrough:   "WHEN_NO_MATCH",
+			newPassthrough:   "NEVER",
+			wantChangedAttrs: []string{"passthrough_behavior"},
+		},
+		"mock integration_http_method": {
+			integrationType:  "MOCK",
+			oldHTTPMethod:    "GET",
+			newHTTPMethod:    "POST",
+			oldPassthrough:   "WHEN_NO_MATCH",
+			newPassthrough:   "WHEN_NO_MATCH",
+			wantRequiresNew:  true,
+			wantChangedAttrs: []string{"integration_http_method"},
+		},
+		"mock passthrough_behavior": {
+			integrationType:  "MOCK",
+			oldHTTPMethod:    "GET",
+			newHTTPMethod:    "GET",
+			oldPassthrough:   "WHEN_NO_MATCH",
+			newPassthrough:   "NEVER",
+			wantChangedAttrs: []string{"passthrough_behavior"},
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			state := &tfterraform.InstanceState{
+				ID: "agi-abcdefgh12-yimyg9-GET",
+				Attributes: map[string]string{
+					names.AttrID:              "agi-abcdefgh12-yimyg9-GET",
+					"rest_api_id":             "abcdefgh12",
+					names.AttrResourceID:      "yimyg9",
+					"http_method":             "GET",
+					names.AttrType:            testCase.integrationType,
+					names.AttrURI:             "https://example.com",
+					"integration_http_method": testCase.oldHTTPMethod,
+					"passthrough_behavior":    testCase.oldPassthrough,
+					"cache_namespace":         "yimyg9",
+					"connection_type":         "INTERNET",
+					"timeout_milliseconds":    "29000",
+				},
+			}
+			config := tfterraform.NewResourceConfigRaw(map[string]any{
+				"rest_api_id":             "abcdefgh12",
+				names.AttrResourceID:      "yimyg9",
+				"http_method":             "GET",
+				names.AttrType:            testCase.integrationType,
+				names.AttrURI:             "https://example.com",
+				"integration_http_method": testCase.newHTTPMethod,
+				"passthrough_behavior":    testCase.newPassthrough,
+			})
+
+			diff, err := tfapigateway.ResourceIntegration().Diff(ctx, state, config, nil)
+			if err != nil {
+				t.Fatalf("unexpected diff error: %s", err)
+			}
+			if diff == nil {
+				t.Fatal("expected a diff, got none")
+			}
+
+			if got := diff.RequiresNew(); got != testCase.wantRequiresNew {
+				t.Errorf("RequiresNew() = %t, want %t", got, testCase.wantRequiresNew)
+			}
+
+			for _, attr := range testCase.wantChangedAttrs {
+				if _, ok := diff.Attributes[attr]; !ok {
+					t.Errorf("expected %q in the diff, got attributes %v", attr, diff.Attributes)
+				}
+			}
+		})
+	}
 }
 
 func TestAccAPIGatewayIntegration_Parameters_cacheKey(t *testing.T) {
@@ -1098,6 +1245,38 @@ resource "aws_api_gateway_integration" "test" {
   timeout_milliseconds    = 2000
 }
 `, rName)
+}
+
+func testAccIntegrationConfig_httpMethodPassthroughBehavior(rName, integrationHTTPMethod, passthroughBehavior string) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = %[1]q
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  parent_id   = aws_api_gateway_rest_api.test.root_resource_id
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  resource_id   = aws_api_gateway_resource.test.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "test" {
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  resource_id = aws_api_gateway_resource.test.id
+  http_method = aws_api_gateway_method.test.http_method
+
+  type                    = "HTTP"
+  uri                     = "https://www.google.de"
+  integration_http_method = %[2]q
+  passthrough_behavior    = %[3]q
+}
+`, rName, integrationHTTPMethod, passthroughBehavior)
 }
 
 func testAccIntegrationConfig_updateNoTemplates(rName string) string {
