@@ -165,7 +165,12 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	contactInformation, err := findContactInformation(ctx, conn, d.Get(names.AttrAccountID).(string))
+	accountID := d.Get(names.AttrAccountID).(string)
+	if accountID == "" && d.Id() != "default" {
+		accountID = d.Id()
+	}
+
+	contactInformation, err := findContactInformation(ctx, conn, accountID)
 
 	if !d.IsNewResource() && retry.NotFound(err) {
 		log.Printf("[WARN] Account Primary Contact (%s) not found, removing from state", d.Id())
@@ -177,7 +182,7 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading Account Primary Contact (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, d.Get(names.AttrAccountID))
+	d.Set(names.AttrAccountID, accountID)
 	d.Set("address_line_1", contactInformation.AddressLine1)
 	d.Set("address_line_2", contactInformation.AddressLine2)
 	d.Set("address_line_3", contactInformation.AddressLine3)
