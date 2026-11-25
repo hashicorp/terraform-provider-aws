@@ -52,14 +52,14 @@ This resource supports the following arguments:
 ### context_provider
 
 * `key_definition` - (Optional) Mappings from keys in the OIDC token to trusted context keys. Up to 10 blocks. See [`key_definition`](#key_definition) below.
-* `subject_source_key` - (Required) Key in the OIDC token that supplies the subject.
+* `subject_source_key` - (Required) Key in the OIDC token that supplies the subject. Keys can contain only ASCII letters, numbers, single spaces, and the characters `_ . : / = + - @ #`, and can't start or end with a space.
 * `subject_type_source_key` - (Optional) Key in the OIDC token that supplies the subject type. Conflicts with `subject_type_value`.
 * `subject_type_value` - (Optional) Static value for the subject type, such as `user` or `workload`. Conflicts with `subject_type_source_key`.
 
 ### key_definition
 
 * `source_key` - (Required) Key in the OIDC token to read the value from.
-* `target_key` - (Optional) Trusted context key to map the value into.
+* `target_key` - (Optional) Trusted context key to map the value into. Defaults to the value of `source_key`.
 
 ## Attribute Reference
 
