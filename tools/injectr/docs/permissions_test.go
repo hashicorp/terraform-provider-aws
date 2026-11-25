@@ -7,23 +7,23 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 )
 
 func TestResourcePermissions(t *testing.T) {
 	t.Parallel()
 
-	ref := func(perms ...string) *permissions.FuncRef { return &permissions.FuncRef{IAMPermissions: perms} }
-	r := &permissions.Resource{
+	ref := func(perms ...string) *model.FuncRef { return &model.FuncRef{IAMPermissions: perms} }
+	r := &model.Resource{
 		Create: ref("svc:Create", "svc:Describe"),
 		Read:   ref("svc:Describe"),
 		Update: ref("svc:Update"),
 		Delete: ref("svc:Delete"),
-		CustomizeDiff: &permissions.FuncRef{Functions: []*permissions.FuncRef{
+		CustomizeDiff: &model.FuncRef{Functions: []*model.FuncRef{
 			ref("svc:Validate"),
 		}},
 		Import: ref("svc:Import"),
-		Tags:   &permissions.ResourceTags{List: ref("svc:ListTags"), Update: ref("svc:TagResource")},
+		Tags:   &model.ResourceTags{List: ref("svc:ListTags"), Update: ref("svc:TagResource")},
 	}
 
 	got := resourcePermissions(r)
@@ -41,7 +41,7 @@ func TestResourcePermissions(t *testing.T) {
 func TestResourcePermissionsEmptyRead(t *testing.T) {
 	t.Parallel()
 
-	got := resourcePermissions(&permissions.Resource{Create: &permissions.FuncRef{IAMPermissions: []string{"svc:Create"}}})
+	got := resourcePermissions(&model.Resource{Create: &model.FuncRef{IAMPermissions: []string{"svc:Create"}}})
 
 	if len(got.Read) != 0 {
 		t.Errorf("Read = %v, want none", got.Read)
@@ -54,9 +54,9 @@ func TestResourcePermissionsEmptyRead(t *testing.T) {
 func TestDataSourcePermissions(t *testing.T) {
 	t.Parallel()
 
-	d := &permissions.DataSource{
-		Read: &permissions.FuncRef{IAMPermissions: []string{"svc:Get", "svc:Describe"}},
-		Tags: &permissions.ResourceTags{List: &permissions.FuncRef{IAMPermissions: []string{"svc:Describe", "svc:ListTags"}}},
+	d := &model.DataSource{
+		Read: &model.FuncRef{IAMPermissions: []string{"svc:Get", "svc:Describe"}},
+		Tags: &model.ResourceTags{List: &model.FuncRef{IAMPermissions: []string{"svc:Describe", "svc:ListTags"}}},
 	}
 
 	got := dataSourcePermissions(d)

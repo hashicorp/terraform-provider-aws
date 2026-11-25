@@ -7,21 +7,18 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/model"
 	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
-
-// unresolvedReason explains why an SDK call could not be mapped to IAM
-// permissions.
-type unresolvedReason string
 
 const (
 	// No service reference lists any operation for the call's SDK client:
 	// either the service is missing, or its data has no Operations.
-	reasonServiceHasNoOperations unresolvedReason = "service-has-no-operations"
+	reasonServiceHasNoOperations model.UnresolvedReason = "service-has-no-operations"
 	// The service lists operations, but not this one.
-	reasonOperationNotFound unresolvedReason = "operation-not-found"
+	reasonOperationNotFound model.UnresolvedReason = "operation-not-found"
 	// The operation is listed, but requires no IAM actions.
-	reasonNoIAMActions unresolvedReason = "no-iam-actions"
+	reasonNoIAMActions model.UnresolvedReason = "no-iam-actions"
 )
 
 // operationKey identifies an operation by its normalized Boto3 client name and
@@ -75,10 +72,10 @@ func NewOperationIndex(refs serviceref.ServiceRefs) *OperationIndex {
 	return idx
 }
 
-// Resolve returns the IAM permissions required by sdkCall, an sdkmap call such
+// Resolve returns the IAM permissions required by sdkCall, an SDK call such
 // as "elasticloadbalancingv2.CreateLoadBalancer". If none can be found, it
 // returns the reason instead. The returned slice must not be modified.
-func (idx *OperationIndex) Resolve(sdkCall string) ([]string, unresolvedReason) {
+func (idx *OperationIndex) Resolve(sdkCall string) ([]string, model.UnresolvedReason) {
 	goSDKPackage, operation, _ := strings.Cut(sdkCall, ".")
 	key := operationKey{client: boto3Client(goSDKPackage), operation: operation}
 

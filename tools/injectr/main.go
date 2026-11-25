@@ -10,24 +10,30 @@ import (
 
 	"github.com/hashicorp/terraform-provider-aws/tools/injectr/docs"
 	"github.com/hashicorp/terraform-provider-aws/tools/injectr/permissions"
+	"github.com/hashicorp/terraform-provider-aws/tools/injectr/sdkmap"
 	"github.com/hashicorp/terraform-provider-aws/tools/injectr/serviceref"
 )
 
 func main() {
+	log.SetFlags(0)
+	root := flag.String("root", "../..", "path to the root of the terraform-provider-aws repository")
 	serviceDataDir := flag.String("out", "service-data", "directory to write service reference files to")
 	serviceIndexFile := flag.String("index", "service-urls-cache.json", "file to write the service name to URL index to")
-	sdkMapFile := flag.String("sdkmap", "../../sdkmap.json", "sdkmap output to read")
-	permissionsMapFile := flag.String("permissions-map", "../../permissions_map.json", "file to write the sdkmap output with IAM permissions to")
+	permissionsMapFile := flag.String("permissions-map", "../../permissions_map.json", "file to write the permissions map to")
 	skipSync := flag.Bool("skip-sync", false, "use the existing service reference files without checking for updates")
-	skipGenerate := flag.Bool("skip-generate", false, "use the existing permissions map without regenerating it")
 
 	var insert docs.InsertOptions
-	flag.StringVar(&insert.Root, "root", "../..", "path to the root of the terraform-provider-aws repository")
 	flag.Var((*stringList)(&insert.Files), "insert-file", "comma-separated documentation files, relative to -root, to add IAM permissions to")
 	flag.Var((*stringList)(&insert.Services), "insert-service", "comma-separated service packages to add IAM permissions to, e.g. s3,sqs")
 	flag.BoolVar(&insert.All, "insert-all", false, "add IAM permissions to the documentation of every resource and data source")
 	flag.BoolVar(&insert.DryRun, "dry-run", false, "report documentation changes without writing them")
 	flag.Parse()
+	insert.Root = *root
+
+	m, err := sdkmap.Generate(*root)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if !*skipSync {
 		if err := serviceref.SyncServiceRefs(*serviceDataDir, *serviceIndexFile); err != nil {
@@ -35,14 +41,12 @@ func main() {
 		}
 	}
 
-	if !*skipGenerate {
-		if err := permissions.GeneratePermissionsMap(*serviceDataDir, *sdkMapFile, *permissionsMapFile); err != nil {
-			log.Fatal(err)
-		}
+	if err := permissions.GeneratePermissionsMap(*serviceDataDir, m, *permissionsMapFile); err != nil {
+		log.Fatal(err)
 	}
 
 	if insert.Enabled() {
-		if err := docs.InsertIAMPermissions(*permissionsMapFile, insert); err != nil {
+		if err := docs.InsertIAMPermissions(m, insert); err != nil {
 			log.Fatal(err)
 		}
 	}
