@@ -668,30 +668,40 @@ func resourceNATGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	// Eventual consistency wait for any attached appliances to be detached before deleting the NAT Gateway
-	if _, err := waitNATGatewayAttachedAppliancesDetached(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) attached appliances to detach: %s", d.Id(), err)
+	if err := deleteNATGateway(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", d.Id())
+	return diags
+}
+
+// deleteNATGateway deletes a NAT gateway once any attached appliances are
+// detached, and waits until it's deleted.
+func deleteNATGateway(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) error {
+	// Eventual consistency wait for any attached appliances to be detached before deleting the NAT Gateway
+	if _, err := waitNATGatewayAttachedAppliancesDetached(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 NAT Gateway (%s) attached appliances to detach: %w", id, err)
+	}
+
+	log.Printf("[INFO] Deleting EC2 NAT Gateway: %s", id)
 	input := ec2.DeleteNatGatewayInput{
-		NatGatewayId: aws.String(d.Id()),
+		NatGatewayId: aws.String(id),
 	}
 	_, err := conn.DeleteNatGateway(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNatGatewayNotFound) {
-		return diags
+		return nil
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 NAT Gateway (%s): %s", d.Id(), err)
+		return fmt.Errorf("deleting EC2 NAT Gateway (%s): %w", id, err)
 	}
 
-	if _, err := waitNATGatewayDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EC2 NAT Gateway (%s) delete: %s", d.Id(), err)
+	if _, err := waitNATGatewayDeleted(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 NAT Gateway (%s) delete: %w", id, err)
 	}
 
-	return diags
+	return nil
 }
 
 func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceDiff, meta any) error {

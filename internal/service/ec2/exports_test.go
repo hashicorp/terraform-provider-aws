@@ -201,7 +201,6 @@ var (
 	FindMainRouteTableAssociationByID                           = findMainRouteTableAssociationByID
 	FindManagedPrefixListByID                                   = findManagedPrefixListByID
 	FindManagedPrefixListEntryByIDAndCIDR                       = findManagedPrefixListEntryByIDAndCIDR
-	FindNATGatewayByID                                          = findNATGatewayByID
 	FindNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded = findNATGatewayAddressByNATGatewayIDAndAllocationIDSucceeded
 	FindNetworkACLAssociationByID                               = findNetworkACLAssociationByID
 	FindNetworkACLByID                                          = findNetworkACLByID
