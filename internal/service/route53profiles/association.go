@@ -15,9 +15,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -41,7 +44,7 @@ func newAssociationResource(_ context.Context) (resource.ResourceWithConfigure, 
 	r := &associationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(5 * time.Minute) // tags only
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -69,14 +72,21 @@ func (r *associationResource) Schema(ctx context.Context, req resource.SchemaReq
 					lazystringvalidator.RegexMatches("(^[^0-9][a-zA-Z0-9\\-_' ']+$)", ""),
 					stringvalidator.LengthBetween(0, 64),
 				},
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrOwnerID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrPriority: schema.Int32Attribute{
+				Optional: true,
+				Computed: true,
+				Validators: []validator.Int32{
+					int32validator.Between(100, 9900),
+				},
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
 			"profile_id": schema.StringAttribute{
@@ -127,10 +137,12 @@ func (r *associationResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	input := &route53profiles.AssociateProfileInput{
-		Name: data.Name.ValueStringPointer(),
 		Tags: getTagsInSlice(ctx),
 	}
 	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	out, err := conn.AssociateProfile(ctx, input)
 	if err != nil {
@@ -203,6 +215,82 @@ func (r *associationResource) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
+func (r *associationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().Route53ProfilesClient(ctx)
+
+	var plan, state associationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	diff, d := flex.Diff(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
+		input := &route53profiles.UpdateProfileAssociationInput{
+			ProfileAssociationId: plan.ID.ValueStringPointer(),
+		}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateProfileAssociation(ctx, input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionUpdating, ResNameAssociation, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		// The new priority isn't guaranteed to apply to every query until the association is COMPLETE again.
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		profileAssociation, err := waitAssociationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Route53Profiles, create.ErrActionWaitingForUpdate, ResNameAssociation, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, profileAssociation, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+// ModifyPlan marks status and status_message unknown when name or priority changes, because the
+// update returns new values for them. A tags-only change keeps the prior values.
+func (r *associationResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var plan, state associationResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if plan.Name.Equal(state.Name) && plan.Priority.Equal(state.Priority) {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(names.AttrStatus), fwtypes.StringEnumUnknown[awstypes.ProfileStatus]())...)
+	resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root(names.AttrStatusMessage), types.StringUnknown())...)
+}
+
 func (r *associationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53ProfilesClient(ctx)
 
@@ -247,6 +335,23 @@ func waitAssociationCreated(ctx context.Context, conn *route53profiles.Client, i
 		Refresh:                   statusAssociation(conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*awstypes.ProfileAssociation); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitAssociationUpdated(ctx context.Context, conn *route53profiles.Client, id string, timeout time.Duration) (*awstypes.ProfileAssociation, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.ProfileStatusCreating, awstypes.ProfileStatusUpdating),
+		Target:                    enum.Slice(awstypes.ProfileStatusComplete),
+		Refresh:                   statusAssociation(conn, id),
+		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
@@ -320,6 +425,7 @@ type associationResourceModel struct {
 	ProfileID     types.String                               `tfsdk:"profile_id"`
 	Name          types.String                               `tfsdk:"name"`
 	OwnerId       types.String                               `tfsdk:"owner_id"`
+	Priority      types.Int32                                `tfsdk:"priority"`
 	Status        fwtypes.StringEnum[awstypes.ProfileStatus] `tfsdk:"status"`
 	StatusMessage types.String                               `tfsdk:"status_message"`
 	Tags          tftags.Map                                 `tfsdk:"tags"`
