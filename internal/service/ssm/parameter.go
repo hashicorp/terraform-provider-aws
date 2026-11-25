@@ -269,9 +269,28 @@ func resourceParameterCreate(ctx context.Context, d *schema.ResourceData, meta a
 
 	// Since the AWS SSM Service does not support PutParameter requests with
 	// Tags and Overwrite set to true, we make an additional API call
-	// to Update the resource's tags if necessary
+	// to Update the resource's tags if necessary.
+	// For parameters with data_type "aws:ec2:image", SSM performs asynchronous
+	// validation after PutParameter succeeds, during which the parameter may not
+	// be found. Retry on InvalidResourceId to allow validation to complete.
 	if len(tags) > 0 && input.Tags == nil {
-		if err := createTags(ctx, conn, name, string(awstypes.ResourceTypeForTaggingParameter), tags); err != nil {
+		if dataType, _ := d.GetOk("data_type"); dataType == "aws:ec2:image" {
+			const tagTimeout = 2 * time.Minute
+			_, err = tfresource.RetryWhen(ctx, tagTimeout,
+				func(ctx context.Context) (any, error) {
+					return nil, createTags(ctx, conn, name, string(awstypes.ResourceTypeForTaggingParameter), tags)
+				},
+				func(err error) (bool, error) {
+					if tfawserr.ErrCodeEquals(err, errCodeInvalidResourceID) {
+						return true, err
+					}
+					return false, err
+				},
+			)
+		} else {
+			err = createTags(ctx, conn, name, string(awstypes.ResourceTypeForTaggingParameter), tags)
+		}
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting SSM Parameter (%s) tags: %s", name, err)
 		}
 	}

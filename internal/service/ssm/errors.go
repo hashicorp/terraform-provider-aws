@@ -4,5 +4,6 @@
 package ssm
 
 const (
+	errCodeInvalidResourceID   = "InvalidResourceId"
 	errCodeValidationException = "ValidationException"
 )
