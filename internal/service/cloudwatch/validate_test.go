@@ -7,8 +7,53 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestMetricAlarmMetricQueryExpression(t *testing.T) {
+	t.Parallel()
+
+	metricQuery := resourceMetricAlarm().SchemaMap()["metric_query"].Elem.(*schema.Resource)
+	validate := metricQuery.SchemaMap()[names.AttrExpression].ValidateFunc
+
+	testCases := map[string]struct {
+		length  int
+		wantErr bool
+	}{
+		"empty": {
+			length:  0,
+			wantErr: true,
+		},
+		"minimum length": {
+			length: 1,
+		},
+		"previous maximum length": {
+			length: 1024,
+		},
+		"above previous maximum length": {
+			length: 1025,
+		},
+		"maximum length": {
+			length: 2048,
+		},
+		"above maximum length": {
+			length:  2049,
+			wantErr: true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			_, errs := validate(strings.Repeat("a", testCase.length), "metric_query.0.expression")
+			if got := len(errs) > 0; got != testCase.wantErr {
+				t.Errorf("got error = %t (%v), want error = %t", got, errs, testCase.wantErr)
+			}
+		})
+	}
+}
 
 func TestValidDashboardName(t *testing.T) {
 	t.Parallel()
