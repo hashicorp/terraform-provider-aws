@@ -343,7 +343,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Default `30m`). If this is the first time attaching a policy to a core network then this timeout value is also used as the `create` timeout value.
+* `create` - (Default `30m`) Used when first attaching a policy to a core network, including waiting for the policy change set to finish generating.
+* `update` - (Default `30m`) Used when attaching an updated policy document to a core network, including waiting for the policy change set to finish generating.
 
 ## Import
 
