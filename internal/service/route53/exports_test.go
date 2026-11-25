@@ -9,6 +9,7 @@ var (
 	ResourceCIDRLocation                = newCIDRLocationResource
 	ResourceDelegationSet               = resourceDelegationSet
 	ResourceHealthCheck                 = resourceHealthCheck
+	ResourceHealthCheckSource           = newHealthCheckSourceResource
 	ResourceHostedZoneDNSSEC            = resourceHostedZoneDNSSEC
 	ResourceKeySigningKey               = resourceKeySigningKey
 	ResourceQueryLog                    = resourceQueryLog
@@ -25,6 +26,7 @@ var (
 	FindCIDRLocationByTwoPartKey                = findCIDRLocationByTwoPartKey
 	FindDelegationSetByID                       = findDelegationSetByID
 	FindHealthCheckByID                         = findHealthCheckByID
+	FindHealthCheckSourceByID                   = findHealthCheckSourceByID
 	FindHostedZoneByID                          = findHostedZoneByID
 	FindHostedZoneDNSSECByZoneID                = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey               = findKeySigningKeyByTwoPartKey
