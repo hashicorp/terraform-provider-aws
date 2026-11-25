@@ -36,10 +36,9 @@ resource "aws_eks_addon" "example" {
 
 Custom add-on configuration can be passed using `configuration_values` as a single JSON string while creating or updating the add-on.
 
-~> **Note:** `configuration_values` is a single JSON string should match the valid JSON schema for each add-on with specific version.
+~> **Note:** `configuration_values` is a single JSON string that must conform to the JSON schema for the specific add-on version. The configuration keys (such as `replicaCount`, `resources`, etc.) correspond to the add-on's underlying Helm chart values. The [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) API returns the JSON schema that validates these values, but the actual available keys and their structure are defined by each add-on's Helm chart.
 
-You can use [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html) to extract each add-on's JSON schema.
-Here's an example command to extract the `configuration_values` schema for `coredns`.
+You can use `describe-addon-configuration` to retrieve the JSON schema for a given add-on version. Here is an example command for `coredns`:
 
 ```bash
 aws eks describe-addon-configuration \
@@ -47,6 +46,8 @@ aws eks describe-addon-configuration \
   --addon-version v1.10.1-eksbuild.1 \
   | jq -r .configurationSchema | jq .
 ```
+
+To discover the full set of configurable keys, consult the Helm chart documentation for the specific add-on, or inspect the `properties` in the JSON schema output above.
 
 Example to create a `coredns` managed addon with custom `configuration_values`.
 
@@ -132,7 +133,7 @@ The following arguments are optional:
 
 * `addon_version` - (Optional) The version of the EKS add-on. The version must
   match one of the versions returned by [describe-addon-versions](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html).
-* `configuration_values` - (Optional) Custom configuration values for addons with single JSON string. This JSON string value must match the JSON schema derived from [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html).
+* `configuration_values` - (Optional) Custom configuration values for the add-on as a single JSON string. The JSON string must conform to the JSON schema returned by [describe-addon-configuration](https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-configuration.html). The available configuration keys (e.g., `replicaCount`, `resources`) are defined by the add-on's underlying Helm chart.
 * `namespace_config` - (Optional) Namespace configuration for the add-on. See [`namespace_config`](#namespace_config) below for details.
 * `pod_identity_association` - (Optional) Configuration block with EKS Pod Identity association settings. See [`pod_identity_association`](#pod_identity_association) below for details.
 * `preserve` - (Optional) Indicates if you want to preserve the created resources when deleting the EKS add-on.
