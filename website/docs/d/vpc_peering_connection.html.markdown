@@ -61,14 +61,15 @@ More complex filters can be expressed using one or more `filter` sub-blocks, whi
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `accepter` - Configuration block that describes [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC. The map contains `allow_remote_vpc_dns_resolution`, which is whether a local VPC can resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
+* `accepter` - Configuration block that describes [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC. The map contains `allow_multipath_resilience`, which is whether the VPC allows multipath resilience, and `allow_remote_vpc_dns_resolution`, which is whether a local VPC can resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
 * `cidr_block_set` - List of objects with IPv4 CIDR blocks of the requester VPC. See [`cidr_block_set` Block](#cidr_block_set-block) below.
 * `ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the requester VPC. See [`ipv6_cidr_block_set` Block](#ipv6_cidr_block_set-block) below.
+* `multipath_resilience_status` - Multipath resilience status of the VPC Peering Connection. Values are `enabled` (both sides allow multipath resilience), `pending` (only one side allows it) and `disabled` (neither side allows it).
 * `peer_cidr_block_set` - List of objects with IPv4 CIDR blocks of the accepter VPC. See [`peer_cidr_block_set` Block](#peer_cidr_block_set-block) below.
 * `peer_ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the accepter VPC. See [`peer_ipv6_cidr_block_set` Block](#peer_ipv6_cidr_block_set-block) below.
 * `peer_region` - Region of the accepter VPC.
 * `region` - (**Deprecated**) Region of the requester VPC. Use `requester_region` instead.
-* `requester` - Configuration block that describes [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC. The map contains `allow_remote_vpc_dns_resolution`, which is whether a local VPC can resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
+* `requester` - Configuration block that describes [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC. The map contains `allow_multipath_resilience`, which is whether the VPC allows multipath resilience, and `allow_remote_vpc_dns_resolution`, which is whether a local VPC can resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
 * `requester_region` - Region of the requester VPC.
 
 ### `cidr_block_set` Block

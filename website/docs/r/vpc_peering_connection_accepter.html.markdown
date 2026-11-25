@@ -130,7 +130,9 @@ This resource supports the following arguments:
 
 ### `accepter` Block
 
+* `allow_multipath_resilience` - (Optional) Whether to allow [multipath resilience](https://docs.aws.amazon.com/vpc/latest/peering/enable-multipath-resilience-peering.html) for this side of a cross-Region VPC Peering Connection. Multipath resilience takes effect only when both sides allow it, and additional charges apply. If not set, the current setting is left unchanged. Accepting a connection whose requester allows multipath resilience also allows it for the accepter.
 * `allow_remote_vpc_dns_resolution` - (Optional) Whether to allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in a peer VPC.
+* `multipath_resilience_mode` - (Optional) Multipath resilience mode. Valid values: `always-on`. Can only be set when `allow_multipath_resilience` is `true`. Defaults to `always-on` when multipath resilience is allowed.
 
 ### `requester` Block
 
@@ -142,6 +144,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `accept_status` - Status of the VPC Peering Connection request.
 * `id` - ID of the VPC Peering Connection.
+* `multipath_resilience_status` - Multipath resilience status of the VPC Peering Connection. Values are `enabled` (both sides allow multipath resilience), `pending` (only one side allows it) and `disabled` (neither side allows it).
 * `peer_owner_id` - AWS account ID of the owner of the requester VPC.
 * `peer_region` - Region of the accepter VPC.
 * `peer_vpc_id` - ID of the requester VPC.

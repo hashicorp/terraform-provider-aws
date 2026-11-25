@@ -29,8 +29,8 @@ func resourceVPCPeeringConnectionOptions() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				"accepter":  vpcPeeringConnectionOptionsSchema,
-				"requester": vpcPeeringConnectionOptionsSchema,
+				"accepter":  vpcPeeringConnectionOptionsSchema(true),
+				"requester": vpcPeeringConnectionOptionsSchema(true),
 				"vpc_peering_connection_id": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -80,7 +80,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 	d.Set("vpc_peering_connection_id", vpcPeeringConnection.VpcPeeringConnectionId)
 
 	if vpcPeeringConnection.AccepterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("accepter", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("accepter", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.AccepterVpcInfo.PeeringOptions, true)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting accepter: %s", err)
 		}
 	} else {
@@ -88,7 +88,7 @@ func resourceVPCPeeringConnectionOptionsRead(ctx context.Context, d *schema.Reso
 	}
 
 	if vpcPeeringConnection.RequesterVpcInfo.PeeringOptions != nil {
-		if err := d.Set("requester", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions)}); err != nil {
+		if err := d.Set("requester", []any{flattenVPCPeeringConnectionOptionsDescription(vpcPeeringConnection.RequesterVpcInfo.PeeringOptions, true)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting requester: %s", err)
 		}
 	} else {

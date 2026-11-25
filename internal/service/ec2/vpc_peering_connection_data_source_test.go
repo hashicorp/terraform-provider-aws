@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -136,6 +138,32 @@ func TestAccVPCPeeringConnectionDataSource_vpcID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVPCID, resourceName, names.AttrVPCID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCPeeringConnectionDataSource_multipathResilience(t *testing.T) {
+	ctx := acctest.Context(t)
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dataSourceName := "data.aws_vpc_peering_connection.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               testAccErrorCheckSkipVPCPeeringConnectionMultipathResilience(t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCPeeringConnectionDataSourceConfig_multipathResilience(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "accepter.allow_multipath_resilience", acctest.CtTrue),
+					resource.TestCheckResourceAttr(dataSourceName, "multipath_resilience_status", string(awstypes.MultipathResilienceStatusEnabled)),
+					resource.TestCheckResourceAttr(dataSourceName, "requester.allow_multipath_resilience", acctest.CtTrue),
 				),
 			},
 		},
@@ -324,4 +352,13 @@ data "aws_vpc_peering_connection" "test" {
   vpc_id = aws_vpc_peering_connection.test.vpc_id
 }
 `, rName)
+}
+
+func testAccVPCPeeringConnectionDataSourceConfig_multipathResilience(rName string) string {
+	return acctest.ConfigCompose(testAccVPCPeeringConnectionConfig_multipathResilience(rName, acctest.CtTrue, "null"), `
+data "aws_vpc_peering_connection" "test" {
+  # Read the connection once it has been accepted.
+  id = aws_vpc_peering_connection_accepter.peer.id
+}
+`)
 }

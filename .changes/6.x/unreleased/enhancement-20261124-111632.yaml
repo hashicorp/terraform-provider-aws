@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:16:32.791169+01:00
+custom:
+    Body: Add `requester.allow_multipath_resilience`, `requester.multipath_resilience_mode`, `accepter.allow_multipath_resilience` and `accepter.multipath_resilience_mode` arguments
+    Impact: resource/aws_vpc_peering_connection_options
+    PullRequest: "51088"
