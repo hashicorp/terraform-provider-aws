@@ -12,8 +12,13 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_api_gateway_domain_name: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* data-source/aws_cloudfront_distribution: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
 * data-source/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
 * provider: Ignore AWS system tags when waiting for tag updates to propagate ([#51238](https://github.com/hashicorp/terraform-provider-aws/issues/51238))
+* resource/aws_api_gateway_domain_name: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_cloudfront_distribution: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_cognito_user_pool_domain: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
 * resource/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
 * resource/aws_s3_bucket: Fall back to S3 list and update tagging APIs if the corresponding S3 Control APIs fail with `AccessDenied` (e.g. Ceph Object Gateway)
 

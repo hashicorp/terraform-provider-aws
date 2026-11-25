@@ -1,10 +1,11 @@
 kind: bug
 time: 2026-11-24T06:10:13.782795791Z
 custom:
-    Body: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition
-    Impact: |-
-        resource/aws_api_gateway_domain_name
-        resource/aws_cloudfront_distribution
-        resource/aws_cognito_user_pool_domain
-        data-source/aws_api_gateway_domain_name
-        data-source/aws_cloudfront_distribution
+  Body: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition
+  Impact: |-
+    resource/aws_api_gateway_domain_name
+    resource/aws_cloudfront_distribution
+    resource/aws_cognito_user_pool_domain
+    data-source/aws_api_gateway_domain_name
+    data-source/aws_cloudfront_distribution
+  PullRequest: "51288"
