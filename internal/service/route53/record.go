@@ -347,6 +347,8 @@ func resourceRecord() *schema.Resource {
 			}
 		},
 
+		CustomizeDiff: validateTXTRecordStringLength,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
