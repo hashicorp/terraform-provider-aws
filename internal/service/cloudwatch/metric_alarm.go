@@ -909,14 +909,17 @@ func expandEvaluationWindow(tfMap map[string]any) awstypes.EvaluationWindow {
 	}
 
 	v, ok := tfMap["wall_clock_window"].([]any)
-	if !ok || len(v) == 0 || v[0] == nil {
+	if !ok || len(v) == 0 {
 		return nil
 	}
-	wallClockWindowMap := v[0].(map[string]any)
 
+	// SDKv2 passes an empty wall_clock_window block as a nil element. It still
+	// selects a wall clock window, which CloudWatch aligns to UTC.
 	apiObject := awstypes.WallClockWindow{}
-	if v, ok := wallClockWindowMap["timezone"]; ok && v.(string) != "" {
-		apiObject.Timezone = aws.String(v.(string))
+	if wallClockWindowMap, ok := v[0].(map[string]any); ok {
+		if timezone, ok := wallClockWindowMap["timezone"].(string); ok && timezone != "" {
+			apiObject.Timezone = aws.String(timezone)
+		}
 	}
 
 	return &awstypes.EvaluationWindowMemberWallClockWindow{

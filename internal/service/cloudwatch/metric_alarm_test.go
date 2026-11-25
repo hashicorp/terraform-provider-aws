@@ -732,6 +732,62 @@ func TestAccCloudWatchMetricAlarm_evaluationWindow(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/51049.
+func TestAccCloudWatchMetricAlarm_evaluationWindowNoTimezone(t *testing.T) {
+	ctx := acctest.Context(t)
+	var alarm types.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName, 80),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.0.timezone"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "threshold", "90"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.0.timezone"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_evaluationWindow(rName, "America/New_York"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.0.timezone", "America/New_York"),
+				),
+			},
+			{
+				Config: testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMetricAlarmExists(ctx, t, resourceName, &alarm),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.#", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "evaluation_window.0.wall_clock_window.0.timezone"),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/47624.
 func TestAccCloudWatchMetricAlarm_metricNameUnknown(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1410,6 +1466,31 @@ resource "aws_cloudwatch_metric_alarm" "test" {
   }
 }
 `, rName, timezone)
+}
+
+func testAccMetricAlarmConfig_evaluationWindowNoTimezone(rName string, threshold int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_metric_alarm" "test" {
+  alarm_name                = %[1]q
+  comparison_operator       = "GreaterThanOrEqualToThreshold"
+  evaluation_periods        = 2
+  metric_name               = "CPUUtilization"
+  namespace                 = "AWS/EC2"
+  period                    = 60
+  statistic                 = "Average"
+  threshold                 = %[2]d
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  dimensions = {
+    InstanceId = "i-abcd1234"
+  }
+
+  evaluation_window {
+    wall_clock_window {}
+  }
+}
+`, rName, threshold)
 }
 
 func testAccMetricAlarmConfig_metricNameUnknown(rName string) string {
