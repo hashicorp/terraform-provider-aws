@@ -6,6 +6,7 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -920,13 +921,11 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssoci
 
 // Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47735
 func TestAccCloudFrontMultiTenantDistribution_customOriginTimeouts(t *testing.T) {
-	t.Parallel()
-
 	ctx := acctest.Context(t)
 	var distribution awstypes.Distribution
 	resourceName := "aws_cloudfront_multitenant_distribution.test"
 
-	acctest.Test(ctx, t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -952,6 +951,68 @@ func TestAccCloudFrontMultiTenantDistribution_customOriginTimeouts(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", "60"),
 				),
 				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+// Verifies that a distribution created by a provider version with schema-level defaults on origin
+// attributes (last released is v6.74.0) produces no diff after upgrading.
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47735
+func TestAccCloudFrontMultiTenantDistribution_upgradeFromV6_74_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	originNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		CheckDestroy: testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.74.0",
+					},
+				},
+				Config: testAccMultiTenantDistributionConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_attempts", strconv.Itoa(int(tfcloudfront.DefaultConnectionAttempts))),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", strconv.Itoa(int(tfcloudfront.DefaultConnectionTimeout))),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout", strconv.Itoa(int(tfcloudfront.DefaultOriginKeepaliveTimeout))),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", strconv.Itoa(int(tfcloudfront.DefaultOriginReadTimeout))),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					originNoChange.AddStateValue(resourceName, tfjsonpath.New("origin")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccMultiTenantDistributionConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					originNoChange.AddStateValue(resourceName, tfjsonpath.New("origin")),
+				},
 			},
 		},
 	})
