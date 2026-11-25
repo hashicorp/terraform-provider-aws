@@ -32,7 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `odb_peering_connections` - List of ODB peering connections. A summary of an ODB peering connection.
 
-### odb_peering_connections
+### `odb_peering_connections` Block
 
 * `arn` - ARN for the ODB network peering connection.
 * `display_name` - Display name of the ODB network peering connection.

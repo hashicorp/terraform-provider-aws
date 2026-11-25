@@ -11,7 +11,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,12 +30,11 @@ import (
 
 // @SDKResource("aws_cloudwatch_event_endpoint", name="Global Endpoint")
 // @IdentityAttribute("name")
+// @Testing(name="Endpoint")
 // @Testing(idAttrDuplicates="name")
 // @Testing(preIdentityVersion="v6.53.0")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/eventbridge;eventbridge.DescribeEndpointOutput")
-// @Testing(altRegionProvider=true)
-// Alternate region not working
-// @Testing(identityTest=false)
+// @Testing(altRegionTfVars=true)
 func resourceEndpoint() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointCreate,
@@ -77,7 +76,7 @@ func resourceEndpoint() *schema.Resource {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{1,64}$`), "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
+					ValidateFunc: lazyvalidation.StringMatch(`^[0-9A-Za-z_.-]{1,64}$`, "Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_."),
 				},
 				"replication_config": {
 					Type:     schema.TypeList,

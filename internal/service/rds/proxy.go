@@ -140,7 +140,7 @@ func resourceProxy() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_connection_network_type": {
 					Type:             schema.TypeString,
 					Optional:         true,

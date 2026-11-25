@@ -113,6 +113,10 @@ func dataSourceSubnet() *schema.Resource {
 					Type:     schema.TypeBool,
 					Computed: true,
 				},
+				"network_firewall_connectivity_type": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				names.AttrOutpostARN: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -130,7 +134,7 @@ func dataSourceSubnet() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputed(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -226,6 +230,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta any)
 
 	d.Set("map_customer_owned_ip_on_launch", subnet.MapCustomerOwnedIpOnLaunch)
 	d.Set("map_public_ip_on_launch", subnet.MapPublicIpOnLaunch)
+	d.Set("network_firewall_connectivity_type", subnet.NetworkFirewallConnectivityType)
 	d.Set(names.AttrOutpostARN, subnet.OutpostArn)
 	d.Set(names.AttrOwnerID, subnet.OwnerId)
 	d.Set(names.AttrState, subnet.State)

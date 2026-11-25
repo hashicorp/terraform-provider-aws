@@ -36,6 +36,8 @@ func TestAccVPCRouteDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// By destination CIDR.
 					resource.TestCheckResourceAttrPair(datasource1Name, "destination_cidr_block", instanceRouteResourceName, "destination_cidr_block"),
+					resource.TestCheckResourceAttr(datasource1Name, "igw_firewall.#", "0"),
+					resource.TestCheckResourceAttrPair(datasource1Name, "igw_firewall.#", instanceRouteResourceName, "igw_firewall.#"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "route_table_id", rtResourceName, names.AttrID),
 
 					// By instance ID.

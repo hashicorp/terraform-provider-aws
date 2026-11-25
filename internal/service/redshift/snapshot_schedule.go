@@ -75,7 +75,7 @@ func resourceSnapshotSchedule() *schema.Resource {
 					ConflictsWith: []string{names.AttrIdentifier},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

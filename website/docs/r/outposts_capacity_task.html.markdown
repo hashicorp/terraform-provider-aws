@@ -69,25 +69,35 @@ resource "aws_outposts_capacity_task" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `outpost_identifier` - (Required) ID or ARN of the Outpost on which to run the capacity task. Both forms are accepted; the provider normalizes the value internally. Changing this value forces a new resource.
-* `instance_pool` - (Required) One or more `instance_pool` blocks defining the desired instance-type layout for the Outpost. See [below](#instance_pool). At least one block is required. Changing any value forces a new resource.
 * `asset_id` - (Optional) ID of a specific Outposts asset (hardware server) to target for the capacity task. If omitted, AWS selects an appropriate asset automatically. Discover valid asset IDs with the [`aws_outposts_assets`](../d/outposts_assets.html.markdown) data source. Changing this value forces a new resource.
-* `instances_to_exclude` - (Optional) Single `instances_to_exclude` block specifying user-owned running instances that must not be stopped to free up capacity. See [below](#instances_to_exclude). Note: AWS does not return this value via the Get/Describe API; after import, you must add the block back to your configuration manually — see [Import](#import).
+* `instance_pool` - (Required) One or more `instance_pool` blocks defining the desired instance-type layout for the Outpost. See [below](#instance_pool-block). At least one block is required. Changing any value forces a new resource.
+* `instances_to_exclude` - (Optional) Single `instances_to_exclude` block specifying user-owned running instances that must not be stopped to free up capacity. See [below](#instances_to_exclude-block). Note: AWS does not return this value via the Get/Describe API; after import, you must add the block back to your configuration manually — see [Import](#import).
 * `order_id` - (Optional) ID of the Amazon Web Services Outposts order associated with the capacity task. Changing this value forces a new resource.
+* `outpost_identifier` - (Required) ID or ARN of the Outpost on which to run the capacity task. Both forms are accepted; the provider normalizes the value internally. Changing this value forces a new resource.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `task_action_on_blocking_instances` - (Optional) Action to take if running instances block the capacity task. Valid values are `WAIT_FOR_EVACUATION` and `FAIL_TASK`. Changing this value forces a new resource.
 * `timeouts` - (Optional) Configuration block with timeouts. See [below](#timeouts).
 
-### instance_pool
+### `instance_pool` Block
 
-* `instance_type` - (Required) Instance type for this pool entry. Must be an instance type supported by the target Outpost. Changing this value forces a new resource.
 * `count` - (Required) Number of instances of `instance_type` that should be present after the task completes. Must be at least `1`. Changing this value forces a new resource.
+* `instance_type` - (Required) Instance type for this pool entry. Must be an instance type supported by the target Outpost. Changing this value forces a new resource.
 
-### instances_to_exclude
+### `instances_to_exclude` Block
 
 * `instances` - (Required) Set of EC2 instance IDs (of user-owned instances running on the Outpost) that the capacity task must not stop. At least one instance ID is required.
 
-### timeouts
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `capacity_task_id` - ID assigned by AWS to the capacity task (for example, `cap-1a2b3c4d5e6f7g8h9`).
+* `completion_date` - RFC 3339 timestamp at which the capacity task reached a terminal state (if any).
+* `creation_date` - RFC 3339 timestamp at which the capacity task was created.
+* `failure_reason` - Human-readable reason reported by AWS when the capacity task failed. `null` unless the terminal state is `FAILED`.
+* `status` - Current status of the capacity task. One of `REQUESTED`, `IN_PROGRESS`, `WAITING_FOR_EVACUATION`, `CANCELLATION_IN_PROGRESS`, `COMPLETED`, `CANCELLED`, or `FAILED`. See the [AWS documentation](https://docs.aws.amazon.com/outposts/latest/APIReference/API_GetCapacityTask.html) for semantics.
+
+## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
@@ -104,23 +114,6 @@ timeouts {
 ```
 
 If the `create` waiter times out before the capacity task reaches a terminal state, Terraform will return an error and will **not** write the resource to state, even though the task continues to run in AWS. Recovering from this condition requires locating the orphaned task (for example with `aws outposts list-capacity-tasks --outpost-identifier <outpost-id>`), waiting for it to complete, and then importing it using `terraform import aws_outposts_capacity_task.example <outpost-id>/<capacity-task-id>`.
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `capacity_task_id` - ID assigned by AWS to the capacity task (for example, `cap-1a2b3c4d5e6f7g8h9`).
-* `status` - Current status of the capacity task. One of `REQUESTED`, `IN_PROGRESS`, `WAITING_FOR_EVACUATION`, `CANCELLATION_IN_PROGRESS`, `COMPLETED`, `CANCELLED`, or `FAILED`. See the [AWS documentation](https://docs.aws.amazon.com/outposts/latest/APIReference/API_GetCapacityTask.html) for semantics.
-* `creation_date` - RFC 3339 timestamp at which the capacity task was created.
-* `completion_date` - RFC 3339 timestamp at which the capacity task reached a terminal state (if any).
-* `failure_reason` - Human-readable reason reported by AWS when the capacity task failed. `null` unless the terminal state is `FAILED`.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `delete` - (Default `10m`)
 
 ## Import
 

@@ -383,7 +383,7 @@ The following arguments are optional:
 * `filter_prefix` - (Optional) Object key name prefix.
 * `filter_suffix` - (Optional) Object key name suffix.
 * `id` - (Optional) Unique identifier for each of the notification configurations.
-* `lambda_function_arn` - (Required) Lambda function ARN.
+* `lambda_function_arn` - (Optional) Lambda function ARN.
 
 ### `queue` Block
 

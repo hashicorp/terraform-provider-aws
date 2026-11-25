@@ -24,6 +24,7 @@ import (
 
 // @FrameworkDataSource("aws_odb_network", name="Network")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newDataSourceNetwork(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceNetwork{}, nil
 }

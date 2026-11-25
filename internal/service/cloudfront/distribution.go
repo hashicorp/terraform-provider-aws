@@ -874,7 +874,7 @@ func resourceDistribution() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"trusted_key_groups": {
 					Type:     schema.TypeList,
 					Computed: true,

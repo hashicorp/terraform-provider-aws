@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -33,6 +33,11 @@ import (
 
 // @SDKResource("aws_rds_cluster_instance", name="Cluster Instance")
 // @Tags(identifierAttribute="arn")
+// @IdentityAttribute("identifier")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.DBInstance")
+// @Testing(importIgnore="apply_immediately;force_destroy")
+// @Testing(plannableImportAction="NoOp")
+// @Testing(preIdentityVersion="v6.64.0")
 // @Testing(tagsTest=false)
 func resourceClusterInstance() *schema.Resource {
 	return &schema.Resource{
@@ -40,10 +45,6 @@ func resourceClusterInstance() *schema.Resource {
 		ReadWithoutTimeout:   resourceClusterInstanceRead,
 		UpdateWithoutTimeout: resourceClusterInstanceUpdate,
 		DeleteWithoutTimeout: resourceClusterInstanceDelete,
-
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(90 * time.Minute),
@@ -94,7 +95,7 @@ func resourceClusterInstance() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+					ValidateFunc: lazyvalidation.StringMatch(`^AWSRDSCustom.*$`, "must begin with AWSRDSCustom"),
 				},
 				"db_parameter_group_name": {
 					Type:     schema.TypeString,
@@ -120,7 +121,7 @@ func resourceClusterInstance() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 					ValidateFunc: validation.Any(
-						validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
+						lazyvalidation.StringMatch(fmt.Sprintf(`^%s.*$`, instanceEngineCustomPrefix), fmt.Sprintf("must begin with %s", instanceEngineCustomPrefix)),
 						validation.StringInSlice(clusterInstanceEngine_Values(), false),
 					),
 				},
@@ -238,7 +239,7 @@ func resourceClusterInstance() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"warning_event_categories": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -394,24 +395,24 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	dbClusterID := aws.ToString(db.DBClusterIdentifier)
-
 	if dbClusterID == "" {
 		return sdkdiag.AppendErrorf(diags, "DBClusterIdentifier is missing from RDS Cluster Instance (%s). The aws_db_instance resource should be used for non-Aurora instances", d.Id())
 	}
 
 	dbc, err := findDBClusterByID(ctx, conn, dbClusterID)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster (%s): %s", dbClusterID, err)
 	}
 
-	for _, m := range dbc.DBClusterMembers {
+	resourceClusterInstanceFlatten(ctx, db, d, dbc)
+
+	return diags
+}
+
+func resourceClusterInstanceFlatten(ctx context.Context, db *types.DBInstance, d *schema.ResourceData, dbClusters *types.DBCluster) {
+	for _, m := range dbClusters.DBClusterMembers {
 		if aws.ToString(m.DBInstanceIdentifier) == d.Id() {
-			if aws.ToBool(m.IsClusterWriter) {
-				d.Set("writer", true)
-			} else {
-				d.Set("writer", false)
-			}
+			d.Set("writer", m.IsClusterWriter)
 		}
 	}
 
@@ -452,10 +453,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set(names.AttrStorageEncrypted, db.StorageEncrypted)
 
 	clusterSetResourceDataEngineVersionFromClusterInstance(d, db)
-
 	setTagsOut(ctx, db.TagList)
-
-	return diags
 }
 
 func resourceClusterInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {

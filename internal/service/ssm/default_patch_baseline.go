@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -261,7 +262,7 @@ func diffSuppressPatchBaselineID(_, oldValue, newValue string, _ *schema.Resourc
 	return false
 }
 
-var validatePatchBaselineID = validation.StringMatch(regexache.MustCompile(`^`+patchBaselineIDRegexPattern+`$`), `must match "pb-" followed by 17 hexadecimal characters`)
+var validatePatchBaselineID = lazyvalidation.StringMatch(`^`+patchBaselineIDRegexPattern+`$`, `must match "pb-" followed by 17 hexadecimal characters`)
 
 func validatePatchBaselineARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)

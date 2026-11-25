@@ -40,24 +40,25 @@ resource "aws_opensearch_package" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `engine_version` - (Optional, Forces new resources) Engine version that the package is compatible with. This argument is required and only valid when `package_type` is `ZIP-PLUGIN`. Format: `OpenSearch_X.Y` or `Elasticsearch_X.Y`, where `X` and `Y` are the major and minor version numbers, respectively.
-* `package_name` - (Required, Forces new resource) Unique name for the package.
-* `package_type` - (Required, Forces new resource) The type of package. Valid values are `TXT-DICTIONARY`, `ZIP-PLUGIN`, `PACKAGE-LICENSE` and `PACKAGE-CONFIG`.
-* `package_source` - (Required, Forces new resource) Configuration block for the package source options.
 * `package_description` - (Optional, Forces new resource) Description of the package.
+* `package_name` - (Required, Forces new resource) Unique name for the package.
+* `package_source` - (Required, Forces new resource) Configuration block for the package source options.
+* `package_type` - (Required, Forces new resource) Type of package. Valid values are `TXT-DICTIONARY`, `ZIP-PLUGIN`, `PACKAGE-LICENSE` and `PACKAGE-CONFIG`.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### package_source
+### `package_source` Block
 
-* `s3_bucket_name` - (Required, Forces new resource) The name of the Amazon S3 bucket containing the package.
+* `s3_bucket_name` - (Required, Forces new resource) Name of the Amazon S3 bucket containing the package.
 * `s3_key` - (Required, Forces new resource) Key (file name) of the package.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the package.
-* `available_package_version` - The current version of the package.
+* `available_package_version` - Current version of the package.
+* `id` - ID of the package.
+* `package_id` - ID of the package.
 
 ## Import
 

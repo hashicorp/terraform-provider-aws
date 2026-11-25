@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_observabilityadmin_dataset_integration
+```
+
+```release-note:new-data-source
+aws_observabilityadmin_dataset_integration
+```

@@ -33,14 +33,6 @@ type organizationListResource struct {
 func (r *organizationListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := r.Meta().WorkMailClient(ctx)
 
-	var query listOrganizationModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
-
 	stream.Results = func(yield func(list.ListResult) bool) {
 		result := request.NewListResult(ctx)
 		var input workmail.ListOrganizationsInput
@@ -87,10 +79,6 @@ func (r *organizationListResource) List(ctx context.Context, request list.ListRe
 			}
 		}
 	}
-}
-
-type listOrganizationModel struct {
-	framework.WithRegionModel
 }
 
 func listOrganizations(ctx context.Context, conn *workmail.Client, input *workmail.ListOrganizationsInput) iter.Seq2[awstypes.OrganizationSummary, error] {

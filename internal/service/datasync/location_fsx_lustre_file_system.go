@@ -97,7 +97,7 @@ func resourceLocationFSxLustreFileSystem() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 4096),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrURI: {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -150,7 +150,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 	}
 
 	uri := aws.ToString(output.LocationUri)
-	subdirectory, err := subdirectoryFromLocationURI(uri)
+	_, subdirectory, err := parseLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

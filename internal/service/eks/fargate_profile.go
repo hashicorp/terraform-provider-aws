@@ -110,7 +110,7 @@ func resourceFargateProfile() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}
@@ -377,11 +377,7 @@ func fargateProfileIssuesError(apiObjects []types.FargateProfileIssue) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		err := fargateProfileIssueError(apiObject)
-
-		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", strings.Join(apiObject.ResourceIds, ", "), fargateProfileIssueError(apiObject)))
 	}
 
 	return errors.Join(errs...)

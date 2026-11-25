@@ -140,14 +140,45 @@
           "Id": "key-default-1",
           "Statement": [
             {
-              "Sid": "Enable IAM User Permissions",
+              "Sid": "Enable IAM Key Administration",
               "Effect": "Allow",
               "Principal": {
                 "AWS": {
                   "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
                 }
               },
-              "Action": "kms:*",
+              "Action": [
+                "kms:Create*",
+                "kms:Describe*",
+                "kms:Enable*",
+                "kms:List*",
+                "kms:Put*",
+                "kms:Update*",
+                "kms:Revoke*",
+                "kms:Disable*",
+                "kms:Get*",
+                "kms:Delete*",
+                "kms:ScheduleKeyDeletion",
+                "kms:CancelKeyDeletion"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "Allow RDS Custom Key Usage",
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+                }
+              },
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt",
+                "kms:GenerateDataKey*",
+                "kms:ReEncrypt*",
+                "kms:CreateGrant",
+                "kms:DescribeKey"
+              ],
               "Resource": "*"
             }
           ]

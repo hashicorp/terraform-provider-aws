@@ -100,7 +100,7 @@ func resourceStudio() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_role": {
 					Type:         schema.TypeString,
 					Optional:     true,

@@ -243,7 +243,7 @@ func (r *resourceWebACLRule) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: "Labels to apply to matching web requests.",
 			},
-			"statement": statementBlock(ctx, webACLRuleStatementSchemaLevel),
+			"statement": statementBlock(ctx, ruleStatementSchemaLevel),
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -1637,23 +1637,13 @@ type webACLRuleRuleActionOverrideModel struct {
 	ActionToUse fwtypes.ListNestedObjectValueOf[webACLRuleActionModel] `tfsdk:"action_to_use"`
 }
 
-type webACLRuleScopeDownStatementModel struct {
-	IPSetReferenceStatement           fwtypes.ListNestedObjectValueOf[webACLRuleIPSetReferenceStatementModel]           `tfsdk:"ip_set_reference_statement"`
-	GeoMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleGeoMatchStatementModel]                 `tfsdk:"geo_match_statement"`
-	ByteMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleByteMatchStatementModel]                `tfsdk:"byte_match_statement"`
-	SqliMatchStatement                fwtypes.ListNestedObjectValueOf[webACLRuleSqliMatchStatementModel]                `tfsdk:"sqli_match_statement"`
-	XssMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleXssMatchStatementModel]                 `tfsdk:"xss_match_statement"`
-	SizeConstraintStatement           fwtypes.ListNestedObjectValueOf[webACLRuleSizeConstraintStatementModel]           `tfsdk:"size_constraint_statement"`
-	RegexMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleRegexMatchStatementModel]               `tfsdk:"regex_match_statement"`
-	RegexPatternSetReferenceStatement fwtypes.ListNestedObjectValueOf[webACLRuleRegexPatternSetReferenceStatementModel] `tfsdk:"regex_pattern_set_reference_statement"`
-	LabelMatchStatement               fwtypes.ListNestedObjectValueOf[webACLRuleLabelMatchStatementModel]               `tfsdk:"label_match_statement"`
-	AsnMatchStatement                 fwtypes.ListNestedObjectValueOf[webACLRuleAsnMatchStatementModel]                 `tfsdk:"asn_match_statement"`
-}
-
 func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx context.Context, stmt *awstypes.Statement) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Initialize all to null
+	m.AndStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleScopeDownAndStatementModel](ctx)
+	m.NotStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleScopeDownNotStatementModel](ctx)
+	m.OrStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleScopeDownOrStatementModel](ctx)
 	m.IPSetReferenceStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleIPSetReferenceStatementModel](ctx)
 	m.GeoMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleGeoMatchStatementModel](ctx)
 	m.ByteMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleByteMatchStatementModel](ctx)
@@ -1666,6 +1656,27 @@ func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx contex
 	m.AsnMatchStatement = fwtypes.NewListNestedObjectValueOfNull[webACLRuleAsnMatchStatementModel](ctx)
 
 	switch {
+	case stmt.AndStatement != nil:
+		var andModel webACLRuleScopeDownAndStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.AndStatement, &andModel)...)
+		if !diags.HasError() {
+			m.AndStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleScopeDownAndStatementModel{&andModel}, nil)
+		}
+
+	case stmt.NotStatement != nil:
+		var notModel webACLRuleScopeDownNotStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.NotStatement, &notModel)...)
+		if !diags.HasError() {
+			m.NotStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleScopeDownNotStatementModel{&notModel}, nil)
+		}
+
+	case stmt.OrStatement != nil:
+		var orModel webACLRuleScopeDownOrStatementModel
+		diags.Append(flex.Flatten(ctx, stmt.OrStatement, &orModel)...)
+		if !diags.HasError() {
+			m.OrStatement, diags = fwtypes.NewListNestedObjectValueOfSlice(ctx, []*webACLRuleScopeDownOrStatementModel{&orModel}, nil)
+		}
+
 	case stmt.IPSetReferenceStatement != nil:
 		var model webACLRuleIPSetReferenceStatementModel
 		diags.Append(flex.Flatten(ctx, stmt.IPSetReferenceStatement, &model)...)
@@ -1722,6 +1733,51 @@ func (m *webACLRuleScopeDownStatementModel) flattenScopeDownStatement(ctx contex
 
 func (m webACLRuleScopeDownStatementModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
+	case !m.AndStatement.IsNull():
+		andData, d := m.AndStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var andStmt awstypes.AndStatement
+		diags.Append(flex.Expand(ctx, andData, &andStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{AndStatement: &andStmt}, diags
+
+	case !m.NotStatement.IsNull():
+		notData, d := m.NotStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var notStmt awstypes.NotStatement
+		diags.Append(flex.Expand(ctx, notData, &notStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{NotStatement: &notStmt}, diags
+
+	case !m.OrStatement.IsNull():
+		orData, d := m.OrStatement.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		var orStmt awstypes.OrStatement
+		diags.Append(flex.Expand(ctx, orData, &orStmt)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		return &awstypes.Statement{OrStatement: &orStmt}, diags
+
 	case !m.IPSetReferenceStatement.IsNull():
 		var stmt awstypes.IPSetReferenceStatement
 		diags.Append(flex.Expand(ctx, m.IPSetReferenceStatement, &stmt)...)

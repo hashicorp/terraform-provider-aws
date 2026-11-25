@@ -25,7 +25,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -223,7 +222,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -295,7 +293,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_emptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -355,7 +352,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_addOnUpdate(t *testing.T) 
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -445,7 +441,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_EmptyTag_onCreate(t *testi
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -547,7 +542,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_EmptyTag_OnUpdate_add(t *t
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -698,7 +692,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_EmptyTag_OnUpdate_replace(
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -798,7 +791,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_providerOnly(t
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -995,7 +987,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_nonOverlapping
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1169,7 +1160,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_overlapping(t 
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1359,7 +1349,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_updateToProvid
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1459,7 +1448,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_updateToResour
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1558,7 +1546,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_emptyResourceT
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1634,7 +1621,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_emptyProviderO
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1702,7 +1688,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_nullOverlappin
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1781,7 +1766,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_DefaultTags_nullNonOverlap
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1862,7 +1846,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_ComputedTag_onCreate(t *te
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -1927,7 +1910,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_ComputedTag_OnUpdate_add(t
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -2034,7 +2016,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_ComputedTag_OnUpdate_repla
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -2131,7 +2112,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_IgnoreTags_Overlap_default
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 
@@ -2301,7 +2281,6 @@ func TestAccBedrockAgentCoreAgentRuntimeEndpoint_Tags_IgnoreTags_Overlap_resourc
 	ctx := acctest.Context(t)
 
 	var v bedrockagentcorecontrol.GetAgentRuntimeEndpointOutput
-	acctest.SkipIfEnvVarNotSet(t, "AWS_BEDROCK_AGENTCORE_RUNTIME_IMAGE_V1_URI")
 	resourceName := "aws_bedrockagentcore_agent_runtime_endpoint.test"
 	rName := testAccRandomAgentRuntimeName(t)
 

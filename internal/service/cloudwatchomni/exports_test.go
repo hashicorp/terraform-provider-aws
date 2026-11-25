@@ -1,0 +1,27 @@
+// Copyright IBM Corp. 2014, 2026
+// SPDX-License-Identifier: MPL-2.0
+
+package cloudwatchomni
+
+// Exports for use in tests only.
+var (
+	ResourceAccessGrant             = newAccessGrantResource
+	ResourceAccessProfile           = newAccessProfileResource
+	ResourceAlert                   = newAlertResource
+	ResourceDashboard               = newDashboardResource
+	ResourceDomain                  = newDomainResource
+	ResourceOrganizationAccessGrant = newOrganizationAccessGrantResource
+	ResourceOrganizationDomain      = newOrganizationDomainResource
+	ResourceSpace                   = newSpaceResource
+	ResourceView                    = newViewResource
+
+	FindAccessGrantByID             = findAccessGrantByID
+	FindAccessProfileByTwoPartKey   = findAccessProfileByTwoPartKey
+	FindAlertByTwoPartKey           = findAlertByTwoPartKey
+	FindDashboardByTwoPartKey       = findDashboardByTwoPartKey
+	FindDomainByID                  = findDomainByID
+	FindOrganizationAccessGrantByID = findOrganizationAccessGrantByID
+	FindOrganizationDomainByID      = findOrganizationDomainByID
+	FindSpaceByID                   = findSpaceByID
+	FindViewByName                  = findViewByName
+)

@@ -2414,6 +2414,20 @@ func channelEncoderSettingsSchema() *schema.Schema {
 						},
 					},
 				},
+				"thumbnail_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrState: {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.ThumbnailState](),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -3137,6 +3151,9 @@ func expandChannelEncoderSettings(tfList []any) *types.EncoderSettings {
 	}
 	if v, ok := m["nielsen_configuration"].([]any); ok && len(v) > 0 {
 		settings.NielsenConfiguration = expandChannelEncoderSettingsNielsenConfiguration(v)
+	}
+	if v, ok := m["thumbnail_configuration"].([]any); ok && len(v) > 0 {
+		settings.ThumbnailConfiguration = expandChannelEncoderSettingsThumbnailConfiguration(v)
 	}
 
 	return &settings
@@ -5386,6 +5403,21 @@ func expandChannelEncoderSettingsNielsenConfiguration(tfList []any) *types.Niels
 	return &out
 }
 
+func expandChannelEncoderSettingsThumbnailConfiguration(tfList []any) *types.ThumbnailConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]any)
+
+	var out types.ThumbnailConfiguration
+	if v, ok := m[names.AttrState].(string); ok && v != "" {
+		out.State = types.ThumbnailState(v)
+	}
+
+	return &out
+}
+
 func expandChannelEncoderSettingsVideoDescriptionsCodecSettings(tfList []any) *types.VideoCodecSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -5869,6 +5901,7 @@ func flattenChannelEncoderSettings(apiObject *types.EncoderSettings) []any {
 		"global_configuration":          flattenGlobalConfiguration(apiObject.GlobalConfiguration),
 		"motion_graphics_configuration": flattenMotionGraphicsConfiguration(apiObject.MotionGraphicsConfiguration),
 		"nielsen_configuration":         flattenNielsenConfiguration(apiObject.NielsenConfiguration),
+		"thumbnail_configuration":       flattenThumbnailConfiguration(apiObject.ThumbnailConfiguration),
 	}
 
 	return []any{m}
@@ -6968,6 +7001,18 @@ func flattenNielsenConfiguration(apiObject *types.NielsenConfiguration) []any {
 	m := map[string]any{
 		"distributor_id":             aws.ToString(apiObject.DistributorId),
 		"nielsen_pcm_to_id3_tagging": string(apiObject.NielsenPcmToId3Tagging),
+	}
+
+	return []any{m}
+}
+
+func flattenThumbnailConfiguration(apiObject *types.ThumbnailConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]any{
+		names.AttrState: string(apiObject.State),
 	}
 
 	return []any{m}

@@ -94,61 +94,62 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
-* `definition` - (Optional) A detailed analysis definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition).
-* `parameters` - (Optional) The parameters for the creation of the analysis, which you want to use to override the default settings. An analysis can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters).
-* `permissions` - (Optional) A set of resource permissions on the analysis. Maximum of 64 items. See [permissions](#permissions).
-* `recovery_window_in_days` - (Optional) A value that specifies the number of days that Amazon QuickSight waits before it deletes the analysis. Use `0` to force deletion without recovery. Minimum value of `7`. Maximum value of `30`. Default to `30`.
+* `definition` - (Optional) Detailed analysis definition. Only one of `definition` or `source_entity` should be configured. See [definition](#definition-block).
+* `parameters` - (Optional) Parameters for the creation of the analysis, which you want to use to override the default settings. An analysis can have any type of parameters, and some parameters might accept multiple values. See [parameters](#parameters-block).
+* `permissions` - (Optional) Set of resource permissions on the analysis. Maximum of 64 items. See [permissions](#permissions-block).
+* `recovery_window_in_days` - (Optional) Value that specifies the number of days that Amazon QuickSight waits before it deletes the analysis. Use `0` to force deletion without recovery. Minimum value of `7`. Maximum value of `30`. Default to `30`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `source_entity` - (Optional) The entity that you are using as a source when you create the analysis (template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity).
+* `source_entity` - (Optional) Entity that you are using as a source when you create the analysis (template). Only one of `definition` or `source_entity` should be configured. See [source_entity](#source_entity-block).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `theme_arn` - (Optional) ARN of the theme that is being used for this analysis. The theme ARN must exist in the same AWS account where you create the analysis.
 
-### permissions
+### `permissions` Block
 
 * `actions` - (Required) List of IAM actions to grant or revoke permissions on.
 * `principal` - (Required) ARN of the principal. See the [ResourcePermission documentation](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ResourcePermission.html) for the applicable ARN values.
 
-### source_entity
+### `source_entity` Block
 
-* `source_template` - (Optional) The source template. See [source_template](#source_template).
+* `source_template` - (Optional) Source template. See [source_template](#source_template-block).
 
-### source_template
+### `source_template` Block
 
 * `arn` - (Required) ARN of the resource.
-* `data_set_references` - (Required) List of dataset references. See [data_set_references](#data_set_references).
+* `data_set_references` - (Required) List of dataset references. See [data_set_references](#data_set_references-block).
 
-### data_set_references
+### `data_set_references` Block
 
 * `data_set_arn` - (Required) Dataset ARN.
 * `data_set_placeholder` - (Required) Dataset placeholder.
 
-### parameters
+### `parameters` Block
 
-* `date_time_parameters` - (Optional) A list of parameters that have a data type of date-time. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameter.html).
-* `decimal_parameters` - (Optional) A list of parameters that have a data type of decimal. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameter.html).
-* `integer_parameters` - (Optional) A list of parameters that have a data type of integer. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameter.html).
-* `string_parameters` - (Optional) A list of parameters that have a data type of string. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameter.html).
+* `date_time_parameters` - (Optional) List of parameters that have a data type of date-time. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DateTimeParameter.html).
+* `decimal_parameters` - (Optional) List of parameters that have a data type of decimal. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalParameter.html).
+* `integer_parameters` - (Optional) List of parameters that have a data type of integer. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_IntegerParameter.html).
+* `string_parameters` - (Optional) List of parameters that have a data type of string. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_StringParameter.html).
 
-### definition
+### `definition` Block
 
+* `analysis_defaults` - (Optional) Configuration for default analysis settings. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html).
+* `calculated_fields` - (Optional) List of calculated field definitions for the analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html).
+* `column_configurations` - (Optional) List of analysis-level column configurations. Column configurations are used to set default formatting for a column that's used throughout an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html).
 * `data_set_identifiers_declarations` - (Required) List dataset identifier declarations. With this mapping,you can use dataset identifiers instead of dataset ARNs throughout the analysis sub-structures. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetIdentifierDeclaration.html).
-* `analysis_defaults` - (Optional) The configuration for default analysis settings. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AnalysisDefaults.html).
-* `calculated_fields` - (Optional) A list of calculated field definitions for the analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_CalculatedField.html).
-* `column_configurations` - (Optional) A list of analysis-level column configurations. Column configurations are used to set default formatting for a column that's used throughout an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnConfiguration.html).
-* `filter_groups` - (Optional) A list of filter definitions for an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterGroup.html). For more information, see [Filtering Data](https://docs.aws.amazon.com/quicksight/latest/user/filtering-visual-data.html) in Amazon QuickSight User Guide.
-* `parameters_declarations` - (Optional) A list of parameter declarations for an analysis. Parameters are named variables that can transfer a value for use by an action or an object. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html). For more information, see [Parameters in Amazon QuickSight](https://docs.aws.amazon.com/quicksight/latest/user/parameters-in-quicksight.html) in the Amazon QuickSight User Guide.
-* `sheets` - (Optional) A list of sheet definitions for an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html).
+* `filter_groups` - (Optional) List of filter definitions for an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterGroup.html). For more information, see [Filtering Data](https://docs.aws.amazon.com/quicksight/latest/user/filtering-visual-data.html) in Amazon QuickSight User Guide.
+* `parameter_declarations` - (Optional) List of parameter declarations for an analysis. Parameters are named variables that can transfer a value for use by an action or an object. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html). For more information, see [Parameters in Amazon QuickSight](https://docs.aws.amazon.com/quicksight/latest/user/parameters-in-quicksight.html) in the Amazon QuickSight User Guide.
+* `sheets` - (Optional) List of sheet definitions for an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the analysis.
-* `created_time` - The time that the analysis was created.
-* `id` - A comma-delimited string joining AWS account ID and analysis ID.
-* `last_updated_time` - The time that the analysis was last updated.
-* `status` - The analysis creation status.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `created_time` - Time that the analysis was created.
+* `id` - Comma-delimited string joining AWS account ID and analysis ID.
+* `last_published_time` - Time that the analysis was last published.
+* `last_updated_time` - Time that the analysis was last updated.
+* `status` - Analysis creation status.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

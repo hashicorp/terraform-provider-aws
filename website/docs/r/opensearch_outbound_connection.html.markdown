@@ -39,51 +39,51 @@ resource "aws_opensearch_outbound_connection" "foo" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `connection_alias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
-* `connection_mode` - (Required, Forces new resource) Specifies the connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
 * `accept_connection` - (Optional, Forces new resource) Accepts the connection.
+* `connection_alias` - (Required, Forces new resource) Connection alias that will be used by the customer for this connection.
+* `connection_mode` - (Optional, Forces new resource) Connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
 * `connection_properties` - (Optional, Forces new resource) Configuration block for the outbound connection.
 * `local_domain_info` - (Required, Forces new resource) Configuration block for the local Opensearch domain.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `remote_domain_info` - (Required, Forces new resource) Configuration block for the remote Opensearch domain.
 
-### connection_properties
+### `connection_properties` Block
 
 * `cross_cluster_search` - (Optional, Forces new resource) Configuration block for cross cluster search.
 
-### cross_cluster_search
+### `cross_cluster_search` Block
 
 * `skip_unavailable` - (Optional, Forces new resource) Skips unavailable clusters and can only be used for cross-cluster searches. Accepted values are `ENABLED` or `DISABLED`.
 
-### local_domain_info
+### `local_domain_info` Block
 
-* `owner_id` - (Required, Forces new resource) The Account ID of the owner of the local domain.
-* `domain_name` - (Required, Forces new resource) The name of the local domain.
-* `region` - (Required, Forces new resource) The region of the local domain.
+* `domain_name` - (Required, Forces new resource) Name of the local domain.
+* `owner_id` - (Required, Forces new resource) Account ID of the owner of the local domain.
+* `region` - (Required, Forces new resource) Region of the local domain.
 
-### remote_domain_info
+### `remote_domain_info` Block
 
-* `owner_id` - (Required, Forces new resource) The Account ID of the owner of the remote domain.
-* `domain_name` - (Required, Forces new resource) The name of the remote domain.
-* `region` - (Required, Forces new resource) The region of the remote domain.
+* `domain_name` - (Required, Forces new resource) Name of the remote domain.
+* `owner_id` - (Required, Forces new resource) Account ID of the owner of the remote domain.
+* `region` - (Required, Forces new resource) Region of the remote domain.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The Id of the connection.
 * `connection_status` - Status of the connection request.
+* `id` - ID of the connection.
 
-`connection_properties` block exports the following:
+### `connection_properties` Block
 
-* `endpoint` - The endpoint of the remote domain, is only set when `connection_mode` is `VPC_ENDPOINT` and `accept_connection` is `TRUE`.
+* `endpoint` - Endpoint of the remote domain, is only set when `connection_mode` is `VPC_ENDPOINT` and `accept_connection` is `TRUE`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5m`)
-* `delete` - (Default `5m`)
+* `create` - (Default `15m`)
+* `delete` - (Default `15m`)
 
 ## Import
 

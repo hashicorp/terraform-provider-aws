@@ -10,13 +10,13 @@ description: |-
 
 `aws_vpc` provides details about a specific VPC.
 
-This resource can prove useful when a module accepts a vpc id as
+This resource can prove useful when a module accepts a VPC ID as
 an input variable and needs to, for example, determine the CIDR block of that
 VPC.
 
 ## Example Usage
 
-The following example shows how one might accept a VPC id as a variable
+The following example shows how one might accept a VPC ID as a variable
 and use this data source to obtain the data necessary to create a subnet
 within it.
 
@@ -40,7 +40,7 @@ This data source supports the following arguments:
 
 * `cidr_block` - (Optional) CIDR block of the desired VPC.
 * `default` - (Optional) Boolean constraint on whether the desired VPC is the default VPC for the region.
-* `dhcp_options_id` - (Optional) DHCP options id of the desired VPC.
+* `dhcp_options_id` - (Optional) DHCP options ID of the desired VPC.
 * `filter` - (Optional) Custom filter block as described below. See [`filter` Block](#filter-block) below.
 * `id` - (Optional) ID of the specific VPC to retrieve.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
@@ -68,6 +68,10 @@ This data source exports the following attributes in addition to the arguments a
 * `ipv6_cidr_block` - (**Deprecated** use `ipv6_cidr_block_associations` instead) IPv6 CIDR block.
 * `ipv6_cidr_block_associations` - Information about the IPv6 CIDR blocks associated with the VPC. See [`ipv6_cidr_block_associations` Block](#ipv6_cidr_block_associations-block) below.
 * `main_route_table_id` - ID of the main route table associated with this VPC.
+* `network_firewall_association` - Automated Internet Firewall that AWS Network Security Manager manages for the VPC. Empty if the VPC doesn't have one.
+    * `firewall_arn` - ARN of the firewall.
+    * `firewall_mode` - Mode of the firewall: `enforce` or `monitor`.
+    * `firewall_onboarding_status` - Status of the firewall for the VPC: `active`, `pending` or `disabling`.
 * `owner_id` - ID of the AWS account that owns the VPC.
 
 ### `cidr_block_associations` Block

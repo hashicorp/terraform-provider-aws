@@ -12,6 +12,8 @@ Manages the accepter's side of an EC2 Transit Gateway Peering Attachment.
 
 ## Example Usage
 
+### Basic Usage
+
 ```terraform
 resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
   transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.example.id
@@ -22,7 +24,66 @@ resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
 }
 ```
 
-A full example of how to create a Transit Gateway in one AWS account, share it with a second AWS account, and attach a to a Transit Gateway in the second account via the `aws_ec2_transit_gateway_peering_attachment` resource can be found in [the `./examples/transit-gateway-cross-account-peering-attachment` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/transit-gateway-cross-account-peering-attachment).
+### Cross-Account Usage
+
+This example creates a Transit Gateway in each of two AWS accounts and Regions, requests a peering attachment from the second account, and accepts it in the first account. The accepter must be created in the account and Region of the peer Transit Gateway. Peering attachments must be accepted even when both Transit Gateways are in the same account.
+
+```terraform
+provider "aws" {
+  region = "us-east-1"
+
+  # Accepter's credentials.
+}
+
+provider "aws" {
+  alias  = "requester"
+  region = "us-west-2"
+
+  # Requester's credentials.
+}
+
+data "aws_region" "accepter" {}
+
+# Accepter's side: create the peer Transit Gateway.
+resource "aws_ec2_transit_gateway" "accepter" {
+  tags = {
+    Name = "Accepter TGW"
+  }
+}
+
+# Requester's side: create the local Transit Gateway and request the peering attachment.
+resource "aws_ec2_transit_gateway" "requester" {
+  provider = aws.requester
+
+  tags = {
+    Name = "Requester TGW"
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment" "example" {
+  provider = aws.requester
+
+  peer_account_id         = aws_ec2_transit_gateway.accepter.owner_id
+  peer_region             = data.aws_region.accepter.region
+  peer_transit_gateway_id = aws_ec2_transit_gateway.accepter.id
+  transit_gateway_id      = aws_ec2_transit_gateway.requester.id
+
+  tags = {
+    Name = "Example cross-account attachment"
+    Side = "Requester"
+  }
+}
+
+# Accepter's side: accept the peering attachment.
+resource "aws_ec2_transit_gateway_peering_attachment_accepter" "example" {
+  transit_gateway_attachment_id = aws_ec2_transit_gateway_peering_attachment.example.id
+
+  tags = {
+    Name = "Example cross-account attachment"
+    Side = "Accepter"
+  }
+}
+```
 
 ## Argument Reference
 

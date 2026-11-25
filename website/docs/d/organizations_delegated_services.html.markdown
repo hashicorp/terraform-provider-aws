@@ -29,5 +29,5 @@ This data source supports the following arguments:
 This data source exports the following attributes in addition to the arguments above:
 
 * `delegated_services` - Services for which the account is a delegated administrator, which have the following attributes:
-    * `delegation_enabled_date` - The date that the account became a delegated administrator for this service.
-    * `service_principal` - The name of an AWS service that can request an operation for the specified service.
+    * `delegation_enabled_date` - Date that the account became a delegated administrator for this service.
+    * `service_principal` - Name of an AWS service that can request an operation for the specified service.

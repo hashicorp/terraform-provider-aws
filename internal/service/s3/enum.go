@@ -44,7 +44,7 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 				return bucketNameTypeS3OnOutpostsAccessPointARN
 			}
 		}
-	case directoryBucketNameRegex.MatchString(bucket):
+	case directoryBucketNameRegex().MatchString(bucket):
 		return bucketNameTypeDirectoryBucket
 	case strings.HasSuffix(bucket, "-s3alias"):
 		return bucketNameTypeAccessPointAlias

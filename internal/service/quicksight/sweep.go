@@ -4,23 +4,29 @@
 package quicksight
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_quicksight_account_custom_permission", sweepAccountCustomPermissions)
 	resource.AddTestSweepers("aws_quicksight_dashboard", &resource.Sweeper{
 		Name: "aws_quicksight_dashboard",
 		F:    sweepDashboards,
@@ -62,6 +68,41 @@ const (
 	// Defined locally to avoid cyclic import from internal/acctest
 	acctestResourcePrefix = "tf-acc-test"
 )
+
+func sweepAccountCustomPermissions(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.QuickSightClient(ctx)
+	accountID := client.AccountID(ctx)
+
+	input := quicksight.DescribeAccountCustomPermissionInput{
+		AwsAccountId: aws.String(accountID),
+	}
+
+	out, err := conn.DescribeAccountCustomPermission(ctx, &input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, smarterr.NewError(err)
+	}
+
+	if out == nil {
+		return nil, smarterr.NewError(tfresource.NewEmptyResultError())
+	}
+
+	profileName := aws.ToString(out.CustomPermissionsName)
+	if profileName == "" {
+		return nil, nil
+	}
+	if !strings.HasPrefix(profileName, acctestResourcePrefix) {
+		return nil, nil
+	}
+
+	return []sweep.Sweepable{
+		framework.NewSweepResource(newAccountCustomPermissionResource, client,
+			framework.NewAttribute(names.AttrAWSAccountID, accountID),
+		),
+	}, nil
+}
 
 func sweepDashboards(region string) error {
 	ctx := sweep.Context(region)

@@ -13,6 +13,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-framework/list"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
@@ -32,19 +33,8 @@ type groupPolicyAttachmentListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type listGroupPolicyAttachmentModel struct {
-}
-
 func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	conn := l.Meta().IAMClient(ctx)
-
-	var query listGroupPolicyAttachmentModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	var input iam.ListGroupsInput
 	tflog.Info(ctx, "Listing Resources")
@@ -62,6 +52,12 @@ func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request li
 				GroupName: aws.String(groupName),
 			}
 			for item, err := range listGroupPolicyAttachments(ctx, conn, &attachInput) {
+				if errs.IsA[*awstypes.NoSuchEntityException](err) {
+					tflog.Warn(ctx, "Resource disappeared during listing, skipping", map[string]any{
+						logging.ResourceAttributeKey("group"): groupName,
+					})
+					break
+				}
 				if err != nil {
 					result := fwdiag.NewListResultErrorDiagnostic(err)
 					yield(result)
@@ -91,25 +87,6 @@ func (l *groupPolicyAttachmentListResource) List(ctx context.Context, request li
 				}
 
 				if !yield(result) {
-					return
-				}
-			}
-		}
-	}
-}
-
-func listGroups(ctx context.Context, conn *iam.Client, input *iam.ListGroupsInput) iter.Seq2[awstypes.Group, error] {
-	return func(yield func(awstypes.Group, error) bool) {
-		pages := iam.NewListGroupsPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if err != nil {
-				yield(awstypes.Group{}, err)
-				return
-			}
-
-			for _, role := range page.Groups {
-				if !yield(role, nil) {
 					return
 				}
 			}

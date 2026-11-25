@@ -179,7 +179,7 @@ func resourceVerifiedAccessTrustProvider() *schema.Resource {
 					Required: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"sse_specification": {
 					Type:     schema.TypeList,
 					Optional: true,

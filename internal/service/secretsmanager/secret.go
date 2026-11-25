@@ -95,7 +95,6 @@ func resourceSecret() *schema.Resource {
 				"replica": {
 					Type:     schema.TypeSet,
 					Optional: true,
-					Computed: true,
 					Set:      sdkv2.SimpleSchemaSetFunc(names.AttrKMSKeyID, names.AttrRegion),
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -124,7 +123,7 @@ func resourceSecret() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrType: {
 					Type:         schema.TypeString,
 					Optional:     true,

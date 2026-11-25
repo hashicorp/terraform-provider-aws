@@ -34,21 +34,9 @@ type layerVersionListResource struct {
 	framework.ListResourceWithSDKv2Resource
 }
 
-type layerVersionListResourceModel struct {
-	framework.WithRegionModel
-}
-
 func (l *layerVersionListResource) List(ctx context.Context, request list.ListRequest, stream *list.ListResultsStream) {
 	awsClient := l.Meta()
 	conn := awsClient.LambdaClient(ctx)
-
-	var query layerVersionListResourceModel
-	if request.Config.Raw.IsKnown() && !request.Config.Raw.IsNull() {
-		if diags := request.Config.Get(ctx, &query); diags.HasError() {
-			stream.Results = list.ListResultsStreamDiagnostics(diags)
-			return
-		}
-	}
 
 	tflog.Info(ctx, "Listing Lambda Layer Versions")
 

@@ -26,15 +26,18 @@ resource "aws_m2_deployment" "test" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `environment_id` - (Required) Environment to deploy application to.
 * `application_id` - (Required) Application to deploy.
 * `application_version` - (Required) Version to application to deploy
+* `environment_id` - (Required) Environment to deploy application to.
+* `force_stop` - (Optional) Stop the application during deployment, even if it is running.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `start` - (Required) Start the application once deployed.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
+
+* `deployment_id` - Unique identifier of the deployment.
 
 ## Timeouts
 

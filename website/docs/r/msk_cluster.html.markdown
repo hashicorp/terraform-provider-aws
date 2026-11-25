@@ -203,144 +203,144 @@ resource "aws_msk_cluster" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster. See [broker_node_group_info Argument Reference](#broker_node_group_info-argument-reference) below.
+* `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster. See [`broker_node_group_info` Block](#broker_node_group_info-block) below.
+* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See [`client_authentication` Block](#client_authentication-block) below.
 * `cluster_name` - (Required) Name of the MSK cluster.
-* `kafka_version` - (Required) Specify the desired Kafka software version.
-* `number_of_broker_nodes` - (Required) The desired total number of broker nodes in the kafka cluster.  It must be a multiple of the number of specified client subnets.
-* `client_authentication` - (Optional) Configuration block for specifying a client authentication. See [client_authentication Argument Reference](#client_authentication-argument-reference) below.
-* `configuration_info` - (Optional) Configuration block for specifying an MSK Configuration to attach to Kafka brokers. See [configuration_info Argument Reference](#configuration_info-argument-reference) below.
-* `encryption_info` - (Optional) Configuration block for specifying encryption. See [encryption_info Argument Reference](#encryption_info-argument-reference) below.
-* `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
-* `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See [open_monitoring Argument Reference](#open_monitoring-argument-reference) below.
-* `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See [logging_info Argument Reference](#logging_info-argument-reference) below.
-* `rebalancing` - (Optional) Configuration block for intelligent rebalancing. See [rebalancing Argument Reference](#rebalancing-argument-reference) below. Only applicable to MSK Provisioned clusters with Express brokers.
+* `configuration_info` - (Optional) Configuration block for specifying an MSK Configuration to attach to Kafka brokers. See [`configuration_info` Block](#configuration_info-block) below.
+* `encryption_info` - (Optional) Configuration block for specifying encryption. See [`encryption_info` Block](#encryption_info-block) below.
+* `enhanced_monitoring` - (Optional) Desired enhanced MSK CloudWatch monitoring level. See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html).
+* `kafka_version` - (Required) Desired Kafka software version.
+* `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See [`logging_info` Block](#logging_info-block) below.
+* `number_of_broker_nodes` - (Required) Desired total number of broker nodes in the kafka cluster. It must be a multiple of the number of specified client subnets.
+* `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See [`open_monitoring` Block](#open_monitoring-block) below.
+* `rebalancing` - (Optional) Configuration block for intelligent rebalancing. See [`rebalancing` Block](#rebalancing-block) below. Only applicable to MSK Provisioned clusters with Express brokers.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `storage_mode` - (Optional) Controls storage mode for supported storage tiers. Valid values are: `LOCAL` or `TIERED`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### broker_node_group_info Argument Reference
+### `broker_node_group_info` Block
 
-* `client_subnets` - (Required) A list of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
-* `instance_type` - (Required) Specify the instance type to use for the kafka brokersE.g., kafka.m5.large. ([Pricing info](https://aws.amazon.com/msk/pricing/))
-* `security_groups` - (Required) A list of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
-* `az_distribution` - (Optional) The distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently, the only valid value is `DEFAULT`.
-* `connectivity_info` - (Optional) Information about the cluster access configuration. See [broker_node_group_info connectivity_info Argument Reference](#broker_node_group_info-connectivity_info-argument-reference) below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
-* `storage_info` - (Optional) A block that contains information about storage volumes attached to MSK broker nodes. See [broker_node_group_info storage_info Argument Reference](#broker_node_group_info-storage_info-argument-reference) below. This block must not be specified when an Express instance type is specified for `instance_type`.
+* `az_distribution` - (Optional) Distribution of broker nodes across availability zones ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-model-brokerazdistribution)). Currently, the only valid value is `DEFAULT`.
+* `client_subnets` - (Required) List of subnets to connect to in client VPC ([documentation](https://docs.aws.amazon.com/msk/1.0/apireference/clusters.html#clusters-prop-brokernodegroupinfo-clientsubnets)).
+* `connectivity_info` - (Optional) Information about the cluster access configuration. See [`connectivity_info` Block](#connectivity_info-block) below. For security reasons, you can't turn on public access while creating an MSK cluster. However, you can update an existing cluster to make it publicly accessible. You can also create a new cluster and then update it to make it publicly accessible ([documentation](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)).
+* `instance_type` - (Required) Instance type to use for the kafka brokers. For example, `kafka.m5.large`. ([Pricing info](https://aws.amazon.com/msk/pricing/))
+* `security_groups` - (Required) List of the security groups to associate with the elastic network interfaces to control who can communicate with the cluster.
+* `storage_info` - (Optional) Configuration block that contains information about storage volumes attached to MSK broker nodes. See [`storage_info` Block](#storage_info-block) below. This block must not be specified when an Express instance type is specified for `instance_type`.
 
-### broker_node_group_info connectivity_info Argument Reference
+### `connectivity_info` Block
 
 * `network_type` - (Optional) Network type of the cluster. Valid values are: `IPV4` or `DUAL`. Default value: `IPV4`. Only updating from `IPV4` to `DUAL` is allowed.
-* `public_access` - (Optional) Access control settings for brokers. See [connectivity_info public_access Argument Reference](#connectivity_info-public_access-argument-reference) below.
-* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [connectivity_info vpc_connectivity Argument Reference](#connectivity_info-vpc_connectivity-argument-reference) below.
+* `public_access` - (Optional) Access control settings for brokers. See [`public_access` Block](#public_access-block) below.
+* `vpc_connectivity` - (Optional) VPC connectivity access control for brokers. See [`vpc_connectivity` Block](#vpc_connectivity-block) below.
 
-### connectivity_info public_access Argument Reference
+### `public_access` Block
 
 * `type` - (Optional) Public access type. Valid values: `DISABLED`, `SERVICE_PROVIDED_EIPS`.
 
-### connectivity_info vpc_connectivity Argument Reference
+### `vpc_connectivity` Block
 
-* `client_authentication` - (Optional) Includes all client authentication information for VPC connectivity. See [vpc_connectivity client_authentication Argument Reference](#vpc_connectivity-client_authentication-argument-reference) below.
+* `client_authentication` - (Optional) Client authentication information for VPC connectivity. See [`vpc_connectivity.client_authentication` Block](#vpc_connectivityclient_authentication-block) below.
 
-### vpc_connectivity client_authentication Argument Reference
+### `vpc_connectivity.client_authentication` Block
 
-* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [vpc_connectivity client_authentication sasl Argument Reference](#vpc_connectivity-client_authentication-sasl-argument-reference) below.
-* `tls` - (Optional) Enables TLS authentication for VPC connectivity.
+* `sasl` - (Optional) SASL authentication type details for VPC connectivity. See [`vpc_connectivity.client_authentication.sasl` Block](#vpc_connectivityclient_authenticationsasl-block) below.
+* `tls` - (Optional) Whether to enable TLS authentication for VPC connectivity.
 
-### vpc_connectivity client_authentication sasl Argument Reference
+### `vpc_connectivity.client_authentication.sasl` Block
 
-* `iam` - (Optional) Enables SASL/IAM authentication for VPC connectivity.
-* `scram` - (Optional) Enables SASL/SCRAM authentication for VPC connectivity.
+* `iam` - (Optional) Whether to enable SASL/IAM authentication for VPC connectivity.
+* `scram` - (Optional) Whether to enable SASL/SCRAM authentication for VPC connectivity.
 
-### broker_node_group_info storage_info Argument Reference
+### `storage_info` Block
 
-* `ebs_storage_info` - (Optional) A block that contains EBS volume information. See [storage_info ebs_storage_info Argument Reference](#storage_info-ebs_storage_info-argument-reference) below.
+* `ebs_storage_info` - (Optional) Configuration block that contains EBS volume information. See [`ebs_storage_info` Block](#ebs_storage_info-block) below.
 
-### storage_info ebs_storage_info Argument Reference
+### `ebs_storage_info` Block
 
-* `provisioned_throughput` - (Optional) A block that contains EBS volume provisioned throughput information. To provision storage throughput, you must choose broker type kafka.m5.4xlarge or larger. See [ebs_storage_info provisioned_throughput Argument Reference](#ebs_storage_info-provisioned_throughput-argument-reference) below.
-* `volume_size` - (Optional) The size in GiB of the EBS volume for the data drive on each broker node. Minimum value of `1` and maximum value of `16384`.
+* `provisioned_throughput` - (Optional) Configuration block that contains EBS volume provisioned throughput information. To provision storage throughput, you must choose broker type kafka.m5.4xlarge or larger. See [`provisioned_throughput` Block](#provisioned_throughput-block) below.
+* `volume_size` - (Optional) Size in GiB of the EBS volume for the data drive on each broker node. Minimum value of `1` and maximum value of `16384`.
 
-### ebs_storage_info provisioned_throughput Argument Reference
+### `provisioned_throughput` Block
 
-* `enabled` - (Optional) Controls whether provisioned throughput is enabled or not. Default value: `false`.
-* `volume_throughput` - (Optional) Throughput value of the EBS volumes for the data drive on each kafka broker node in MiB per second. The minimum value is `250`. The maximum value varies between broker type. You can refer to the valid values for the maximum volume throughput at the following [documentation on throughput bottlenecks](https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html#throughput-bottlenecks)
+* `enabled` - (Optional) Whether provisioned throughput is enabled or not. Default value: `false`.
+* `volume_throughput` - (Optional) Throughput value of the EBS volumes for the data drive on each kafka broker node in MiB per second. The minimum value is `250`. The maximum value varies between broker type. You can refer to the valid values for the maximum volume throughput at the following [documentation on throughput bottlenecks](https://docs.aws.amazon.com/msk/latest/developerguide/msk-provision-throughput.html#throughput-bottlenecks).
 
-### client_authentication Argument Reference
+### `client_authentication` Block
 
-* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See [client_authentication sasl Argument Reference](#client_authentication-sasl-argument-reference) below.
-* `tls` - (Optional) Configuration block for specifying TLS client authentication. See [client_authentication tls Argument Reference](#client_authentication-tls-argument-reference) below.
-* `unauthenticated` - (Optional) Enables unauthenticated access.
+* `sasl` - (Optional) Configuration block for specifying SASL client authentication. See [`sasl` Block](#sasl-block) below.
+* `tls` - (Optional) Configuration block for specifying TLS client authentication. See [`tls` Block](#tls-block) below.
+* `unauthenticated` - (Optional) Whether to enable unauthenticated access.
 
-#### client_authentication sasl Argument Reference
+### `sasl` Block
 
-* `iam` - (Optional) Enables IAM client authentication. Defaults to `false`.
-* `scram` - (Optional) Enables SCRAM client authentication via AWS Secrets Manager. Defaults to `false`.
+* `iam` - (Optional) Whether to enable IAM client authentication. Defaults to `false`.
+* `scram` - (Optional) Whether to enable SCRAM client authentication via AWS Secrets Manager. Defaults to `false`.
 
-#### client_authentication tls Argument Reference
+### `tls` Block
 
 * `certificate_authority_arns` - (Optional) List of ACM Certificate Authority ARNs.
 
-### configuration_info Argument Reference
+### `configuration_info` Block
 
 * `arn` - (Required) ARN of the MSK Configuration to use in the cluster.
 * `revision` - (Required) Revision of the MSK Configuration to use in the cluster.
 
-### encryption_info Argument Reference
+### `encryption_info` Block
 
-* `encryption_in_transit` - (Optional) Configuration block to specify encryption in transit. See [encryption_info encryption_in_transit Argument Reference](#encryption_info-encryption_in_transit-argument-reference) below.
-* `encryption_at_rest_kms_key_arn` - (Optional) You may specify a KMS key short ID or ARN (it will always output an ARN) to use for encrypting your data at rest.  If no key is specified, an AWS managed KMS ('aws/msk' managed service) key will be used for encrypting the data at rest.
+* `encryption_at_rest_kms_key_arn` - (Optional) KMS key short ID or ARN (it will always output an ARN) to use for encrypting your data at rest. If no key is specified, an AWS managed KMS ('aws/msk' managed service) key will be used for encrypting the data at rest.
+* `encryption_in_transit` - (Optional) Configuration block to specify encryption in transit. See [`encryption_in_transit` Block](#encryption_in_transit-block) below.
 
-#### encryption_info encryption_in_transit Argument Reference
+### `encryption_in_transit` Block
 
 * `client_broker` - (Optional) Encryption setting for data in transit between clients and brokers. Valid values: `TLS`, `TLS_PLAINTEXT`, and `PLAINTEXT`. Default value is `TLS`.
 * `in_cluster` - (Optional) Whether data communication among broker nodes is encrypted. Default value: `true`.
 
-#### open_monitoring Argument Reference
+### `open_monitoring` Block
 
-* `prometheus` - (Required) Configuration block for Prometheus settings for open monitoring. See [open_monitoring prometheus Argument Reference](#open_monitoring-prometheus-argument-reference) below.
+* `prometheus` - (Required) Configuration block for Prometheus settings for open monitoring. See [`prometheus` Block](#prometheus-block) below.
 
-#### open_monitoring prometheus Argument Reference
+### `prometheus` Block
 
-* `jmx_exporter` - (Optional) Configuration block for JMX Exporter. See [open_monitoring prometheus jmx_exporter Argument Reference](#open_monitoring-prometheus-jmx_exporter-argument-reference) below.
-* `node_exporter` - (Optional) Configuration block for Node Exporter. See [open_monitoring prometheus node_exporter Argument Reference](#open_monitoring-prometheus-node_exporter-argument-reference) below.
+* `jmx_exporter` - (Optional) Configuration block for JMX Exporter. See [`jmx_exporter` Block](#jmx_exporter-block) below.
+* `node_exporter` - (Optional) Configuration block for Node Exporter. See [`node_exporter` Block](#node_exporter-block) below.
 
-#### open_monitoring prometheus jmx_exporter Argument Reference
+### `jmx_exporter` Block
 
-* `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the JMX Exporter.
+* `enabled_in_broker` - (Required) Whether to enable or disable the JMX Exporter.
 
-#### open_monitoring prometheus node_exporter Argument Reference
+### `node_exporter` Block
 
-* `enabled_in_broker` - (Required) Indicates whether you want to enable or disable the Node Exporter.
+* `enabled_in_broker` - (Required) Whether to enable or disable the Node Exporter.
 
-#### logging_info Argument Reference
+### `logging_info` Block
 
-* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [logging_info broker_logs Argument Reference](#logging_info-broker_logs-argument-reference) below.
+* `broker_logs` - (Required) Configuration block for Broker Logs settings for logging info. See [`broker_logs` Block](#broker_logs-block) below.
 
-#### logging_info broker_logs Argument Reference
+### `broker_logs` Block
 
-* `cloudwatch_logs` - (Optional) Configuration block for Cloudwatch Logs settings. See [logging_info broker_logs cloudwatch_logs Argument Reference](#logging_info-broker_logs-cloudwatch_logs-argument-reference) below.
-* `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings. See [logging_info broker_logs firehose Argument Reference](#logging_info-broker_logs-firehose-argument-reference) below.
-* `s3` - (Optional) Configuration block for S3 settings. See [logging_info broker_logs s3 Argument Reference](#logging_info-broker_logs-s3-argument-reference) below.
+* `cloudwatch_logs` - (Optional) Configuration block for CloudWatch Logs settings. See [`cloudwatch_logs` Block](#cloudwatch_logs-block) below.
+* `firehose` - (Optional) Configuration block for Kinesis Data Firehose settings. See [`firehose` Block](#firehose-block) below.
+* `s3` - (Optional) Configuration block for S3 settings. See [`s3` Block](#s3-block) below.
 
-#### logging_info broker_logs cloudwatch_logs Argument Reference
+### `cloudwatch_logs` Block
 
-* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Cloudwatch Logs.
-* `log_group` - (Optional) Name of the Cloudwatch Log Group to deliver logs to.
+* `enabled` - (Required) Whether to enable or disable streaming broker logs to CloudWatch Logs.
+* `log_group` - (Optional) Name of the CloudWatch Log Group to deliver logs to.
 
-#### logging_info broker_logs firehose Argument Reference
+### `firehose` Block
 
-* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to Kinesis Data Firehose.
 * `delivery_stream` - (Optional) Name of the Kinesis Data Firehose delivery stream to deliver logs to.
+* `enabled` - (Required) Whether to enable or disable streaming broker logs to Kinesis Data Firehose.
 
-#### logging_info broker_logs s3 Argument Reference
+### `s3` Block
 
-* `enabled` - (Optional) Indicates whether you want to enable or disable streaming broker logs to S3.
 * `bucket` - (Optional) Name of the S3 bucket to deliver logs to.
+* `enabled` - (Required) Whether to enable or disable streaming broker logs to S3.
 * `prefix` - (Optional) Prefix to append to the folder name.
 
-### rebalancing Argument Reference
+### `rebalancing` Block
 
-* `status` - (Required) The status of intelligent rebalancing. Valid values: `ACTIVE`, `PAUSED`. Default is `ACTIVE` for new Express-based clusters.
+* `status` - (Required) Status of intelligent rebalancing. Valid values: `ACTIVE`, `PAUSED`. Default is `ACTIVE` for new Express-based clusters.
 
 ~> **NOTE:** Intelligent rebalancing is only available for MSK Provisioned clusters with Express brokers. When enabled, you cannot use third-party rebalancing tools such as Cruise Control. See [AWS MSK Intelligent Rebalancing](https://docs.aws.amazon.com/msk/latest/developerguide/intelligent-rebalancing.html) for more information.
 
@@ -350,26 +350,26 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the MSK cluster.
 * `bootstrap_brokers` - Comma separated list of one or more hostname:port pairs of kafka brokers suitable to bootstrap connectivity to the kafka cluster. Contains a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts values alphabetically. AWS may not always return all endpoints so this value is not guaranteed to be stable across applies.
+* `bootstrap_brokers_ipv6` - One or more IPv6 DNS names (or IP addresses) and plaintext port pairs. For example, `2001:db8:1234:1a00:*:80,2001:db8:1234:1a02:*:80,2001:db8:1234:1a04:*:80`. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_public_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `b-1-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9198,b-2-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9198,b-3-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9198`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true` and `broker_node_group_info.0.connectivity_info.0.public_access.0.type` is set to `SERVICE_PROVIDED_EIPS` and the cluster fulfill all other requirements for public access. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_public_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b-1-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9196,b-2-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9196,b-3-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9196`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true` and `broker_node_group_info.0.connectivity_info.0.public_access.0.type` is set to `SERVICE_PROVIDED_EIPS` and the cluster fulfill all other requirements for public access. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_public_tls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b-1-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9194,b-2-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9194,b-3-public.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9194`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `broker_node_group_info.0.connectivity_info.0.public_access.0.type` is set to `SERVICE_PROVIDED_EIPS` and the cluster fulfill all other requirements for public access. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9098`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
-* `bootstrap_brokers_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
-* `bootstrap_brokers_tls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
-* `bootstrap_brokers_vpc_connectivity_sasl_iam` - A string containing one or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
-* `bootstrap_brokers_vpc_connectivity_sasl_scram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
-* `bootstrap_brokers_vpc_connectivity_tls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
-* `bootstrap_brokers_ipv6` - One or more IPv6 DNS names (or IP addresses) and plaintext port pairs. For example, `2001:db8:1234:1a00:*:80,2001:db8:1234:1a02:*:80,2001:db8:1234:1a04:*:80`. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `PLAINTEXT` or `TLS_PLAINTEXT`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_sasl_iam_ipv6` - One or more IPv6 DNS names (or IP addresses) and SASL IAM port pairs. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.iam` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9096`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_sasl_scram_ipv6` - One or more IPv6 DNS names (or IP addresses) and SASL SCRAM port pairs. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS` and `client_authentication.0.sasl.0.scram` is set to `true`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_tls` - One or more DNS names (or IP addresses) and TLS port pairs. For example, `b-1.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-2.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094,b-3.exampleClusterName.abcde.c2.kafka.us-east-1.amazonaws.com:9094`. This attribute will have a value if `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
 * `bootstrap_brokers_tls_ipv6` - One or more IPv6 DNS names (or IP addresses) and TLS port pairs. This attribute will have a value if the cluster is configured with `broker_node_group_info.0.connectivity_info.0.network_type` set to `DUAL` and `encryption_info.0.encryption_in_transit.0.client_broker` is set to `TLS_PLAINTEXT` or `TLS`. The resource sorts the list alphabetically. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_sasl_iam` - One or more DNS names (or IP addresses) and SASL IAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_sasl_scram` - One or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
+* `bootstrap_brokers_vpc_connectivity_tls` - One or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity. AWS may not always return all endpoints so the values may not be stable across applies.
 * `cluster_uuid` - UUID of the MSK cluster, for use in IAM policies.
 * `current_version` - Current version of the MSK Cluster used for updates, e.g., `K13V1IB3VIYZZH`
 * `customer_action_status` - Status indicating whether Amazon MSK requires customer action for the cluster. Valid values are `NONE`, `ACTION_RECOMMENDED`, and `CRITICAL_ACTION_REQUIRED`.
-* `encryption_info.0.encryption_at_rest_kms_key_arn` - The ARN of the KMS key used for encryption at rest of the broker data volumes.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `zookeeper_connect_string` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
-* `zookeeper_connect_string_tls` - A comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
+* `encryption_info.0.encryption_at_rest_kms_key_arn` - ARN of the KMS key used for encryption at rest of the broker data volumes.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `zookeeper_connect_string` - Comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
+* `zookeeper_connect_string_tls` - Comma separated list of one or more hostname:port pairs to use to connect to the Apache Zookeeper cluster via TLS. The returned values are sorted alphabetically. The AWS API may not return all endpoints, so this value is not guaranteed to be stable across applies.
 
 ## Timeouts
 

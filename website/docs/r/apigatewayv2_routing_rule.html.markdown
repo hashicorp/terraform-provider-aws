@@ -47,11 +47,11 @@ The following arguments are required:
 * `action` - (Required) Configuration of resulting action based on matching routing rules condition. See below.
 * `condition` - (Required) Conditions configuration. See below.
 * `domain_name` - (Required) Domain name. Must be between 1 and 512 characters in length.
+* `priority` - (Required) Order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 
 The following arguments are optional:
 
 * `domain_name_id` - (Optional) Identifier of the domain name. Supported only for private custom domain names.
-* `priority` - (Optional) Order of rule evaluation. Priority is evaluated from the lowest value to the highest value. Rules can't have the same priority. Value must be between 1 and 1,000,000.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `action` Block
