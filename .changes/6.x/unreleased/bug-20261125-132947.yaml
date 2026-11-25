@@ -1,0 +1,5 @@
+kind: bug
+time: 2026-11-25T13:29:47.741939+01:00
+custom:
+    Body: Fix updates to reserved queues failing when AWS returns a concurrent jobs value
+    Impact: resource/aws_media_convert_queue

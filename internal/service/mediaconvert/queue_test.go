@@ -5,19 +5,105 @@ package mediaconvert_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/mediaconvert/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfmediaconvert "github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// Reserved queues require a yearly commitment, so exercise their update requests locally.
+func TestResourceQueueUpdate_concurrentJobs(t *testing.T) {
+	t.Parallel()
+
+	for _, pricingPlan := range []types.PricingPlan{types.PricingPlanOnDemand, types.PricingPlanReserved} {
+		t.Run(string(pricingPlan), func(t *testing.T) {
+			t.Parallel()
+
+			var updateCalls int
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				if r.Method == http.MethodPut {
+					updateCalls++
+					var input map[string]any
+					if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+						t.Errorf("decoding update request: %v", err)
+						w.WriteHeader(http.StatusBadRequest)
+						return
+					}
+					value, present := input["concurrentJobs"]
+					if want := pricingPlan == types.PricingPlanOnDemand; present != want {
+						t.Errorf("concurrentJobs present = %t, want %t", present, want)
+					}
+					if present && value != float64(5) {
+						t.Errorf("concurrentJobs = %v, want 5", value)
+					}
+					if got := input[names.AttrDescription]; got != "updated" {
+						t.Errorf("description = %v, want updated", got)
+					}
+				}
+				if _, err := fmt.Fprintf(w, `{"queue":{"name":"test","pricingPlan":%q,"concurrentJobs":5,"status":"ACTIVE","description":"original"}}`, pricingPlan); err != nil {
+					t.Errorf("writing queue response: %v", err)
+				}
+			}))
+			defer server.Close()
+
+			ctx := t.Context()
+			client := new(conns.AWSClient)
+			client.SetServicePackages(ctx, map[string]conns.ServicePackage{names.MediaConvert: tfmediaconvert.ServicePackage(ctx)})
+			config := conns.Config{
+				AccessKey:               "test",
+				SecretKey:               "test",
+				Region:                  endpoints.UsEast1RegionID,
+				Endpoints:               map[string]string{names.MediaConvert: server.URL},
+				SkipCredsValidation:     true,
+				SkipRequestingAccountId: true,
+				SharedConfigFiles:       []string{},
+				SharedCredentialsFiles:  []string{},
+			}
+			client, diags := config.ConfigureProvider(ctx, client)
+			if diags.HasError() {
+				t.Fatal(diags)
+			}
+
+			queue := tfmediaconvert.ResourceQueue()
+			d := schema.TestResourceDataRaw(t, queue.SchemaMap(), map[string]any{
+				names.AttrName: "test",
+				"pricing_plan": string(pricingPlan),
+			})
+			d.SetId("test")
+			state, diags := queue.RefreshWithoutUpgrade(ctx, d.State(), client)
+			if diags.HasError() {
+				t.Fatal(diags)
+			}
+			diff := &terraformsdk.InstanceDiff{
+				Attributes: map[string]*terraformsdk.ResourceAttrDiff{
+					names.AttrDescription: {Old: "original", New: "updated"},
+				},
+			}
+			if _, diags := queue.Apply(ctx, state, diff, client); diags.HasError() {
+				t.Fatal(diags)
+			}
+			if updateCalls != 1 {
+				t.Errorf("UpdateQueue calls = %d, want 1", updateCalls)
+			}
+		})
+	}
+}
 
 func TestAccMediaConvertQueue_basic(t *testing.T) {
 	ctx := acctest.Context(t)
