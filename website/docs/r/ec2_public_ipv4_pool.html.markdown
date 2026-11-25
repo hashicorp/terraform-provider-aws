@@ -69,7 +69,7 @@ In Terraform v1.12.0 and later, the [`import` block](https://developer.hashicorp
 import {
   to = aws_ec2_public_ipv4_pool.example
   identity = {
-    pool_id = "pool-0123456789abcdef0"
+    pool_id = "ipv4pool-ec2-fbac04f087e582365"
   }
 }
 
@@ -94,12 +94,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ec2_public_ipv4_pool.example
-  id = "pool-0123456789abcdef0"
+  id = "ipv4pool-ec2-fbac04f087e582365"
 }
 ```
 
 Using `terraform import`, import EC2 Public IPv4 Pool using the `pool_id`. For example:
 
 ```console
-% terraform import aws_ec2_public_ipv4_pool.example pool-0123456789abcdef0
+% terraform import aws_ec2_public_ipv4_pool.example ipv4pool-ec2-fbac04f087e582365
 ```

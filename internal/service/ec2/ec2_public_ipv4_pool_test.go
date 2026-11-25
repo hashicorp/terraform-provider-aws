@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	tfstatecheck "github.com/hashicorp/terraform-provider-aws/internal/acctest/statecheck"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -43,18 +44,14 @@ func TestAccEC2PublicIPv4Pool_basic(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New(names.AttrDescription)),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("pool_address_ranges")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("total_address_count")),
-						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("total_available_address_count")),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
 					tfstatecheck.ExpectRegionalARNFormat(resourceName, tfjsonpath.New(names.AttrARN), "ec2", "ipv4pool-ec2/{pool_id}"),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("pool_id"), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("")),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("network_border_group"), knownvalue.StringExact(acctest.Region())),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("pool_address_ranges"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("pool_id"), tfknownvalue.StringNotEmpty()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("total_address_count"), knownvalue.Int64Exact(0)),

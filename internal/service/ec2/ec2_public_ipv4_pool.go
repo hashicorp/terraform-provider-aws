@@ -53,14 +53,7 @@ type publicIPv4PoolResource struct {
 func (r *publicIPv4PoolResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				CustomType:  fwtypes.ARNType,
-				Computed:    true,
-				Description: "ARN, arn:<partition>:ec2:<region>:<account>:ipv4pool-ec2/<pool_id>.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrDescription: schema.StringAttribute{
 				Computed:    true,
 				Description: "Description of the address pool.",
@@ -136,7 +129,7 @@ func (r *publicIPv4PoolResource) Create(ctx context.Context, request resource.Cr
 	}
 
 	// The ARN no API returns, which buildARN composes from the identity.
-	plan.ARN = fwtypes.ARNValue(r.buildARN(ctx, &plan))
+	plan.ARN = types.StringValue(r.buildARN(ctx, &plan))
 
 	// Every identity attribute is in state before the next call, so a failure from here on taints the resource.
 	smerr.AddEnrich(ctx, &response.Diagnostics, response.State.SetAttribute(ctx, path.Root("pool_id"), plan.PoolID))
@@ -200,7 +193,7 @@ func (r *publicIPv4PoolResource) flatten(ctx context.Context, output *awstypes.P
 		return diags
 	}
 
-	data.ARN = fwtypes.ARNValue(r.buildARN(ctx, data))
+	data.ARN = types.StringValue(r.buildARN(ctx, data))
 
 	setTagsOut(ctx, output.Tags)
 
@@ -222,13 +215,24 @@ func (r *publicIPv4PoolResource) Delete(ctx context.Context, request resource.De
 		NetworkBorderGroup: fwflex.StringFromFramework(ctx, data.NetworkBorderGroup),
 	}
 	_, err := conn.DeletePublicIpv4Pool(ctx, &input)
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolNotFound) || tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
+	if isPublicIPv4PoolNotFoundError(err) {
 		return
 	}
 	if err != nil {
 		smerr.AddError(ctx, &response.Diagnostics, err, smerr.ID, id)
 		return
 	}
+}
+
+func isPublicIPv4PoolNotFoundError(err error) bool {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolNotFound) {
+		return true
+	}
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidPublicIpv4PoolIDNotFound) {
+		return true
+	}
+
+	return false
 }
 
 // buildARN composes the ARN no API returns from the partition, the Region, the account and the identity attribute pool_id.
@@ -238,7 +242,7 @@ func (r *publicIPv4PoolResource) buildARN(ctx context.Context, data *publicIPv4P
 
 type publicIPv4PoolResourceModel struct {
 	framework.WithRegionModel
-	ARN                        fwtypes.ARN                                               `tfsdk:"arn" autoflex:"-"`
+	ARN                        types.String                                              `tfsdk:"arn" autoflex:"-"`
 	Description                types.String                                              `tfsdk:"description"`
 	NetworkBorderGroup         types.String                                              `tfsdk:"network_border_group"`
 	PoolAddressRanges          fwtypes.ListNestedObjectValueOf[publicIpv4PoolRangeModel] `tfsdk:"pool_address_ranges"`

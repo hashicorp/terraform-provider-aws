@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
-	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 )
 
@@ -49,19 +48,6 @@ func (l *publicIPv4PoolListResource) List(ctx context.Context, request list.List
 			id := aws.ToString(item.PoolId)
 			ctx := tflog.SetField(ctx, logging.ResourceAttributeKey("pool_id"), id)
 
-			var output *awstypes.PublicIpv4Pool
-			if request.IncludeResource {
-				var err error
-				output, err = findPublicIPv4PoolByID(ctx, conn, id)
-				if retry.NotFound(err) {
-					continue
-				}
-				if err != nil {
-					yield(fwdiag.NewListResultErrorDiagnostic(err))
-					return
-				}
-			}
-
 			result := request.NewListResult(ctx)
 			tags := keyValueTags(ctx, item.Tags)
 
@@ -70,7 +56,7 @@ func (l *publicIPv4PoolListResource) List(ctx context.Context, request list.List
 				data.PoolID = fwflex.StringValueToFramework(ctx, id)
 
 				if request.IncludeResource {
-					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, output, &data))
+					smerr.AddEnrich(ctx, &result.Diagnostics, l.flatten(ctx, &item, &data))
 					if result.Diagnostics.HasError() {
 						return
 					}
