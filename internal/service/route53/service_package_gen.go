@@ -54,6 +54,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
+			Factory:  newHealthCheckSourceResource,
+			TypeName: "aws_route53_health_check_source",
+			Name:     "Health Check Source",
+			Tags:     inttypes.ResourceTagsTypeAndAttribute("healthchecksource", names.AttrID),
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newRecordsExclusiveResource,
 			TypeName: "aws_route53_records_exclusive",
 			Name:     "Records Exclusive",
