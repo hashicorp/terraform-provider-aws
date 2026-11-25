@@ -10,12 +10,14 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"slices"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -84,6 +86,13 @@ func resourceHealthCheck() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				names.AttrEndpointType: {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.EndpointType](),
+				},
 				"failure_threshold": {
 					Type:         schema.TypeInt,
 					Optional:     true,
@@ -94,6 +103,11 @@ func resourceHealthCheck() *schema.Resource {
 					Type:         schema.TypeString,
 					Optional:     true,
 					ValidateFunc: validation.StringLenBetween(0, 255),
+				},
+				"health_check_source_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 64),
 				},
 				"insufficient_data_health_status": {
 					Type:             schema.TypeString,
@@ -187,7 +201,10 @@ func resourceHealthCheck() *schema.Resource {
 			}
 		},
 
-		CustomizeDiff: triggersCustomizeDiff,
+		CustomizeDiff: customdiff.Sequence(
+			triggersCustomizeDiff,
+			privateEndpointCustomizeDiff,
+		),
 	}
 }
 
@@ -208,12 +225,20 @@ func resourceHealthCheckCreate(ctx context.Context, d *schema.ResourceData, meta
 		healthCheckConfig.EnableSNI = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk(names.AttrEndpointType); ok {
+		healthCheckConfig.EndpointType = awstypes.EndpointType(v.(string))
+	}
+
 	if v, ok := d.GetOk("failure_threshold"); ok {
 		healthCheckConfig.FailureThreshold = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("fqdn"); ok {
 		healthCheckConfig.FullyQualifiedDomainName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("health_check_source_id"); ok {
+		healthCheckConfig.HealthCheckSourceId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("invert_healthcheck"); ok {
@@ -332,8 +357,14 @@ func resourceHealthCheckRead(ctx context.Context, d *schema.ResourceData, meta a
 	}
 	d.Set("disabled", healthCheckConfig.Disabled)
 	d.Set("enable_sni", healthCheckConfig.EnableSNI)
+	if v := healthCheckConfig.EndpointType; v != "" {
+		d.Set(names.AttrEndpointType, v)
+	} else {
+		d.Set(names.AttrEndpointType, awstypes.EndpointTypePublic)
+	}
 	d.Set("failure_threshold", healthCheckConfig.FailureThreshold)
 	d.Set("fqdn", healthCheckConfig.FullyQualifiedDomainName)
+	d.Set("health_check_source_id", healthCheckConfig.HealthCheckSourceId)
 	d.Set("insufficient_data_health_status", healthCheckConfig.InsufficientDataHealthStatus)
 	d.Set("invert_healthcheck", healthCheckConfig.Inverted)
 	d.Set(names.AttrIPAddress, healthCheckConfig.IPAddress)
@@ -391,6 +422,10 @@ func resourceHealthCheckUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("fqdn") {
 			input.FullyQualifiedDomainName = aws.String(d.Get("fqdn").(string))
+		}
+
+		if d.HasChange("health_check_source_id") {
+			input.HealthCheckSourceId = aws.String(d.Get("health_check_source_id").(string))
 		}
 
 		if d.HasChange("insufficient_data_health_status") {
@@ -482,6 +517,37 @@ func triggersCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) 
 		if len(o.(map[string]any)) > 0 && len(n.(map[string]any)) == 0 {
 			return d.Clear(names.AttrTriggers)
 		}
+	}
+
+	return nil
+}
+
+func privateEndpointCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta any) error {
+	config := d.GetRawConfig()
+	if !config.IsKnown() {
+		return nil
+	}
+
+	endpointType := config.GetAttr(names.AttrEndpointType)
+	if !endpointType.IsKnown() {
+		return nil
+	}
+	private := !endpointType.IsNull() && awstypes.EndpointType(endpointType.AsString()) == awstypes.EndpointTypePrivate
+	hasSource := !config.GetAttr("health_check_source_id").IsNull()
+
+	switch {
+	case private && !hasSource:
+		return fmt.Errorf(`"health_check_source_id" is required when %q is %q`, names.AttrEndpointType, awstypes.EndpointTypePrivate)
+	case !private && hasSource:
+		return fmt.Errorf(`"health_check_source_id" can only be set when %q is %q`, names.AttrEndpointType, awstypes.EndpointTypePrivate)
+	}
+
+	if !private {
+		return nil
+	}
+
+	if v := awstypes.HealthCheckType(strings.ToUpper(d.Get(names.AttrType).(string))); slices.Contains([]awstypes.HealthCheckType{awstypes.HealthCheckTypeCalculated, awstypes.HealthCheckTypeCloudwatchMetric, awstypes.HealthCheckTypeRecoveryControl}, v) {
+		return fmt.Errorf(`%q %q is not supported with "type" %q`, names.AttrEndpointType, awstypes.EndpointTypePrivate, v)
 	}
 
 	return nil

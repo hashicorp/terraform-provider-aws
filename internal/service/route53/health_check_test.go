@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -549,6 +551,189 @@ func TestAccRoute53HealthCheck_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRoute53HealthCheck_private(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_route53_health_check.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHealthCheckConfig_private(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypePrivate)),
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("health_check_source_id"), "aws_route53_health_check_source.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRoute53HealthCheck_privateUpdateSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_route53_health_check.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHealthCheckConfig_privateTwoSources(rName, "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("health_check_source_id"), "aws_route53_health_check_source.test", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+			{
+				Config: testAccHealthCheckConfig_privateTwoSources(rName, "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(resourceName, tfjsonpath.New("health_check_source_id"), "aws_route53_health_check_source.test2", tfjsonpath.New(names.AttrID), compare.ValuesSame()),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53HealthCheck_endpointTypeForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_route53_health_check.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccHealthCheckConfig_publicWithSourceFixture(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypePublic)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("health_check_source_id"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				Config: testAccHealthCheckConfig_private(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypePrivate)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53HealthCheck_upgradeFromV6_74_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var check awstypes.HealthCheck
+	resourceName := "aws_route53_health_check.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.Route53ServiceID),
+		CheckDestroy: testAccCheckHealthCheckDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.74.0",
+					},
+				},
+				Config: testAccHealthCheckConfig_basic("2", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccHealthCheckConfig_basic("2", true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckHealthCheckExists(ctx, t, resourceName, &check),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEndpointType), tfknownvalue.StringExact(awstypes.EndpointTypePublic)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccRoute53HealthCheck_privateValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccHealthCheckConfig_privateValidation(`endpoint_type = "PRIVATE"`, "HTTP"),
+				ExpectError: regexache.MustCompile(`"health_check_source_id" is required`),
+			},
+			{
+				Config:      testAccHealthCheckConfig_privateValidation(`health_check_source_id = "00000000-0000-0000-0000-000000000000"`, "HTTP"),
+				ExpectError: regexache.MustCompile(`"health_check_source_id" can only be set`),
+			},
+			{
+				Config:      testAccHealthCheckConfig_privateValidation("endpoint_type = \"PUBLIC\"\n  health_check_source_id = \"00000000-0000-0000-0000-000000000000\"", "HTTP"),
+				ExpectError: regexache.MustCompile(`"health_check_source_id" can only be set`),
+			},
+			{
+				Config:      testAccHealthCheckConfig_privateValidation("endpoint_type = \"PRIVATE\"\n  health_check_source_id = \"00000000-0000-0000-0000-000000000000\"", "CALCULATED"),
+				ExpectError: regexache.MustCompile(`not supported with "type" "CALCULATED"`),
+			},
+		},
+	})
+}
+
 func testAccCheckHealthCheckDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).Route53Client(ctx)
@@ -846,4 +1031,82 @@ resource "aws_route53_health_check" "test" {
   routing_control_arn = aws_route53recoverycontrolconfig_routing_control.test.arn
 }
 `, rName)
+}
+
+func testAccHealthCheckConfig_privateBase(rName string) string {
+	return acctest.ConfigCompose(testAccHealthCheckSourceConfig_basic(rName), `
+locals {
+  private_ip = cidrhost(aws_subnet.test[0].cidr_block, 10)
+}
+`)
+}
+
+func testAccHealthCheckConfig_private(rName string) string {
+	return acctest.ConfigCompose(testAccHealthCheckConfig_privateBase(rName), `
+resource "aws_route53_health_check" "test" {
+  endpoint_type          = "PRIVATE"
+  health_check_source_id = aws_route53_health_check_source.test.id
+  ip_address             = local.private_ip
+  port                   = 80
+  type                   = "HTTP"
+  resource_path          = "/"
+  failure_threshold      = "3"
+  request_interval       = "30"
+}
+`)
+}
+
+func testAccHealthCheckConfig_publicWithSourceFixture(rName string) string {
+	return acctest.ConfigCompose(testAccHealthCheckConfig_privateBase(rName), `
+resource "aws_route53_health_check" "test" {
+  fqdn              = "dev.example.com"
+  port              = 80
+  type              = "HTTP"
+  resource_path     = "/"
+  failure_threshold = "3"
+  request_interval  = "30"
+}
+`)
+}
+
+func testAccHealthCheckConfig_privateTwoSources(rName, sourceName string) string {
+	return acctest.ConfigCompose(testAccHealthCheckConfig_privateBase(rName), fmt.Sprintf(`
+resource "aws_route53_health_check_source" "test2" {
+  vpc_id = aws_vpc.test.id
+
+  dynamic "subnet_configuration" {
+    for_each = aws_subnet.test
+
+    content {
+      availability_zone_id = subnet_configuration.value.availability_zone_id
+      security_group_ids   = [aws_security_group.test.id]
+      subnet_id            = subnet_configuration.value.id
+    }
+  }
+}
+
+resource "aws_route53_health_check" "test" {
+  endpoint_type          = "PRIVATE"
+  health_check_source_id = aws_route53_health_check_source.%[1]s.id
+  ip_address             = local.private_ip
+  port                   = 80
+  type                   = "HTTP"
+  resource_path          = "/"
+  failure_threshold      = "3"
+  request_interval       = "30"
+}
+`, sourceName))
+}
+
+func testAccHealthCheckConfig_privateValidation(endpointArgs, healthCheckType string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_health_check" "test" {
+  %[1]s
+  ip_address        = "10.0.0.10"
+  port              = 80
+  type              = %[2]q
+  failure_threshold = "3"
+  request_interval  = "30"
+}
+`, endpointArgs, healthCheckType)
 }

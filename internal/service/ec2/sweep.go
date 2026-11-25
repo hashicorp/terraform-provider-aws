@@ -269,6 +269,7 @@ func RegisterSweepers() {
 		"aws_quicksight_vpc_connection",
 		"aws_redshift_cluster",
 		"aws_redshift_subnet_group",
+		"aws_route53_health_check_source",
 		"aws_route53_resolver_endpoint",
 		"aws_sagemaker_notebook_instance",
 		"aws_spot_fleet_request",
