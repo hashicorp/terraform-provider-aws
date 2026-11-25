@@ -38,6 +38,12 @@ func filterLFTagPermissions(principalIdentifier string) PermissionsFilter {
 	}
 }
 
+func filterLFTagExpressionPermissions(principalIdentifier string) PermissionsFilter {
+	return func(permissions awstypes.PrincipalResourcePermissions) bool {
+		return principalIdentifier == aws.ToString(permissions.Principal.DataLakePrincipalIdentifier) && permissions.Resource.LFTagExpression != nil
+	}
+}
+
 func filterLFTagPolicyPermissions(principalIdentifier string) PermissionsFilter {
 	return func(permissions awstypes.PrincipalResourcePermissions) bool {
 		return principalIdentifier == aws.ToString(permissions.Principal.DataLakePrincipalIdentifier) && permissions.Resource.LFTagPolicy != nil
