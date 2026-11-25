@@ -256,8 +256,12 @@ func resourceBucketLoggingFlatten(loggingEnabled *types.LoggingEnabled, d *schem
 	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return fmt.Errorf("setting target_grant: %w", err)
 	}
-	if loggingEnabled.TargetObjectKeyFormat != nil {
-		if err := d.Set("target_object_key_format", []any{flattenTargetObjectKeyFormat(loggingEnabled.TargetObjectKeyFormat)}); err != nil {
+	// Amazon S3 only returns TargetObjectKeyFormat when it was explicitly set. S3-compatible
+	// backends (e.g. Ceph RADOS Gateway, OVHcloud Object Storage) always return it, with its
+	// default SimplePrefix. Keep that default out of state unless target_object_key_format is
+	// configured, otherwise a configuration without the block has a perpetual diff.
+	if v := loggingEnabled.TargetObjectKeyFormat; v != nil && (v.SimplePrefix == nil || targetObjectKeyFormatConfigured(d)) {
+		if err := d.Set("target_object_key_format", []any{flattenTargetObjectKeyFormat(v)}); err != nil {
 			return fmt.Errorf("setting target_object_key_format: %w", err)
 		}
 	} else {
@@ -478,6 +482,12 @@ func flattenLoggingGrantee(g *types.Grantee) []any {
 	}
 
 	return []any{m}
+}
+
+func targetObjectKeyFormatConfigured(d *schema.ResourceData) bool {
+	v, ok := d.GetOk("target_object_key_format")
+
+	return ok && len(v.([]any)) > 0 && v.([]any)[0] != nil
 }
 
 func expandTargetObjectKeyFormat(tfMap map[string]any) *types.TargetObjectKeyFormat {
