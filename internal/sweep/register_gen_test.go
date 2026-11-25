@@ -91,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/eventbridgev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
@@ -298,6 +299,7 @@ func registerSweepers() {
 	emr.RegisterSweepers()
 	emrcontainers.RegisterSweepers()
 	emrserverless.RegisterSweepers()
+	eventbridgev2.RegisterSweepers()
 	events.RegisterSweepers()
 	evidently.RegisterSweepers()
 	evs.RegisterSweepers()
