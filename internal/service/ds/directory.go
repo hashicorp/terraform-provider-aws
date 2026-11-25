@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -140,13 +141,14 @@ func resourceDirectory() *schema.Resource {
 				},
 				names.AttrName: {
 					Type:         schema.TypeString,
-					Required:     true,
+					Optional:     true,
+					Computed:     true,
 					ForceNew:     true,
 					ValidateFunc: domainValidator,
 				},
 				names.AttrPassword: {
 					Type:      schema.TypeString,
-					Required:  true,
+					Optional:  true,
 					ForceNew:  true,
 					Sensitive: true,
 				},
@@ -180,6 +182,7 @@ func resourceDirectory() *schema.Resource {
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
+					Computed: true,
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -207,6 +210,34 @@ func resourceDirectory() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
+				"assessment_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"secret_arn": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+				"hybrid_settings": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"self_managed_dns_ip_addrs": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"self_managed_instance_ids": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
 			}
 		},
 	}
@@ -223,7 +254,11 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 		creator = adConnectorCreator{}
 
 	case awstypes.DirectoryTypeMicrosoftAd:
-		creator = microsoftADCreator{}
+		if d.Get("edition") == "Hybrid" {
+			creator = hybridADCreator{}
+		} else {
+			creator = microsoftADCreator{}
+		}
 
 	case awstypes.DirectoryTypeSimpleAd:
 		creator = simpleADCreator{}
@@ -289,6 +324,9 @@ func resourceDirectoryCreate(ctx context.Context, d *schema.ResourceData, meta a
 	}
 
 	if v, ok := d.GetOk("enable_directory_data_access"); ok && v.(bool) {
+		if d.Get("edition") == "Hybrid" {
+			return sdkdiag.AppendErrorf(diags, "Directory Service Data feature is not supported for this directory type.")
+		}
 		if err := enableDirectoryDataAccess(ctx, conn, d.Id()); err != nil {
 			sdkdiag.AppendFromErr(diags, err)
 		}
@@ -366,7 +404,7 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 		d.Set("vpc_settings", nil)
 	}
 
-	if dir.Type == awstypes.DirectoryTypeMicrosoftAd {
+	if dir.Type == awstypes.DirectoryTypeMicrosoftAd && dir.Edition != awstypes.DirectoryEditionHybrid {
 		dda, err := getDirectoryDataAccess(ctx, conn, d.Id())
 		if errs.IsA[*awstypes.UnsupportedOperationException](err) {
 			// Directory Service Data is not available in all regions (e.g. GovCloud).
@@ -378,6 +416,18 @@ func resourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta any
 		}
 	} else {
 		d.Set("enable_directory_data_access", false)
+	}
+
+	if dir.Type == awstypes.DirectoryTypeMicrosoftAd && dir.Edition == awstypes.DirectoryEditionHybrid {
+		d.Set(names.AttrName, dir.Name)
+	}
+
+	if dir.HybridSettings != nil {
+		if err := d.Set("hybrid_settings", []any{flattenHybridSettingsDescription(dir.HybridSettings)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting hybrid_settings: %s", err)
+		}
+	} else {
+		d.Set("hybrid_settings", nil)
 	}
 
 	return diags
@@ -542,6 +592,35 @@ func (c microsoftADCreator) Create(ctx context.Context, conn *directoryservice.C
 	}
 
 	output, err := conn.CreateMicrosoftAD(ctx, input)
+	if err != nil {
+		return err
+	}
+
+	d.SetId(aws.ToString(output.DirectoryId))
+
+	return nil
+}
+
+type hybridADCreator struct{}
+
+func (c hybridADCreator) TypeName() string {
+	return "Microsoft AD"
+}
+
+func (c hybridADCreator) Create(ctx context.Context, conn *directoryservice.Client, name string, d *schema.ResourceData) error {
+	input := &directoryservice.CreateHybridADInput{
+		Tags: getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("assessment_id"); ok {
+		input.AssessmentId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("secret_arn"); ok {
+		input.SecretArn = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateHybridAD(ctx, input)
 	if err != nil {
 		return err
 	}
@@ -1117,6 +1196,24 @@ func flattenDirectoryVpcSettingsDescription(apiObject *awstypes.DirectoryVpcSett
 
 	if v := apiObject.VpcId; v != nil {
 		tfMap[names.AttrVPCID] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
+func flattenHybridSettingsDescription(apiObject *awstypes.HybridSettingsDescription) map[string]any { // nosemgrep:ci.caps5-in-func-name,ci.ds-in-func-name
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{}
+
+	if v := apiObject.SelfManagedDnsIpAddrs; v != nil {
+		tfMap["self_managed_dns_ip_addrs"] = v
+	}
+
+	if v := apiObject.SelfManagedInstanceIds; v != nil {
+		tfMap["self_managed_instance_ids"] = v
 	}
 
 	return tfMap
