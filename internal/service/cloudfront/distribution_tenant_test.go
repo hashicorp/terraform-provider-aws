@@ -327,6 +327,84 @@ func TestAccCloudFrontDistributionTenant_tags(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontDistributionTenant_customizationsRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
+	var tenant awstypes.DistributionTenant
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	rootDomain := acctest.ACMCertificateDomainFromEnv(t)
+	domain := acctest.ACMCertificateRandomSubDomain(rootDomain)
+	resourceName := "aws_cloudfront_distribution_tenant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDistributionTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDistributionTenantConfig_customizationsRemoved(rName, rootDomain, domain, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectPartial(map[string]knownvalue.Check{
+							names.AttrCertificate: knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									names.AttrARN: knownvalue.NotNull(),
+								}),
+							}),
+						}),
+					})),
+				},
+			},
+			{
+				// The domain stays on the tenant without a certificate. CloudFront accepts it because its
+				// CNAME points to the connection group, and serves it over HTTP.
+				Config: testAccDistributionTenantConfig_customizationsRemoved(rName, rootDomain, domain, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionTenantExists(ctx, t, resourceName, &tenant),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("customizations"), knownvalue.ListExact([]knownvalue.Check{})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDomain), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrDomain: knownvalue.StringExact(domain),
+							names.AttrStatus: tfknownvalue.StringExact(awstypes.DomainStatusActive),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"wait_for_deployment",
+					names.AttrStatus,
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckDistributionTenantDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
@@ -809,4 +887,98 @@ resource "aws_cloudfront_distribution_tenant" "test" {
   }
 }
 `, rName, tenantDomain, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccDistributionTenantConfig_customizationsRemoved(rName, rootDomain, tenantDomain string, withCertificate bool) string {
+	customizations := ""
+	if withCertificate {
+		customizations = `
+  customizations {
+    certificate {
+      arn = data.aws_acm_certificate.test.arn
+    }
+  }
+`
+	}
+
+	return acctest.ConfigCompose(testAccDistributionTenantConfig_baseCertificate(rootDomain, tenantDomain), fmt.Sprintf(`
+resource "aws_cloudfront_distribution_tenant" "test" {
+  distribution_id     = aws_cloudfront_multitenant_distribution.test.id
+  connection_group_id = aws_cloudfront_connection_group.test.id
+  domain {
+    domain = %[2]q
+  }
+  name = %[1]q
+
+  parameter {
+    name  = "origin_domain"
+    value = "www.example.com"
+  }
+%[3]s
+  depends_on = [aws_route53_record.tenant]
+}
+
+resource "aws_cloudfront_connection_group" "test" {
+  name = %[1]q
+}
+
+# Lets CloudFront accept the domain once no certificate covers it.
+resource "aws_route53_record" "tenant" {
+  name    = %[2]q
+  records = [aws_cloudfront_connection_group.test.routing_endpoint]
+  ttl     = 60
+  type    = "CNAME"
+  zone_id = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = true
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "www.example.com"
+    id          = "test"
+
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "http-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "test"
+    viewer_protocol_policy = "allow-all"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["GET", "HEAD"]
+      cached_methods = ["GET", "HEAD"]
+    }
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  tenant_config {
+    parameter_definition {
+      name = "origin_domain"
+      definition {
+        string_schema {
+          required = true
+          comment  = "Origin domain parameter for tenants"
+        }
+      }
+    }
+  }
+}
+`, rName, tenantDomain, customizations))
 }
