@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_user: Ignore no-op changes from authentication mode `no-password` to `no-password-required`
+```
