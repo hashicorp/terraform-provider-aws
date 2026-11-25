@@ -7796,3 +7796,96 @@ resource "aws_rds_cluster" "test" {
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL, categories)
 }
+
+func TestAccRDSCluster_GlobalClusterIdentifier_majorVersionUpgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_GlobalClusterID_majorVersionUpgrade(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.test", "version_actual"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_GlobalClusterID_majorVersionUpgrade(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, t, resourceName, &dbCluster2),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngineVersion, "data.aws_rds_engine_version.upgrade", "version_actual"),
+				),
+			},
+		},
+	})
+}
+
+func testAccClusterConfig_GlobalClusterID_majorVersionUpgrade(rName string, upgrade bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine           = %[1]q
+  has_major_target = true
+  latest           = true
+}
+
+data "aws_rds_engine_version" "upgrade" {
+  engine             = data.aws_rds_engine_version.test.engine
+  latest             = true
+  preferred_versions = data.aws_rds_engine_version.test.valid_major_targets
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.test.engine
+  engine_version             = data.aws_rds_engine_version.test.version_actual
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supports_global_databases  = true
+}
+
+locals {
+  engine_version = %[3]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.test.version_actual
+}
+
+resource "aws_rds_global_cluster" "test" {
+  engine                    = data.aws_rds_engine_version.test.engine
+  engine_version            = local.engine_version
+  global_cluster_identifier = %[4]q
+}
+
+resource "aws_rds_cluster" "test" {
+  allow_major_version_upgrade = true
+  apply_immediately           = true
+  cluster_identifier          = %[4]q
+  engine                      = data.aws_rds_engine_version.test.engine
+  engine_version              = local.engine_version
+  global_cluster_identifier   = aws_rds_global_cluster.test.id
+  master_password             = "avoid-plaintext-passwords"
+  master_username             = "tfacctest"
+  skip_final_snapshot         = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  apply_immediately  = true
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_engine_version.test.engine
+  engine_version     = local.engine_version
+  identifier         = %[4]q
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, upgrade, rName)
+}
