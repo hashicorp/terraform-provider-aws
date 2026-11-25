@@ -2732,6 +2732,83 @@ func waitTransitGatewayMeteringPolicyDeleted(ctx context.Context, conn *ec2.Clie
 	return nil, err
 }
 
+func waitTransitGatewayAttachmentNATConfigurationUpdated(ctx context.Context, conn *ec2.Client, id string, support awstypes.TransitGatewayAttachmentNatGatewaySupportValue, rules []awstypes.TransitGatewayNatRuleRequest, timeout time.Duration) (*ec2.GetTransitGatewayAttachmentNatConfigurationOutput, error) {
+	target, other := awstypes.TransitGatewayAttachmentNatGatewaySupportStateEnabled, awstypes.TransitGatewayAttachmentNatGatewaySupportStateDisabled
+	if support == awstypes.TransitGatewayAttachmentNatGatewaySupportValueDisable {
+		target, other = other, target
+	}
+
+	refresh := statusTransitGatewayAttachmentNATConfiguration(conn, id)
+	stateConf := &retry.StateChangeConf{
+		Pending: append(
+			enum.Slice(other, awstypes.TransitGatewayAttachmentNatGatewaySupportStateEnabling, awstypes.TransitGatewayAttachmentNatGatewaySupportStateDisabling),
+			enum.Slice(awstypes.TransitGatewayNatRuleStatePending, awstypes.TransitGatewayNatRuleStateDeleting)...,
+		),
+		Target:  enum.Slice(target),
+		Timeout: timeout,
+		Refresh: func(ctx context.Context) (any, string, error) {
+			outputRaw, status, err := refresh(ctx)
+
+			// Modify is asynchronous and Get can briefly report the previous rule set in a stable state.
+			if output, ok := outputRaw.(*ec2.GetTransitGatewayAttachmentNatConfigurationOutput); ok && status == string(target) && !transitGatewayNATRulesMatch(output.NatGatewayRules, rules) {
+				return output, string(awstypes.TransitGatewayNatRuleStatePending), nil
+			}
+
+			return outputRaw, status, err
+		},
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.GetTransitGatewayAttachmentNatConfigurationOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayAttachmentNATConfigurationDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*ec2.GetTransitGatewayAttachmentNatConfigurationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: append(
+			enum.Values[awstypes.TransitGatewayAttachmentNatGatewaySupportState](),
+			enum.Slice(awstypes.TransitGatewayNatRuleStatePending, awstypes.TransitGatewayNatRuleStateDeleting)...,
+		),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusTransitGatewayAttachmentNATConfiguration(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.GetTransitGatewayAttachmentNatConfigurationOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// transitGatewayNATRulesMatch reports whether got contains exactly the rules in want, ignoring rule state.
+func transitGatewayNATRulesMatch(got []awstypes.TransitGatewayNatRule, want []awstypes.TransitGatewayNatRuleRequest) bool {
+	if len(got) != len(want) {
+		return false
+	}
+
+	rules := make(map[int32]awstypes.TransitGatewayNatRule, len(got))
+	for _, rule := range got {
+		rules[aws.ToInt32(rule.RuleNumber)] = rule
+	}
+
+	for _, w := range want {
+		rule, ok := rules[aws.ToInt32(w.RuleNumber)]
+		if !ok || aws.ToString(rule.MatchSourceCidr) != aws.ToString(w.MatchSourceCidr) || aws.ToString(rule.NatCidr) != aws.ToString(w.NatCidr) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func waitTransitGatewayPolicyTableCreated(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPolicyTable, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayPolicyTableStatePending),
