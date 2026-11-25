@@ -19,6 +19,7 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:      testAccDefaultVPCDHCPOptions_basic,
+		"defaultTags":        testAccDefaultVPCDHCPOptions_defaultTags,
 		"owner":              testAccDefaultVPCDHCPOptions_owner,
 		"v4.20.0_regression": testAccDefaultVPCDHCPOptions_v420Regression,
 	}
@@ -48,6 +49,43 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Default DHCP Option Set"),
 				),
+			},
+		},
+	})
+}
+
+func testAccDefaultVPCDHCPOptions_defaultTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var d awstypes.DhcpOptions
+	resourceName := "aws_default_vpc_dhcp_options.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+provider "aws" {
+  default_tags {
+    tags = {
+      Environment = "staging"
+    }
+  }
+}
+
+resource "aws_default_vpc_dhcp_options" "test" {}
+`,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDHCPOptionsExists(ctx, t, resourceName, &d),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.Environment", "staging"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
 			},
 		},
 	})
