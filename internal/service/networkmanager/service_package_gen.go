@@ -22,10 +22,22 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newAttachmentsDataSource,
+			TypeName: "aws_networkmanager_attachments",
+			Name:     "Attachments",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newCoreNetworkDataSource,
 			TypeName: "aws_networkmanager_core_network",
 			Name:     "Core Network",
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
+			Factory:  newSiteToSiteVPNAttachmentDataSource,
+			TypeName: "aws_networkmanager_site_to_site_vpn_attachment",
+			Name:     "Site To Site VPN Attachment",
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 	}
