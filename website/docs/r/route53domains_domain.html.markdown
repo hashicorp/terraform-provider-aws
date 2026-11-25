@@ -77,6 +77,7 @@ This resource supports the following arguments:
 * `auto_renew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
 * `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
 * `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
+* `consent` - (Optional) The amount of money you consent to spending on a contact update. See [Consent Blocks](#consent-blocks) for more details
 * `domain_name` - (Required) The name of the domain.
 * `duration_in_years` - (Optional) The number of years that you want to register the domain for. Domains are registered for a minimum of one year. Increasing the duration renews the domain.
 * `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
@@ -88,6 +89,13 @@ This resource supports the following arguments:
 * `transfer_lock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
 
 ~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
+
+### Consent Block
+
+The `consent` block supports the following:
+
+* `currency` - (Required) The currency that the `max_price` sets the limit for (uses ISO 4217 format)
+* `max_price` - (Required) How much you consent to spending for an update to be completed for a contact
 
 ### Contact Blocks
 
