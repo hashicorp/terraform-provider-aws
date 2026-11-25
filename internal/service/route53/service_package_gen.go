@@ -25,6 +25,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
 	return []*inttypes.ServicePackageFrameworkDataSource{
 		{
+			Factory:  newRecordSetProtectionsDataSource,
+			TypeName: "aws_route53_record_set_protections",
+			Name:     "Record Set Protections",
+			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
 			Factory:  newRecordsDataSource,
 			TypeName: "aws_route53_records",
 			Name:     "Records",
@@ -52,6 +58,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			TypeName: "aws_route53_cidr_location",
 			Name:     "CIDR Location",
 			Region:   inttypes.ResourceRegionDisabled(),
+		},
+		{
+			Factory:  newRecordSetProtectionResource,
+			TypeName: "aws_route53_record_set_protection",
+			Name:     "Record Set Protection",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute("record_name", true),
+				inttypes.StringIdentityAttribute("record_type", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      recordSetProtectionImportID{},
+			},
 		},
 		{
 			Factory:  newRecordsExclusiveResource,
