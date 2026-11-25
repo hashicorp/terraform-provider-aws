@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearch_application: Add `iam_role_for_data_source_arn` to `data_sources` configuration block
+```

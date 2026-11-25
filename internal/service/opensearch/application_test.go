@@ -195,6 +195,54 @@ func TestAccOpenSearchApplication_appConfig(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchApplication_dataSourceIAMRole(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var application opensearch.GetApplicationOutput
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")[:30]
+	resourceName := "aws_opensearch_application.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_dataSourceIAMRole(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, t, resourceName, &application),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("data_source"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"data_source_arn":              knownvalue.NotNull(),
+							"data_source_description":      knownvalue.StringExact("test data source"),
+							"iam_role_for_data_source_arn": knownvalue.NotNull(),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -327,6 +375,47 @@ resource "aws_opensearch_application" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccApplicationConfig_dataSourceIAMRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "OpenSearch_2.11"
+
+  cluster_config {
+    instance_type = "t3.small.search"
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "opensearchservice.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_opensearch_application" "test" {
+  name = %[1]q
+
+  data_source {
+    data_source_arn              = aws_opensearch_domain.test.arn
+    data_source_description      = "test data source"
+    iam_role_for_data_source_arn = aws_iam_role.test.arn
+  }
+}
+`, rName)
 }
 
 func testAccApplicationConfig_appConfig1(rName string) string {
