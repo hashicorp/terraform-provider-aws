@@ -92,7 +92,6 @@ func resourceEBSEncryptionByDefaultDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	// Removing the resource disables default encryption.
 	if err := setEBSEncryptionByDefault(ctx, conn, false); err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EBS encryption by default: %s", err)
 	}
