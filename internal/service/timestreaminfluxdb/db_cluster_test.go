@@ -21,6 +21,7 @@ import (
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tftimestreaminfluxdb "github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -642,6 +643,159 @@ func TestAccTimestreamInfluxDBDBCluster_maintenanceSchedule(t *testing.T) {
 	})
 }
 
+func TestAccTimestreamInfluxDBDBCluster_deploymentConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+	nodeGroups := tfjsonpath.New("deployment_configuration").AtSliceIndex(0).AtMapKey("influxdb_v3_enterprise").AtSliceIndex(0).AtMapKey("node_group")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_deploymentConfiguration(rName, "db.influx.2xlarge", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_configuration.0.influxdb_v3_enterprise.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "INFLUXDB_V3_ENTERPRISE"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
+				),
+				// AWS reconstructs the shape from the cluster's live nodes and does not preserve
+				// node group ordering, so an empty follow-up plan is the assertion that matters.
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, nodeGroups, knownvalue.SetExact([]knownvalue.Check{
+						checkNodeGroup(2, "db.influx.large", "INGEST", "QUERY"),
+						checkNodeGroup(2, "db.influx.medium", "QUERY"),
+						checkNodeGroup(1, "db.influx.2xlarge", "COMPACT"),
+					})),
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrBucket, names.AttrUsername, names.AttrPassword, "organization", names.AttrAllocatedStorage},
+			},
+			{
+				Config: testAccDBClusterConfig_deploymentConfiguration(rName, "db.influx.4xlarge", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, nodeGroups, knownvalue.SetExact([]knownvalue.Check{
+						checkNodeGroup(2, "db.influx.large", "INGEST", "QUERY"),
+						checkNodeGroup(2, "db.influx.medium", "QUERY"),
+						checkNodeGroup(1, "db.influx.4xlarge", "COMPACT"),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccTimestreamInfluxDBDBCluster_deploymentConfigurationNodeCount(t *testing.T) {
+	t.Skip("skipping test: after an update that adds or removes nodes, AWS leaves the cluster UPDATING for hours, which also blocks its deletion")
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var dbCluster timestreaminfluxdb.GetDbClusterOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_timestreaminfluxdb_db_cluster.test"
+	nodeGroups := tfjsonpath.New("deployment_configuration").AtSliceIndex(0).AtMapKey("influxdb_v3_enterprise").AtSliceIndex(0).AtMapKey("node_group")
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDBClusters(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamInfluxDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBClusterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDBClusterConfig_deploymentConfiguration(rName, "db.influx.2xlarge", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, nodeGroups, knownvalue.SetExact([]knownvalue.Check{
+						checkNodeGroup(2, "db.influx.large", "INGEST", "QUERY"),
+						checkNodeGroup(2, "db.influx.medium", "QUERY"),
+						checkNodeGroup(1, "db.influx.2xlarge", "COMPACT"),
+					})),
+				},
+			},
+			{
+				Config: testAccDBClusterConfig_deploymentConfiguration(rName, "db.influx.2xlarge", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, nodeGroups, knownvalue.SetExact([]knownvalue.Check{
+						checkNodeGroup(2, "db.influx.large", "INGEST", "QUERY"),
+						checkNodeGroup(1, "db.influx.medium", "QUERY"),
+						checkNodeGroup(1, "db.influx.2xlarge", "COMPACT"),
+					})),
+				},
+			},
+			{
+				Config: testAccDBClusterConfig_deploymentConfiguration(rName, "db.influx.2xlarge", 2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBClusterExists(ctx, t, resourceName, &dbCluster),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, nodeGroups, knownvalue.SetExact([]knownvalue.Check{
+						checkNodeGroup(2, "db.influx.large", "INGEST", "QUERY"),
+						checkNodeGroup(2, "db.influx.medium", "QUERY"),
+						checkNodeGroup(1, "db.influx.2xlarge", "COMPACT"),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func checkNodeGroup(count int32, instanceType string, instanceModes ...string) knownvalue.Check {
+	return knownvalue.ObjectExact(map[string]knownvalue.Check{
+		"count": knownvalue.Int32Exact(count),
+		"instance_modes": knownvalue.SetExact(tfslices.ApplyToAll(instanceModes, func(v string) knownvalue.Check {
+			return knownvalue.StringExact(v)
+		})),
+		names.AttrInstanceType: knownvalue.StringExact(instanceType),
+	})
+}
+
 func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -710,6 +864,18 @@ func TestAccTimestreamInfluxDBDBCluster_validateConfig(t *testing.T) {
 			{
 				Config:      testAccDBClusterConfig_maintenanceScheduleV2(rName, "Sun:02:00-Sun:06:00", "UTC"),
 				ExpectError: regexache.MustCompile(`(?s)maintenance_schedule is only supported for InfluxDB V3 clusters`),
+			},
+			{
+				Config:      testAccDBClusterConfig_noTopology(rName),
+				ExpectError: regexache.MustCompile(`(?s)db_instance_type is required unless deployment_configuration`),
+			},
+			{
+				Config:      testAccDBClusterConfig_deploymentConfigurationWithBucket(rName),
+				ExpectError: regexache.MustCompile(`(?s)bucket must not be set when deployment_configuration is configured`),
+			},
+			{
+				Config:      testAccDBClusterConfig_deploymentConfigurationDuplicateNodeGroup(rName),
+				ExpectError: regexache.MustCompile(`(?s)More than one node_group has instance_type`),
 			},
 		},
 	})
@@ -1077,6 +1243,130 @@ resource "aws_timestreaminfluxdb_db_cluster" "test" {
     aws_vpc_endpoint_route_table_association.test,
     aws_security_group_rule.test,
   ]
+}
+`, rName))
+}
+
+// AWS's documented 5-node example: two ingest and query nodes, two query-only nodes, and a
+// dedicated compactor, each group on its own instance type.
+func testAccDBClusterConfig_deploymentConfiguration(rName, compactInstanceType string, queryCount int) string {
+	return acctest.ConfigCompose(
+		testAccDBClusterConfig_base(rName, 2),
+		testAccDBClusterConfig_v3Base(rName),
+		fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  deployment_configuration {
+    influxdb_v3_enterprise {
+      node_group {
+        instance_modes = ["INGEST", "QUERY"]
+        instance_type  = "db.influx.large"
+        count          = 2
+      }
+      node_group {
+        instance_modes = ["QUERY"]
+        instance_type  = "db.influx.medium"
+        count          = %[3]d
+      }
+      node_group {
+        instance_modes = ["COMPACT"]
+        instance_type  = %[2]q
+        count          = 1
+      }
+    }
+  }
+
+  # AWS doesn't document how long an update takes, so leave room beyond the 30-minute defaults.
+  timeouts {
+    create = "60m"
+    update = "2h"
+    delete = "60m"
+  }
+
+  # The cluster needs the subnets' S3 route until it's deleted.
+  depends_on = [
+    aws_route_table_association.test,
+    aws_vpc_endpoint_route_table_association.test,
+    aws_security_group_rule.test,
+  ]
+}
+`, rName, compactInstanceType, queryCount))
+}
+
+// Neither db_instance_type nor deployment_configuration: rejected at plan time.
+func testAccDBClusterConfig_noTopology(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  allocated_storage      = 20
+  bucket                 = "initial"
+  name                   = %[1]q
+  organization           = "organization"
+  username               = "admin"
+  password               = "testpassword"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName))
+}
+
+// An InfluxDB V2-only field alongside a deployment configuration.
+func testAccDBClusterConfig_deploymentConfigurationWithBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  bucket                 = "initial"
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  deployment_configuration {
+    influxdb_v3_enterprise {
+      node_group {
+        instance_modes = ["INGEST", "QUERY", "COMPACT"]
+        instance_type  = "db.influx.medium"
+        count          = 1
+      }
+    }
+  }
+}
+`, rName))
+}
+
+// Two node groups sharing an instance mode set and instance type. AWS accepts this but
+// reports the groups merged, so the provider rejects it at plan time.
+func testAccDBClusterConfig_deploymentConfigurationDuplicateNodeGroup(rName string) string {
+	return acctest.ConfigCompose(testAccDBClusterConfig_base(rName, 2), fmt.Sprintf(`
+resource "aws_timestreaminfluxdb_db_cluster" "test" {
+  name                   = %[1]q
+  vpc_subnet_ids         = aws_subnet.test[*].id
+  vpc_security_group_ids = [aws_security_group.test.id]
+
+  deployment_configuration {
+    influxdb_v3_enterprise {
+      node_group {
+        instance_modes = ["INGEST", "QUERY"]
+        instance_type  = "db.influx.medium"
+        count          = 2
+      }
+      node_group {
+        instance_modes = ["COMPACT"]
+        instance_type  = "db.influx.large"
+        count          = 1
+      }
+      node_group {
+        instance_modes = ["QUERY"]
+        instance_type  = "db.influx.medium"
+        count          = 1
+      }
+      node_group {
+        instance_modes = ["QUERY"]
+        instance_type  = "db.influx.medium"
+        count          = 2
+      }
+    }
+  }
 }
 `, rName))
 }

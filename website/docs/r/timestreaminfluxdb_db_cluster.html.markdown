@@ -207,6 +207,40 @@ resource "aws_timestreaminfluxdb_db_cluster" "example" {
 }
 ```
 
+### Usage with a Heterogeneous InfluxDB V3 Enterprise Cluster
+
+A `deployment_configuration` block sizes each cluster function separately: every `node_group` sets its own instance type, node count, and set of instance modes. Because the groups can differ in size, the cluster is heterogeneous, such as a large dedicated compactor alongside smaller query nodes. No `db_instance_type` is needed, and no DB parameter group is required.
+
+```terraform
+resource "aws_timestreaminfluxdb_db_cluster" "example" {
+  name                   = "example-heterogeneous-cluster"
+  vpc_subnet_ids         = [aws_subnet.example_1.id, aws_subnet.example_2.id]
+  vpc_security_group_ids = [aws_security_group.example.id]
+
+  deployment_configuration {
+    influxdb_v3_enterprise {
+      node_group {
+        instance_modes = ["INGEST", "QUERY"]
+        instance_type  = "db.influx.large"
+        count          = 2
+      }
+      node_group {
+        instance_modes = ["QUERY"]
+        instance_type  = "db.influx.medium"
+        count          = 2
+      }
+      node_group {
+        instance_modes = ["COMPACT"]
+        instance_type  = "db.influx.2xlarge"
+        count          = 1
+      }
+    }
+  }
+}
+```
+
+~> **Note:** Creating a large cluster, or a reshape / update of one, can take longer than the 30 minute default. Raise it with a [`timeouts`](#timeouts) block if needed.
+
 ### Cluster Type Requirements
 
 #### InfluxDB V2 Clusters (default)
@@ -222,9 +256,11 @@ The following arguments are **required** for InfluxDB V2 clusters:
 
 The `deployment_type` argument defaults to `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters when not specified.
 
-#### InfluxDB V3 Clusters (when using V3 parameter groups)
+#### InfluxDB V3 Clusters (when using V3 parameter groups or a deployment configuration)
 
-The following arguments are **forbidden** for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group):
+A cluster is treated as InfluxDB V3 when it uses an InfluxDB V3 DB parameter group, or when `deployment_configuration` is configured. A `deployment_configuration` applies to InfluxDB V3 Enterprise only, so it identifies the cluster type on its own and no DB parameter group is required.
+
+The following arguments are **forbidden** for InfluxDB V3 clusters:
 
 * `allocated_storage`
 * `bucket`
@@ -233,11 +269,34 @@ The following arguments are **forbidden** for InfluxDB V3 clusters (when using a
 * `password`
 * `username`
 
+#### Deployment Configuration Shape Rules
+
+The instance modes map onto cluster behavior as follows.
+
+| Mode | What the nodes in the group do |
+|------|--------------------------------|
+| `INGEST` | Accept writes. These nodes back the cluster's `endpoint`. |
+| `QUERY` | Serve read queries. Nodes that have `QUERY` but not `INGEST` back the cluster's `reader_endpoint`. |
+| `PROCESS` | Run processing engine plugins. Only valid in a group that also includes `QUERY`. |
+| `COMPACT` | Compact Parquet files in Amazon S3. |
+
+AWS validates the shape before provisioning anything and rejects a request that breaks any of these limits.
+
+| Rule | Limit |
+|------|-------|
+| `INGEST` nodes | 1 to 4, counted across every group that includes `INGEST` |
+| `QUERY` nodes | 0 to 13, counted across every group that includes `QUERY` |
+| `COMPACT` nodes | Exactly 1 |
+| Cluster size | Up to 15 nodes in total, counting the compactor. A shape can satisfy every per-function limit above and still be rejected for exceeding it. |
+| `PROCESS` pairing | A group that includes `PROCESS` must also include `QUERY` |
+| Dedicated compactor | Above 3 non-compaction nodes, `COMPACT` must be its own group. At 3 or fewer it can share a group that also does other work. |
+
+Splitting a function across several groups does not raise its limit; the caps apply to the total number of nodes carrying that mode.
+
 ## Argument Reference
 
 The following arguments are required:
 
-* `db_instance_type` - (Required) Timestream for InfluxDB DB instance type to run InfluxDB on. Valid options are: `"db.influx.medium"`, `"db.influx.large"`, `"db.influx.xlarge"`, `"db.influx.2xlarge"`, `"db.influx.4xlarge"`, `"db.influx.8xlarge"`, `"db.influx.12xlarge"`, and `"db.influx.16xlarge"`. This argument is updatable.
 * `name` - (Required) Name that uniquely identifies the DB cluster when interacting with the Amazon Timestream for InfluxDB API and CLI commands. This name will also be a prefix included in the endpoint. Cluster names must be unique per customer and per region. The argument must start with a letter, cannot contain consecutive hyphens (`-`) and cannot end with a hyphen.
 * `vpc_security_group_ids` - (Required) List of VPC security group IDs to associate with the cluster.
 * `vpc_subnet_ids` - (Required) List of VPC subnet IDs to associate with the cluster. Provide at least two VPC subnet IDs in different availability zones when deploying with a Multi-AZ standby.
@@ -246,8 +305,10 @@ The following arguments are optional:
 
 * `allocated_storage` - (Optional) Amount of storage in GiB (gibibytes). The minimum value is `20`, the maximum value is `16384`. The argument `db_storage_type` places restrictions on this argument's minimum value. The following is a list of `db_storage_type` values and the corresponding minimum value for `allocated_storage`: `"InfluxIOIncludedT1": `20`, `"InfluxIOIncludedT2" and `"InfluxIOIncludedT3": `400`. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
 * `bucket` - (Optional) Name of the initial InfluxDB bucket. All InfluxDB data is stored in a bucket. A bucket combines the concept of a database and a retention period (the duration of time that each data point persists). A bucket belongs to an organization. Along with `organization`, `username`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
+* `db_instance_type` - (Optional) Timestream for InfluxDB DB instance type to run InfluxDB on. Valid options are: `"db.influx.medium"`, `"db.influx.large"`, `"db.influx.xlarge"`, `"db.influx.2xlarge"`, `"db.influx.4xlarge"`, `"db.influx.8xlarge"`, `"db.influx.12xlarge"`, and `"db.influx.16xlarge"`. This argument is updatable. Required unless `deployment_configuration` is configured, which sets an instance type per node group instead. AWS rejects a request that changes both `db_instance_type` and `deployment_configuration` on an existing cluster.
 * `db_parameter_group_identifier` - (Optional) ID of the DB parameter group assigned to your cluster. This argument is updatable. If added to an existing Timestream for InfluxDB cluster or given a new value, will cause an in-place update to the cluster. However, if a cluster already has a value for `db_parameter_group_identifier`, removing `db_parameter_group_identifier` will cause the cluster to be destroyed and recreated.
 * `db_storage_type` - (Optional, Default: `"InfluxIOIncludedT1"`) Timestream for InfluxDB DB storage type to read and write InfluxDB data. You can choose between 3 different types of provisioned Influx IOPS included storage according to your workloads requirements: Influx IO Included 3000 IOPS, Influx IO Included 12000 IOPS, Influx IO Included 16000 IOPS. Valid options are: `"InfluxIOIncludedT1"`, `"InfluxIOIncludedT2"`, and `"InfluxIOIncludedT3"`. If you use `"InfluxIOIncludedT2" or "InfluxIOIncludedT3", the minimum value for `allocated_storage` is 400.
+* `deployment_configuration` - (Optional) Compute topology of the cluster, defined as a set of node groups. See [`deployment_configuration` Block](#deployment_configuration-block) for details. This argument is updatable. Supported for InfluxDB V3 Enterprise clusters only.
 * `deployment_type` - (Optional, Default: `"MULTI_NODE_READ_REPLICAS"` for InfluxDB V2 clusters) Type of cluster to create. Valid options are: `"MULTI_NODE_READ_REPLICAS"`. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
 * `failover_mode` - (Optional, Default: `"AUTOMATIC"`) Behavior of failure recovery when the primary node of the cluster fails. Valid options are: `"AUTOMATIC"` and `"NO_FAILOVER"`.
 * `log_delivery_configuration` - (Optional) Configuration for sending InfluxDB engine logs to a specified S3 bucket. This argument is updatable.
@@ -260,6 +321,28 @@ The following arguments are optional:
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `username` - (Optional) Username of the initial admin user created in InfluxDB. Must start with a letter and can't end with a hyphen or contain two consecutive hyphens. This username will allow you to access the InfluxDB UI to perform various administrative tasks and also use the InfluxDB CLI to create an operator token. Along with `bucket`, `organization`, and `password`, this argument will be stored in the secret referred to by the `influx_auth_parameters_secret_arn` attribute. This field is forbidden for InfluxDB V3 clusters (when using an InfluxDB V3 DB parameter group).
+
+#### `deployment_configuration` Block
+
+A deployment configuration replaces the `ingestQueryInstances`, `queryOnlyInstances`, and `dedicatedCompactor` parameters of a DB parameter group. When both are present, the deployment configuration is the source of truth for cluster shape and those three parameters are ignored; every other parameter in the group still applies. A cluster must take its topology from one mechanism or the other.
+
+* `influxdb_v3_enterprise` - (Required) Compute topology for an InfluxDB V3 Enterprise cluster. See [`influxdb_v3_enterprise` Block](#influxdb_v3_enterprise-block) for details.
+
+#### `influxdb_v3_enterprise` Block
+
+* `node_group` - (Required) One or more node groups that make up the cluster. Between 1 and 10 blocks. See [`node_group` Block](#node_group-block) for details.
+
+#### `node_group` Block
+
+See [Deployment Configuration Shape Rules](#deployment-configuration-shape-rules) for what each instance mode does and the limits AWS enforces.
+
+* `count` - (Required) Number of nodes in this group. Valid values are `1` to `13`.
+* `instance_modes` - (Required) Functions that the nodes in this group perform. Between 1 and 4 unique values from `"INGEST"`, `"QUERY"`, `"PROCESS"`, and `"COMPACT"`.
+* `instance_type` - (Required) DB instance type to run InfluxDB on for the nodes in this group. Groups can specify different instance types, which is what makes a cluster heterogeneous.
+
+~> **Note:** Each combination of `instance_modes` and `instance_type` must appear in at most one `node_group`. AWS rebuilds this argument from the cluster's live nodes and reports groups that share a mode set and instance type as a single merged group, so Terraform would detect a difference on every plan. Use one `node_group` with the combined `count` instead.
+
+~> **Note:** Updating this argument submits the complete target shape, and AWS converges the cluster to exactly what is submitted. A `node_group` removed from the configuration is removed from the cluster. Adding, removing, or resizing nodes restarts the affected nodes, so prefer periods of lower activity.
 
 #### `log_delivery_configuration` Block
 
@@ -275,7 +358,7 @@ The following arguments are optional:
 * `bucket_name` - (Required) Name of the S3 bucket to deliver logs to.
 * `enabled` - (Required) Whether log delivery to the S3 bucket is enabled.
 
-**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `db_instance_type`, `failover_mode`, and `tags`. Changes to any other argument after a cluster has been deployed will cause destruction and re-creation of the cluster. Additionally, when `db_parameter_group_identifier` is added to a cluster or modified, the cluster will be updated in-place but if `db_parameter_group_identifier` is removed from a cluster, the cluster will be destroyed and re-created.
+**Note**: The following arguments do updates in-place: `db_parameter_group_identifier`, `deployment_configuration`, `log_delivery_configuration`, `maintenance_schedule`, `port`, `db_instance_type`, `failover_mode`, and `tags`. Changes to any other argument after a cluster has been deployed will cause destruction and re-creation of the cluster. Additionally, when `db_parameter_group_identifier` is added to a cluster or modified, the cluster will be updated in-place but if `db_parameter_group_identifier` is removed from a cluster, the cluster will be destroyed and re-created.
 
 ## Attribute Reference
 

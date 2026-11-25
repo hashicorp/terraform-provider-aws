@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-25T15:23:59.769266-05:00
+custom:
+    Body: Fix `unexpected state 'PARTIALLY_AVAILABLE', wanted target 'AVAILABLE'` errors when creating or updating multi-node clusters
+    Impact: resource/aws_timestreaminfluxdb_db_cluster
+    PullRequest: "51376"

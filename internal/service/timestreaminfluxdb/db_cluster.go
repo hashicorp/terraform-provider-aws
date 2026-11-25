@@ -8,6 +8,8 @@ package timestreaminfluxdb
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -95,9 +97,12 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 					(when using an InfluxDB V3 db parameter group).`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
-				Required:    true,
-				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.`,
+				CustomType: fwtypes.StringEnumType[awstypes.DbInstanceType](),
+				Optional:   true,
+				Computed:   true,
+				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on. Not needed when
+					deployment_configuration defines the cluster topology, as the instance type is then
+					specified per node group.`,
 			},
 			"db_parameter_group_identifier": schema.StringAttribute{
 				Optional: true,
@@ -309,6 +314,66 @@ func (r *dbClusterResource) Schema(ctx context.Context, req resource.SchemaReque
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"deployment_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[deploymentConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				Description: `The compute topology of the cluster, defined as a set of node groups, each with
+					its own instance type, node count and set of instance modes. Supersedes the cluster
+					topology parameters of a DB parameter group. Only supported for InfluxDB V3 Enterprise
+					clusters.`,
+				NestedObject: schema.NestedBlockObject{
+					Blocks: map[string]schema.Block{
+						"influxdb_v3_enterprise": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[influxDBv3EnterpriseDeploymentConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtMost(1),
+							},
+							Description: `The compute topology for an InfluxDB V3 Enterprise cluster.`,
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"node_group": schema.SetNestedBlock{
+										CustomType: fwtypes.NewSetNestedObjectTypeOf[nodeGroupModel](ctx),
+										Validators: []validator.Set{
+											setvalidator.SizeBetween(1, 10),
+										},
+										Description: `A group of one or more nodes that share the same instance modes
+											and instance type.`,
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"count": schema.Int32Attribute{
+													Required: true,
+													Validators: []validator.Int32{
+														int32validator.Between(1, 13),
+													},
+													Description: `The number of nodes in this group.`,
+												},
+												"instance_modes": schema.SetAttribute{
+													CustomType: fwtypes.SetOfStringEnumType[awstypes.InstanceMode](),
+													Required:   true,
+													Validators: []validator.Set{
+														setvalidator.SizeBetween(1, 4),
+													},
+													Description: `The functions that the nodes in this group perform. Valid
+														values are INGEST, QUERY, PROCESS and COMPACT. A group containing
+														PROCESS must also contain QUERY.`,
+												},
+												names.AttrInstanceType: schema.StringAttribute{
+													CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
+													Required:    true,
+													Description: `The DB instance type to run InfluxDB on for the nodes in this group.`,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"log_delivery_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[logDeliveryConfigurationModel](ctx),
 				Validators: []validator.List{
@@ -494,7 +559,14 @@ func (r *dbClusterResource) Update(ctx context.Context, req resource.UpdateReque
 		input := timestreaminfluxdb.UpdateDbClusterInput{
 			DbClusterId: aws.String(clusterID),
 		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, diff.IgnoredFieldNamesOpts()...)...)
+		opts := diff.IgnoredFieldNamesOpts()
+		if slices.Contains(diff.ChangedFieldNames(), "DeploymentConfiguration") {
+			// AWS rejects dbInstanceType and deploymentConfiguration in the same request, and
+			// ModifyPlan deliberately plans db_instance_type as unknown during a reshape / update.
+			opts = append(opts, fwflex.WithIgnoredFieldNamesAppend("DBInstanceType"))
+		}
+
+		resp.Diagnostics.Append(fwflex.Expand(ctx, plan, &input, opts...)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -576,6 +648,59 @@ func isParameterGroupV3(ctx context.Context, conn *timestreaminfluxdb.Client, pa
 	}
 }
 
+// validateNodeGroupsAreDistinct rejects node groups that share both an instance mode set and
+// an instance type. AWS accepts such a request but reconstructs the cluster's shape from its
+// live nodes, reporting those groups merged into one, which Terraform could never reconcile
+// with the configuration.
+func validateNodeGroupsAreDistinct(ctx context.Context, deploymentConfiguration fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel]) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	deployment, d := deploymentConfiguration.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || deployment == nil || deployment.InfluxDBv3Enterprise.IsNull() {
+		return diags
+	}
+
+	enterprise, d := deployment.InfluxDBv3Enterprise.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() || enterprise == nil {
+		return diags
+	}
+
+	nodeGroups, d := enterprise.NodeGroups.ToSlice(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	seen := make(map[string]struct{}, len(nodeGroups))
+	for _, nodeGroup := range nodeGroups {
+		if isNullOrUnknownValue(nodeGroup.InstanceType) || isNullOrUnknownValue(nodeGroup.InstanceModes) {
+			continue
+		}
+
+		instanceModes := enum.Slice(fwflex.ExpandFrameworkStringyValueSet[awstypes.InstanceMode](ctx, nodeGroup.InstanceModes)...)
+		slices.Sort(instanceModes)
+		instanceType := nodeGroup.InstanceType.ValueString()
+
+		key := instanceType + " " + strings.Join(instanceModes, ",")
+		if _, ok := seen[key]; ok {
+			diags.AddAttributeError(
+				path.Root("deployment_configuration"),
+				"Duplicate Node Group",
+				fmt.Sprintf("More than one node_group has instance_type %q and instance_modes [%s]. "+
+					"AWS reports such node groups as a single merged group, so Terraform would detect a "+
+					"difference on every plan. Use one node_group with the combined count instead.",
+					instanceType, strings.Join(instanceModes, ", ")),
+			)
+			return diags
+		}
+		seen[key] = struct{}{}
+	}
+
+	return diags
+}
+
 func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	if req.Plan.Raw.IsNull() {
 		// Resource deletion.
@@ -588,8 +713,42 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 		return
 	}
 
-	var isV3Cluster bool
-	if !isNullOrUnknownValue(data.DBParameterGroupIdentifier) {
+	// Read the configuration, not the plan, to distinguish a value the practitioner set from
+	// one the provider computed.
+	var config dbClusterResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	isCreate := req.State.Raw.IsNull()
+	hasDeploymentConfiguration := !isNullOrUnknownValue(config.DeploymentConfiguration)
+	hasDBInstanceType := !isNullOrUnknownValue(config.DBInstanceType)
+
+	switch {
+	case isCreate && !hasDeploymentConfiguration && !hasDBInstanceType:
+		resp.Diagnostics.AddAttributeError(
+			path.Root("db_instance_type"),
+			"Missing Required Configuration",
+			"db_instance_type is required unless deployment_configuration defines the cluster topology",
+		)
+	case !isCreate && hasDeploymentConfiguration && hasDBInstanceType:
+		// CreateDbCluster accepts both, but UpdateDbCluster rejects the combination.
+		resp.Diagnostics.AddAttributeError(
+			path.Root("db_instance_type"),
+			"Invalid Configuration for a Deployment Configuration",
+			"db_instance_type cannot be updated together with deployment_configuration. "+
+				"Specify per-node-group instance types within deployment_configuration instead.",
+		)
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// A deployment configuration is only valid for InfluxDB V3 Enterprise clusters, so it
+	// identifies the engine by itself. AWS's documented configuration has no parameter group.
+	isV3Cluster := hasDeploymentConfiguration
+	if !isV3Cluster && !isNullOrUnknownValue(data.DBParameterGroupIdentifier) {
 		conn := r.Meta().TimestreamInfluxDBClient(ctx)
 
 		paramGroupID := fwflex.StringValueFromFramework(ctx, data.DBParameterGroupIdentifier)
@@ -615,12 +774,17 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 
 	// Validate V3-specific field restrictions
 	if isV3Cluster {
+		v3Reason := "when using an InfluxDB V3 db parameter group"
+		if hasDeploymentConfiguration {
+			v3Reason = "when deployment_configuration is configured"
+		}
+
 		for _, v := range v2Fields {
 			if !isNullOrUnknownValue(v.val) {
 				resp.Diagnostics.AddAttributeError(
 					path.Root(v.path),
 					"Invalid Configuration for InfluxDB V3",
-					v.path+" must not be set when using an InfluxDB V3 db parameter group",
+					v.path+" must not be set "+v3Reason,
 				)
 			}
 		}
@@ -647,11 +811,37 @@ func (r *dbClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyP
 			)
 		}
 	}
+
+	if !hasDeploymentConfiguration {
+		return
+	}
+
+	resp.Diagnostics.Append(validateNodeGroupsAreDistinct(ctx, config.DeploymentConfiguration)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if isCreate {
+		return
+	}
+
+	var state dbClusterResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// GetDbCluster reports one cluster-wide instance type for a cluster whose nodes can differ,
+	// and a reshape / update may change it. Planning it as unknown lets whatever AWS returns
+	// land in state instead of failing the apply.
+	if !data.DeploymentConfiguration.Equal(state.DeploymentConfiguration) {
+		resp.Diagnostics.Append(resp.Plan.SetAttribute(ctx, path.Root("db_instance_type"), fwtypes.StringEnumUnknown[awstypes.DbInstanceType]())...)
+	}
 }
 
 func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ClusterStatusCreating),
+		Pending:                   enum.Slice(awstypes.ClusterStatusCreating, awstypes.ClusterStatusPartiallyAvailable),
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
@@ -668,7 +858,7 @@ func waitDBClusterCreated(ctx context.Context, conn *timestreaminfluxdb.Client, 
 
 func waitDBClusterUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbClusterOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(string(awstypes.ClusterStatusUpdating), string(awstypes.StatusUpdatingInstanceType)),
+		Pending:                   enum.Slice(string(awstypes.ClusterStatusUpdating), string(awstypes.StatusUpdatingInstanceType), string(awstypes.ClusterStatusPartiallyAvailable)),
 		Target:                    enum.Slice(awstypes.ClusterStatusAvailable),
 		Refresh:                   statusDBCluster(conn, id),
 		Timeout:                   timeout,
@@ -778,6 +968,7 @@ type dbClusterResourceModel struct {
 	DBInstanceType                fwtypes.StringEnum[awstypes.DbInstanceType]                    `tfsdk:"db_instance_type"`
 	DBParameterGroupIdentifier    types.String                                                   `tfsdk:"db_parameter_group_identifier"`
 	DBStorageType                 fwtypes.StringEnum[awstypes.DbStorageType]                     `tfsdk:"db_storage_type"`
+	DeploymentConfiguration       fwtypes.ListNestedObjectValueOf[deploymentConfigurationModel]  `tfsdk:"deployment_configuration"`
 	DeploymentType                fwtypes.StringEnum[awstypes.ClusterDeploymentType]             `tfsdk:"deployment_type"`
 	EngineType                    types.String                                                   `tfsdk:"engine_type"`
 	Endpoint                      types.String                                                   `tfsdk:"endpoint"`
@@ -813,6 +1004,75 @@ type s3ConfigurationModel struct {
 type maintenanceScheduleModel struct {
 	PreferredMaintenanceWindow types.String `tfsdk:"preferred_maintenance_window"`
 	Timezone                   types.String `tfsdk:"timezone"`
+}
+
+type deploymentConfigurationModel struct {
+	InfluxDBv3Enterprise fwtypes.ListNestedObjectValueOf[influxDBv3EnterpriseDeploymentConfigurationModel] `tfsdk:"influxdb_v3_enterprise"`
+}
+
+type influxDBv3EnterpriseDeploymentConfigurationModel struct {
+	NodeGroups fwtypes.SetNestedObjectValueOf[nodeGroupModel] `tfsdk:"node_group"`
+}
+
+type nodeGroupModel struct {
+	Count         types.Int32                                                   `tfsdk:"count"`
+	InstanceModes fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.InstanceMode]] `tfsdk:"instance_modes"`
+	InstanceType  fwtypes.StringEnum[awstypes.DbInstanceType]                   `tfsdk:"instance_type"`
+}
+
+var (
+	_ fwflex.Expander  = deploymentConfigurationModel{}
+	_ fwflex.Flattener = &deploymentConfigurationModel{}
+)
+
+func (m deploymentConfigurationModel) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if m.InfluxDBv3Enterprise.IsNull() {
+		return nil, diags
+	}
+
+	model, d := m.InfluxDBv3Enterprise.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	var r awstypes.DeploymentConfigurationMemberInfluxDBv3Enterprise
+	diags.Append(fwflex.Expand(ctx, model, &r.Value)...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
+	return &r, diags
+}
+
+func (m *deploymentConfigurationModel) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	switch t := v.(type) {
+	case awstypes.DeploymentConfigurationMemberInfluxDBv3Enterprise:
+		var model influxDBv3EnterpriseDeploymentConfigurationModel
+		diags.Append(fwflex.Flatten(ctx, t.Value, &model)...)
+		if diags.HasError() {
+			return diags
+		}
+
+		v, d := fwtypes.NewListNestedObjectValueOfPtr(ctx, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+		m.InfluxDBv3Enterprise = v
+
+	default:
+		diags.AddError(
+			"Unsupported Type",
+			fmt.Sprintf("deploymentConfigurationModel.Flatten: %T", v),
+		)
+	}
+
+	return diags
 }
 
 func isNullOrUnknownValue(val attr.Value) bool {
