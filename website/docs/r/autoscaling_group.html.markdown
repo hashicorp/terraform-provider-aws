@@ -609,6 +609,7 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
+- `image_id` - (Optional) AMI for instances launched with this override. With an `instance_refresh` whose `strategy` is `ReplaceRootVolume`, every override must set it, and it is the AMI the root volumes are replaced with.
 - `instance_type` - (Optional) Override the instance type in the Launch Template.
 - `instance_requirements` - (Optional) Override the instance type in the Launch Template with instance types that satisfy the requirements.
 - `launch_template_specification` - (Optional) Override the instance launch template specification in the Launch Template.
@@ -747,7 +748,7 @@ To declare multiple tags, additional `tag` blocks can be specified.
 
 This configuration block supports the following:
 
-- `strategy` - (Required) Strategy to use for instance refresh. The only allowed value is `Rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
+- `strategy` - (Required) Strategy to use for instance refresh. Valid values are `Rolling` and `ReplaceRootVolume`. `ReplaceRootVolume` replaces each instance's root volume with one created from its `mixed_instances_policy` override's `image_id`, keeping the instance; it requires a `mixed_instances_policy` and a launch template version other than `$Latest` or `$Default`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
 - `preferences` - (Optional) Override default parameters for Instance Refresh.
     - `checkpoint_delay` - (Optional) Number of seconds to wait after a checkpoint. Defaults to `3600`.
     - `checkpoint_percentages` - (Optional) List of percentages for each checkpoint. Values must be unique and in ascending order. To replace all instances, the final number must be `100`.
