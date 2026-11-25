@@ -98,7 +98,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test"),
 				),
 			},
 			{
@@ -111,7 +111,58 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.0", "test2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPIdentityProvider_idpIdentifiersOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider awstypes.IdentityProviderType
+	resourceName := "aws_cognito_identity_provider.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_identifiers(rName, `["test1", "test2"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test2"),
+				),
+			},
+			{
+				// Reordering the identifiers is not a change: AWS returns them in its own order.
+				Config: testAccIdentityProviderConfig_identifiers(rName, `["test2", "test1"]`),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test2"),
+				),
+			},
+			{
+				// Adding an identifier that sorts before the existing ones does not leave a diff behind.
+				Config: testAccIdentityProviderConfig_identifiers(rName, `["test2", "test1", "aaa"]`),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, t, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "aaa"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "idp_identifiers.*", "test2"),
 				),
 			},
 		},
@@ -387,6 +438,35 @@ resource "aws_cognito_identity_provider" "test" {
   }
 }
 `, rName, attribute)
+}
+
+func testAccIdentityProviderConfig_identifiers(rName, identifiers string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                     = %[1]q
+  auto_verified_attributes = ["email"]
+}
+
+resource "aws_cognito_identity_provider" "test" {
+  user_pool_id  = aws_cognito_user_pool.test.id
+  provider_name = "Google"
+  provider_type = "Google"
+
+  idp_identifiers = %[2]s
+
+  provider_details = {
+    attributes_url                = "https://people.googleapis.com/v1/people/me?personFields="
+    attributes_url_add_attributes = "true"
+    authorize_scopes              = "email"
+    authorize_url                 = "https://accounts.google.com/o/oauth2/v2/auth"
+    client_id                     = "test-url.apps.googleusercontent.com"
+    client_secret                 = "client_secret"
+    oidc_issuer                   = "https://accounts.google.com"
+    token_request_method          = "POST"
+    token_url                     = "https://www.googleapis.com/oauth2/v4/token"
+  }
+}
+`, rName, identifiers)
 }
 
 func testAccIdentityProviderConfig_saml(rName, userPoolName, idpEntityId, encryptedResponses string) string {
