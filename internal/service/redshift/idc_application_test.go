@@ -118,7 +118,7 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
+func TestAccRedshiftIDCApplication_serviceIntegrationsLakeFormationOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -130,7 +130,7 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
 		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdcApplicationConfig_serviceIntegrationsLakehouse(rName),
+				Config: testAccIdcApplicationConfig_serviceIntegrationsLakeFormationOnly(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
@@ -201,6 +201,44 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsS3AccessGrants(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.0.read_write_access.0.authorization", "Enabled"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "redshift_idc_application_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "redshift_idc_application_arn",
+			},
+		},
+	})
+}
+
+// TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse exercises the
+// regression covered by GitHub issue: Lakehouse applications require BOTH
+// LakeFormation:LakeFormationQuery and Redshift:Connect to be enabled in a
+// single API call.
+func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshift_idc_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdcApplicationConfig_serviceIntegrationsLakehouseBoth(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "application_type", "Lakehouse"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.lake_formation.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.lake_formation.0.lake_formation_query.0.authorization", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.redshift.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "service_integration.0.redshift.0.connect.0.authorization", "Enabled"),
 				),
 			},
 			{
@@ -400,7 +438,7 @@ resource "aws_redshift_idc_application" "test" {
 `, rName))
 }
 
-func testAccIdcApplicationConfig_serviceIntegrationsLakehouse(rName string) string {
+func testAccIdcApplicationConfig_serviceIntegrationsLakeFormationOnly(rName string) string {
 	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -452,6 +490,34 @@ resource "aws_redshift_idc_application" "test" {
   service_integration {
     s3_access_grants {
       read_write_access {
+        authorization = "Enabled"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccIdcApplicationConfig_serviceIntegrationsLakehouseBoth(rName string) string {
+	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_redshift_idc_application" "test" {
+  application_type              = "Lakehouse"
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  identity_namespace            = %[1]q
+  redshift_idc_application_name = %[1]q
+
+  service_integration {
+    lake_formation {
+      lake_formation_query {
+        authorization = "Enabled"
+      }
+    }
+    redshift {
+      connect {
         authorization = "Enabled"
       }
     }
