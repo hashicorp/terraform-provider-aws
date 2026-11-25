@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-25T14:30:00.000000+01:00
+custom:
+    Impact: resource/aws_route53_health_check
+    Body: Add `endpoint_type` and `health_check_source_id` arguments to support private endpoint health checks

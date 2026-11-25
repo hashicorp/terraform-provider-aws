@@ -109,6 +109,21 @@ resource "aws_route53_health_check" "example" {
 }
 ```
 
+### Private Endpoint Check
+
+```terraform
+resource "aws_route53_health_check" "example" {
+  endpoint_type          = "PRIVATE"
+  health_check_source_id = aws_route53_health_check_source.example.id
+  ip_address             = "10.0.1.10"
+  port                   = 80
+  type                   = "HTTP"
+  resource_path          = "/health"
+  failure_threshold      = "3"
+  request_interval       = "30"
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -134,6 +149,8 @@ This resource supports the following arguments:
 
     ~> **Note:** After you disable a health check, Route 53 considers the status of the health check to always be healthy. If you configured DNS failover, Route 53 continues to route traffic to the corresponding resources. If you want to stop routing traffic to a resource, change the value of `invert_healthcheck`.
 * `enable_sni` - (Optional) A boolean value that indicates whether Route53 should send the `fqdn` to the endpoint when performing the health check. This defaults to AWS' defaults: when the `type` is "HTTPS" `enable_sni` defaults to `true`, when `type` is anything else `enable_sni` defaults to `false`.
+* `endpoint_type` - (Optional) Whether the health check targets a public endpoint (`PUBLIC`) or a private endpoint in a VPC (`PRIVATE`). Defaults to `PUBLIC`. `PRIVATE` requires `health_check_source_id` and isn't supported when `type` is `CALCULATED`, `CLOUDWATCH_METRIC` or `RECOVERY_CONTROL`. Changing this forces a new resource.
+* `health_check_source_id` - (Optional) ID of the [`aws_route53_health_check_source`](route53_health_check_source.html) that Route 53 sends private endpoint health checks from. Required when `endpoint_type` is `PRIVATE`, and can only be set then. For a private endpoint health check, `ip_address` must be a private IPv4 or IPv6 address, and Route 53 resolves `fqdn` only through the Route 53 Resolver of the source's VPC.
 * `child_healthchecks` - (Optional) For a specified parent health check, a list of HealthCheckId values for the associated child health checks.
 * `child_health_threshold` - (Optional) The minimum number of child health checks that must be healthy for Route 53 to consider the parent health check to be healthy. Valid values are integers between 0 and 256, inclusive
 * `cloudwatch_alarm_name` - (Optional) The name of the CloudWatch alarm.
