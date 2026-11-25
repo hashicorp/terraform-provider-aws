@@ -1514,6 +1514,32 @@ type webACLRuleAWSManagedRulesBotControlRuleSetModel struct {
 	InspectionLevel       fwtypes.StringEnum[awstypes.InspectionLevel] `tfsdk:"inspection_level"`
 }
 
+var _ flex.Flattener = &webACLRuleAWSManagedRulesBotControlRuleSetModel{}
+
+// Flatten normalizes EnableMachineLearning to false when the inspection level is COMMON,
+// where machine learning is never active and the API may not return the field.
+func (m *webACLRuleAWSManagedRulesBotControlRuleSetModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch val := v.(type) {
+	case *awstypes.AWSManagedRulesBotControlRuleSet:
+		m.InspectionLevel = fwtypes.StringEnumValue(val.InspectionLevel)
+		if val.InspectionLevel == awstypes.InspectionLevelCommon && (val.EnableMachineLearning == nil || !*val.EnableMachineLearning) {
+			m.EnableMachineLearning = types.BoolValue(false)
+		} else {
+			m.EnableMachineLearning = flex.BoolToFramework(ctx, val.EnableMachineLearning)
+		}
+	case awstypes.AWSManagedRulesBotControlRuleSet:
+		m.InspectionLevel = fwtypes.StringEnumValue(val.InspectionLevel)
+		if val.InspectionLevel == awstypes.InspectionLevelCommon && (val.EnableMachineLearning == nil || !*val.EnableMachineLearning) {
+			m.EnableMachineLearning = types.BoolValue(false)
+		} else {
+			m.EnableMachineLearning = flex.BoolToFramework(ctx, val.EnableMachineLearning)
+		}
+	default:
+		diags.AddError("Unexpected type", fmt.Sprintf("expected awstypes.AWSManagedRulesBotControlRuleSet, got %T", v))
+	}
+	return diags
+}
+
 type webACLRuleAWSManagedRulesACFPRuleSetModel struct {
 	CreationPath         types.String                                                          `tfsdk:"creation_path"`
 	EnableRegexInPath    types.Bool                                                            `tfsdk:"enable_regex_in_path"`
