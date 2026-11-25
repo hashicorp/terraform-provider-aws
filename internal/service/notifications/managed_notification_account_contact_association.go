@@ -15,8 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -37,7 +39,6 @@ func newManagedNotificationAccountContactAssociationResource(_ context.Context) 
 
 type managedNotificationAccountContactAssociationResource struct {
 	framework.ResourceWithModel[managedNotificationAccountContactAssociationResourceModel]
-	framework.WithNoUpdate
 }
 
 func (r *managedNotificationAccountContactAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -57,6 +58,13 @@ func (r *managedNotificationAccountContactAssociationResource) Schema(ctx contex
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"sensitive_events_subscribed": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
 	}
 }
@@ -73,6 +81,7 @@ func (r *managedNotificationAccountContactAssociationResource) Create(ctx contex
 	managedNotificationConfigurationARN, contactIdentifier := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), data.ContactIdentifier.ValueEnum()
 	input := notifications.AssociateManagedNotificationAccountContactInput{
 		ContactIdentifier:                   contactIdentifier,
+		IsSensitiveEventsSubscribed:         fwflex.BoolFromFramework(ctx, data.SensitiveEventsSubscribed),
 		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
 	}
 	_, err := conn.AssociateManagedNotificationAccountContact(ctx, &input)
@@ -82,6 +91,16 @@ func (r *managedNotificationAccountContactAssociationResource) Create(ctx contex
 
 		return
 	}
+
+	output, err := findManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, string(contactIdentifier))
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading User Notifications Managed Notification Account Contact Association (%s,%s)", managedNotificationConfigurationARN, contactIdentifier), err.Error())
+
+		return
+	}
+
+	data.SensitiveEventsSubscribed = fwflex.BoolToFramework(ctx, output.IsSensitiveEventsSubscribed)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -96,7 +115,7 @@ func (r *managedNotificationAccountContactAssociationResource) Read(ctx context.
 	conn := r.Meta().NotificationsClient(ctx)
 
 	managedNotificationConfigurationARN, contactIdentifier := fwflex.StringValueFromFramework(ctx, data.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, data.ContactIdentifier)
-	_, err := findManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, contactIdentifier)
+	output, err := findManagedNotificationAccountContactAssociationByTwoPartKey(ctx, conn, managedNotificationConfigurationARN, contactIdentifier)
 
 	if retry.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -111,7 +130,35 @@ func (r *managedNotificationAccountContactAssociationResource) Read(ctx context.
 		return
 	}
 
+	data.SensitiveEventsSubscribed = fwflex.BoolToFramework(ctx, output.IsSensitiveEventsSubscribed)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *managedNotificationAccountContactAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new managedNotificationAccountContactAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().NotificationsClient(ctx)
+
+	managedNotificationConfigurationARN, contactIdentifier := fwflex.StringValueFromFramework(ctx, new.ManagedNotificationConfigurationARN), fwflex.StringValueFromFramework(ctx, new.ContactIdentifier)
+	input := notifications.UpdateManagedNotificationChannelAssociationInput{
+		ChannelIdentifier:                   aws.String(contactIdentifier),
+		IsSensitiveEventsSubscribed:         fwflex.BoolFromFramework(ctx, new.SensitiveEventsSubscribed),
+		ManagedNotificationConfigurationArn: aws.String(managedNotificationConfigurationARN),
+	}
+	_, err := conn.UpdateManagedNotificationChannelAssociation(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating User Notifications Managed Notification Account Contact Association (%s,%s)", managedNotificationConfigurationARN, contactIdentifier), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *managedNotificationAccountContactAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -207,4 +254,5 @@ func findManagedNotificationChannelAssociations(ctx context.Context, conn *notif
 type managedNotificationAccountContactAssociationResourceModel struct {
 	ContactIdentifier                   fwtypes.StringEnum[awstypes.AccountContactType] `tfsdk:"contact_identifier"`
 	ManagedNotificationConfigurationARN fwtypes.ARN                                     `tfsdk:"managed_notification_configuration_arn"`
+	SensitiveEventsSubscribed           types.Bool                                      `tfsdk:"sensitive_events_subscribed"`
 }
