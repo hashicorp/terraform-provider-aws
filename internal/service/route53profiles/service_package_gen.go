@@ -34,6 +34,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.S
 			Name:     "Profiles",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newResourceAssociationsDataSource,
+			TypeName: "aws_route53profiles_resource_associations",
+			Name:     "Resource Associations",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
 	}
 }
 
