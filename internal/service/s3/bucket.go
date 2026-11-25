@@ -1790,6 +1790,10 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 		}
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError()
 	}
