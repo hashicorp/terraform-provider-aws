@@ -179,7 +179,8 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta any) 
 			Status: types.QueueStatus(d.Get(names.AttrStatus).(string)),
 		}
 
-		if v, ok := d.GetOk("concurrent_jobs"); ok {
+		// AWS can return concurrent jobs for reserved queues, but only on-demand queues accept it in updates.
+		if v, ok := d.GetOk("concurrent_jobs"); ok && types.PricingPlan(d.Get("pricing_plan").(string)) == types.PricingPlanOnDemand {
 			input.ConcurrentJobs = aws.Int32(int32(v.(int)))
 		}
 
