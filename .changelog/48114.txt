@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrockagentcore_gateway_target: Handle `CREATE_PENDING_AUTH`, `UPDATE_PENDING_AUTH`, and `SYNCHRONIZE_PENDING_AUTH` target states for `AUTHORIZATION_CODE` OAuth grant type targets
+```
