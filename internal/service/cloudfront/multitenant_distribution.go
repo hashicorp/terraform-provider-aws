@@ -305,6 +305,19 @@ func (r *multiTenantDistributionResource) Schema(ctx context.Context, request re
 					},
 				},
 			},
+			"cache_tag_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[cacheTagConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"header_name": schema.StringAttribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			"default_cache_behavior": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[defaultCacheBehaviorModel](ctx),
 				Validators: []validator.List{
@@ -855,6 +868,11 @@ func (r *multiTenantDistributionResource) Update(ctx context.Context, request re
 			return
 		}
 
+		// Expand does not touch fields that are empty in the plan, so a removed cache_tag_config block must be cleared explicitly
+		if new.CacheTagConfig.Length(fwtypes.CollectionLengthUnhandledAsZero) == 0 {
+			distributionConfig.CacheTagConfig = nil
+		}
+
 		// Fix origins: CloudFront requires S3OriginConfig to be set (even if empty) when no custom or VPC origin config is specified
 		// This is needed for S3 origins using Origin Access Control (OAC)
 		fixOriginConfigs(distributionConfig.Origins)
@@ -911,6 +929,7 @@ func mtDistributionHasChanges(old, new multiTenantDistributionResourceModel) boo
 		!old.HTTPVersion.Equal(new.HTTPVersion) ||
 		!old.WebACLID.Equal(new.WebACLID) ||
 		!old.CacheBehavior.Equal(new.CacheBehavior) ||
+		!old.CacheTagConfig.Equal(new.CacheTagConfig) ||
 		!old.CustomErrorResponse.Equal(new.CustomErrorResponse) ||
 		!old.DefaultCacheBehavior.Equal(new.DefaultCacheBehavior) ||
 		!old.Origin.Equal(new.Origin) ||
@@ -1079,6 +1098,7 @@ type multiTenantDistributionResourceModel struct {
 	ActiveTrustedKeyGroups        fwtypes.ListNestedObjectValueOf[activeTrustedKeyGroupsModel] `tfsdk:"active_trusted_key_groups" autoflex:",xmlwrapper=Items,omitempty"`
 	ARN                           types.String                                                 `tfsdk:"arn"`
 	CacheBehavior                 fwtypes.ListNestedObjectValueOf[cacheBehaviorModel]          `tfsdk:"cache_behavior" autoflex:",xmlwrapper=Items,omitempty"`
+	CacheTagConfig                fwtypes.ListNestedObjectValueOf[cacheTagConfigModel]         `tfsdk:"cache_tag_config" autoflex:",omitempty"`
 	CallerReference               types.String                                                 `tfsdk:"caller_reference"`
 	ConnectionMode                fwtypes.StringEnum[awstypes.ConnectionMode]                  `tfsdk:"connection_mode"`
 	Comment                       types.String                                                 `tfsdk:"comment"`
@@ -1136,6 +1156,10 @@ type customOriginConfigModel struct {
 
 type originMtlsConfigModel struct {
 	ClientCertificateArn fwtypes.ARN `tfsdk:"client_certificate_arn"`
+}
+
+type cacheTagConfigModel struct {
+	HeaderName types.String `tfsdk:"header_name"`
 }
 
 type originShieldModel struct {
