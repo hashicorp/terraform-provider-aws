@@ -13,8 +13,10 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -32,6 +34,11 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_route53_query_log", &resource.Sweeper{
 		Name: "aws_route53_query_log",
 		F:    sweepQueryLogs,
+	})
+
+	resource.AddTestSweepers("aws_route53_record_set_protection", &resource.Sweeper{
+		Name: "aws_route53_record_set_protection",
+		F:    sweepRecordSetProtections,
 	})
 
 	resource.AddTestSweepers("aws_route53_traffic_policy", &resource.Sweeper{
@@ -55,6 +62,7 @@ func RegisterSweepers() {
 			"aws_service_discovery_private_dns_namespace",
 			"aws_elb",
 			"aws_route53_key_signing_key",
+			"aws_route53_record_set_protection",
 			"aws_route53_traffic_policy",
 		},
 		F: sweepZones,
@@ -307,6 +315,73 @@ func sweepTrafficPolicyInstances(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("sweeping Route 53 Traffic Policy Instances (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepRecordSetProtections(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.Route53Client(ctx)
+	var input route53.ListHostedZonesInput
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := route53.NewListHostedZonesPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route 53 Record Set Protection sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("listing Route 53 Hosted Zones (%s): %w", region, err)
+		}
+
+	MAIN:
+		for _, v := range page.HostedZones {
+			zoneID := cleanZoneID(aws.ToString(v.Id))
+
+			// Skip the same zones as the hosted zone sweeper: their protections are not test leftovers.
+			for _, domain := range hostedZonesToPreserve() {
+				if strings.Contains(aws.ToString(v.Name), domain) {
+					continue MAIN
+				}
+			}
+
+			if v.LinkedService != nil {
+				continue MAIN
+			}
+
+			protections, err := findRecordSetProtectionsByZoneID(ctx, conn, zoneID)
+
+			if retry.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("listing Route 53 Record Set Protections (%s): %w", zoneID, err)
+			}
+
+			for _, protection := range protections {
+				sweepResources = append(sweepResources, framework.NewSweepResource(newRecordSetProtectionResource, client,
+					framework.NewAttribute("zone_id", zoneID),
+					framework.NewAttribute("record_name", aws.ToString(protection.RecordName)),
+					framework.NewAttribute("record_type", string(protection.RecordType)),
+				))
+			}
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping Route 53 Record Set Protections (%s): %w", region, err)
 	}
 
 	return nil

@@ -13,6 +13,7 @@ var (
 	ResourceKeySigningKey               = resourceKeySigningKey
 	ResourceQueryLog                    = resourceQueryLog
 	ResourceRecord                      = resourceRecord
+	ResourceRecordSetProtection         = newRecordSetProtectionResource
 	ResourceTrafficPolicy               = resourceTrafficPolicy
 	ResourceTrafficPolicyInstance       = resourceTrafficPolicyInstance
 	ResourceVPCAssociationAuthorization = resourceVPCAssociationAuthorization
@@ -29,6 +30,9 @@ var (
 	FindHostedZoneDNSSECByZoneID                = findHostedZoneDNSSECByZoneID
 	FindKeySigningKeyByTwoPartKey               = findKeySigningKeyByTwoPartKey
 	FindQueryLoggingConfigByID                  = findQueryLoggingConfigByID
+	FindRecordSetProtectionByThreePartKey       = findRecordSetProtectionByThreePartKey
+	IsProtectionNotFound                        = isProtectionNotFound
+	ProtectionBatchError                        = protectionBatchError
 	FindResourceRecordSetByFourPartKey          = findResourceRecordSetByFourPartKey
 	FindResourceRecordSetsForHostedZone         = findResourceRecordSetsForHostedZone
 	FindTrafficPolicyByID                       = findTrafficPolicyByID
@@ -43,4 +47,7 @@ var (
 	WaitChangeInsync                            = waitChangeInsync
 )
 
-type Route53TrafficPolicyDoc = route53TrafficPolicyDoc
+type (
+	RecordSetProtectionImportID = recordSetProtectionImportID
+	Route53TrafficPolicyDoc     = route53TrafficPolicyDoc
+)

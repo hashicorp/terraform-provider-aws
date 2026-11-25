@@ -15,6 +15,8 @@ Terraform resource for maintaining exclusive management of resource record sets 
 
 ~> The default `NS` and `SOA` records created during provisioning of the Route53 Zone __should not be included__ in this resource definition. Adding them will cause persistent drift as the read operation is explicitly configured to ignore writing them to state.
 
+~> If any record set that this resource would create, update, or delete has a [record set protection](route53_record_set_protection.html), Route 53 rejects the whole change with an `InvalidChangeBatch` error and makes no changes. This includes removing a protected record set that isn't configured. Remove the protection first, in a separate apply.
+
 ## Example Usage
 
 ### Basic Usage

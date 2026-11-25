@@ -54,6 +54,21 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDisabled(),
 		},
 		{
+			Factory:  newRecordSetProtectionResource,
+			TypeName: "aws_route53_record_set_protection",
+			Name:     "Record Set Protection",
+			Region:   inttypes.ResourceRegionDisabled(),
+			Identity: inttypes.GlobalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute("zone_id", true),
+				inttypes.StringIdentityAttribute("record_name", true),
+				inttypes.StringIdentityAttribute("record_type", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      recordSetProtectionImportID{},
+			},
+		},
+		{
 			Factory:  newRecordsExclusiveResource,
 			TypeName: "aws_route53_records_exclusive",
 			Name:     "Records Exclusive",
