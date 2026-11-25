@@ -1450,7 +1450,7 @@ func resourceDomain() *schema.Resource {
 				names.AttrSubnetIDs: {
 					Type:     schema.TypeSet,
 					Required: true,
-					ForceNew: true,
+					ForceNew: false,
 					MaxItems: 16,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
