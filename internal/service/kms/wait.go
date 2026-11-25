@@ -14,6 +14,11 @@ import (
 const (
 	keyRotationUpdatedTimeout = 10 * time.Minute
 
+	// Timeout for a replica key to finish being created after ReplicateKey.
+	// Multi-Region key replication can take longer than the KMS default
+	// eventual-consistency window, so allow a generous default.
+	replicaKeyCreatedTimeout = 20 * time.Minute
+
 	// General timeout for KMS resource changes to propagate.
 	// See https://docs.aws.amazon.com/kms/latest/developerguide/programming-eventual-consistency.html
 	propagationTimeout = 3 * time.Minute // nosemgrep:ci.kms-in-const-name, ci.kms-in-var-name
