@@ -189,7 +189,8 @@ This configuration block supports the following:
 
 ### capacity_rebalance
 
-* `replacement_strategy` - (Optional) The replacement strategy to use. Only available for fleets of `type` set to `maintain`. Valid values: `launch`.
+* `replacement_strategy` - (Optional) The replacement strategy to use. Only available for fleets of `type` set to `maintain`. Valid values: `launch`, `launch-before-terminate`.
+* `termination_delay` - (Optional) The amount of time (in seconds) that Amazon EC2 waits before terminating the old Spot Instance after launching a new replacement Spot Instance. Required when `replacement_strategy` is set to `launch-before-terminate`. Valid values: 120-7200.
 
 ### target_capacity_specification
 
