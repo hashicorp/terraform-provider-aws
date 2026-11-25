@@ -322,6 +322,11 @@ func TestAccMemoryDBMultiRegionCluster_nodeType(t *testing.T) {
 			},
 			{
 				Config: testAccMultiRegionClusterConfig_nodeType(rName, "db.r7g.2xlarge"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.2xlarge"),
