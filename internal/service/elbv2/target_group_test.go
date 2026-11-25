@@ -1182,6 +1182,64 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 	})
 }
 
+func TestAccELBV2TargetGroup_Geneve_sendTCPReset(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.TargetGroup
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_lb_target_group.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveSendTCPReset(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(awstypes.ProtocolEnumGeneve)),
+					resource.TestCheckResourceAttr(resourceName, "send_tcp_reset.0.on_deregistration", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "send_tcp_reset.0.on_unhealthy", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+			{
+				Config: testAccTargetGroupConfig_protocolGeneveSendTCPReset(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, t, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6081"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, string(awstypes.ProtocolEnumGeneve)),
+					resource.TestCheckResourceAttr(resourceName, "send_tcp_reset.0.on_deregistration", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "send_tcp_reset.0.on_unhealthy", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"connection_termination",
+					"lambda_multi_value_headers_enabled",
+					"proxy_protocol_v2",
+					"slow_start",
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.TargetGroup
@@ -4855,6 +4913,33 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccTargetGroupConfig_protocolGeneveSendTCPReset(rName string, sendTCPReset bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.10.0/25"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 6081
+  protocol = "GENEVE"
+  vpc_id   = aws_vpc.test.id
+  send_tcp_reset {
+    on_deregistration = %[2]t
+    on_unhealthy      = %[2]t
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, sendTCPReset)
 }
 
 func testAccTargetGroupConfig_protocolGeneveSticky(rName, stickinessType string) string {
