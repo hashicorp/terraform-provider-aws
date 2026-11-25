@@ -6,6 +6,7 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -45,6 +46,17 @@ func TestAccCloudFrontMultiTenantDistribution_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "etag", regexache.MustCompile(`^\S+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant_config.0.parameter_definition.0.definition.0.string_schema.0.required", acctest.CtTrue),
+
+					// Check ResponseCompletionTimeout is not enabled with no value set
+					resource.TestCheckNoResourceAttr(resourceName, "origin.0.response_completion_timeout"),
+
+					// Check ConnectionAttempts and ConnectionTimeout exist in the state (server-side defaults)
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.connection_attempts"),
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.connection_timeout"),
+
+					// Check OriginKeepaliveTimeout and OriginReadTimeout exist in the state (server-side defaults)
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout"),
+					resource.TestCheckResourceAttrSet(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cache_behavior"), knownvalue.ListSizeExact(0)),
@@ -907,6 +919,105 @@ func TestAccCloudFrontMultiTenantDistribution_CacheBehavior_lambdaFunctionAssoci
 	})
 }
 
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47735
+func TestAccCloudFrontMultiTenantDistribution_customOriginTimeouts(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_customOriginTimeouts(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", "5"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", "60"),
+				),
+			},
+			{
+				Config: testAccMultiTenantDistributionConfig_customOriginTimeouts(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", "5"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", "60"),
+				),
+				ExpectNonEmptyPlan: false,
+			},
+		},
+	})
+}
+
+// Verifies that a distribution created by a provider version with schema-level defaults on origin
+// attributes (last released is v6.74.0) produces no diff after upgrading.
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/47735
+func TestAccCloudFrontMultiTenantDistribution_upgradeFromV6_74_0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	originNoChange := statecheck.CompareValue(compare.ValuesSame())
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		CheckDestroy: testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.74.0",
+					},
+				},
+				Config: testAccMultiTenantDistributionConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_attempts", strconv.Itoa(int(tfcloudfront.DefaultConnectionAttempts))),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.connection_timeout", strconv.Itoa(int(tfcloudfront.DefaultConnectionTimeout))),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_keepalive_timeout", strconv.Itoa(int(tfcloudfront.DefaultOriginKeepaliveTimeout))),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.custom_origin_config.0.origin_read_timeout", strconv.Itoa(int(tfcloudfront.DefaultOriginReadTimeout))),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					originNoChange.AddStateValue(resourceName, tfjsonpath.New("origin")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccMultiTenantDistributionConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					originNoChange.AddStateValue(resourceName, tfjsonpath.New("origin")),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckMultiTenantDistributionDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).CloudFrontClient(ctx)
@@ -1490,7 +1601,7 @@ func testAccMultiTenantDistributionConfig_DefaultCacheBehavior_functionAssociati
       event_type   = "viewer-request"
       function_arn = aws_cloudfront_function.viewer_request.arn
     }
-    
+
     function_association {
       event_type   = "viewer-response"
       function_arn = aws_cloudfront_function.viewer_response.arn
@@ -2203,4 +2314,52 @@ resource "aws_iam_role" "lambda" {
 
 data "aws_partition" "current" {}
 `, rName, comment)
+}
+
+func testAccMultiTenantDistributionConfig_customOriginTimeouts() string {
+	return `
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    connection_timeout = 5
+
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "https-only"
+      origin_ssl_protocols     = ["TLSv1.2"]
+      origin_keepalive_timeout = 30
+      origin_read_timeout      = 60
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  tenant_config {}
+}
+`
 }
