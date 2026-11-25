@@ -294,6 +294,21 @@ func TestAccRolesAnywhereProfile_tipConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "DISABLED"),
 				),
 			},
+			{
+				Config: testAccProfileConfig_tipConfiguration(rName, roleName, "ENABLED", "x509Subject/CN", "user"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "ENABLED"),
+				),
+			},
+			{
+				// Removing the block doesn't change the setting in AWS.
+				Config: testAccProfileConfig_basic(rName, roleName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProfileExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tip_configuration.0.status", "ENABLED"),
+				),
+			},
 		},
 	})
 }
