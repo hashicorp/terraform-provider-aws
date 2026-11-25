@@ -233,7 +233,7 @@ func TestValidContextProviderKey(t *testing.T) {
 	t.Parallel()
 
 	validKeys := []string{
-		"email",
+		names.AttrEmail,
 		"custom:department",
 		"https://example.com/claims/groups",
 		"user name",
