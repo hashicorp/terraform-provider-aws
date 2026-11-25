@@ -469,13 +469,9 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta any) diag
 		return sdkdiag.AppendErrorf(diags, "setting ephemeral_block_device: %s", err)
 	}
 
-	input := ec2.GetInstanceUefiDataInput{
-		InstanceId: aws.String(d.Id()),
-	}
-	instanceData, err := conn.GetInstanceUefiData(ctx, &input)
-	if err == nil {
-		d.Set("uefi_data", instanceData.UefiData)
-	}
+	// NOTE: uefi_data is a write-only attribute used during RegisterImage.
+	// GetInstanceUefiData is an EC2 instance API and cannot be called with
+	// an AMI ID. The value set at create time is preserved in state.
 
 	setTagsOut(ctx, image.Tags)
 
