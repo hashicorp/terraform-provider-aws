@@ -335,8 +335,10 @@ func TestAccIAMOpenIDConnectProvider_contextProvider(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "sub"),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_type_value", "user"),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.source_key", names.AttrEmail),
-					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.0.target_key", "Email"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": names.AttrEmail,
+						"target_key": "Email",
+					}),
 				),
 			},
 			{
@@ -399,11 +401,93 @@ func TestAccIAMOpenIDConnectProvider_identityCenterInstance(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccOpenIDConnectProviderConfig_identityCenterInstanceSubject(rString, "oid"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "identity_center_instance_arn", "data.aws_ssoadmin_instances.test", "arns.0"),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.subject_source_key", "oid"),
+				),
+			},
+			{
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "context_provider.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "identity_center_instance_arn", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMOpenIDConnectProvider_contextProviderKeyDefinitions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rString := acctest.RandString(t, 5)
+	resourceName := "aws_iam_openid_connect_provider.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOpenIDConnectProviderDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitions(rString, `
+    key_definition {
+      source_key = "email"
+    }
+
+    key_definition {
+      source_key = "department"
+      target_key = "Department"
+    }
+
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": names.AttrEmail,
+						"target_key": names.AttrEmail, // Defaults to the source key when omitted.
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "department",
+						"target_key": "Department",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "groups",
+						"target_key": "Groups",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitions(rString, `
+    key_definition {
+      source_key = "groups"
+      target_key = "Groups"
+    }
+
+    key_definition {
+      source_key = "title"
+      target_key = "Title"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOpenIDConnectProviderExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "context_provider.0.key_definition.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "context_provider.0.key_definition.*", map[string]string{
+						"source_key": "title",
+						"target_key": "Title",
+					}),
 				),
 			},
 		},
@@ -596,6 +680,48 @@ resource "aws_iam_openid_connect_provider" "test" {
   }
 }
 `, rName, subjectSourceKey, subjectTypeValue)
+}
+
+func testAccOpenIDConnectProviderConfig_contextProviderKeyDefinitions(rName, keyDefinitions string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  context_provider {
+    subject_source_key = "sub"
+    subject_type_value = "user"
+%[2]s  }
+}
+`, rName, keyDefinitions)
+}
+
+func testAccOpenIDConnectProviderConfig_identityCenterInstanceSubject(rName, subjectSourceKey string) string {
+	return fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  identity_center_instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+
+  context_provider {
+    subject_source_key = %[2]q
+    subject_type_value = "user"
+  }
+}
+`, rName, subjectSourceKey)
 }
 
 func testAccOpenIDConnectProviderConfig_identityCenterInstance(rName string) string {
