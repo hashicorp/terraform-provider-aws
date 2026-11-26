@@ -912,3 +912,44 @@ Using `terraform import`, import Lambda Functions using the `function_name`. For
 ```console
 % terraform import aws_lambda_function.example example
 ```
+
+### Code deployment after import
+
+~> **NOTE:** `filename` and `source_code_hash` cannot be read back from AWS, so both are empty in state immediately after an import. A configured `filename` therefore plans as a new value on the first apply, which calls the Lambda `UpdateFunctionCode` API and replaces the code currently deployed to `$LATEST` with the configured package, even when the two differ. A planned change to any of `filename`, `source_code_hash`, `code_sha256`, `s3_bucket`, `s3_key`, `s3_object_version`, `source_kms_key_arn`, `image_uri` or `architectures` triggers a code update.
+
+Choose one of the following approaches before importing a function whose deployed code you want to keep.
+
+**Terraform should not manage the code.** The schema requires one of `filename`, `image_uri` or `s3_bucket`, so keep a placeholder package and ignore changes to `filename`. If you also set `source_code_hash`, ignore it too, because a change to either one triggers an update on its own.
+
+```terraform
+resource "aws_lambda_function" "example" {
+  function_name = "example"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs22.x"
+
+  # Never uploaded, because changes to the code arguments are ignored below.
+  filename = "placeholder.zip"
+
+  lifecycle {
+    ignore_changes = [
+      filename,
+      source_code_hash,
+    ]
+  }
+}
+```
+
+**Terraform should manage the code.** Download the package that is currently deployed (the URL returned by `aws lambda get-function --function-name example --query 'Code.Location' --output text` is short-lived), reference it in `filename`, and set `source_code_hash` to its hash. You can compare the hash with the `Configuration.CodeSha256` value from `aws lambda get-function`. The first apply still calls `UpdateFunctionCode` because `filename` is new to state, but it uploads identical code, so expect a new `LastModified` value and a CloudTrail event.
+
+```terraform
+resource "aws_lambda_function" "example" {
+  function_name = "example"
+  role          = aws_iam_role.example.arn
+  handler       = "index.handler"
+  runtime       = "nodejs22.x"
+
+  filename         = "deployed-package.zip"
+  source_code_hash = filebase64sha256("deployed-package.zip")
+}
+```
