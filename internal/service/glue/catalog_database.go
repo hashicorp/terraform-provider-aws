@@ -228,7 +228,21 @@ func resourceCatalogDatabaseRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.Set(names.AttrARN, databaseARN(ctx, c, name))
 	d.Set(names.AttrCatalogID, database.CatalogId)
-	if err := d.Set("create_table_default_permission", flattenPrincipalPermissionses(database.CreateTableDefaultPermissions)); err != nil {
+	createTableDefaultPermission := flattenPrincipalPermissionses(database.CreateTableDefaultPermissions)
+	if len(createTableDefaultPermission) == 0 {
+		// AWS returned no default permissions. If the config explicitly set an empty
+		// `create_table_default_permission {}` block (rather than omitting the argument),
+		// echo that back so the plan doesn't perpetually want to re-apply it.
+		if raw := d.GetRawConfig().GetAttr("create_table_default_permission"); !raw.IsNull() && raw.LengthInt() > 0 {
+			createTableDefaultPermission = []any{
+				map[string]any{
+					names.AttrPermissions: []any{},
+					names.AttrPrincipal:   []any{},
+				},
+			}
+		}
+	}
+	if err := d.Set("create_table_default_permission", createTableDefaultPermission); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting create_table_default_permission: %s", err)
 	}
 	d.Set(names.AttrDescription, database.Description)
@@ -470,7 +484,7 @@ func expandPrincipalPermissionses(tfList []any) []awstypes.PrincipalPermissions 
 		return nil
 	}
 
-	var apiObjects []awstypes.PrincipalPermissions
+	apiObjects := make([]awstypes.PrincipalPermissions, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]any)
@@ -478,10 +492,33 @@ func expandPrincipalPermissionses(tfList []any) []awstypes.PrincipalPermissions 
 			continue
 		}
 
+		// A block with neither permissions nor a principal represents an explicitly
+		// empty `create_table_default_permission {}`, meaning Lake Formation should
+		// manage default permissions (no automatic IAM_ALLOWED_PRINCIPALS grant). It
+		// must be sent to AWS as a genuinely empty list, not a single entry with a
+		// null Principal, which AWS rejects with "Principal in PrincipalPrivileges
+		// cannot be null". Skipping it here — while still returning the non-nil
+		// (possibly zero-length) apiObjects slice above — achieves that.
+		if isEmptyPrincipalPermissionsBlock(tfMap) {
+			continue
+		}
+
 		apiObjects = append(apiObjects, expandPrincipalPermissions(tfMap))
 	}
 
 	return apiObjects
+}
+
+func isEmptyPrincipalPermissionsBlock(tfMap map[string]any) bool {
+	if v, ok := tfMap[names.AttrPermissions].(*schema.Set); ok && v.Len() > 0 {
+		return false
+	}
+
+	if v, ok := tfMap[names.AttrPrincipal].([]any); ok && len(v) > 0 && v[0] != nil {
+		return false
+	}
+
+	return true
 }
 
 func expandPrincipalPermissions(tfMap map[string]any) awstypes.PrincipalPermissions {
