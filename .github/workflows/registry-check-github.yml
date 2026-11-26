@@ -1,0 +1,190 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+# Same checks as registry-check.yml, but reports through GitHub instead of
+# Slack: results go to the job summary, and a failure opens (or comments on)
+# an issue that mentions the maintainer team.
+name: Registry Initialization Check (GitHub)
+
+on:
+  # Fires when release engineering publishes the GitHub release, so this
+  # doesn't depend on the crt-post-promote-production dispatch.
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Provider version to check, with or without the leading 'v' (e.g. 6.74.0). Defaults to the latest GitHub release.
+        required: false
+        type: string
+      timeout:
+        description: Minutes to wait for Registry ingest and for initialization to succeed
+        required: true
+        default: '120'
+        type: string
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  TIMEOUT_MINUTES: ${{ inputs.timeout || '120' }}
+
+jobs:
+  registry-ingest:
+    name: Await Registry Ingest
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # required to read the latest release
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      elapsed: ${{ steps.ingest.outputs.elapsed }}
+    steps:
+      - name: Resolve Version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          RAW="${RELEASE_TAG:-$INPUT_VERSION}"
+          if [[ -z "$RAW" ]]; then
+            RAW=$(gh release list --repo "$GITHUB_REPOSITORY" --json tagName,isLatest --jq '.[] | select(.isLatest).tagName')
+          fi
+          if [[ ! "$RAW" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::error::Invalid version: ${RAW}"
+            exit 1
+          fi
+          echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          echo "tag=v${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+      - name: Await Ingest
+        id: ingest
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          SECONDS=0
+          while :; do
+            if curl -sf "https://registry.terraform.io/v2/providers/323/provider-versions" \
+              | jq -e --arg tag "$TAG" '.data[] | select(.attributes.tag == $tag)' >/dev/null; then
+              echo "Terraform Registry has ingested ${TAG} after ${SECONDS}s"
+              echo "elapsed=${SECONDS}" >> "$GITHUB_OUTPUT"
+              echo "Terraform Registry ingested \`${TAG}\` after $((SECONDS / 60)) minutes." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+            if (( SECONDS / 60 >= TIMEOUT_MINUTES )); then
+              echo "::error::Timed out after ${TIMEOUT_MINUTES} minutes waiting for the Terraform Registry to ingest ${TAG}"
+              echo "Timed out after ${TIMEOUT_MINUTES} minutes waiting for the Terraform Registry to ingest \`${TAG}\`." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+            echo "Registry has not ingested ${TAG} yet; waiting..."
+            sleep 300
+          done
+
+  init-check:
+    name: Initialize Provider (${{ matrix.os }})
+    needs: registry-ingest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    permissions: {}
+    steps:
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e
+        with:
+          terraform_wrapper: false
+
+      - name: Write Configuration
+        env:
+          VERSION: ${{ needs.registry-ingest.outputs.version }}
+        run: |
+          cat <<EOF > main.tf
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = "${VERSION}"
+              }
+            }
+          }
+
+          provider "aws" {
+            region = "us-east-1"
+          }
+          EOF
+
+      # Success is Terraform's exit code. On failure, report the JSON error
+      # diagnostics, or stderr and the last JSON lines if there are none (for
+      # example, a crash before any diagnostics are written).
+      - name: Initialize
+        env:
+          ELAPSED: ${{ needs.registry-ingest.outputs.elapsed }}
+          OS: ${{ matrix.os }}
+        run: |
+          SECONDS=$ELAPSED
+          while :; do
+            RC=0
+            terraform init -upgrade -input=false -json > init.json 2> init.err || RC=$?
+            if (( RC == 0 )); then
+              echo "Initialization on \`${OS}\` succeeded." >> "$GITHUB_STEP_SUMMARY"
+              break
+            fi
+            if (( SECONDS / 60 >= TIMEOUT_MINUTES )); then
+              ERROR=$(jq -rR 'fromjson? | select(.diagnostic.severity == "error") | .["@message"] + "\n\n" + (.diagnostic.detail // "")' init.json || true)
+              if [[ -z "$ERROR" ]]; then
+                ERROR=$(printf 'terraform init exited %s with no error diagnostics.\n\nstderr:\n%s\n\nLast output:\n%s' "$RC" "$(cat init.err)" "$(tail -n 20 init.json)")
+              fi
+              {
+                echo "Initialization on \`${OS}\` failed after ${TIMEOUT_MINUTES} minutes:"
+                echo
+                echo '```console'
+                echo "$ERROR"
+                echo '```'
+              } >> "$GITHUB_STEP_SUMMARY"
+              echo "::error::Initialization on ${OS} failed (exit ${RC})"
+              exit 1
+            fi
+            echo "Initialization failed (exit ${RC}), retrying in 60s..."
+            sleep 60
+          done
+
+  report:
+    name: Report Failure
+    needs: [registry-ingest, init-check]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # required to list this run's job results
+      issues: write # required to open or comment on the failure issue
+    steps:
+      - name: Open or Update Issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.registry-ingest.outputs.tag || inputs.version || github.event.release.tag_name }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          FAILED=$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?per_page=50" \
+            --jq '.jobs[] | select(.conclusion == "failure") | "- " + .name')
+          TITLE="Registry initialization check failed for ${TAG:-the latest release}"
+          BODY=$(printf '%s\n' \
+            "@hashicorp/terraform-aws The post-release Registry initialization check failed." \
+            "" \
+            "Failed jobs:" \
+            "${FAILED}" \
+            "" \
+            "Error details are in the job summaries: ${RUN_URL}" \
+            "" \
+            "If the Registry hasn't ingested the release, or downloads fail on some platforms, ask in #support-terraform-registry. A CloudFront cache invalidation is a common fix.")
+          EXISTING=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"${TITLE}\" in:title" --json number --jq '.[0].number // empty')
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --label repository --body "$BODY"
+          fi
