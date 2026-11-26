@@ -123,13 +123,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `bgp_options` - (Optional) Connect peer BGP options. See [bgp_options](#bgp_options) for more information.
+* `bgp_options` - (Optional) Connect peer BGP options. See [bgp_options](#bgp_options-block) for more information.
 * `core_network_address` - (Optional) Connect peer core network address.
 * `inside_cidr_blocks` - (Optional) Inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `GRE`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
 * `subnet_arn` - (Optional) Subnet ARN for the Connect peer. Required when the Connect attachment protocol is `NO_ENCAP`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### bgp_options
+### `bgp_options` Block
 
 * `peer_asn` - (Optional) Peer ASN. Supports 2-byte and 4-byte ASNs (1 to 4294967295).
 
@@ -138,13 +138,28 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Connect peer.
-* `configuration` - Configuration of the Connect peer.
+* `configuration` - Configuration of the Connect peer. See [`configuration` Block](#configuration-block) for details.
 * `connect_peer_id` - ID of the Connect peer.
 * `core_network_id` - ID of a core network.
 * `created_at` - Timestamp when the Connect peer was created.
 * `edge_location` - Region where the peer is located.
 * `state` - State of the Connect peer.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `configuration` Block
+
+* `bgp_configurations` - BGP configurations of the Connect peer. See [`bgp_configurations` Block](#bgp_configurations-block) for details.
+* `core_network_address` - Connect peer core network address.
+* `inside_cidr_blocks` - Inside IP addresses used for BGP peering.
+* `peer_address` - Connect peer address.
+* `protocol` - Tunnel protocol used for the Connect peer.
+
+### `bgp_configurations` Block
+
+* `core_network_address` - Core network address.
+* `core_network_asn` - Core network ASN.
+* `peer_address` - Peer address.
+* `peer_asn` - Peer ASN.
 
 ## Timeouts
 

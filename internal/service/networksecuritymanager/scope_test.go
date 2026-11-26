@@ -74,6 +74,7 @@ func TestAccNetworkSecurityManagerScope_basic(t *testing.T) {
 							}),
 						}),
 					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("specialized_scope_type"), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{})),
 				},
@@ -121,6 +122,80 @@ func TestAccNetworkSecurityManagerScope_disappears(t *testing.T) {
 					PostApplyPostRefresh: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
 					},
+				},
+			},
+		},
+	})
+}
+
+// specialized_scope_type is set when the scope is created and cannot be changed, so adding or removing it replaces the scope.
+func TestAccNetworkSecurityManagerScope_specializedScopeType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_networksecuritymanager_scope.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckScope(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkSecurityManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScopeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Scope/specialized/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:          config.StringVariable(rName),
+					"specialized_scope_type": config.StringVariable(string(awstypes.SpecializedScopeTypeIgwFirewallSubnetConnectivityOverride)),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScopeExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("scope_configuration").AtSliceIndex(0).AtMapKey("resource_scope"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"exclude":              knownvalue.ListSizeExact(0),
+							"include":              knownvalue.ListSizeExact(0),
+							"include_all":          knownvalue.Bool(true),
+							names.AttrResourceType: tfknownvalue.StringExact(awstypes.ScopeResourceTypeSubnet),
+						}),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("specialized_scope_type"), tfknownvalue.StringExact(awstypes.SpecializedScopeTypeIgwFirewallSubnetConnectivityOverride)),
+				},
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Scope/specialized/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName:          config.StringVariable(rName),
+					"specialized_scope_type": config.StringVariable(string(awstypes.SpecializedScopeTypeIgwFirewallSubnetConnectivityOverride)),
+				},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				ConfigDirectory: config.StaticDirectory("testdata/Scope/specialized/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScopeExists(ctx, t, resourceName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("specialized_scope_type"), knownvalue.Null()),
 				},
 			},
 		},

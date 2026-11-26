@@ -39,12 +39,12 @@ The following arguments are optional:
 * `type` - (Optional) Type of device.
 * `vendor` - (Optional) Vendor of the device.
 
-The `aws_location` object supports the following:
+### `aws_location` Block
 
 * `subnet_arn` - (Optional) ARN of the subnet that the device is located in.
 * `zone` - (Optional) Zone that the device is located in. Specify the ID of an Availability Zone, Local Zone, Wavelength Zone, or an Outpost.
 
-The `location` object supports the following:
+### `location` Block
 
 * `address` - (Optional) Physical address.
 * `latitude` - (Optional) Latitude.

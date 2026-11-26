@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_networksecuritymanager_policy
 
-Manages an AWS Network Security Manager Policy. A policy combines templates and rules with enforcement settings for a firewall type, such as AWS WAF or AWS Shield Advanced.
+Manages an AWS Network Security Manager Policy. A policy combines templates and rules with enforcement settings for a firewall type, such as AWS WAF, AWS Shield Advanced or the Internet Gateway Firewall.
 
 Changes to a policy are published unless `is_published` is `false`.
 
@@ -53,12 +53,70 @@ resource "aws_networksecuritymanager_policy" "example" {
 }
 ```
 
+### Internet Gateway Firewall Policy
+
+```terraform
+resource "aws_networksecuritymanager_scope" "public_subnets" {
+  name                   = "public-subnets"
+  specialized_scope_type = "IGW_FIREWALL_SUBNET_CONNECTIVITY_OVERRIDE"
+
+  scope_configuration {
+    resource_scope {
+      resource_type = "AWS::EC2::Subnet"
+
+      include {
+        expression {
+          criteria {
+            tags = {
+              Tier = "public"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "aws_networksecuritymanager_rule" "default_action" {
+  name          = "igw-default-action"
+  firewall_type = "IGW_FIREWALL"
+  type          = "INSPECTION"
+  configuration = jsonencode({
+    FirewallDefaultAction = "DROP"
+  })
+}
+
+resource "aws_networksecuritymanager_policy" "example" {
+  name          = "baseline-igw-firewall"
+  firewall_type = "IGW_FIREWALL"
+  priority      = 3
+
+  template_or_rule {
+    rule_identifier = aws_networksecuritymanager_rule.default_action.arn
+  }
+
+  configuration {
+    remediation_enabled = true
+    resources_clean_up  = true
+
+    igw_firewall_config {
+      default_subnet_connectivity = "outbound-only"
+
+      subnet_connectivity_override {
+        connectivity_type = "bidirectional"
+        scope_arn         = [aws_networksecuritymanager_scope.public_subnets.arn]
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `configuration` - (Required) Settings that control the policy's behavior. See [`configuration`](#configuration-block) below.
-* `firewall_type` - (Required) Firewall type of the policy. Valid values: `WAF`, `SHIELD_ADVANCED`. Changing this value forces a new resource.
+* `firewall_type` - (Required) Firewall type of the policy. Valid values: `WAF`, `SHIELD_ADVANCED`, `IGW_FIREWALL`. Changing this value forces a new resource.
 * `name` - (Required) Name of the policy. Changing this value forces a new resource.
 * `priority` - (Required) Priority of the policy. A lower number indicates a higher priority. Minimum value of `1`. Must be unique across policies in the AWS account.
 
@@ -68,15 +126,26 @@ The following arguments are optional:
 * `is_published` - (Optional) Whether to publish the policy. When `true`, the policy is saved in the published (`ACTIVE`) state. When `false`, it is saved as a draft (`DRAFT`); for a published policy, the draft is saved on top of the published version. Defaults to `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `template_or_rule` - (Optional) Ordered list of templates and rules to associate with the policy. For `WAF` policies, specify 1 to 100 entries, of which at most 2 can be templates. Must be omitted for `SHIELD_ADVANCED` policies. See [`template_or_rule`](#template_or_rule-block) below.
+* `template_or_rule` - (Optional) Ordered list of templates and rules to associate with the policy. For `WAF` policies, specify 1 to 100 entries, of which at most 2 can be templates. `IGW_FIREWALL` policies require at least 1 entry. Must be omitted for `SHIELD_ADVANCED` policies. See [`template_or_rule`](#template_or_rule-block) below.
 
 ~> **Note:** A rule or template referenced by a published policy cannot be deleted. Configure [`create_before_destroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy) on referenced rule and template resources so that a replacement is associated with the policy before the old resource is deleted.
 
 ### `configuration` Block
 
-* `remediation_enabled` - (Required) Whether to automatically remediate noncompliant resources.
+* `igw_firewall_config` - (Optional) Internet Gateway Firewall-specific settings. Required for `IGW_FIREWALL` policies. See [`igw_firewall_config`](#igw_firewall_config-block) below.
+* `remediation_enabled` - (Required) Whether to automatically remediate noncompliant resources. Must be `true` for `IGW_FIREWALL` policies.
 * `resources_clean_up` - (Required) Whether to automatically remove the resources the service created when they are no longer needed. The service currently only accepts `true`.
 * `waf_config` - (Optional) AWS WAF-specific settings. Required for `WAF` policies. See [`waf_config`](#waf_config-block) below.
+
+### `igw_firewall_config` Block
+
+* `default_subnet_connectivity` - (Required) Default internet connectivity for subnets in scope, unless a `subnet_connectivity_override` applies. Valid values: `flexible` (bidirectional for network interfaces with a public IP address, outbound-only for the others), `bidirectional`, `outbound-only`.
+* `subnet_connectivity_override` - (Optional) Ordered list of up to 4 overrides that apply a different connectivity to the subnets a scope selects. When a subnet matches more than one override, the first one applies. At most one override per connectivity type. See [`subnet_connectivity_override`](#subnet_connectivity_override-block) below.
+
+### `subnet_connectivity_override` Block
+
+* `connectivity_type` - (Required) Connectivity to apply to the selected subnets. Valid values: `flexible`, `bidirectional`, `outbound-only`, `exclude`.
+* `scope_arn` - (Required) List with the ARN of the scope that selects the subnets. The service currently accepts exactly one scope ARN. The scope must have `specialized_scope_type` set to `IGW_FIREWALL_SUBNET_CONNECTIVITY_OVERRIDE`.
 
 ### `waf_config` Block
 

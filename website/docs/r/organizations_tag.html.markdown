@@ -39,8 +39,8 @@ resource "aws_organizations_tag" "example" {
 
 This resource supports the following arguments:
 
-* `resource_id` - (Required) ID of the Organizations resource to tag.
 * `key` - (Required) Tag name.
+* `resource_id` - (Required) ID of the Organizations resource to tag.
 * `value` - (Required) Tag value.
 
 ## Attribute Reference

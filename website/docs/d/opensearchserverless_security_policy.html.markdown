@@ -23,16 +23,16 @@ data "aws_opensearchserverless_security_policy" "example" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `name` - (Required) Name of the policy
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `type` - (Required) Type of security policy. One of `encryption` or `network`.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `created_date` - The date the security policy was created.
+* `created_date` - Date the security policy was created.
 * `description` - Description of the security policy.
-* `last_modified_date` - The date the security policy was last modified.
-* `policy` - The JSON policy document without any whitespaces.
+* `last_modified_date` - Date the security policy was last modified.
+* `policy` - JSON policy document without any whitespaces.
 * `policy_version` - Version of the policy.

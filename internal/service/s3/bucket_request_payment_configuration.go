@@ -85,7 +85,8 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		return conn.PutBucketRequestPayment(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "RequestPaymentConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "RequestPaymentConfiguration is not valid, expected CreateBucketConfiguration") ||
+		tfawserr.ErrMessageContains(err, errCodeNotImplemented, "The information you provided implies functionality that is not implemented") {
 		err = errDirectoryBucket(err)
 	}
 

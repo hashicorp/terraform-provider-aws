@@ -97,8 +97,15 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the VPC.
 * `ipv6_association_id` - Association ID for the IPv6 CIDR block.
 * `main_route_table_id` - ID of the main route table associated with this VPC. Note that you can change a VPC's main route table by using an [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_association.html).
+* `network_firewall_association` - Automated Internet Firewall that inspects traffic between the VPC and its internet gateway or egress-only internet gateway. AWS Network Security Manager manages the firewall. Empty if the VPC doesn't have one. See [`network_firewall_association`](#network_firewall_association-block) below.
 * `owner_id` - ID of the AWS account that owns the VPC.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `network_firewall_association` Block
+
+* `firewall_arn` - ARN of the firewall.
+* `firewall_mode` - Mode of the firewall. `enforce` applies the firewall policy to traffic. `monitor` logs traffic that the policy would act on but doesn't block it.
+* `firewall_onboarding_status` - Status of the firewall for the VPC. `active` means the firewall inspects traffic for the VPC, `pending` means AWS is still setting it up, and `disabling` means AWS is removing it.
 
 ### GuardDuty Cleanup Permissions
 

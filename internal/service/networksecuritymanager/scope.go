@@ -95,6 +95,13 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"specialized_scope_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SpecializedScopeType](),
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -345,7 +352,9 @@ func (r *scopeResource) Create(ctx context.Context, req resource.CreateRequest, 
 	input.ClientToken = aws.String(create.UniqueId(ctx))
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateScope(ctx, &input)
+	out, err := retryWhenOnboarding(ctx, func(ctx context.Context) (*networksecuritymanager.CreateScopeOutput, error) {
+		return conn.CreateScope(ctx, &input)
+	})
 	if err != nil {
 		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, name)
 		return
@@ -585,13 +594,14 @@ func (r *scopeResource) flatten(ctx context.Context, out *networksecuritymanager
 
 type scopeResourceModel struct {
 	framework.WithRegionModel
-	ARN                types.String                                             `tfsdk:"arn"`
-	Description        types.String                                             `tfsdk:"description"`
-	IsPublished        types.Bool                                               `tfsdk:"is_published"`
-	Name               types.String                                             `tfsdk:"name"`
-	ScopeConfiguration fwtypes.ListNestedObjectValueOf[scopeConfigurationModel] `tfsdk:"scope_configuration"`
-	Tags               tftags.Map                                               `tfsdk:"tags"`
-	TagsAll            tftags.Map                                               `tfsdk:"tags_all"`
+	ARN                  types.String                                             `tfsdk:"arn"`
+	Description          types.String                                             `tfsdk:"description"`
+	IsPublished          types.Bool                                               `tfsdk:"is_published"`
+	Name                 types.String                                             `tfsdk:"name"`
+	ScopeConfiguration   fwtypes.ListNestedObjectValueOf[scopeConfigurationModel] `tfsdk:"scope_configuration"`
+	SpecializedScopeType fwtypes.StringEnum[awstypes.SpecializedScopeType]        `tfsdk:"specialized_scope_type"`
+	Tags                 tftags.Map                                               `tfsdk:"tags"`
+	TagsAll              tftags.Map                                               `tfsdk:"tags_all"`
 }
 
 type scopeConfigurationModel struct {

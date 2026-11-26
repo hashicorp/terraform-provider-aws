@@ -36,17 +36,17 @@ resource "aws_opensearchserverless_collection_group" "example" {
 The following arguments are required:
 
 * `name` - (Required, Forces new resource) Name of the collection group.
-* `standby_replicas` - (Required, Forces new resource) Indicates whether standby replicas should be used for collections in this group. Valid values are `ENABLED` and `DISABLED`. If `generation` is set to `NEXTGEN`, this argument must be set to `ENABLED`.
+* `standby_replicas` - (Required, Forces new resource) Whether standby replicas should be used for collections in this group. Valid values are `ENABLED` and `DISABLED`. If `generation` is set to `NEXTGEN`, this argument must be set to `ENABLED`.
 
 The following arguments are optional:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `capacity_limits` - (Optional) Configuration block for the collection group's indexing and search capacity limits. See [`capacity_limits`](#capacity_limits) below for details.
+* `capacity_limits` - (Optional) Configuration block for the collection group's indexing and search capacity limits. See [`capacity_limits`](#capacity_limits-block) below for details.
 * `description` - (Optional) Description of the collection group.
 * `generation` - (Optional, Forces new resource) Generation of Amazon OpenSearch Serverless for the collection group. Valid values are `CLASSIC` and `NEXTGEN`. Default value is `CLASSIC`.
-* `tags` - (Optional) A map of tags to assign to the collection group. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the collection group. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `capacity_limits`
+### `capacity_limits` Block
 
 * `max_indexing_capacity_in_ocu` - (Optional) Maximum indexing capacity, in OpenSearch Compute Units (OCUs), for the collection group.
 * `max_search_capacity_in_ocu` - (Optional) Maximum search capacity, in OpenSearch Compute Units (OCUs), for the collection group.
@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the collection group.
 * `created_date` - Date the collection group was created.
 * `id` - Unique identifier for the collection group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
