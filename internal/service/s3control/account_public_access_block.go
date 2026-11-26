@@ -68,6 +68,10 @@ func resourceAccountPublicAccessBlock() *schema.Resource {
 					Optional: true,
 					Default:  false,
 				},
+				names.AttrSkipDestroy: {
+					Type:     schema.TypeBool,
+					Optional: true,
+				},
 			}
 		},
 	}
@@ -170,6 +174,11 @@ func resourceAccountPublicAccessBlockUpdate(ctx context.Context, d *schema.Resou
 func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Skipping destruction of S3 Account Public Access Block: %s", d.Id())
+		return diags
+	}
 
 	log.Printf("[DEBUG] Deleting S3 Account Public Access Block: %s", d.Id())
 	_, err := conn.DeletePublicAccessBlock(ctx, &s3control.DeletePublicAccessBlockInput{
