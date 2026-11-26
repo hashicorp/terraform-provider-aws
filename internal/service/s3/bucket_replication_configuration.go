@@ -668,7 +668,24 @@ func replicationRuleNotOperatorSchema() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 								},
-								names.AttrTags: tftags.TagsSchema(),
+								"tags": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Resource{
+										SchemaFunc: func() map[string]*schema.Schema {
+											return map[string]*schema.Schema{
+												names.AttrKey: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValue: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											}
+										},
+									},
+								},
 							}
 						},
 					},
@@ -1005,9 +1022,20 @@ func expandReplicationRuleOrOperator(ctx context.Context, tfList []any) *types.R
 		}
 	}
 
-	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
-		if tags := svcTags(tftags.New(ctx, v).IgnoreAWS()); len(tags) > 0 {
-			apiObject.Tags = tags
+	if v, ok := tfMap["tags"].([]any); ok && len(v) > 0 {
+		for _, raw := range v {
+			tagMap, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			tag := types.Tag{}
+			if k, ok := tagMap[names.AttrKey].(string); ok {
+				tag.Key = aws.String(k)
+			}
+			if val, ok := tagMap[names.AttrValue].(string); ok {
+				tag.Value = aws.String(val)
+			}
+			apiObject.Tags = append(apiObject.Tags, tag)
 		}
 	}
 
@@ -1309,8 +1337,15 @@ func flattenReplicationRuleOrOperator(ctx context.Context, apiObject *types.Repl
 		tfMap["prefixes"] = v
 	}
 
-	if v := apiObject.Tags; v != nil {
-		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+	if v := apiObject.Tags; len(v) > 0 {
+		var tagList []any
+		for _, tag := range v {
+			tagList = append(tagList, map[string]any{
+				names.AttrKey:   aws.ToString(tag.Key),
+				names.AttrValue: aws.ToString(tag.Value),
+			})
+		}
+		tfMap["tags"] = tagList
 	}
 
 	return []any{tfMap}
