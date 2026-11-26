@@ -1104,7 +1104,7 @@ func resourceFlow() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"task": {
 					Type:     schema.TypeSet,
 					Required: true,

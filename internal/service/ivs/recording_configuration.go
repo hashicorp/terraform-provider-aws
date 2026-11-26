@@ -93,7 +93,7 @@ func ResourceRecordingConfiguration() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchemaForceNew(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"thumbnail_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,

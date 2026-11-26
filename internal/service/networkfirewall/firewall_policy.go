@@ -260,7 +260,7 @@ func resourceFirewallPolicy() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"update_token": {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -316,7 +316,8 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		return conn.PutBucketNotificationConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "NotificationConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "NotificationConfiguration is not valid, expected CreateBucketConfiguration") ||
+		tfawserr.ErrMessageContains(err, errCodeNotImplemented, "The information you provided implies functionality that is not implemented") {
 		err = errDirectoryBucket(err)
 	}
 

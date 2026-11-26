@@ -56,7 +56,7 @@ func dataSourceRouteTable() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrFilter: customFiltersSchema(),
-				names.AttrTags:   tftags.TagsSchemaComputed(),
+				names.AttrTags:   tftags.TagsSchemaOptionalComputed(),
 				"routes": {
 					Type:     schema.TypeList,
 					Computed: true,

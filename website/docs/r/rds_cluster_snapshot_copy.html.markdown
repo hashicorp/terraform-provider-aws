@@ -59,11 +59,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `engine` - Name of the database engine.
 * `engine_version` - Version of the database engine.
 * `id` - Cluster snapshot identifier.
-* `kms_key_id` - ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
-* `shared_accounts` - List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `snapshot_type` - Type of the DB cluster snapshot.
-* `source_db_cluster_snapshot_identifier` - DB snapshot ARN that the DB cluster snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `storage_encrypted` - Whether the DB cluster snapshot is encrypted.
 * `storage_type` - Storage type associated with DB cluster snapshot.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

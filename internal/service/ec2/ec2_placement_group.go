@@ -76,7 +76,7 @@ func resourcePlacementGroup() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.PlacementStrategy](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 

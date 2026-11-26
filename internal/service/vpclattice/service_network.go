@@ -60,7 +60,7 @@ func resourceServiceNetwork() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(3, 63),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

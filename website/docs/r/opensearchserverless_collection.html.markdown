@@ -76,21 +76,21 @@ The following arguments are optional:
 
 * `collection_group_name` - (Optional, Forces new resource) Name of the collection group to associate with this collection.
 * `description` - (Optional) Description of the collection.
-* `encryption_config` - (Optional, Forces new resource) Configuration block for direct collection encryption settings. See [`encryption_config`](#encryption_config) below for details.
+* `encryption_config` - (Optional, Forces new resource) Configuration block for direct collection encryption settings. See [`encryption_config`](#encryption_config-block) below for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `standby_replicas` - (Optional) Whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.
-* `vector_options` - (Optional) Configuration block for vector search options. Only valid when `type` is `VECTORSEARCH`. See [`vector_options`](#vector_options) below for details.
+* `vector_options` - (Optional) Configuration block for vector search options. Only valid when `type` is `VECTORSEARCH`. See [`vector_options`](#vector_options-block) below for details.
 
-### `encryption_config`
+### `encryption_config` Block
 
 Specify one of the following:
 
 * `aws_owned_key` - (Optional) Whether to use an AWS owned key for collection encryption.
 * `kms_key_arn` - (Optional) ARN of the AWS KMS key to use for collection encryption.
 
-### `vector_options`
+### `vector_options` Block
 
 * `serverless_vector_acceleration` - (Required) Status of serverless vector acceleration for the collection. One of `ENABLED`, `DISABLED`, or `ALLOWED`.
 

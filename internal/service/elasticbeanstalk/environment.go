@@ -186,7 +186,7 @@ func resourceEnvironment() *schema.Resource {
 					ConflictsWith: []string{"platform_arn", "template_name"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"template_name": {
 					Type:          schema.TypeString,
 					Optional:      true,

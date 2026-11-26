@@ -85,7 +85,7 @@ func DataSourceThesaurus() *schema.Resource {
 					Type:     schema.TypeInt,
 					Computed: true,
 				},
-				names.AttrTags: tftags.TagsSchemaComputed(),
+				names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"term_count": {
 					Type:     schema.TypeInt,
 					Computed: true,

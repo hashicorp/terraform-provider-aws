@@ -266,7 +266,7 @@ func resourceObject() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.ObjectStorageClass](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"version_id": {
 					Type:     schema.TypeString,
 					Computed: true,

@@ -23,7 +23,7 @@ resource "aws_notifications_notification_hub" "example" {
 
 The following arguments are required:
 
-* `notification_hub_region` - Notification Hub region.
+* `notification_hub_region` - (Required) Notification Hub region.
 
 ## Attribute Reference
 

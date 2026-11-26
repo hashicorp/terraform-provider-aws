@@ -150,7 +150,7 @@ func resourceAssociation() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.AssociationSyncCompliance](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"targets": {
 					Type:     schema.TypeList,
 					Optional: true,

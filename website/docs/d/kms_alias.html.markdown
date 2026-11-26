@@ -33,6 +33,5 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN of the key alias.
 * `id` - ARN of the key alias.
-* `name` - Name of the alias
 * `target_key_arn` - ARN pointed to by the alias.
 * `target_key_id` - Key identifier pointed to by the alias.

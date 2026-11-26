@@ -334,7 +334,7 @@ func resourceMetricAlarm() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.Statistic](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"threshold": {
 					Type:          schema.TypeFloat,
 					Optional:      true,

@@ -30,10 +30,10 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the Site.
-* `location` - (Optional) Site location. [See below](#location).
+* `location` - (Optional) Site location. [See below](#location-block).
 * `tags` - (Optional) Key-value tags for the Site. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### location
+### `location` Block
 
 * `address` - (Optional) Address of the location.
 * `latitude` - (Optional) Latitude of the location.

@@ -378,7 +378,7 @@ func resourceObjectCopy() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[types.TaggingDirective](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"version_id": {
 					Type:     schema.TypeString,
 					Computed: true,

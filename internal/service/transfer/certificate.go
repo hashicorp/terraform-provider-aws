@@ -85,7 +85,7 @@ func resourceCertificate() *schema.Resource {
 					//ExactlyOneOf: []string{"certificate_chain", "private_key"},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"usage": {
 					Type:             schema.TypeString,
 					Required:         true,

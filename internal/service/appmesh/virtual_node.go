@@ -88,7 +88,7 @@ func resourceVirtualNode() *schema.Resource {
 				},
 				"spec":            resourceVirtualNodeSpecSchema(),
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

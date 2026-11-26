@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -151,6 +152,7 @@ func resourceCluster() *schema.Resource {
 					ValidateFunc:  validIdentifierPrefix,
 					ConflictsWith: []string{names.AttrClusterIdentifier},
 				},
+				// Warns when configured: see ValidateRawResourceConfigFuncs.
 				"cluster_members": {
 					Type:     schema.TypeSet,
 					Optional: true,
@@ -711,7 +713,7 @@ func resourceCluster() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"upgrade_rollout_order": {
 					Type:     schema.TypeString,
 					Computed: true,
@@ -728,6 +730,10 @@ func resourceCluster() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 			}
+		},
+
+		ValidateRawResourceConfigFuncs: []schema.ValidateRawResourceConfigFunc{
+			sdkv2.WarnShouldBeComputedOnlyRawConfig("cluster_members"),
 		},
 
 		CustomizeDiff: customdiff.Sequence(

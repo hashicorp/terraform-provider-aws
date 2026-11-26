@@ -74,7 +74,7 @@ func resourceUserProfile() *schema.Resource {
 					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"user_profile_name": {
 					Type:     schema.TypeString,
 					Required: true,

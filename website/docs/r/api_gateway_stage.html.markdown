@@ -12,8 +12,6 @@ Manages an API Gateway Stage. A stage is a named reference to a deployment, whic
 
 ## Example Usage
 
-An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
-
 ```terraform
 resource "aws_api_gateway_rest_api" "example" {
   body = jsonencode({

@@ -128,6 +128,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_ipam_pool_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_netmask_length", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "main_route_table_id"),
+					testAccCheckVPCNetworkFirewallAssociation(resourceName, &v),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -140,6 +141,23 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckVPCNetworkFirewallAssociation(resourceName string, vpc *awstypes.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		checks := []resource.TestCheckFunc{
+			resource.TestCheckResourceAttr(resourceName, "network_firewall_association.#", fmt.Sprint(len(vpc.NetworkFirewallAssociations))),
+		}
+		for i, association := range vpc.NetworkFirewallAssociations {
+			prefix := fmt.Sprintf("network_firewall_association.%d.", i)
+			checks = append(checks,
+				resource.TestCheckResourceAttr(resourceName, prefix+"firewall_arn", aws.ToString(association.FirewallArn)),
+				resource.TestCheckResourceAttr(resourceName, prefix+"firewall_mode", string(association.FirewallMode)),
+				resource.TestCheckResourceAttr(resourceName, prefix+"firewall_onboarding_status", string(association.FirewallOnboardingStatus)),
+			)
+		}
+		return resource.ComposeAggregateTestCheckFunc(checks...)(s)
+	}
 }
 
 func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {

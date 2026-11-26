@@ -275,6 +275,126 @@ resource "aws_api_gateway_integration" "example" {
 }
 ```
 
+### AWS Service Integration (S3 Proxy)
+
+This example proxies `GET /{key}` requests to `GetObject` on an S3 bucket. An integration of type `AWS` calls an AWS service API directly using the IAM role in `credentials`. The `Content-Type` header is passed through from S3, and S3 `4xx` errors are mapped to a `400` response with `selection_pattern`.
+
+```terraform
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "example" {
+  name               = "example-api-gateway-s3"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "s3_read" {
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.example.arn}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  name   = "s3-read"
+  role   = aws_iam_role.example.id
+  policy = data.aws_iam_policy_document.s3_read.json
+}
+
+resource "aws_api_gateway_rest_api" "example" {
+  name = "example"
+}
+
+resource "aws_api_gateway_resource" "example" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  parent_id   = aws_api_gateway_rest_api.example.root_resource_id
+  path_part   = "{key}"
+}
+
+resource "aws_api_gateway_method" "example" {
+  rest_api_id   = aws_api_gateway_rest_api.example.id
+  resource_id   = aws_api_gateway_resource.example.id
+  http_method   = "GET"
+  authorization = "AWS_IAM"
+
+  request_parameters = {
+    "method.request.path.key" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "example" {
+  rest_api_id             = aws_api_gateway_rest_api.example.id
+  resource_id             = aws_api_gateway_resource.example.id
+  http_method             = aws_api_gateway_method.example.http_method
+  type                    = "AWS"
+  integration_http_method = "GET"
+  uri                     = "arn:${data.aws_partition.current.partition}:apigateway:${data.aws_region.current.region}:s3:path/${aws_s3_bucket.example.bucket}/{key}"
+  credentials             = aws_iam_role.example.arn
+
+  request_parameters = {
+    "integration.request.path.key" = "method.request.path.key"
+  }
+}
+
+resource "aws_api_gateway_method_response" "ok" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  resource_id = aws_api_gateway_resource.example.id
+  http_method = aws_api_gateway_method.example.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "client_error" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  resource_id = aws_api_gateway_resource.example.id
+  http_method = aws_api_gateway_method.example.http_method
+  status_code = "400"
+}
+
+resource "aws_api_gateway_integration_response" "ok" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  resource_id = aws_api_gateway_resource.example.id
+  http_method = aws_api_gateway_method.example.http_method
+  status_code = aws_api_gateway_method_response.ok.status_code
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+
+  depends_on = [aws_api_gateway_integration.example]
+}
+
+resource "aws_api_gateway_integration_response" "client_error" {
+  rest_api_id       = aws_api_gateway_rest_api.example.id
+  resource_id       = aws_api_gateway_resource.example.id
+  http_method       = aws_api_gateway_method.example.http_method
+  status_code       = aws_api_gateway_method_response.client_error.status_code
+  selection_pattern = "4\\d{2}"
+
+  depends_on = [aws_api_gateway_integration.example]
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:

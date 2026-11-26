@@ -115,7 +115,7 @@ func resourceReportDefinition() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(awsRegion_Values(), false),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"time_unit": {
 					Type:             schema.TypeString,
 					Required:         true,

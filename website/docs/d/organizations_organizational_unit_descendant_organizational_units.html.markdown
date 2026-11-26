@@ -32,6 +32,6 @@ This data source exports the following attributes in addition to the arguments a
 
 * `children` - List of child organizational units, which have the following attributes:
     * `arn` - ARN of the organizational unit
-    * `name` - Name of the organizational unit
     * `id` - ID of the organizational unit
+    * `name` - Name of the organizational unit
 * `id` - Parent identifier of the organizational units.

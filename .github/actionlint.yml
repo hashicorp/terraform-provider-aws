@@ -4,3 +4,8 @@
 self-hosted-runner:
   # Labels of self-hosted runner in array of string
   labels: [custom-ubuntu-22.04-small, custom-ubuntu-22.04-medium, custom-ubuntu-22.04-large, custom-ubuntu-22.04-xl]
+
+paths:
+  .github/workflows/update-changelog.yml:
+    ignore:
+      - 'unexpected key "queue" for "concurrency" section'

@@ -1,3 +1,0 @@
-```release-note:new-resource
-aws_pinpointsmsvoicev2_account_default_protect_configuration
-```

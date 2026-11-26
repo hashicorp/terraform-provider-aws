@@ -1461,7 +1461,7 @@ func resourceDomain() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.TagPropagation](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrURL: {
 					Type:     schema.TypeString,
 					Computed: true,

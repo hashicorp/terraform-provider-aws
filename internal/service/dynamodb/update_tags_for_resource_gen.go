@@ -81,6 +81,8 @@ func waitTagsPropagedForResource(ctx context.Context, conn *dynamodb.Client, id 
 			return false, smarterr.NewError(err)
 		}
 
+		output = output.IgnoreSystem(names.DynamoDB)
+
 		if inContext, ok := tftags.FromContext(ctx); ok {
 			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)

@@ -33,9 +33,8 @@ This data source exports the following attributes in addition to the arguments a
 
 * `db_system_shapes` - List of shapes and their properties. Information about a hardware system model (shape) that's available for an Exadata infrastructure. The shape determines resources, such as CPU cores, memory, and storage, to allocate to the Exadata infrastructure.
 
-### db_system_shapes
+### `db_system_shapes` Block
 
-* `are_server_types_supported` - Whether the hardware system model supports configurable database and server storage types.
 * `available_core_count` - Maximum number of CPU cores that can be enabled for the shape.
 * `available_core_count_per_node` - Maximum number of CPU cores per DB node that can be enabled for the shape.
 * `available_data_storage_in_tbs` - Maximum amount of data storage, in terabytes (TB), that can be enabled for the shape.
@@ -44,7 +43,6 @@ This data source exports the following attributes in addition to the arguments a
 * `available_db_node_storage_in_gbs` - Maximum amount of DB node storage, in gigabytes (GB), that can be enabled for the shape.
 * `available_memory_in_gbs` - Maximum amount of memory, in gigabytes (GB), that can be enabled for the shape.
 * `available_memory_per_node_in_gbs` - Maximum amount of memory, in gigabytes (GB), that's available per DB node for the shape.
-* `compute_model` - OCI compute model used when creating or cloning an instance: ECPU or OCPU.
 * `core_count_increment` - Discrete number by which the CPU core count for the shape can be increased or decreased.
 * `max_storage_count` - Maximum number of Exadata storage servers available for the shape.
 * `maximum_node_count` - Maximum number of compute servers available for the shape.

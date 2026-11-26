@@ -145,7 +145,7 @@ func resourceDetector() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.FindingPublishingFrequency](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

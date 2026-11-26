@@ -81,7 +81,8 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 
 	_, err := conn.PutBucketOwnershipControls(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "OwnershipControls is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "OwnershipControls is not valid, expected CreateBucketConfiguration") ||
+		tfawserr.ErrMessageContains(err, errCodeNotImplemented, "The information you provided implies functionality that is not implemented") {
 		err = errDirectoryBucket(err)
 	}
 

@@ -179,6 +179,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 			// Attempt ListTagsForResource first, fall back to GetBucketTagging.
 			tags, err = tfs3control.ListTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountID)
 			if errs.Contains(err, "is not authorized to perform: s3:ListTagsForResource") ||
+				tfawserr.ErrCodeEquals(err, errCodeAccessDenied) ||
 				tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed) {
 				tags, err = bucketListTags(ctx, conn, identifier)
 			}
@@ -235,7 +236,9 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 		if accountID := c.AccountID(ctx); accountID != "" {
 			// Attempt Tag/UntagResource first, fall back to Put/DeleteBucketTagging.
 			err = tfs3control.UpdateTags(ctx, c.S3ControlClient(ctx), bucketARN(ctx, c, identifier), accountID, oldTags, newTags)
-			if errs.Contains(err, "is not authorized to perform: s3:TagResource") || errs.Contains(err, "is not authorized to perform: s3:UntagResource") ||
+			if errs.Contains(err, "is not authorized to perform: s3:TagResource") ||
+				errs.Contains(err, "is not authorized to perform: s3:UntagResource") ||
+				tfawserr.ErrCodeEquals(err, errCodeAccessDenied) ||
 				tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed) {
 				return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
 			}

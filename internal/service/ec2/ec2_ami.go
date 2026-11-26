@@ -278,7 +278,7 @@ func resourceAMI() *schema.Resource {
 					Default:  sriovNetSupportSimple,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"tpm_support": {
 					Type:             schema.TypeString,
 					Optional:         true,

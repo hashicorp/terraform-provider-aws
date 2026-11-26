@@ -38,6 +38,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `expiration_data_rule` - (Optional) Expiration data rule configuration. See [`expiration_data_rule`](#expiration_data_rule-block) below.
+* `latest_version_number` - (Optional) Version number of the synchronization configuration. If omitted, the service assigns it and the value is exported after apply.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ### `import_data_rule` Block
@@ -52,9 +53,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
-
-* `latest_version_number` - Latest synchronization configuration version number.
+This resource exports no additional attributes.
 
 ## Import
 

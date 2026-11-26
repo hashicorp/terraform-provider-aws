@@ -65,15 +65,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `application_id` - Application ID of the End User Messaging App.
 * `arn` - ARN of the PinPoint Application.
-* `campaign_hook[0].lambda_function_name` - Lambda function name or ARN to be called for delivery.
-* `campaign_hook[0].mode` - What mode Lambda should be invoked in.
-* `campaign_hook[0].web_url` - Web URL to call for hook.
-* `limits[0].daily` - Maximum number of messages that the campaign can send daily.
-* `limits[0].maximum_duration` - Length of time (in seconds) that the campaign can run before it ends and message deliveries stop.
-* `limits[0].messages_per_second` - Number of messages that the campaign can send per second.
-* `limits[0].total` - Maximum total number of messages that the campaign can send.
-* `quiet_time[0].end` - Default end time for quiet time in ISO 8601 format.
-* `quiet_time[0].start` - Default start time for quiet time in ISO 8601 format.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

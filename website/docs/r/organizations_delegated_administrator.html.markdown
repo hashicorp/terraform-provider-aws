@@ -23,21 +23,21 @@ resource "aws_organizations_delegated_administrator" "example" {
 
 This resource supports the following arguments:
 
-* `account_id` - (Required) The account ID number of the member account in the organization to register as a delegated administrator.
-* `service_principal` - (Required) The service principal of the AWS service for which you want to make the member account a delegated administrator.
+* `account_id` - (Required) Account ID number of the member account in the organization to register as a delegated administrator.
+* `service_principal` - (Required) Service principal of the AWS service for which you want to make the member account a delegated administrator.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The unique identifier (ID) of the delegated administrator.
 * `arn` - ARN of the delegated administrator's account.
-* `delegation_enabled_date` - The date when the account was made a delegated administrator.
-* `email` - The email address that is associated with the delegated administrator's AWS account.
-* `joined_method` - The method by which the delegated administrator's account joined the organization.
-* `joined_timestamp` - The date when the delegated administrator's account became a part of the organization.
-* `name` - The friendly name of the delegated administrator's account.
-* `status` - The status of the delegated administrator's account in the organization.
+* `delegation_enabled_date` - Date when the account was made a delegated administrator.
+* `email` - Email address that is associated with the delegated administrator's AWS account.
+* `id` - Unique identifier (ID) of the delegated administrator.
+* `joined_method` - Method by which the delegated administrator's account joined the organization.
+* `joined_timestamp` - Date when the delegated administrator's account became a part of the organization.
+* `name` - Friendly name of the delegated administrator's account.
+* `status` - Status of the delegated administrator's account in the organization.
 
 ## Import
 
