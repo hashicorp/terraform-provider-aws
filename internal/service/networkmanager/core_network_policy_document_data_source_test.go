@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -1289,6 +1290,180 @@ const testAccPolicyDocumentRoutingPolicyNamesExpectedJSON = `{
     }
   ]
 }`
+
+// lintignore:AWSAT003
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_multipathResilience(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_networkmanager_core_network_policy_document.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(`
+    multipath_resilience {
+      mode = "best-effort"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff(dataSourceName, names.AttrJSON, testAccPolicyDocumentMultipathResilienceExpectedJSON(`
+    "multipath-resilience": {
+      "mode": "best-effort"
+    }`)),
+				),
+			},
+			{
+				// The second edge set is listed in reverse order to check that each pair is rendered sorted.
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(`
+    multipath_resilience {
+      mode = "best-effort"
+
+      edge_sets {
+        edge_locations = ["us-east-1", "eu-west-1"]
+      }
+      edge_sets {
+        edge_locations = ["us-west-2", "eu-west-1"]
+      }
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff(dataSourceName, names.AttrJSON, testAccPolicyDocumentMultipathResilienceExpectedJSON(`
+    "multipath-resilience": {
+      "mode": "best-effort",
+      "edge-sets": [
+        {
+          "edge-locations": ["eu-west-1", "us-east-1"]
+        },
+        {
+          "edge-locations": ["eu-west-1", "us-west-2"]
+        }
+      ]
+    }`)),
+				),
+			},
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(`
+    multipath_resilience {
+      mode = "disabled"
+    }
+`),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff(dataSourceName, names.AttrJSON, testAccPolicyDocumentMultipathResilienceExpectedJSON(`
+    "multipath-resilience": {
+      "mode": "disabled"
+    }`)),
+				),
+			},
+		},
+	})
+}
+
+// lintignore:AWSAT003
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_multipathResilienceErrors(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(`
+    multipath_resilience {
+      mode = "best-effort"
+
+      edge_sets {
+        edge_locations = ["us-east-1", "us-east-2"]
+      }
+    }
+`),
+				ExpectError: regexache.MustCompile(`multipath_resilience edge_sets location \(us-east-2\) is not defined in\s+core_network_configuration edge_locations`),
+			},
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(`
+    multipath_resilience {
+      mode = "best-effort"
+
+      edge_sets {
+        edge_locations = ["us-east-1", "us-east-1"]
+      }
+    }
+`),
+				ExpectError: regexache.MustCompile(`requires 2 item minimum, but config has only 1\s+declared`),
+			},
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(`
+    multipath_resilience {
+      mode = "always-on"
+    }
+`),
+				ExpectError: regexache.MustCompile(`expected core_network_configuration.0.multipath_resilience.0.mode to be one of`),
+			},
+		},
+	})
+}
+
+// lintignore:AWSAT003
+func testAccCoreNetworkPolicyDocumentDataSourceConfig_multipathResilience(multipathResilience string) string {
+	return fmt.Sprintf(`
+data "aws_networkmanager_core_network_policy_document" "test" {
+  core_network_configuration {
+    asn_ranges = ["64512-64555"]
+
+    edge_locations {
+      location = "us-east-1"
+    }
+    edge_locations {
+      location = "us-west-2"
+    }
+    edge_locations {
+      location = "eu-west-1"
+    }
+%[1]s
+  }
+
+  segments {
+    name = "prod"
+  }
+}
+`, multipathResilience)
+}
+
+// lintignore:AWSAT003
+func testAccPolicyDocumentMultipathResilienceExpectedJSON(multipathResilience string) string {
+	return fmt.Sprintf(`{
+  "version": "2021.12",
+  "core-network-configuration": {
+    "asn-ranges": [
+      "64512-64555"
+    ],
+    "vpn-ecmp-support": true,
+    "edge-locations": [
+      {
+        "location": "us-east-1"
+      },
+      {
+        "location": "us-west-2"
+      },
+      {
+        "location": "eu-west-1"
+      }
+    ],
+    "dns-support": true,
+    "security-group-referencing-support": false,
+%[1]s
+  },
+  "segments": [
+    {
+      "name": "prod",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": true
+    }
+  ]
+}`, multipathResilience)
+}
 
 func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_attachmentRoutingPolicyRulesEmptyAction(t *testing.T) {
 	ctx := acctest.Context(t)

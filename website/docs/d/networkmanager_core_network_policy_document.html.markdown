@@ -235,6 +235,7 @@ The following arguments are available:
 * `dns_support` - (Optional) Whether DNS resolution is enabled for the core network. The value can be either `true` or `false`. When set to `true`, DNS resolution is enabled for VPCs attached to the core network, allowing resources in different VPCs to resolve each other's domain names. The default is `true`.
 * `edge_locations` - (Required) Block value of AWS Region locations where you're creating Core Network Edges. Detailed below.
 * `inside_cidr_blocks` - (Optional) Classless Inter-Domain Routing (CIDR) block range used to create tunnels for AWS Transit Gateway Connect. The format is standard AWS CIDR range (for example, `10.0.1.0/24`). You can optionally define the inside CIDR in the Core Network Edges section per Region. The minimum is a `/24` for IPv4 or `/64` for IPv6. You can provide multiple `/24` subnets or a larger CIDR range. If you define a larger CIDR range, new Core Network Edges will be automatically assigned `/24` and `/64` subnets from the larger CIDR. An Inside CIDR block is required for attaching Connect attachments to a Core Network Edge.
+* `multipath_resilience` - (Optional) Block argument that enables multipath resilience for cross-Region traffic between Core Network Edges. Detailed below.
 * `security_group_referencing_support` - (Optional) Whether security group referencing is enabled for the core network. The value can be either `true` or `false`. When set to `true`, security groups in one VPC can reference security groups in another VPC attached to the core network, enabling more flexible security configurations across your network. The default is `false`.
 * `vpn_ecmp_support` - (Optional) Whether the core network forwards traffic over multiple equal-cost routes using VPN. The value can be either `true` or `false`. The default is `true`.
 
@@ -245,6 +246,21 @@ The following arguments are available:
 * `asn` - (Optional) ASN of the Core Network Edge in an AWS Region. By default, the ASN will be a single integer automatically assigned from `asn_ranges`
 * `inside_cidr_blocks` - (Optional) Local CIDR blocks for this Core Network Edge for AWS Transit Gateway Connect attachments. By default, this CIDR block will be one or more optional IPv4 and IPv6 CIDR prefixes auto-assigned from `inside_cidr_blocks`.
 * `location` - (Required) AWS Region code, such as `us-east-1`.
+
+### `multipath_resilience` Block
+
+Multipath resilience replicates cross-Region traffic across multiple paths on the AWS global network. It incurs additional charges while enabled. See [Enable multipath resilience in a core network policy](https://docs.aws.amazon.com/network-manager/latest/cloudwan/enable-multipath-resilience-cloudwan.html) for more information and the supported Regions.
+
+The following arguments are available:
+
+* `edge_sets` - (Optional) Pairs of edge locations to cover. When omitted, multipath resilience covers all eligible pairs of edge locations. Detailed below.
+* `mode` - (Required) Multipath resilience mode. Valid values: `best-effort`, `disabled`.
+
+#### `multipath_resilience.edge_sets` Block
+
+The following arguments are available:
+
+* `edge_locations` - (Required) Set of exactly two AWS Region codes. Each must be defined in `edge_locations`. The pair covers traffic in both directions.
 
 ### `segments` Block
 

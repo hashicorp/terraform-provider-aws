@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-26T16:37:18.000000+01:00
+custom:
+    Body: Add `core_network_configuration.multipath_resilience` argument
+    Impact: data-source/aws_networkmanager_core_network_policy_document
+    PullRequest: "51105"
