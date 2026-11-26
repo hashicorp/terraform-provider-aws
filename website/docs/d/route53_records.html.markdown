@@ -59,6 +59,9 @@ This data source exports the following attributes in addition to the arguments a
         * `dns_name` - Target DNS name.
         * `evaluate_target_health` - Whether an alias resource record set inherits the health of the referenced AWS resource.
         * `hosted_zone_id` - Target hosted zone ID.
+    * `az_affinity` - Information about the Availability Zone, Zone Group, Region or partition that the query must come from for Route 53 to use this record.
+        * `location_id` - The location ID, such as an Availability Zone ID (`use1-az1`), a Zone Group (`us-east-1-zg-1`), a Region (`us-east-1`), a partition (`aws`) or `global`.
+        * `location_type` - `AvailabilityZone`, `AvailabilityZoneGroup`, `Region`, `Partition` or `Global`.
     * `cidr_routing_config` - Information about the CIDR location traffic is routed to.
         * `collection_id` - The CIDR collection ID.
         * `location_name` - The CIDR collection location name.

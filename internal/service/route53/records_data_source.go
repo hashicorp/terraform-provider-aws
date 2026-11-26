@@ -96,6 +96,7 @@ type recordsDataSourceModel struct {
 
 type resourceRecordSetModelReadonly struct {
 	AliasTarget             fwtypes.ObjectValueOf[aliasTargetModel]                  `tfsdk:"alias_target"`
+	AZAffinity              fwtypes.ObjectValueOf[azAffinityModel]                   `tfsdk:"az_affinity"`
 	CIDRRoutingConfig       fwtypes.ObjectValueOf[cidrRoutingConfigModel]            `tfsdk:"cidr_routing_config"`
 	Failover                fwtypes.StringEnum[awstypes.ResourceRecordSetFailover]   `tfsdk:"failover"`
 	GeoLocation             fwtypes.ObjectValueOf[geoLocationModel]                  `tfsdk:"geolocation"`

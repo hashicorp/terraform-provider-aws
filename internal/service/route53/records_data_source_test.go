@@ -46,6 +46,34 @@ func TestAccRoute53RecordsDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccRoute53RecordsDataSource_azAffinity(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_route53_records.test"
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordsDataSourceConfig_azAffinity(zoneName.String(), recordName.String()),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New("resource_record_sets"), knownvalue.ListExact([]knownvalue.Check{knownvalue.MapPartial(map[string]knownvalue.Check{
+						names.AttrName:   knownvalue.StringExact(recordName.String() + "."),
+						"set_identifier": knownvalue.StringExact("regional"),
+						"az_affinity": knownvalue.MapExact(map[string]knownvalue.Check{
+							"location_id":   knownvalue.StringExact(acctest.Region()),
+							"location_type": tfknownvalue.StringExact(awstypes.AZAffinityLocationTypeRegion),
+						}),
+					})})),
+				},
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/46426.
 func TestAccRoute53RecordsDataSource_wildcardRegexInvalid(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -102,6 +130,42 @@ resource "aws_route53_record" "test" {
 
 data "aws_route53_records" "test" {
   zone_id    = aws_route53_record.test.zone_id
+  name_regex = "^%[2]s"
+}
+`, zName, rName)
+}
+
+func testAccRecordsDataSourceConfig_azAffinity(zName, rName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route53_zone" "test" {
+  name          = "%[1]s."
+  force_destroy = true
+}
+
+resource "aws_route53_records_exclusive" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+
+  resource_record_set {
+    name           = %[2]q
+    type           = "A"
+    ttl            = 60
+    set_identifier = "regional"
+
+    az_affinity {
+      location_type = "Region"
+      location_id   = data.aws_region.current.region
+    }
+
+    resource_records {
+      value = "127.0.0.1"
+    }
+  }
+}
+
+data "aws_route53_records" "test" {
+  zone_id    = aws_route53_records_exclusive.test.zone_id
   name_regex = "^%[2]s"
 }
 `, zName, rName)
