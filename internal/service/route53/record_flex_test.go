@@ -134,6 +134,7 @@ func TestParseRecordID(t *testing.T) {
 func TestValidateAZAffinityLocation(t *testing.T) {
 	t.Parallel()
 
+	//lintignore:AWSAT003
 	testCases := []struct {
 		locationType awstypes.AZAffinityLocationType
 		locationID   string

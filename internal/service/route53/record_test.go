@@ -1536,8 +1536,8 @@ func TestAccRoute53Record_AZAffinity_validation(t *testing.T) {
 				ExpectError: regexache.MustCompile(`must contain only lowercase alphanumeric characters and hyphens`),
 			},
 			{
-				Config:      testAccRecordConfig_azAffinityLiteral(string(awstypes.AZAffinityLocationTypeAvailabilityZone), "us-east-1a"),
-				ExpectError: regexache.MustCompile(`location_id "us-east-1a" is not valid for location_type "AvailabilityZone"`),
+				Config:      testAccRecordConfig_azAffinityLiteral(string(awstypes.AZAffinityLocationTypeAvailabilityZone), "us-east-1a"), //lintignore:AWSAT003
+				ExpectError: regexache.MustCompile(`location_id "us-east-1a" is not valid for location_type "AvailabilityZone"`),          //lintignore:AWSAT003
 			},
 			{
 				Config:      testAccRecordConfig_azAffinityLiteral(string(awstypes.AZAffinityLocationTypeGlobal), "aws"),

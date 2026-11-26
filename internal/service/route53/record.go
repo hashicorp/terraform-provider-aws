@@ -1128,9 +1128,9 @@ func validateAZAffinityLocation(locationType awstypes.AZAffinityLocationType, lo
 	case awstypes.AZAffinityLocationTypeAvailabilityZone:
 		pattern, example = `^[0-9a-z]+(-[0-9a-z]+)*-az[0-9]+$`, "use1-az1"
 	case awstypes.AZAffinityLocationTypeAvailabilityZoneGroup:
-		pattern, example = `^`+inttypes.CanonicalRegionPatternNoAnchors+`-zg-[0-9]+$`, "us-east-1-zg-1"
+		pattern, example = `^`+inttypes.CanonicalRegionPatternNoAnchors+`-zg-[0-9]+$`, "us-east-1-zg-1" //lintignore:AWSAT003
 	case awstypes.AZAffinityLocationTypeRegion:
-		pattern, example = inttypes.CanonicalRegionPattern, "us-east-1"
+		pattern, example = inttypes.CanonicalRegionPattern, "us-east-1" //lintignore:AWSAT003
 	case awstypes.AZAffinityLocationTypePartition:
 		pattern, example = `^aws(-[a-z]+)*$`, "aws"
 	case awstypes.AZAffinityLocationTypeGlobal:
