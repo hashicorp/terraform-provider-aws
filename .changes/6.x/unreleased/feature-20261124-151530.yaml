@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-24T15:15:30.937555-06:00
+custom:
+    Name: aws_ebs_encryption_by_default
+    NewType: New List Resource
+    PullRequest: "50866"

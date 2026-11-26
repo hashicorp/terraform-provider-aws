@@ -1,0 +1,8 @@
+kind: bug
+time: 2026-11-24T12:32:03.669153-05:00
+custom:
+    Body: 'Fix `DescribeTags ... ValidationException: 1 validation error detected: Value ''...'' at ''fileSystemId'' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission'
+    Impact: |-
+        resource/aws_efs_access_point
+        data-source/aws_efs_access_point
+    PullRequest: "49938"

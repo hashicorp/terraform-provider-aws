@@ -22,8 +22,8 @@ data "aws_opensearch_domain" "my_domain" {
 
 This data source supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `domain_name` - (Required) Name of the domain.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
 ## Attribute Reference
 
@@ -39,45 +39,45 @@ This data source exports the following attributes in addition to the arguments a
         * `enabled` - Whether JWT authentication is enabled.
         * `jwks_url` - URL endpoint that hosts the JSON Web Key Set (JWKS) containing public keys used to verify JWT signatures.
         * `public_key` - PEM-encoded public key used to verify JWT signatures.
-        * `role_key` - Element of the JWT assertion to use for roles.
+        * `roles_key` - Element of the JWT assertion to use for roles.
         * `subject_key` - Element of the JWT assertion to use for the user name.
 * `arn` - ARN of the domain.
 * `auto_tune_options` - Configuration of the Auto-Tune options of the domain.
     * `desired_state` - Auto-Tune desired state for the domain.
-    * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
-        * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
-        * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
-            * `value` - Duration of an Auto-Tune maintenance window.
-            * `unit` - Unit of time.
+    * `maintenance_schedule` - List of the nested configurations for the Auto-Tune maintenance windows of the domain.
         * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
+        * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
+            * `unit` - Unit of time.
+            * `value` - Duration of an Auto-Tune maintenance window.
+        * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
     * `use_off_peak_window` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.
-        * `enabled` - Indicates  cold storage is enabled.
-    * `instance_type` - Instance type of data nodes in the cluster.
-    * `instance_count` - Number of instances in the cluster.
-    * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
-    * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
+        * `enabled` - Whether cold storage is enabled.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
+    * `dedicated_master_enabled` - Whether dedicated master nodes are enabled for the cluster.
+    * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
+    * `instance_count` - Number of instances in the cluster.
+    * `instance_type` - Instance type of data nodes in the cluster.
     * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `node_options` - List of node options for the domain.
         * `node_config` - Sizing of a node type.
             * `count` - Number of nodes of a particular node type in the cluster.
             * `enabled` - Whether a particular node type is enabled.
-            * `type` - The instance type of a particular node type in the cluster.
+            * `type` - Instance type of a particular node type in the cluster.
         * `node_type` - Type of node this configuration describes.
-    * `warm_enabled` - Warm storage is enabled.
     * `warm_count` - Number of warm nodes in the cluster.
+    * `warm_enabled` - Warm storage is enabled.
     * `warm_type` - Instance type for the OpenSearch cluster's warm nodes.
-    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
     * `zone_awareness_config` - Configuration block containing zone awareness settings.
         * `availability_zone_count` - Number of availability zones used.
+    * `zone_awareness_enabled` - Whether zone awareness is enabled.
 * `cognito_options` - Domain Amazon Cognito Authentication options for Dashboard.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
-    * `user_pool_id` - Cognito User pool used by the domain.
     * `identity_pool_id` - Cognito Identity pool used by the domain.
     * `role_arn` - IAM Role with the AmazonOpenSearchServiceCognitoAccess policy attached.
+    * `user_pool_id` - Cognito User pool used by the domain.
 * `created` - Status of the creation of the domain.
 * `dashboard_endpoint` - Domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html).
 * `dashboard_endpoint_v2` - V2 domain-specific endpoint used to access the [Dashboard application](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/dashboards.html)
@@ -88,16 +88,16 @@ This data source exports the following attributes in addition to the arguments a
 * `domain_id` - Unique identifier for the domain.
 * `ebs_options` - EBS Options for the instances in the domain.
     * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
-    * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
-    * `volume_type` - Type of EBS volumes attached to data nodes.
-    * `volume_size` - Size of EBS volumes attached to data nodes (in GB).
     * `iops` - Baseline input/output (I/O) performance of EBS volumes attached to data nodes.
-* `engine_version` - OpenSearch version for the domain.
+    * `throughput` - Throughput (in MiB/s) of the EBS volumes attached to data nodes.
+    * `volume_size` - Size of EBS volumes attached to data nodes (in GB).
+    * `volume_type` - Type of EBS volumes attached to data nodes.
 * `encryption_at_rest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
     * `kms_key_id` - KMS key ID used to encrypt data at rest.
 * `endpoint` - Domain-specific endpoint used to submit index, search, and data upload requests.
 * `endpoint_v2` - V2 domain-specific endpoint that works with both IPv4 and IPv6 addresses, used to submit index, search, and data upload requests.
+* `engine_version` - OpenSearch version for the domain.
 * `identity_center_options` - Configuration for enabling and managing IAM Identity Center integration within a domain.
     * `enabled_api_access` - Boolean whether IAM Identity Center is enabled for API access.
     * `identity_center_instance_arn` - ARN of the IAM Identity Center instance to create an OpenSearch UI application that uses IAM Identity Center for authentication.
@@ -105,9 +105,9 @@ This data source exports the following attributes in addition to the arguments a
     * `subject_key` - Attribute that contains the subject identifier (such as username, user ID, or email) in IAM Identity Center.
 * `ip_address_type` - Type of IP addresses supported by the endpoint for the domain.
 * `log_publishing_options` - Domain log publishing related options.
-    * `log_type` - Type of OpenSearch log being published.
     * `cloudwatch_log_group_arn` - CloudWatch Log Group where the logs are published.
     * `enabled` - Whether log publishing is enabled.
+    * `log_type` - Type of OpenSearch log being published.
 * `node_to_node_encryption` - Domain in transit encryption related options.
     * `enabled` - Whether node to node encryption is enabled.
 * `off_peak_window_options` - Off Peak update options
@@ -117,7 +117,7 @@ This data source exports the following attributes in addition to the arguments a
             * `hours` - Starting hour of the 10-hour window for updates
             * `minutes` - Starting minute of the 10-hour window for updates
 * `processing` - Status of a configuration change in the domain.
-* `snapshot_options` – Domain snapshot related options.
+* `snapshot_options` - Domain snapshot related options.
     * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `software_update_options` - Software update options for the domain
     * `auto_software_update_enabled` - Enabled or disabled.

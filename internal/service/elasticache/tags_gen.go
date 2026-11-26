@@ -192,6 +192,8 @@ func waitTagsPropagated(ctx context.Context, conn *elasticache.Client, id string
 			return false, smarterr.NewError(err)
 		}
 
+		output = output.IgnoreSystem(names.ElastiCache)
+
 		if inContext, ok := tftags.FromContext(ctx); ok {
 			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)

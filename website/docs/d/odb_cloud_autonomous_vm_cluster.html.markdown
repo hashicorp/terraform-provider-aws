@@ -84,3 +84,20 @@ This data source exports the following attributes in addition to the arguments a
 * `time_ords_certificate_expires` - Expiration date and time of the Oracle REST Data Services (ORDS) certificate.
 * `time_zone` - Time zone of the Autonomous VM cluster.
 * `total_container_databases` - Total number of Autonomous Container Databases that can be created with the allocated local storage.
+
+### `maintenance_window` Block
+
+* `days_of_week` - Days of the week when maintenance can be performed. See [`days_of_week` Block](#days_of_week-block) below.
+* `hours_of_day` - Hours of the day when maintenance can be performed.
+* `lead_time_in_weeks` - Lead time in weeks before the maintenance window.
+* `months` - Months when maintenance can be performed. See [`months` Block](#months-block) below.
+* `preference` - Preference for the maintenance window scheduling.
+* `weeks_of_month` - Weeks of the month when maintenance can be performed.
+
+#### `days_of_week` Block
+
+* `name` - Name of the day of the week.
+
+#### `months` Block
+
+* `name` - Name of the month.

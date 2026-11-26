@@ -14,6 +14,7 @@ import (
 var (
 	standardPartition, _ = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.UsEast1RegionID)
 	chinaPartition, _    = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.CnNorth1RegionID)
+	euscPartition, _     = endpoints.PartitionForRegion(endpoints.DefaultPartitions(), endpoints.EuscDeEast1RegionID)
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
@@ -592,6 +593,51 @@ func TestAWSClientRegionalARNWithRegion(t *testing.T) { // nosemgrep:ci.aws-in-f
 			t.Parallel()
 
 			got := testCase.AWSClient.RegionalARNWithRegion(ctx, testCase.Service, "region-1", testCase.Resource)
+
+			if got != testCase.Expected {
+				t.Errorf("got %s, expected %s", got, testCase.Expected)
+			}
+		})
+	}
+}
+
+func TestAWSClientCloudFrontDistributionHostedZoneID(t *testing.T) { // nosemgrep:ci.aws-in-func-name
+	t.Parallel()
+
+	ctx := t.Context()
+	testCases := []struct {
+		Name      string
+		AWSClient *AWSClient
+		Expected  string
+	}{
+		{
+			Name: "AWS Commercial",
+			AWSClient: &AWSClient{
+				partition: standardPartition,
+			},
+			Expected: "Z2FDTNDATAQYW2",
+		},
+		{
+			Name: "AWS China",
+			AWSClient: &AWSClient{
+				partition: chinaPartition,
+			},
+			Expected: "Z3RFFRIM2A3IF5",
+		},
+		{
+			Name: "AWS European Sovereign Cloud",
+			AWSClient: &AWSClient{
+				partition: euscPartition,
+			},
+			Expected: "Z02010231DDS20FNRTLEC",
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.Name, func(t *testing.T) {
+			t.Parallel()
+
+			got := testCase.AWSClient.CloudFrontDistributionHostedZoneID(ctx)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)

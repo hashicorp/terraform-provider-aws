@@ -1,0 +1,8 @@
+{
+  "Name": "qldb",
+  "ServiceName": "QLDB",
+  "Version": "v1.5",
+  "Actions": [
+    {"Name": "CreateLedger"}
+  ]
+}

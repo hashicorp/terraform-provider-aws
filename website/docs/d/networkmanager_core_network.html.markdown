@@ -33,14 +33,14 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN of the core network.
 * `created_at` - Time stamp when the core network was created.
 * `description` - Description of the core network.
-* `edges` - Edges within a core network. See [`edges` Attribute Reference](#edges-attribute-reference) for details.
+* `edges` - Edges within a core network. See [`edges` Block](#edges-block) for details.
 * `global_network_id` - ID of the global network that the core network is a part of.
-* `network_function_groups` - Network function groups associated with the core network. See [`network_function_groups` Attribute Reference](#network_function_groups-attribute-reference) for details.
-* `segments` - Segments within a core network. See [`segments` Attribute Reference](#segments-attribute-reference) for details.
+* `network_function_groups` - Network function groups associated with the core network. See [`network_function_groups` Block](#network_function_groups-block) for details.
+* `segments` - Segments within a core network. See [`segments` Block](#segments-block) for details.
 * `state` - Current state of the core network.
 * `tags` - Map of tags assigned to the resource.
 
-### `edges` Attribute Reference
+### `edges` Block
 
 The `edges` configuration block exports the following attributes:
 
@@ -48,22 +48,22 @@ The `edges` configuration block exports the following attributes:
 * `edge_location` - AWS region where the edge is located.
 * `inside_cidr_blocks` - Inside IP addresses used for core network edges.
 
-### `network_function_groups` Attribute Reference
+### `network_function_groups` Block
 
 The `network_function_groups` configuration block exports the following attributes:
 
 * `edge_locations` - Core network edge locations.
 * `name` - Name of the network function group.
-* `segments` - Segments associated with the network function group. See [`network_function_groups.segments` Attribute Reference](#network_function_groupssegments-attribute-reference) for details.
+* `segments` - Segments associated with the network function group. See [`network_function_groups.segments` Block](#network_function_groupssegments-block) for details.
 
-### `network_function_groups.segments` Attribute Reference
+### `network_function_groups.segments` Block
 
 The `network_function_groups.segments` configuration block exports the following attributes:
 
 * `send_to` - List of segments associated with the `send-to` action.
 * `send_via` - List of segments associated with the `send-via` action.
 
-### `segments` Attribute Reference
+### `segments` Block
 
 The `segments` configuration block exports the following attributes:
 

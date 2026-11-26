@@ -29,27 +29,27 @@ resource "aws_neptune_cluster_parameter_group" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Optional, Forces new resource) The name of the neptune cluster parameter group. If omitted, Terraform will assign a random, unique name.
+* `description` - (Optional) Description of the neptune cluster parameter group. Defaults to "Managed by Terraform".
+* `family` - (Required) Family of the neptune cluster parameter group.
+* `name` - (Optional, Forces new resource) Name of the neptune cluster parameter group. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
-* `family` - (Required) The family of the neptune cluster parameter group.
-* `description` - (Optional) The description of the neptune cluster parameter group. Defaults to "Managed by Terraform".
-* `parameter` - (Optional) A list of neptune parameters to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `parameter` - (Optional) List of neptune parameters to apply. See [`parameter` Block](#parameter-block) below.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Parameter blocks support the following:
+### parameter Block
 
-* `name` - (Required) The name of the neptune parameter.
-* `value` - (Required) The value of the neptune parameter.
 * `apply_method` - (Optional) Valid values are `immediate` and `pending-reboot`. Defaults to `pending-reboot`.
+* `name` - (Required) Name of the neptune parameter.
+* `value` - (Required) Value of the neptune parameter.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The neptune cluster parameter group name.
-* `arn` - The ARN of the neptune cluster parameter group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the neptune cluster parameter group.
+* `id` - Neptune cluster parameter group name.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

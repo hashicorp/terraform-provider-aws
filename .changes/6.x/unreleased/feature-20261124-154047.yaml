@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-24T15:40:47.879668-05:00
+custom:
+    Name: aws_eventbridgev2_event_bus
+    NewType: New Resource
+    PullRequest: "50438"

@@ -38,7 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value tags for the link.
 * `type` - Type of the link.
 
-The `bandwidth` object supports the following:
+### `bandwidth` Block
 
 * `download_speed` - Download speed in Mbps.
 * `upload_speed` - Upload speed in Mbps.

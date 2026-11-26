@@ -35,7 +35,7 @@ This data source exports the following attributes in addition to the arguments a
 * `location` - Site location as documented below.
 * `tags` - Key-value tags for the Site.
 
-The `location` object supports the following:
+### `location` Block
 
 * `address` - Address of the location.
 * `latitude` - Latitude of the location.

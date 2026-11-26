@@ -52,7 +52,6 @@ This data source exports the following attributes in addition to the arguments a
 * `db_node_storage_size_in_gbs` - Size of the storage available on each database node, in gigabytes (GB).
 * `db_server_version` - Version of the Exadata infrastructure.
 * `display_name` - Display name of the Exadata infrastructure.
-* `id` - Unique identifier of the Exadata infrastructure.
 * `last_maintenance_run_id` - Oracle Cloud Identifier (OCID) of the last maintenance run for the Exadata infrastructure.
 * `maintenance_window` - Scheduling details of the maintenance window. Patching and system updates take place during the maintenance window.
 * `max_cpu_count` - Total number of CPU cores available on the Exadata infrastructure.
@@ -75,3 +74,27 @@ This data source exports the following attributes in addition to the arguments a
 * `storage_server_version` - Software version of the storage servers on the Exadata infrastructure.
 * `tags` - Map of tags assigned to the Exadata infrastructure.
 * `total_storage_size_in_gbs` - Total amount of storage, in gigabytes (GB), on the Exadata infrastructure.
+
+### `customer_contacts_to_send_to_oci` Block
+
+* `email` - Email address of the contact.
+
+### `maintenance_window` Block
+
+* `custom_action_timeout_in_mins` - Custom action timeout in minutes for the maintenance window.
+* `days_of_week` - Days of the week when maintenance can be performed. See [`days_of_week` Block](#days_of_week-block) below.
+* `hours_of_day` - Hours of the day when maintenance can be performed.
+* `is_custom_action_timeout_enabled` - Whether custom action timeout is enabled for the maintenance window.
+* `lead_time_in_weeks` - Lead time in weeks before the maintenance window.
+* `months` - Months when maintenance can be performed. See [`months` Block](#months-block) below.
+* `patching_mode` - Patching mode for the maintenance window.
+* `preference` - Preference for the maintenance window scheduling.
+* `weeks_of_month` - Weeks of the month when maintenance can be performed.
+
+#### `days_of_week` Block
+
+* `name` - Name of the day of the week.
+
+#### `months` Block
+
+* `name` - Name of the month.

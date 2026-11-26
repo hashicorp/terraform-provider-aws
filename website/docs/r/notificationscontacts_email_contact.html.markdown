@@ -29,24 +29,19 @@ resource "aws_notificationscontacts_email_contact" "example" {
 
 The following arguments are required:
 
-* `email_address` - (Required) Email address for the contact. Must be between 6 and 254 characters and match an email
-  pattern.
-* `name` - (Required) Name of the email contact. Must be between 1 and 64 characters and can contain alphanumeric
-  characters, underscores, tildes, periods, and hyphens.
+* `email_address` - (Required) Email address for the contact. Must be between 6 and 254 characters and match an email pattern.
+* `name` - (Required) Name of the email contact. Must be between 1 and 64 characters and can contain alphanumeric characters, underscores, tildes, periods, and hyphens.
 
 The following arguments are optional:
 
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [
-  `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block)
-  present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Email Contact.
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [
-  `default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

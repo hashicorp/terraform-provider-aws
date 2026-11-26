@@ -250,7 +250,8 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 		return conn.PutBucketWebsite(ctx, &input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "WebsiteConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "WebsiteConfiguration is not valid, expected CreateBucketConfiguration") ||
+		tfawserr.ErrMessageContains(err, errCodeNotImplemented, "The information you provided implies functionality that is not implemented") {
 		err = errDirectoryBucket(err)
 	}
 

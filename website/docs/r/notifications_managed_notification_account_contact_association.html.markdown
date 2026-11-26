@@ -24,7 +24,7 @@ resource "aws_notifications_managed_notification_account_contact_association" "e
 
 The following arguments are required:
 
-* `contact_identifier` - (Required) A unique value of an Account Contact Type to associate with the ManagedNotificationConfiguration. Valid values: `ACCOUNT_PRIMARY`, `ACCOUNT_ALTERNATE_BILLING`, `ACCOUNT_ALTERNATE_OPERATIONS`, `ACCOUNT_ALTERNATE_SECURITY`.
+* `contact_identifier` - (Required) Unique value of an Account Contact Type to associate with the ManagedNotificationConfiguration. Valid values: `ACCOUNT_PRIMARY`, `ACCOUNT_ALTERNATE_BILLING`, `ACCOUNT_ALTERNATE_OPERATIONS`, `ACCOUNT_ALTERNATE_SECURITY`.
 * `managed_notification_configuration_arn` - (Required) ARN of the managed notification configuration to associate the account contact with.
 
 ## Attribute Reference

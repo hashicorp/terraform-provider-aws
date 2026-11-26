@@ -35,14 +35,14 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the collection group.
-* `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits) below for details.
+* `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits-block) below for details.
 * `created_date` - Date the collection group was created.
 * `description` - Description of the collection group.
 * `generation` - Generation of Amazon OpenSearch Serverless for the collection group.
-* `standby_replicas` - Indicates whether standby replicas should be used for collections in this group.
-* `tags` - A map of tags assigned to the collection group.
+* `standby_replicas` - Whether standby replicas should be used for collections in this group.
+* `tags` - Map of tags assigned to the collection group.
 
-### `capacity_limits`
+### `capacity_limits` Block
 
 * `max_indexing_capacity_in_ocu` - Maximum indexing capacity, in OpenSearch Compute Units (OCUs), for the collection group.
 * `max_search_capacity_in_ocu` - Maximum search capacity, in OpenSearch Compute Units (OCUs), for the collection group.
