@@ -2125,7 +2125,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 func testAccBucketReplicationConfigurationConfig_filterEmptyBlock(rName string) string {
 	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [aws_s3_bucket_versioning.source, aws_s3_bucket_versioning.destination]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
@@ -2151,7 +2151,7 @@ resource "aws_s3_bucket_replication_configuration" "test" {
 func testAccBucketReplicationConfigurationConfig_filterEmptyPrefix(rName string) string {
 	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), `
 resource "aws_s3_bucket_replication_configuration" "test" {
-  depends_on = [aws_s3_bucket_versioning.source]
+  depends_on = [aws_s3_bucket_versioning.source, aws_s3_bucket_versioning.destination]
 
   bucket = aws_s3_bucket.source.id
   role   = aws_iam_role.test.arn
