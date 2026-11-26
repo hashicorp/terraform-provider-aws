@@ -1671,6 +1671,35 @@ func TestAccECSTaskDefinition_containerDefinitionDockerLabels(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/50874.
+func TestAccECSTaskDefinition_containerDefinitionFirelensNoUser(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionFirelensNoUser(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, t, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/38779.
 func TestAccECSTaskDefinition_containerDefinitionNullPortMapping(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -4125,6 +4154,40 @@ resource "aws_ecs_task_definition" "test" {
   ])
 }
 `, rName, image)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionFirelensNoUser(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family                   = %[1]q
+  requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "256"
+  memory                   = "512"
+
+  container_definitions = jsonencode([
+    {
+      name      = "log_router"
+      image     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:stable"
+      essential = true
+      firelensConfiguration = {
+        type = "fluentbit"
+      }
+    },
+    {
+      name      = "app"
+      image     = "public.ecr.aws/docker/library/busybox:latest"
+      essential = true
+      logConfiguration = {
+        logDriver = "awsfirelens"
+        options = {
+          Name = "stdout"
+        }
+      }
+    },
+  ])
+}
+`, rName)
 }
 
 func testAccTaskDefinitionConfig_containerDefinitionNullPortMapping(rName, image string) string {
