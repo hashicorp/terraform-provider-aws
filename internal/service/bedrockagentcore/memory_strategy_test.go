@@ -432,6 +432,151 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			},
 		},
 		{
+			name: "basic semantic with record_expiry_duration_days",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:            fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringValue("memory_001"),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                     types.StringValue("semantic_builtin_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(90),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSemantic),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSemanticMemoryStrategy{
+				Value: awstypes.SemanticMemoryStrategyInput{
+					Name:               aws.String("semantic_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+					RecordExpirySpecification: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+						Value: 90,
+					},
+				},
+			},
+		},
+		{
+			name: "basic summarization with record_expiry_duration_days",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:            fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringValue("memory_001"),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                     types.StringValue("summarization_builtin_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(31),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSummarization),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberSummaryMemoryStrategy{
+				Value: awstypes.SummaryMemoryStrategyInput{
+					Name:               aws.String("summarization_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+					RecordExpirySpecification: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+						Value: 31,
+					},
+				},
+			},
+		},
+		{
+			name: "basic user preference with record_expiry_duration_days",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:            fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringValue("memory_001"),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                     types.StringValue("user_preference_builtin_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(90),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeUserPreference),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberUserPreferenceMemoryStrategy{
+				Value: awstypes.UserPreferenceMemoryStrategyInput{
+					Name:               aws.String("user_preference_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+					RecordExpirySpecification: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+						Value: 90,
+					},
+				},
+			},
+		},
+		{
+			name: "basic episodic with record_expiry_duration_days",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:            fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringValue("memory_001"),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                     types.StringValue("episodic_builtin_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(180),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeEpisodic),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberEpisodicMemoryStrategy{
+				Value: awstypes.EpisodicMemoryStrategyInput{
+					Name:               aws.String("episodic_builtin_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+					RecordExpirySpecification: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+						Value: 180,
+					},
+					ReflectionConfiguration: &awstypes.EpisodicReflectionConfigurationInput{
+						NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+					},
+				},
+			},
+		},
+		{
+			name: "summarization override with record_expiry_duration_days",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
+					Consolidation: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.OverrideDetailsModel{
+						AppendToPrompt: types.StringValue("<task>Consolidate</task>"),
+						ModelID:        types.StringValue("us.amazon.nova-2-lite-v1:0"),
+					}),
+					Extraction:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.OverrideDetailsModel](ctx),
+					Reflection:               fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionOverrideDetailsModel](ctx),
+					SelfManagedConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.SelfManagedConfigurationModel](ctx),
+					Type:                     fwtypes.StringEnumValue(awstypes.OverrideTypeSummaryOverride),
+				}),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringValue("memory_001"),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                     types.StringValue("summarization_override_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(365),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+			expected: &awstypes.MemoryStrategyInputMemberCustomMemoryStrategy{
+				Value: awstypes.CustomMemoryStrategyInput{
+					Configuration: &awstypes.CustomConfigurationInputMemberSummaryOverride{
+						Value: awstypes.SummaryOverrideConfigurationInput{
+							Consolidation: &awstypes.SummaryOverrideConsolidationConfigurationInput{
+								AppendToPrompt: aws.String("<task>Consolidate</task>"),
+								ModelId:        aws.String("us.amazon.nova-2-lite-v1:0"),
+							},
+						},
+					},
+					Name:               aws.String("summarization_override_001"),
+					NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"},
+					RecordExpirySpecification: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+						Value: 365,
+					},
+				},
+			},
+		},
+		{
 			name: "self-managed",
 			model: tfbedrockagentcore.MemoryStrategyResourceModel{
 				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
@@ -565,6 +710,8 @@ func TestMemoryStrategyResourceModelExpandOnCreate(t *testing.T) {
 			awstypes.MessageBasedTriggerInput{},
 			awstypes.MetadataSchemaEntry{},
 			awstypes.NumberValidation{},
+			awstypes.RecordExpirySpecificationMemberAction{},
+			awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{},
 			awstypes.SemanticMemoryStrategyInput{},
 			awstypes.SelfManagedConfigurationInput{},
 			awstypes.SummaryMemoryStrategyInput{},
@@ -1073,6 +1220,28 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			},
 		},
 		{
+			name: "basic semantic with record_expiry_duration_days",
+			model: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:            fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringValue("memory_001"),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				Name:                     types.StringValue("semantic_builtin_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(90),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSemantic),
+			},
+			expected: awstypes.ModifyMemoryStrategyInput{
+				NamespaceTemplates: []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				RecordExpirySpecification: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+					Value: 90,
+				},
+			},
+		},
+		{
 			name: "self-managed",
 			model: tfbedrockagentcore.MemoryStrategyResourceModel{
 				Configuration: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfbedrockagentcore.CustomConfigurationModel{
@@ -1202,6 +1371,8 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 			awstypes.ModifySelfManagedConfiguration{},
 			awstypes.ModifyStrategyConfiguration{},
 			awstypes.NumberValidation{},
+			awstypes.RecordExpirySpecificationMemberAction{},
+			awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{},
 			awstypes.SemanticOverrideConsolidationConfigurationInput{},
 			awstypes.SemanticOverrideExtractionConfigurationInput{},
 			awstypes.StringListValidation{},
@@ -1232,6 +1403,76 @@ func TestMemoryStrategyResourceModelExpandOnUpdate(t *testing.T) {
 
 			if diff := cmp.Diff(tc.expected, out, opts...); diff != "" {
 				t.Errorf("model -> ModifyMemoryStrategyInput mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+func TestExpandModifyRecordExpirySpecification(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		plan     types.Int32
+		state    types.Int32
+		expected awstypes.RecordExpirySpecification
+	}{
+		{
+			name:  "not configured",
+			plan:  types.Int32Null(),
+			state: types.Int32Null(),
+		},
+		{
+			name:  "unchanged",
+			plan:  types.Int32Value(90),
+			state: types.Int32Value(90),
+		},
+		{
+			name:  "added",
+			plan:  types.Int32Value(90),
+			state: types.Int32Null(),
+			expected: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+				Value: 90,
+			},
+		},
+		{
+			name:  "changed",
+			plan:  types.Int32Value(365),
+			state: types.Int32Value(90),
+			expected: &awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{
+				Value: 365,
+			},
+		},
+		{
+			name:  "removed",
+			plan:  types.Int32Null(),
+			state: types.Int32Value(90),
+			expected: &awstypes.RecordExpirySpecificationMemberAction{
+				Value: awstypes.RecordExpiryActionRemove,
+			},
+		},
+		{
+			name:  "unknown",
+			plan:  types.Int32Unknown(),
+			state: types.Int32Value(90),
+		},
+	}
+
+	opts := cmp.Options{
+		cmpopts.IgnoreUnexported(
+			awstypes.RecordExpirySpecificationMemberAction{},
+			awstypes.RecordExpirySpecificationMemberRecordExpiryDurationDays{},
+		),
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := tfbedrockagentcore.ExpandRecordExpiryForUpdate(tc.plan, tc.state)
+
+			if diff := cmp.Diff(tc.expected, got, opts...); diff != "" {
+				t.Errorf("RecordExpirySpecification mismatch (-want +got):\n%s", diff)
 			}
 		})
 	}
@@ -1896,6 +2137,30 @@ func TestMemoryStrategyResourceModelFlatten(t *testing.T) {
 				NamespaceTemplates:      fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/sessions/{sessionId}/"}),
 				ReflectionConfiguration: fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
 				Type:                    fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeCustom),
+			},
+		},
+		{
+			name: "basic semantic with record_expiry_duration_days",
+			input: awstypes.MemoryStrategy{
+				Name:                     aws.String("semantic_builtin_001"),
+				NamespaceTemplates:       []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"},
+				RecordExpiryDurationDays: aws.Int32(90),
+				StrategyId:               aws.String("semantic_builtin_001-YJnphM84r5"),
+				Type:                     awstypes.MemoryStrategyTypeSemantic,
+			},
+			expected: tfbedrockagentcore.MemoryStrategyResourceModel{
+				Configuration:            fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.CustomConfigurationModel](ctx),
+				Description:              types.StringNull(),
+				MemoryExecutionRoleARN:   fwtypes.ARNNull(),
+				MemoryID:                 types.StringNull(),
+				MemoryRecordSchema:       fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.MemoryRecordSchemaModel](ctx),
+				MemoryStrategyID:         types.StringValue("semantic_builtin_001-YJnphM84r5"),
+				Name:                     types.StringValue("semantic_builtin_001"),
+				Namespaces:               fwtypes.NewSetValueOfNull[types.String](ctx),
+				NamespaceTemplates:       fwflex.FlattenFrameworkStringValueSetOfString(ctx, []string{"/strategies/{memoryStrategyId}/actors/{actorId}/"}),
+				RecordExpiryDurationDays: types.Int32Value(90),
+				ReflectionConfiguration:  fwtypes.NewListNestedObjectValueOfNull[tfbedrockagentcore.EpisodicReflectionConfigurationModel](ctx),
+				Type:                     fwtypes.StringEnumValue(awstypes.MemoryStrategyTypeSemantic),
 			},
 		},
 		{
@@ -3593,6 +3858,186 @@ func TestAccBedrockAgentCoreMemoryStrategy_userPreferenceMemoryRecordSchema(t *t
 	})
 }
 
+func TestAccBedrockAgentCoreMemoryStrategy_recordExpiryDurationDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_recordExpiryDurationDays(rName, 31),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Int32Exact(31)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+			},
+			{
+				Config: testAccMemoryStrategyConfig_recordExpiryDurationDays(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Int32Exact(90)),
+				},
+			},
+			// Update another argument and keep the same expiry. No expiry change is sent.
+			{
+				Config: testAccMemoryStrategyConfig_recordExpiryDurationDaysDescription(rName, "updated", 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrDescription), knownvalue.StringExact("updated")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Int32Exact(90)),
+				},
+			},
+			{
+				Config: testAccMemoryStrategyConfig_basicNamespaceTemplates(rName, awstypes.MemoryStrategyTypeSemantic, "default"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Null()),
+				},
+			},
+			{
+				Config: testAccMemoryStrategyConfig_recordExpiryDurationDays(rName, 365),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Int32Exact(365)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_recordExpiryDurationDaysCustom(t *testing.T) {
+	ctx := acctest.Context(t)
+	var m awstypes.MemoryStrategy
+	rName := randomWithPrefixAndUnderscore(t)
+	resourceName := "aws_bedrockagentcore_memory_strategy.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMemoryStrategyConfig_recordExpiryDurationDaysCustom(rName, 90),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Int32Exact(90)),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMemoryStrategyImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "memory_strategy_id",
+			},
+			{
+				Config: testAccMemoryStrategyConfig_recordExpiryDurationDaysCustom(rName, 120),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckMemoryStrategyExists(ctx, t, resourceName, &m),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("record_expiry_duration_days"), knownvalue.Int32Exact(120)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreMemoryStrategy_recordExpiryDurationDaysInvalid(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := randomWithPrefixAndUnderscore(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckMemories(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMemoryStrategyDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccMemoryStrategyConfig_recordExpiryDurationDays(rName, 30),
+				ExpectError: regexache.MustCompile(`Attribute record_expiry_duration_days value must be at least 31`),
+			},
+			{
+				Config:      testAccMemoryStrategyConfig_recordExpiryDurationDaysSelfManaged(rName),
+				ExpectError: regexache.MustCompile(`Attribute record_expiry_duration_days must not be configured`),
+			},
+		},
+	})
+}
+
 func testAccCheckMemoryStrategyDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).BedrockAgentCoreClient(ctx)
@@ -3781,6 +4226,83 @@ resource "aws_bedrockagentcore_memory_strategy" "test" {
   type                = "CUSTOM"
   description         = "Test custom strategy"
   namespace_templates = ["default"]
+}
+`, rName))
+}
+
+func testAccMemoryStrategyConfig_recordExpiryDurationDays(rName string, days int) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "SEMANTIC"
+  namespace_templates = ["default"]
+
+  record_expiry_duration_days = %[2]d
+}
+`, rName, days))
+}
+
+func testAccMemoryStrategyConfig_recordExpiryDurationDaysDescription(rName, description string, days int) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "SEMANTIC"
+  description         = %[2]q
+  namespace_templates = ["default"]
+
+  record_expiry_duration_days = %[3]d
+}
+`, rName, description, days))
+}
+
+func testAccMemoryStrategyConfig_recordExpiryDurationDaysCustom(rName string, days int) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_memoryExecutionRole(rName), fmt.Sprintf(`
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name                = %[1]q
+  memory_id           = aws_bedrockagentcore_memory.test.id
+  type                = "CUSTOM"
+  namespace_templates = ["{sessionId}"]
+
+  record_expiry_duration_days = %[2]d
+
+  configuration {
+    type = "SUMMARY_OVERRIDE"
+    consolidation {
+      append_to_prompt = "Focus on key decisions"
+      model_id         = "us.amazon.nova-2-lite-v1:0"
+    }
+  }
+}
+`, rName, days))
+}
+
+func testAccMemoryStrategyConfig_recordExpiryDurationDaysSelfManaged(rName string) string {
+	return acctest.ConfigCompose(testAccMemoryConfig_basic(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_bedrockagentcore_memory_strategy" "test" {
+  name      = %[1]q
+  memory_id = aws_bedrockagentcore_memory.test.id
+  type      = "CUSTOM"
+
+  record_expiry_duration_days = 90
+
+  configuration {
+    type = "SELF_MANAGED"
+
+    self_managed_configuration {
+      invocation_configuration {
+        payload_delivery_bucket_name = "example-bucket"
+        topic_arn                    = "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.region}:${data.aws_caller_identity.current.account_id}:example"
+      }
+    }
+  }
 }
 `, rName))
 }
