@@ -243,6 +243,129 @@ func TestDiffUsers(t *testing.T) {
 	}
 }
 
+func TestFindUsersByBrokerID(t *testing.T) {
+	t.Parallel()
+
+	userSummary := func(username string) types.UserSummary {
+		return types.UserSummary{Username: aws.String(username)}
+	}
+	makeUsers := func(names ...string) []types.UserSummary {
+		out := make([]types.UserSummary, len(names))
+		for i, n := range names {
+			out[i] = userSummary(n)
+		}
+		return out
+	}
+
+	tests := []struct {
+		name    string
+		client  *fakeMQListUsers
+		want    []types.UserSummary
+		wantErr bool
+	}{
+		{
+			name: "single page",
+			client: &fakeMQListUsers{
+				pages: [][]types.UserSummary{
+					makeUsers("alice", "bob"),
+				},
+			},
+			want: makeUsers("alice", "bob"),
+		},
+		{
+			name: "multiple pages",
+			client: &fakeMQListUsers{
+				pages: [][]types.UserSummary{
+					makeUsers("u001", "u002", "u003"),
+					makeUsers("u004", "u005"),
+				},
+			},
+			want: makeUsers("u001", "u002", "u003", "u004", "u005"),
+		},
+		{
+			name: "exactly 100 users across two pages",
+			client: &fakeMQListUsers{
+				pages: [][]types.UserSummary{
+					func() []types.UserSummary {
+						users := make([]types.UserSummary, 100)
+						for i := range users {
+							users[i] = userSummary(fmt.Sprintf("user%03d", i))
+						}
+						return users
+					}(),
+					makeUsers("user100"),
+				},
+			},
+			want: func() []types.UserSummary {
+				users := make([]types.UserSummary, 101)
+				for i := range 100 {
+					users[i] = userSummary(fmt.Sprintf("user%03d", i))
+				}
+				users[100] = userSummary("user100")
+				return users
+			}(),
+		},
+		{
+			name:   "empty broker",
+			client: &fakeMQListUsers{pages: [][]types.UserSummary{{}}},
+			want:   nil,
+		},
+		{
+			name:    "api error",
+			client:  &fakeMQListUsers{err: fmt.Errorf("throttled")},
+			wantErr: true,
+		},
+		{
+			name: "api error on second page",
+			client: &fakeMQListUsers{
+				// two entries so the first call returns NextToken and triggers a second call,
+				// which then hits the error at errAfter=1
+				pages:    [][]types.UserSummary{makeUsers("alice"), {}},
+				errAfter: 1,
+				err:      fmt.Errorf("throttled"),
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got, err := tfmq.FindUsersByBrokerID(context.Background(), tc.client, "broker-id")
+			if (err != nil) != tc.wantErr {
+				t.Fatalf("FindUsersByBrokerID() error = %v, wantErr %v", err, tc.wantErr)
+			}
+			if diff := cmp.Diff(tc.want, got, cmpopts.IgnoreUnexported(types.UserSummary{})); diff != "" {
+				t.Errorf("FindUsersByBrokerID() mismatch (-want +got):\n%s", diff)
+			}
+		})
+	}
+}
+
+// fakeMQListUsers is a test double for the MQ ListUsers API.
+type fakeMQListUsers struct {
+	pages    [][]types.UserSummary
+	err      error
+	errAfter int // return err after this many successful calls; 0 means fail immediately
+	calls    int
+}
+
+func (f *fakeMQListUsers) ListUsers(_ context.Context, _ *mq.ListUsersInput, _ ...func(*mq.Options)) (*mq.ListUsersOutput, error) {
+	if f.err != nil && f.calls >= f.errAfter {
+		return nil, f.err
+	}
+	page := f.pages[f.calls]
+	f.calls++
+	var nextToken *string
+	if f.calls < len(f.pages) {
+		nextToken = aws.String("token")
+	}
+	return &mq.ListUsersOutput{
+		Users:     page,
+		NextToken: nextToken,
+	}, nil
+}
+
 func TestSortBrokerInstanceEndpoints(t *testing.T) {
 	t.Parallel()
 
