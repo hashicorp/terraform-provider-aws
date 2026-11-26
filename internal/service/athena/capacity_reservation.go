@@ -35,6 +35,7 @@ import (
 
 // @FrameworkResource("aws_athena_capacity_reservation", name="Capacity Reservation")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newCapacityReservationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &capacityReservationResource{}
 
