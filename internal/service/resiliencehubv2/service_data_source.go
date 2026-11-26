@@ -6,6 +6,9 @@ package resiliencehubv2
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehubv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	fwschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,6 +39,32 @@ func (d *serviceDataSource) Schema(ctx context.Context, req datasource.SchemaReq
 			},
 			"associated_system": framework.DataSourceComputedListOfObjectAttribute[associatedSystemModel](ctx),
 			names.AttrDescription: fwschema.StringAttribute{
+				Computed: true,
+			},
+			// Read-side view of the DevOps Agent connection, mirroring the resource's
+			// computed status attributes.
+			"dev_ops_agent_space_arn": fwschema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+			},
+			"dev_ops_agent_space_id": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"dev_ops_agent_region": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"dev_ops_agent_operator_app_url": fwschema.StringAttribute{
+				Computed: true,
+			},
+			"dev_ops_agent_connected_at": fwschema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"dev_ops_agent_status": fwschema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.DevOpsAgentConnectionStatus](),
+				Computed:   true,
+			},
+			"dev_ops_agent_status_reason": fwschema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrKMSKeyID: fwschema.StringAttribute{
@@ -78,6 +107,32 @@ func (d *serviceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
+	// DevOps Agent status is read from the single read-side view
+	// (svc.DevOpsAgentConfiguration). The view is present whenever the service has ever
+	// been linked (DISCONNECTED after an opt-out), and omitted only when never linked.
+	data.DevOpsAgentSpaceARN = fwtypes.ARNNull()
+	data.DevOpsAgentStatus = fwtypes.StringEnumNull[awstypes.DevOpsAgentConnectionStatus]()
+	data.DevOpsAgentSpaceID = types.StringNull()
+	data.DevOpsAgentRegion = types.StringNull()
+	data.DevOpsAgentOperatorAppURL = types.StringNull()
+	data.DevOpsAgentConnectedAt = timetypes.NewRFC3339Null()
+	data.DevOpsAgentStatusReason = types.StringNull()
+	if v := svc.DevOpsAgentConfiguration; v != nil {
+		if v.AgentSpaceArn != nil {
+			data.DevOpsAgentSpaceARN = fwtypes.ARNValue(aws.ToString(v.AgentSpaceArn))
+		}
+		if v.Status != "" {
+			data.DevOpsAgentStatus = fwtypes.StringEnumValue(v.Status)
+		}
+		data.DevOpsAgentSpaceID = fwflex.StringToFramework(ctx, v.AgentSpaceId)
+		data.DevOpsAgentRegion = fwflex.StringToFramework(ctx, v.Region)
+		data.DevOpsAgentOperatorAppURL = fwflex.StringToFramework(ctx, v.OperatorAppUrl)
+		data.DevOpsAgentStatusReason = fwflex.StringToFramework(ctx, v.StatusReason)
+		if v.ConnectedAt != nil {
+			data.DevOpsAgentConnectedAt = timetypes.NewRFC3339TimeValue(aws.ToTime(v.ConnectedAt))
+		}
+	}
+
 	setTagsOut(ctx, svc.Tags)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
@@ -85,13 +140,20 @@ func (d *serviceDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 type serviceDataSourceModel struct {
 	framework.WithRegionModel
-	AssociatedSystems fwtypes.ListNestedObjectValueOf[associatedSystemModel] `tfsdk:"associated_system"`
-	Description       types.String                                           `tfsdk:"description"`
-	KMSKeyID          types.String                                           `tfsdk:"kms_key_id"`
-	Name              types.String                                           `tfsdk:"name"`
-	PermissionModel   fwtypes.ListNestedObjectValueOf[permissionModelModel]  `tfsdk:"permission_model"`
-	PolicyARN         types.String                                           `tfsdk:"policy_arn"`
-	Regions           fwtypes.ListOfString                                   `tfsdk:"regions"`
-	ServiceARN        fwtypes.ARN                                            `tfsdk:"arn"`
-	Tags              tftags.Map                                             `tfsdk:"tags"`
+	AssociatedSystems         fwtypes.ListNestedObjectValueOf[associatedSystemModel]   `tfsdk:"associated_system"`
+	Description               types.String                                             `tfsdk:"description"`
+	DevOpsAgentConnectedAt    timetypes.RFC3339                                        `tfsdk:"dev_ops_agent_connected_at" autoflex:"-"`
+	DevOpsAgentOperatorAppURL types.String                                             `tfsdk:"dev_ops_agent_operator_app_url" autoflex:"-"`
+	DevOpsAgentRegion         types.String                                             `tfsdk:"dev_ops_agent_region" autoflex:"-"`
+	DevOpsAgentSpaceARN       fwtypes.ARN                                              `tfsdk:"dev_ops_agent_space_arn" autoflex:"-"`
+	DevOpsAgentSpaceID        types.String                                             `tfsdk:"dev_ops_agent_space_id" autoflex:"-"`
+	DevOpsAgentStatus         fwtypes.StringEnum[awstypes.DevOpsAgentConnectionStatus] `tfsdk:"dev_ops_agent_status" autoflex:"-"`
+	DevOpsAgentStatusReason   types.String                                             `tfsdk:"dev_ops_agent_status_reason" autoflex:"-"`
+	KMSKeyID                  types.String                                             `tfsdk:"kms_key_id"`
+	Name                      types.String                                             `tfsdk:"name"`
+	PermissionModel           fwtypes.ListNestedObjectValueOf[permissionModelModel]    `tfsdk:"permission_model"`
+	PolicyARN                 types.String                                             `tfsdk:"policy_arn"`
+	Regions                   fwtypes.ListOfString                                     `tfsdk:"regions"`
+	ServiceARN                fwtypes.ARN                                              `tfsdk:"arn"`
+	Tags                      tftags.Map                                               `tfsdk:"tags"`
 }
