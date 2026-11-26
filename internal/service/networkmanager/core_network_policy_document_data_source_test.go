@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1339,3 +1340,227 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 }
 `, acctest.Region())
 }
+
+func TestCoreNetworkPolicyVersionAtLeast(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]struct {
+		version string
+		minimum string
+		want    bool
+	}{
+		"older":           {version: "2021.12", minimum: "2025.11", want: false},
+		"equal":           {version: "2025.11", minimum: "2025.11", want: true},
+		"newer":           {version: "2026.10", minimum: "2025.11", want: true},
+		"newest minimum":  {version: "2025.11", minimum: "2026.10", want: false},
+		"unknown version": {version: "2099.01", minimum: "2025.11", want: false},
+		"unknown minimum": {version: "2026.10", minimum: "2099.01", want: false},
+		"empty version":   {version: "", minimum: "2021.12", want: false},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tfnetworkmanager.CoreNetworkPolicyVersionAtLeast(testCase.version, testCase.minimum); got != testCase.want {
+				t.Errorf("CoreNetworkPolicyVersionAtLeast(%q, %q) = %t, want %t", testCase.version, testCase.minimum, got, testCase.want)
+			}
+		})
+	}
+}
+
+func TestAccNetworkManagerCoreNetworkPolicyDocumentDataSource_version202610(t *testing.T) {
+	ctx := acctest.Context(t)
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCoreNetworkPolicyDocumentDataSourceConfig_version202610,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrJSONNoDiff("data.aws_networkmanager_core_network_policy_document.test", names.AttrJSON, testAccPolicyDocumentVersion202610ExpectedJSON),
+				),
+			},
+		},
+	})
+}
+
+// lintignore:AWSAT003
+const testAccCoreNetworkPolicyDocumentDataSourceConfig_version202610 = `
+data "aws_networkmanager_core_network_policy_document" "test" {
+  version = "2026.10"
+
+  core_network_configuration {
+    asn_ranges = ["64512-65534"]
+
+    edge_locations {
+      location = "us-east-1"
+    }
+
+    edge_locations {
+      location = "us-west-2"
+    }
+  }
+
+  segments {
+    name = "shared"
+  }
+
+  segments {
+    name = "prod"
+  }
+
+  routing_policies {
+    routing_policy_name      = "routingFilter"
+    routing_policy_direction = "inbound"
+    routing_policy_number    = 100
+
+    routing_policy_rules {
+      rule_number = 1
+
+      rule_definition {
+        condition_logic = "and"
+
+        match_conditions {
+          type  = "prefix-in-cidr"
+          value = "10.0.0.0/8"
+        }
+
+        action {
+          type = "allow"
+        }
+      }
+    }
+  }
+
+  segment_actions {
+    action               = "share"
+    mode                 = "attachment-route"
+    segment              = "shared"
+    share_with           = ["prod"]
+    routing_policy_names = ["routingFilter"]
+  }
+
+  segment_actions {
+    action  = "associate-routing-policy"
+    segment = "prod"
+
+    edge_location_association {
+      edge_location        = "us-east-1"
+      peer_edge_location   = "us-west-2"
+      routing_policy_names = ["routingFilter"]
+    }
+  }
+
+  attachment_routing_policy_rules {
+    rule_number = 10
+
+    conditions {
+      type  = "routing-policy-label"
+      value = "filtered"
+    }
+
+    action {
+      associate_routing_policies = ["routingFilter"]
+    }
+  }
+}
+`
+
+// lintignore:AWSAT003
+const testAccPolicyDocumentVersion202610ExpectedJSON = `{
+  "version": "2026.10",
+  "core-network-configuration": {
+    "vpn-ecmp-support": true,
+    "dns-support": true,
+    "security-group-referencing-support": false,
+    "asn-ranges": [
+      "64512-65534"
+    ],
+    "edge-locations": [
+      {
+        "location": "us-east-1"
+      },
+      {
+        "location": "us-west-2"
+      }
+    ]
+  },
+  "segments": [
+    {
+      "name": "shared",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": true
+    },
+    {
+      "name": "prod",
+      "isolate-attachments": false,
+      "require-attachment-acceptance": true
+    }
+  ],
+  "routing-policies": [
+    {
+      "routing-policy-name": "routingFilter",
+      "routing-policy-direction": "inbound",
+      "routing-policy-number": 100,
+      "routing-policy-rules": [
+        {
+          "rule-number": 1,
+          "rule-definition": {
+            "condition-logic": "and",
+            "match-conditions": [
+              {
+                "type": "prefix-in-cidr",
+                "value": "10.0.0.0/8"
+              }
+            ],
+            "action": {
+              "type": "allow"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "segment-actions": [
+    {
+      "action": "share",
+      "mode": "attachment-route",
+      "segment": "shared",
+      "share-with": [
+        "prod"
+      ],
+      "routing-policy-names": [
+        "routingFilter"
+      ]
+    },
+    {
+      "action": "associate-routing-policy",
+      "segment": "prod",
+      "edge-location-association": {
+        "edge-location": "us-east-1",
+        "peer-edge-location": "us-west-2",
+        "routing-policy-names": [
+          "routingFilter"
+        ]
+      }
+    }
+  ],
+  "attachment-routing-policy-rules": [
+    {
+      "rule-number": 10,
+      "conditions": [
+        {
+          "type": "routing-policy-label",
+          "value": "filtered"
+        }
+      ],
+      "action": {
+        "associate-routing-policies": [
+          "routingFilter"
+        ]
+      }
+    }
+  ]
+}`
