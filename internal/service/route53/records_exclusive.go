@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -144,6 +145,27 @@ func (r *recordsExclusiveResource) Schema(ctx context.Context, req resource.Sche
 										Validators: []validator.String{
 											stringvalidator.LengthAtMost(32),
 										},
+									},
+								},
+							},
+						},
+						"az_affinity": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[azAffinityModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"location_id": schema.StringAttribute{
+										Required: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 64),
+											lazystringvalidator.RegexMatches(`^[0-9a-z-]+$`, "must contain only lowercase alphanumeric characters and hyphens"),
+										},
+									},
+									"location_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.AZAffinityLocationType](),
+										Required:   true,
 									},
 								},
 							},
@@ -448,6 +470,7 @@ type recordsExclusiveResourceModel struct {
 
 type resourceRecordSetModel struct {
 	AliasTarget             fwtypes.ListNestedObjectValueOf[aliasTargetModel]          `tfsdk:"alias_target"`
+	AZAffinity              fwtypes.ListNestedObjectValueOf[azAffinityModel]           `tfsdk:"az_affinity"`
 	CIDRRoutingConfig       fwtypes.ListNestedObjectValueOf[cidrRoutingConfigModel]    `tfsdk:"cidr_routing_config"`
 	Failover                fwtypes.StringEnum[awstypes.ResourceRecordSetFailover]     `tfsdk:"failover"`
 	GeoLocation             fwtypes.ListNestedObjectValueOf[geoLocationModel]          `tfsdk:"geolocation"`
@@ -468,6 +491,11 @@ type aliasTargetModel struct {
 	DNSName              fwtypes.DNSNameString `tfsdk:"dns_name"`
 	EvaluateTargetHealth types.Bool            `tfsdk:"evaluate_target_health"`
 	HostedZoneID         types.String          `tfsdk:"hosted_zone_id"`
+}
+
+type azAffinityModel struct {
+	LocationID   types.String                                        `tfsdk:"location_id"`
+	LocationType fwtypes.StringEnum[awstypes.AZAffinityLocationType] `tfsdk:"location_type"`
 }
 
 type cidrRoutingConfigModel struct {
