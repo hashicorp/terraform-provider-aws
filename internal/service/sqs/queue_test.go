@@ -353,6 +353,53 @@ func TestAccSQSQueue_update(t *testing.T) {
 	})
 }
 
+// TestAccSQSQueue_defaultTagsProviderOnly is a regression test for
+// https://github.com/hashicorp/terraform-provider-aws/issues/<NEW_ISSUE>
+// (also tracked upstream in pulumi/pulumi-aws#5959).
+//
+// When only provider-level default_tags change (no queue attribute changes),
+// the resource update path produced an empty SetQueueAttributesInput and
+// failed with: "MissingParameter: The request must contain the parameter
+// Attribute.Name."
+func TestAccSQSQueue_defaultTagsProviderOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var queueAttributes map[types.QueueAttributeName]string
+	resourceName := "aws_sqs_queue.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
+					testAccQueueConfig_name(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckQueueExists(ctx, t, resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+				),
+			},
+			{
+				// Provider default_tags change only — no queue attribute change.
+				// Prior to the fix this produced an empty SetQueueAttributes
+				// call and returned MissingParameter from the SQS API.
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("key1", "value2"),
+					testAccQueueConfig_name(rName),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckQueueExists(ctx, t, resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSQSQueue_Policy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var queueAttributes map[types.QueueAttributeName]string
