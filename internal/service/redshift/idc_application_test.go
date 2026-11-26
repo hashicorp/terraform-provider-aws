@@ -118,7 +118,7 @@ func TestAccRedshiftIDCApplication_authorizedTokenIssuerList(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
+func TestAccRedshiftIDCApplication_ServiceIntegrations_lakehouse(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -150,7 +150,7 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsLakehouse(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
+func TestAccRedshiftIDCApplication_ServiceIntegrations_redshift(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -162,7 +162,7 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdcApplicationConfig_serviceIntegrationsRshift(rName),
+				Config: testAccIdcApplicationConfig_serviceIntegrationsRedshift(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIDCApplicationExists(ctx, t, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
@@ -182,7 +182,7 @@ func TestAccRedshiftIDCApplication_serviceIntegrationsRshift(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftIDCApplication_serviceIntegrationsS3AccessGrants(t *testing.T) {
+func TestAccRedshiftIDCApplication_ServiceIntegrations_s3AccessGrants(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_idc_application.test"
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -420,7 +420,7 @@ resource "aws_redshift_idc_application" "test" {
 `, rName))
 }
 
-func testAccIdcApplicationConfig_serviceIntegrationsRshift(rName string) string {
+func testAccIdcApplicationConfig_serviceIntegrationsRedshift(rName string) string { // nosemgrep:ci.redshift-in-func-name
 	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
