@@ -1330,6 +1330,227 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_AZAffinity_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_azAffinityAvailabilityZone("test", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "az_affinity_routing_policy.0.location_id", "data.aws_availability_zones.available", "zone_ids.0"),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeAvailabilityZone)),
+					resource.TestCheckResourceAttr(resourceName, "set_identifier", "test"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_AZAffinity_locationTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record1, record2, record3, record4, record5 awstypes.ResourceRecordSet
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_azAffinityLocationTypes(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.availability_zone", &record1),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.availability_zone_group", &record2),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.region", &record3),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.partition", &record4),
+					testAccCheckRecordExists(ctx, t, "aws_route53_record.global", &record5),
+					resource.TestCheckResourceAttr("aws_route53_record.availability_zone", "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeAvailabilityZone)),
+					resource.TestCheckResourceAttrPair("aws_route53_record.availability_zone", "az_affinity_routing_policy.0.location_id", "data.aws_availability_zones.available", "zone_ids.0"),
+					resource.TestCheckResourceAttr("aws_route53_record.availability_zone_group", "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeAvailabilityZoneGroup)),
+					resource.TestMatchResourceAttr("aws_route53_record.availability_zone_group", "az_affinity_routing_policy.0.location_id", regexache.MustCompile(`-zg-[0-9]+$`)),
+					resource.TestCheckResourceAttr("aws_route53_record.region", "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeRegion)),
+					resource.TestCheckResourceAttr("aws_route53_record.region", "az_affinity_routing_policy.0.location_id", acctest.Region()),
+					resource.TestCheckResourceAttr("aws_route53_record.partition", "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypePartition)),
+					resource.TestCheckResourceAttr("aws_route53_record.partition", "az_affinity_routing_policy.0.location_id", acctest.Partition()),
+					resource.TestCheckResourceAttr("aws_route53_record.global", "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeGlobal)),
+					resource.TestCheckResourceAttr("aws_route53_record.global", "az_affinity_routing_policy.0.location_id", "global"),
+				),
+			},
+			{
+				ResourceName:            "aws_route53_record.availability_zone_group",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				ResourceName:            "aws_route53_record.global",
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_AZAffinity_alias(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_azAffinityAlias(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record),
+					resource.TestCheckResourceAttr(resourceName, "alias.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "alias.0.evaluate_target_health", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeRegion)),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.0.location_id", acctest.Region()),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_AZAffinity_healthCheck(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_azAffinityHealthCheck(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record),
+					resource.TestCheckResourceAttrPair(resourceName, "health_check_id", "aws_route53_health_check.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeAvailabilityZone)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_AZAffinity_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record1, record2, record3 awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_azAffinityAvailabilityZone("test", 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record1),
+					resource.TestCheckResourceAttrPair(resourceName, "az_affinity_routing_policy.0.location_id", "data.aws_availability_zones.available", "zone_ids.0"),
+				),
+			},
+			{
+				Config: testAccRecordConfig_azAffinityAvailabilityZone("test", 1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record2),
+					resource.TestCheckResourceAttrPair(resourceName, "az_affinity_routing_policy.0.location_id", "data.aws_availability_zones.available", "zone_ids.1"),
+				),
+			},
+			{
+				Config: testAccRecordConfig_azAffinityRegion("test"),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record3),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.0.location_type", string(awstypes.AZAffinityLocationTypeRegion)),
+					resource.TestCheckResourceAttr(resourceName, "az_affinity_routing_policy.0.location_id", acctest.Region()),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_AZAffinity_validation(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRecordConfig_azAffinityWeighted(),
+				ExpectError: regexache.MustCompile(`"az_affinity_routing_policy": conflicts with weighted_routing_policy`),
+			},
+			{
+				Config:      testAccRecordConfig_azAffinityNoSetIdentifier(),
+				ExpectError: regexache.MustCompile(`all of\s+` + "`" + `az_affinity_routing_policy,set_identifier` + "`" + `\s+must be specified`),
+			},
+			{
+				Config:      testAccRecordConfig_azAffinityLiteral(string(awstypes.AZAffinityLocationTypeAvailabilityZone), "USE1-AZ1"),
+				ExpectError: regexache.MustCompile(`must contain only lowercase alphanumeric characters and hyphens`),
+			},
+			{
+				Config:      testAccRecordConfig_azAffinityLiteral(string(awstypes.AZAffinityLocationTypeAvailabilityZone), "us-east-1a"),
+				ExpectError: regexache.MustCompile(`location_id "us-east-1a" is not valid for location_type "AvailabilityZone"`),
+			},
+			{
+				Config:      testAccRecordConfig_azAffinityLiteral(string(awstypes.AZAffinityLocationTypeGlobal), "aws"),
+				ExpectError: regexache.MustCompile(`location_id "aws" is not valid for location_type "Global"`),
+			},
+			{
+				Config:      testAccRecordConfig_azAffinityLiteral("Zone", "use1-az1"),
+				ExpectError: regexache.MustCompile(`expected location_type to be one of`),
+			},
+		},
+	})
+}
+
 func TestAccRoute53Record_HealthCheckID_setIdentifierChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2 awstypes.ResourceRecordSet
@@ -1831,6 +2052,41 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityCoordinates(t *testing
 				Config: testAccRecordConfig_setIdentifierRenameGeoproximityCoordinates("49.22", "-74.01", "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, t, resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53Record_SetIdentifierRename_azAffinity(t *testing.T) {
+	ctx := acctest.Context(t)
+	var record1, record2 awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_azAffinityAvailabilityZone("before", 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite"},
+			},
+			{
+				Config: testAccRecordConfig_azAffinityAvailabilityZone("after", 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, t, resourceName, &record2),
+					resource.TestCheckResourceAttr(resourceName, "set_identifier", "after"),
+					resource.TestCheckResourceAttrPair(resourceName, "az_affinity_routing_policy.0.location_id", "data.aws_availability_zones.available", "zone_ids.0"),
 				),
 			},
 		},
@@ -4568,4 +4824,269 @@ resource "aws_route53_record" "secondary" {
   }
 }
 `, zoneName, primaryWeight)
+}
+
+func testAccRecordConfig_azAffinityAvailabilityZone(setIdentifier string, zoneIndex int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.1"]
+  set_identifier = %[1]q
+
+  az_affinity_routing_policy {
+    location_type = "AvailabilityZone"
+    location_id   = data.aws_availability_zones.available.zone_ids[%[2]d]
+  }
+}
+`, setIdentifier, zoneIndex))
+}
+
+func testAccRecordConfig_azAffinityRegion(setIdentifier string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.1"]
+  set_identifier = %[1]q
+
+  az_affinity_routing_policy {
+    location_type = "Region"
+    location_id   = data.aws_region.current.region
+  }
+}
+`, setIdentifier))
+}
+
+func testAccRecordConfig_azAffinityLocationTypes() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "availability_zone" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.1"]
+  set_identifier = "availability-zone"
+
+  az_affinity_routing_policy {
+    location_type = "AvailabilityZone"
+    location_id   = data.aws_availability_zones.available.zone_ids[0]
+  }
+}
+
+resource "aws_route53_record" "availability_zone_group" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.2"]
+  set_identifier = "availability-zone-group"
+
+  az_affinity_routing_policy {
+    location_type = "AvailabilityZoneGroup"
+    location_id   = tolist(data.aws_availability_zones.available.group_names)[0]
+  }
+}
+
+resource "aws_route53_record" "region" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.3"]
+  set_identifier = "region"
+
+  az_affinity_routing_policy {
+    location_type = "Region"
+    location_id   = data.aws_region.current.region
+  }
+}
+
+resource "aws_route53_record" "partition" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.4"]
+  set_identifier = "partition"
+
+  az_affinity_routing_policy {
+    location_type = "Partition"
+    location_id   = data.aws_partition.current.partition
+  }
+}
+
+resource "aws_route53_record" "global" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["192.0.2.1"]
+  set_identifier = "global"
+
+  az_affinity_routing_policy {
+    location_type = "Global"
+    location_id   = "global"
+  }
+}
+`)
+}
+
+func testAccRecordConfig_azAffinityAlias() string {
+	return `
+data "aws_region" "current" {}
+
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "target" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "target"
+  type    = "A"
+  ttl     = 60
+  records = ["10.0.0.1"]
+}
+
+resource "aws_route53_record" "test" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  set_identifier = "region"
+
+  alias {
+    name                   = aws_route53_record.target.fqdn
+    zone_id                = aws_route53_zone.test.zone_id
+    evaluate_target_health = true
+  }
+
+  az_affinity_routing_policy {
+    location_type = "Region"
+    location_id   = data.aws_region.current.region
+  }
+}
+`
+}
+
+func testAccRecordConfig_azAffinityHealthCheck() string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = 2
+  fqdn              = "target.domain.test"
+  port              = 80
+  request_interval  = 30
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  name            = "www"
+  type            = "A"
+  ttl             = 60
+  records         = ["10.0.0.1"]
+  set_identifier  = "availability-zone"
+  health_check_id = aws_route53_health_check.test.id
+
+  az_affinity_routing_policy {
+    location_type = "AvailabilityZone"
+    location_id   = data.aws_availability_zones.available.zone_ids[0]
+  }
+}
+`)
+}
+
+func testAccRecordConfig_azAffinityWeighted() string {
+	return `
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.1"]
+  set_identifier = "test"
+
+  az_affinity_routing_policy {
+    location_type = "Global"
+    location_id   = "global"
+  }
+
+  weighted_routing_policy {
+    weight = 10
+  }
+}
+`
+}
+
+func testAccRecordConfig_azAffinityNoSetIdentifier() string {
+	return `
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = "www"
+  type    = "A"
+  ttl     = 60
+  records = ["10.0.0.1"]
+
+  az_affinity_routing_policy {
+    location_type = "Global"
+    location_id   = "global"
+  }
+}
+`
+}
+
+func testAccRecordConfig_azAffinityLiteral(locationType, locationID string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id        = aws_route53_zone.test.zone_id
+  name           = "www"
+  type           = "A"
+  ttl            = 60
+  records        = ["10.0.0.1"]
+  set_identifier = "test"
+
+  az_affinity_routing_policy {
+    location_type = %[1]q
+    location_id   = %[2]q
+  }
+}
+`, locationType, locationID)
 }

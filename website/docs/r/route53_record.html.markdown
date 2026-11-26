@@ -79,6 +79,40 @@ resource "aws_route53_record" "www" {
 }
 ```
 
+### AZ-Affinity Routing Policy
+
+A group of records that answers each query with the record closest to the Availability Zone the query comes from. Route 53 uses the most specific healthy match (Availability Zone, Zone Group, Region, Partition, then Global).
+
+~> **NOTE:** Only queries that reach Route 53 through the VPC Resolver can match `AvailabilityZone`, `AvailabilityZoneGroup`, `Region` and `Partition` records. All other queries, such as queries from the internet, match only the `Global` record. Create a `Global` record so that every query gets an answer; without one, unmatched queries get no answer (NODATA).
+
+```terraform
+locals {
+  az_affinity = {
+    az     = { location_type = "AvailabilityZone", location_id = "use1-az1", ip = "10.0.1.10" }
+    zg     = { location_type = "AvailabilityZoneGroup", location_id = "us-east-1-zg-1", ip = "10.0.2.10" }
+    region = { location_type = "Region", location_id = "us-east-1", ip = "10.0.3.10" }
+    aws    = { location_type = "Partition", location_id = "aws", ip = "10.0.4.10" }
+    global = { location_type = "Global", location_id = "global", ip = "192.0.2.10" }
+  }
+}
+
+resource "aws_route53_record" "service" {
+  for_each = local.az_affinity
+
+  zone_id        = aws_route53_zone.primary.zone_id
+  name           = "service.example.com"
+  type           = "A"
+  ttl            = 60
+  records        = [each.value.ip]
+  set_identifier = each.key
+
+  az_affinity_routing_policy {
+    location_type = each.value.location_type
+    location_id   = each.value.location_id
+  }
+}
+```
+
 ### Alias Record
 
 See [related part of Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
@@ -183,10 +217,11 @@ This resource supports the following arguments:
 * `type` - (Required) The record type. Valid values are `A`, `AAAA`, `CAA`, `CNAME`, `DS`, `HTTPS`, `MX`, `NAPTR`, `NS`, `PTR`, `SOA`, `SPF`, `SRV`, `SSHFP`, `SVCB`, `TLSA`, and `TXT`.
 * `ttl` - (Required for non-alias records) The TTL of the record.
 * `records` - (Required for non-alias records) A string list of records. To specify a single record value longer than 255 characters such as a TXT record for DKIM, add `\"\"` inside the Terraform configuration string (e.g., `"first255characters\"\"morecharacters"`).
-* `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `cidr_routing_policy`, `failover_routing_policy`, `geolocation_routing_policy`,`geoproximity_routing_policy`, `latency_routing_policy`, `multivalue_answer_routing_policy`, or `weighted_routing_policy`.
+* `set_identifier` - (Optional) Unique identifier to differentiate records with routing policies from one another. Required if using `az_affinity_routing_policy`, `cidr_routing_policy`, `failover_routing_policy`, `geolocation_routing_policy`,`geoproximity_routing_policy`, `latency_routing_policy`, `multivalue_answer_routing_policy`, or `weighted_routing_policy`.
 * `health_check_id` - (Optional) The health check the record should be associated with.
 * `alias` - (Optional) An alias block. Conflicts with `ttl` & `records`.
   [Documented below](#alias).
+* `az_affinity_routing_policy` - (Optional) A block indicating a routing policy based on the Availability Zone, Zone Group, Region or Partition that the query comes from. Conflicts with any other routing policy. [Documented below](#az-affinity-routing-policy).
 * `cidr_routing_policy` - (Optional) A block indicating a routing policy based on the IP network ranges of requestors. Conflicts with any other routing policy. [Documented below](#cidr-routing-policy).
 * `failover_routing_policy` - (Optional) A block indicating the routing behavior when associated health check fails. Conflicts with any other routing policy. [Documented below](#failover-routing-policy).
 * `geolocation_routing_policy` - (Optional) A block indicating a routing policy based on the geolocation of the requestor. Conflicts with any other routing policy. [Documented below](#geolocation-routing-policy).
@@ -205,6 +240,15 @@ Alias records support the following:
 * `name` - (Required) DNS domain name for a CloudFront distribution, S3 bucket, ELB, AWS Global Accelerator, or another resource record set in this hosted zone.
 * `zone_id` - (Required) Hosted zone ID for a CloudFront distribution, S3 bucket, ELB, AWS Global Accelerator, or Route 53 hosted zone. See [`resource_elb.zone_id`](/docs/providers/aws/r/elb.html#zone_id) for example.
 * `evaluate_target_health` - (Required) Set to `true` if you want Route 53 to determine whether to respond to DNS queries using this resource record set by checking the health of the resource record set. Some resources have special requirements, see [related part of documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values.html#rrsets-values-alias-evaluate-target-health).
+
+### AZ-Affinity Routing Policy
+
+AZ-affinity routing policies support the following:
+
+* `location_type` - (Required) Scope that the record answers for. Valid values are `AvailabilityZone`, `AvailabilityZoneGroup`, `Region`, `Partition` and `Global`.
+* `location_id` - (Required) Identifier of the location, in lowercase. An Availability Zone ID such as `use1-az1` (not an Availability Zone name such as `us-east-1a`), a Zone Group of Availability Zones such as `us-east-1-zg-1`, a Region such as `us-east-1`, a partition such as `aws`, or `global`. The [`aws_availability_zones` data source](/docs/providers/aws/d/availability_zones.html) exposes Availability Zone IDs in `zone_ids`.
+
+Use the same `ttl` for all records in the group. A non-AZ-affinity record can't have the same `name` and `type` as AZ-affinity records. For alias records, AWS recommends `evaluate_target_health = true` instead of a `health_check_id`; if both are set, both must be healthy. Don't use a health check whose domain name is the record's own name. AZ-affinity routing directs traffic; it isn't an access control. See the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-azaffinity.html) and [health checks](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-failover.html) for details.
 
 ### CIDR Routing Policy
 
