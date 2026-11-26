@@ -37,6 +37,7 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKinesisStreamingDestinationCreate,
 		ReadWithoutTimeout:   resourceKinesisStreamingDestinationRead,
+		UpdateWithoutTimeout: resourceKinesisStreamingDestinationUpdate,
 		DeleteWithoutTimeout: resourceKinesisStreamingDestinationDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -49,7 +50,6 @@ func resourceKinesisStreamingDestination() *schema.Resource {
 					Type:             schema.TypeString,
 					Optional:         true,
 					Computed:         true,
-					ForceNew:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.ApproximateCreationDateTimePrecision](),
 				},
 				names.AttrStreamARN: {
@@ -130,6 +130,37 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	d.Set(names.AttrTableName, tableName)
 
 	return diags
+}
+
+func resourceKinesisStreamingDestinationUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
+
+	if d.HasChange("approximate_creation_date_time_precision") {
+		parts, err := flex.ExpandResourceId(d.Id(), kinesisStreamingDestinationResourceIDPartCount, false)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		tableName, streamARN := parts[0], parts[1]
+		input := dynamodb.UpdateKinesisStreamingDestinationInput{
+			StreamArn: aws.String(streamARN),
+			TableName: aws.String(tableName),
+			UpdateKinesisStreamingConfiguration: &awstypes.UpdateKinesisStreamingConfiguration{
+				ApproximateCreationDateTimePrecision: awstypes.ApproximateCreationDateTimePrecision(d.Get("approximate_creation_date_time_precision").(string)),
+			},
+		}
+
+		if _, err := conn.UpdateKinesisStreamingDestination(ctx, &input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitKinesisStreamingDestinationUpdated(ctx, conn, streamARN, tableName); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Kinesis Streaming Destination (%s) update: %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceKinesisStreamingDestinationRead(ctx, d, meta)...)
 }
 
 func resourceKinesisStreamingDestinationDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
@@ -252,6 +283,28 @@ func waitKinesisStreamingDestinationActive(ctx context.Context, conn *dynamodb.C
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.DestinationStatusDisabled, awstypes.DestinationStatusEnabling),
+		Target:  enum.Slice(awstypes.DestinationStatusActive),
+		Timeout: timeout,
+		Refresh: statusKinesisStreamingDestination(conn, streamARN, tableName),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.KinesisDataStreamDestination); ok {
+		retry.SetLastError(err, errors.New(aws.ToString(output.DestinationStatusDescription)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitKinesisStreamingDestinationUpdated(ctx context.Context, conn *dynamodb.Client, streamARN, tableName string) (*awstypes.KinesisDataStreamDestination, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DestinationStatusUpdating),
 		Target:  enum.Slice(awstypes.DestinationStatusActive),
 		Timeout: timeout,
 		Refresh: statusKinesisStreamingDestination(conn, streamARN, tableName),

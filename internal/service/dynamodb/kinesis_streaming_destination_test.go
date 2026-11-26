@@ -68,6 +68,20 @@ func TestAccDynamoDBKinesisStreamingDestination_approximateCreationDateTimePreci
 				),
 			},
 			{
+				Config: testAccKinesisStreamingDestinationConfig_approximateCreationDateTimePrecision(rName, "MILLISECOND"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisStreamingDestinationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "approximate_creation_date_time_precision", "MILLISECOND"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
