@@ -72,6 +72,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Name:     "User Pool Client",
 			Region:   inttypes.ResourceRegionDefault(),
 		},
+		{
+			Factory:  newUserPoolClientTermsResource,
+			TypeName: "aws_cognito_user_pool_client_terms",
+			Name:     "User Pool Client Terms",
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalParameterizedIdentity([]inttypes.IdentityAttribute{
+				inttypes.StringIdentityAttribute(names.AttrUserPoolID, true),
+				inttypes.StringIdentityAttribute("terms_id", true),
+			}),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+				ImportID:      userPoolClientTermsImportID{},
+			},
+		},
 	}
 }
 
