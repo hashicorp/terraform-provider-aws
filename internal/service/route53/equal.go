@@ -22,6 +22,7 @@ func resourceRecordSetEqual(s1, s2 awstypes.ResourceRecordSet) bool {
 		aws.ToInt64(s1.Weight) == aws.ToInt64(s2.Weight) &&
 		// Nested attributes
 		aliasTargetEqual(s1.AliasTarget, s2.AliasTarget) &&
+		azAffinityEqual(s1.AZAffinity, s2.AZAffinity) &&
 		cidrRoutingConfigEqual(s1.CidrRoutingConfig, s2.CidrRoutingConfig) &&
 		geolocationEqual(s1.GeoLocation, s2.GeoLocation) &&
 		geoProximityLocationEqual(s1.GeoProximityLocation, s2.GeoProximityLocation) &&
@@ -58,6 +59,18 @@ func aliasTargetEqual(s1, s2 *awstypes.AliasTarget) bool {
 	return dns.Normalize(aws.ToString(s1.DNSName)) == dns.Normalize(aws.ToString(s2.DNSName)) &&
 		s1.EvaluateTargetHealth == s2.EvaluateTargetHealth &&
 		aws.ToString(s1.HostedZoneId) == aws.ToString(s2.HostedZoneId)
+}
+
+func azAffinityEqual(s1, s2 *awstypes.AZAffinity) bool {
+	if s1 == nil && s2 == nil {
+		return true
+	}
+	if s1 == nil && s2 != nil || s1 != nil && s2 == nil {
+		return false
+	}
+
+	return aws.ToString(s1.LocationId) == aws.ToString(s2.LocationId) &&
+		s1.LocationType == s2.LocationType
 }
 
 func cidrRoutingConfigEqual(s1, s2 *awstypes.CidrRoutingConfig) bool {

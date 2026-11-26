@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-26T19:31:46.000000+01:00
+custom:
+    Body: Add `resource_record_set.az_affinity` argument
+    Impact: resource/aws_route53_records_exclusive

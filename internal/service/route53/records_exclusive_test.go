@@ -331,6 +331,66 @@ func TestAccRoute53RecordsExclusive_upsert(t *testing.T) {
 	})
 }
 
+func TestAccRoute53RecordsExclusive_azAffinity(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	zoneName := acctest.RandomDomain(t)
+	recordName := zoneName.RandomSubdomain(t)
+	resourceName := "aws_route53_records_exclusive.test"
+	azsDataSourceName := "data.aws_availability_zones.available"
+	regionDataSourceName := "data.aws_region.current"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordsExclusiveDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordsExclusiveConfig_azAffinity(zoneName.String(), recordName.String(), 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_record_set.*", map[string]string{
+						"set_identifier":              "az",
+						"az_affinity.#":               "1",
+						"az_affinity.0.location_type": string(types.AZAffinityLocationTypeAvailabilityZone),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resource_record_set.*", map[string]string{
+						"set_identifier":              "regional",
+						"az_affinity.#":               "1",
+						"az_affinity.0.location_type": string(types.AZAffinityLocationTypeRegion),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_record_set.*.az_affinity.0.location_id", azsDataSourceName, "zone_ids.0"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_record_set.*.az_affinity.0.location_id", regionDataSourceName, names.AttrRegion),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				Config: testAccRecordsExclusiveConfig_azAffinity(zoneName.String(), recordName.String(), 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordsExclusiveExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_record_set.#", "2"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_record_set.*.az_affinity.0.location_id", azsDataSourceName, "zone_ids.1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "resource_record_set.*.az_affinity.0.location_id", regionDataSourceName, names.AttrRegion),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
 // An empty resource_record_set argument should remove any existing, non-default record
 // sets associated with the zone
 func TestAccRoute53RecordsExclusive_empty(t *testing.T) {
@@ -1020,4 +1080,51 @@ resource "aws_route53_records_exclusive" "test" {
   }
 }
 `, zoneName, recordName, ttl)
+}
+
+func testAccRecordsExclusiveConfig_azAffinity(zoneName, recordName string, azIndex int) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_route53_zone" "test" {
+  name          = %[1]q
+  force_destroy = true
+}
+
+resource "aws_route53_records_exclusive" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+
+  resource_record_set {
+    name           = %[2]q
+    type           = "A"
+    ttl            = 60
+    set_identifier = "az"
+
+    az_affinity {
+      location_type = "AvailabilityZone"
+      location_id   = data.aws_availability_zones.available.zone_ids[%[3]d]
+    }
+
+    resource_records {
+      value = "127.0.0.1"
+    }
+  }
+
+  resource_record_set {
+    name           = %[2]q
+    type           = "A"
+    ttl            = 60
+    set_identifier = "regional"
+
+    az_affinity {
+      location_type = "Region"
+      location_id   = data.aws_region.current.region
+    }
+
+    resource_records {
+      value = "127.0.0.2"
+    }
+  }
+}
+`, zoneName, recordName, azIndex))
 }

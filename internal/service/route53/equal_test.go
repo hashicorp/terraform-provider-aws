@@ -215,6 +215,138 @@ func Test_resourceRecordSetEqual(t *testing.T) {
 			},
 			want: false,
 		},
+		{
+			name: "equal, az affinity",
+			s1: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az1"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZone,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			s2: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az1"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZone,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			name: "not equal, az affinity location id",
+			s1: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az1"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZone,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			s2: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az2"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZone,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "not equal, az affinity location type",
+			s1: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az1"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZone,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			s2: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az1"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZoneGroup,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			want: false,
+		},
+		{
+			name: "not equal, az affinity unset",
+			s1: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				AZAffinity: &awstypes.AZAffinity{
+					LocationId:   aws.String("use1-az1"),
+					LocationType: awstypes.AZAffinityLocationTypeAvailabilityZone,
+				},
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			s2: awstypes.ResourceRecordSet{
+				Name:          aws.String("example.com"),
+				Type:          awstypes.RRTypeA,
+				SetIdentifier: aws.String("foo"),
+				TTL:           aws.Int64(300),
+				ResourceRecords: []awstypes.ResourceRecord{
+					{
+						Value: aws.String("127.0.0.1"),
+					},
+				},
+			},
+			want: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
