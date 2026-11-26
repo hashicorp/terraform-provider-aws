@@ -85,6 +85,21 @@ func resourceStream() *schema.Resource {
 					Required: true,
 					ForceNew: true,
 				},
+				"stream_storage_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_storage_tier": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.DefaultStorageTier](),
+							},
+						},
+					},
+				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVersion: {
@@ -117,6 +132,10 @@ func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	if v, ok := d.GetOk("media_type"); ok {
 		input.MediaType = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("stream_storage_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		input.StreamStorageConfiguration = expandStreamStorageConfiguration(v.([]any)[0].(map[string]any))
 	}
 
 	output, err := conn.CreateStream(ctx, input)
@@ -159,6 +178,16 @@ func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	d.Set(names.AttrName, stream.StreamName)
 	d.Set(names.AttrVersion, stream.Version)
 
+	storageConfiguration, err := findStreamStorageConfigurationByARN(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Video Stream (%s) storage configuration: %s", d.Id(), err)
+	}
+
+	if err := d.Set("stream_storage_configuration", flattenStreamStorageConfiguration(storageConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting stream_storage_configuration: %s", err)
+	}
+
 	return diags
 }
 
@@ -166,9 +195,12 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	// The stream version changes on every update.
+	version := aws.String(d.Get(names.AttrVersion).(string))
+
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "stream_storage_configuration") {
 		input := &kinesisvideo.UpdateStreamInput{
-			CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+			CurrentVersion: version,
 			StreamARN:      aws.String(d.Id()),
 		}
 
@@ -186,8 +218,32 @@ func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 			return sdkdiag.AppendErrorf(diags, "updating Kinesis Video Stream (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitStreamUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		stream, err := waitStreamUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Video Stream (%s) update: %s", d.Id(), err)
+		}
+
+		version = stream.Version
+	}
+
+	if d.HasChange("stream_storage_configuration") {
+		if v, ok := d.GetOk("stream_storage_configuration"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+			input := &kinesisvideo.UpdateStreamStorageConfigurationInput{
+				CurrentVersion:             version,
+				StreamARN:                  aws.String(d.Id()),
+				StreamStorageConfiguration: expandStreamStorageConfiguration(v.([]any)[0].(map[string]any)),
+			}
+
+			_, err := conn.UpdateStreamStorageConfiguration(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Kinesis Video Stream (%s) storage configuration: %s", d.Id(), err)
+			}
+
+			if _, err := waitStreamUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Video Stream (%s) storage configuration update: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -245,6 +301,30 @@ func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvi
 	}
 
 	return output.StreamInfo, nil
+}
+
+func findStreamStorageConfigurationByARN(ctx context.Context, conn *kinesisvideo.Client, arn string) (*awstypes.StreamStorageConfiguration, error) {
+	input := &kinesisvideo.DescribeStreamStorageConfigurationInput{
+		StreamARN: aws.String(arn),
+	}
+
+	output, err := conn.DescribeStreamStorageConfiguration(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError: err,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StreamStorageConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError()
+	}
+
+	return output.StreamStorageConfiguration, nil
 }
 
 func statusStream(conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc {
@@ -318,4 +398,30 @@ func waitStreamDeleted(ctx context.Context, conn *kinesisvideo.Client, arn strin
 	}
 
 	return nil, err
+}
+
+func expandStreamStorageConfiguration(tfMap map[string]any) *awstypes.StreamStorageConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.StreamStorageConfiguration{}
+
+	if v, ok := tfMap["default_storage_tier"].(string); ok && v != "" {
+		apiObject.DefaultStorageTier = awstypes.DefaultStorageTier(v)
+	}
+
+	return apiObject
+}
+
+func flattenStreamStorageConfiguration(apiObject *awstypes.StreamStorageConfiguration) []any {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]any{
+		"default_storage_tier": apiObject.DefaultStorageTier,
+	}
+
+	return []any{tfMap}
 }

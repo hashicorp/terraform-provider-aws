@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-26T03:42:08.000000+00:00
+custom:
+    Body: Add `stream_storage_configuration` argument
+    Impact: resource/aws_kinesis_video_stream
+    PullRequest: "51385"

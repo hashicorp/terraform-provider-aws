@@ -43,6 +43,8 @@ func TestAccKinesisVideoStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeviceName, ""),
 					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", "alias/aws/kinesisvideo"),
 					resource.TestCheckResourceAttr(resourceName, "media_type", ""),
+					resource.TestCheckResourceAttr(resourceName, "stream_storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_storage_configuration.0.default_storage_tier", string(awstypes.DefaultStorageTierHot)),
 				),
 			},
 			{
@@ -92,6 +94,49 @@ func TestAccKinesisVideoStream_options(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKinesisVideoStream_streamStorageConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream awstypes.StreamInfo
+	resourceName := "aws_kinesis_video_stream.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KinesisVideoEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisVideoServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamConfig_streamStorageConfiguration(rName, "video/h264", string(awstypes.DefaultStorageTierWarm)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "stream_storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "stream_storage_configuration.0.default_storage_tier", string(awstypes.DefaultStorageTierWarm)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccStreamConfig_streamStorageConfiguration(rName, "video/h265", string(awstypes.DefaultStorageTierHot)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStreamExists(ctx, t, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "stream_storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "media_type", "video/h265"),
+					resource.TestCheckResourceAttr(resourceName, "stream_storage_configuration.0.default_storage_tier", string(awstypes.DefaultStorageTierHot)),
+				),
 			},
 		},
 	})
@@ -247,6 +292,20 @@ resource "aws_kms_key" "test" {
   enable_key_rotation     = true
 }
 `, rName, deviceName, mediaType)
+}
+
+func testAccStreamConfig_streamStorageConfiguration(rName, mediaType, defaultStorageTier string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_video_stream" "test" {
+  name                    = %[1]q
+  data_retention_in_hours = 24
+  media_type              = %[2]q
+
+  stream_storage_configuration {
+    default_storage_tier = %[3]q
+  }
+}
+`, rName, mediaType, defaultStorageTier)
 }
 
 func testAccStreamConfig_tags1(rName, tagKey1, tagValue1 string) string {
