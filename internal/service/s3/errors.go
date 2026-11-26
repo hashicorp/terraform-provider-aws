@@ -23,6 +23,7 @@ const (
 	errCodeMalformedXML                         = "MalformedXML"
 	errCodeMetadataConfigurationNotFound        = "MetadataConfigurationNotFound"
 	errCodeMethodNotAllowed                     = "MethodNotAllowed"
+	errCodeMissingRequestBodyError              = "MissingRequestBodyError"
 	errCodeNoSuchBucket                         = "NoSuchBucket"
 	errCodeNoSuchBucketPolicy                   = "NoSuchBucketPolicy"
 	errCodeNoSuchConfiguration                  = "NoSuchConfiguration"
