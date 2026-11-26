@@ -461,7 +461,7 @@ The `existing_object_replication` configuration block supports the following arg
 
 ### `filter` Block
 
-~> **NOTE:** The `filter` argument must be specified as either an empty configuration block (`filter {}`) to imply the rule requires no filter or with exactly one of `prefix`, `tag`, or `and`.
+~> **NOTE:** The `filter` argument must be specified as either an empty configuration block (`filter {}`) to imply the rule requires no filter or with exactly one of `prefix`, `tag`, `and`, or `not`.
 Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
 The `filter` configuration block supports the following arguments:
@@ -477,7 +477,7 @@ The `and` configuration block supports the following arguments:
 
 * `not` - (Optional) Configuration block for specifying objects that should be excluded from replication. [See below](#not-block).
 * `prefix` - (Optional) Object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `tags` - (Optional, Required if `prefix` is configured) Map of tags (key and value pairs) that identifies a subset of objects to which the rule applies. The rule applies only to objects having all the tags in its tagset.
+* `tags` - (Optional, Required if `prefix` is configured and `not` is not configured) Map of tags (key and value pairs) that identifies a subset of objects to which the rule applies. The rule applies only to objects having all the tags in its tagset.
 
 ### `not` Block
 
@@ -492,7 +492,14 @@ The `not` configuration block supports the following arguments:
 The `or` configuration block (within `not`) supports the following arguments:
 
 * `prefixes` - (Optional) List of object key name prefixes that identify objects to be excluded from replication. Each prefix must be less than or equal to 1024 characters in length.
-* `tags` - (Optional) Map of tags (key and value pairs) that identifies objects to be excluded from replication.
+* `tags` - (Optional) List of tag blocks identifying objects to be excluded from replication. An object is excluded if it matches any of the specified tags. [See below](#or-tag-block).
+
+### `or` `tag` Block
+
+The `tag` configuration block (within `or`) supports the following arguments:
+
+* `key` - (Required) Name of the tag key.
+* `value` - (Required) Value of the tag.
 
 ### `tag` Block
 
