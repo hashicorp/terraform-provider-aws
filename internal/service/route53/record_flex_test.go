@@ -130,3 +130,46 @@ func TestParseRecordID(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateAZAffinityLocation(t *testing.T) {
+	t.Parallel()
+
+	//lintignore:AWSAT003
+	testCases := []struct {
+		locationType awstypes.AZAffinityLocationType
+		locationID   string
+		valid        bool
+	}{
+		{awstypes.AZAffinityLocationTypeAvailabilityZone, "use1-az1", true},
+		{awstypes.AZAffinityLocationTypeAvailabilityZone, "usgw1-az2", true},
+		{awstypes.AZAffinityLocationTypeAvailabilityZone, "cnnw1-az3", true},
+		{awstypes.AZAffinityLocationTypeAvailabilityZone, "us-east-1a", false},
+		{awstypes.AZAffinityLocationTypeAvailabilityZone, "us-east-1", false},
+		{awstypes.AZAffinityLocationTypeAvailabilityZoneGroup, "us-east-1-zg-1", true},
+		{awstypes.AZAffinityLocationTypeAvailabilityZoneGroup, "us-gov-west-1-zg-1", true},
+		{awstypes.AZAffinityLocationTypeAvailabilityZoneGroup, "us-east-1", false},
+		{awstypes.AZAffinityLocationTypeAvailabilityZoneGroup, "use1-az1", false},
+		{awstypes.AZAffinityLocationTypeRegion, "us-east-1", true},
+		{awstypes.AZAffinityLocationTypeRegion, "eu-south-2", true},
+		{awstypes.AZAffinityLocationTypeRegion, "us-east-1-zg-1", false},
+		{awstypes.AZAffinityLocationTypeRegion, "use1-az1", false},
+		{awstypes.AZAffinityLocationTypePartition, "aws", true},
+		{awstypes.AZAffinityLocationTypePartition, "aws-us-gov", true},
+		{awstypes.AZAffinityLocationTypePartition, "aws-iso-b", true},
+		{awstypes.AZAffinityLocationTypePartition, "us-east-1", false},
+		{awstypes.AZAffinityLocationTypeGlobal, "global", true},
+		{awstypes.AZAffinityLocationTypeGlobal, "aws", false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(string(testCase.locationType)+"/"+testCase.locationID, func(t *testing.T) {
+			t.Parallel()
+
+			err := validateAZAffinityLocation(testCase.locationType, testCase.locationID)
+
+			if got := err == nil; got != testCase.valid {
+				t.Errorf("validateAZAffinityLocation(%q, %q) error = %v, want valid = %t", testCase.locationType, testCase.locationID, err, testCase.valid)
+			}
+		})
+	}
+}

@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-25T23:37:47.000000+01:00
+custom:
+    Body: Add `az_affinity_routing_policy` argument
+    Impact: resource/aws_route53_record

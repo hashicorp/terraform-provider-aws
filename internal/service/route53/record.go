@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53/types"
@@ -28,8 +29,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/provider/sdkv2/importer"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	lazyvalidation "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/validation/lazy"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	inttypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -79,6 +82,8 @@ func resourceRecord() *schema.Resource {
 		SchemaVersion: 2,
 		MigrateState:  recordMigrateState,
 
+		CustomizeDiff: azAffinityRoutingPolicyCustomizeDiff,
+
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
 				names.AttrAlias: {
@@ -113,6 +118,38 @@ func resourceRecord() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
+				"az_affinity_routing_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"location_id": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 64),
+									lazyvalidation.StringMatch(`^[0-9a-z-]+$`, "must contain only lowercase alphanumeric characters and hyphens"),
+								),
+							},
+							"location_type": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.AZAffinityLocationType](),
+							},
+						},
+					},
+					ConflictsWith: []string{
+						"cidr_routing_policy",
+						"failover_routing_policy",
+						"geolocation_routing_policy",
+						"geoproximity_routing_policy",
+						"latency_routing_policy",
+						"multivalue_answer_routing_policy",
+						"weighted_routing_policy",
+					},
+					RequiredWith: []string{"set_identifier"},
+				},
 				"cidr_routing_policy": {
 					Type:     schema.TypeList,
 					MaxItems: 1,
@@ -130,6 +167,7 @@ func resourceRecord() *schema.Resource {
 						},
 					},
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"failover_routing_policy",
 						"geolocation_routing_policy",
 						"geoproximity_routing_policy",
@@ -153,6 +191,7 @@ func resourceRecord() *schema.Resource {
 						},
 					},
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"cidr_routing_policy",
 						"geolocation_routing_policy",
 						"geoproximity_routing_policy",
@@ -187,6 +226,7 @@ func resourceRecord() *schema.Resource {
 						},
 					},
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"cidr_routing_policy",
 						"failover_routing_policy",
 						"geoproximity_routing_policy",
@@ -234,6 +274,7 @@ func resourceRecord() *schema.Resource {
 						},
 					},
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"cidr_routing_policy",
 						"failover_routing_policy",
 						"geolocation_routing_policy",
@@ -261,6 +302,7 @@ func resourceRecord() *schema.Resource {
 						},
 					},
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"cidr_routing_policy",
 						"failover_routing_policy",
 						"geolocation_routing_policy",
@@ -274,6 +316,7 @@ func resourceRecord() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"cidr_routing_policy",
 						"failover_routing_policy",
 						"geolocation_routing_policy",
@@ -329,6 +372,7 @@ func resourceRecord() *schema.Resource {
 						},
 					},
 					ConflictsWith: []string{
+						"az_affinity_routing_policy",
 						"cidr_routing_policy",
 						"failover_routing_policy",
 						"geolocation_routing_policy",
@@ -455,6 +499,16 @@ func resourceRecordFlatten(d *schema.ResourceData, record *awstypes.ResourceReco
 			return sdkdiag.AppendErrorf(diags, "setting alias: %s", err)
 		}
 	}
+	if azAffinity := record.AZAffinity; azAffinity != nil {
+		tfList := []any{map[string]any{
+			"location_id":   aws.ToString(azAffinity.LocationId),
+			"location_type": azAffinity.LocationType,
+		}}
+
+		if err := d.Set("az_affinity_routing_policy", tfList); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting az_affinity_routing_policy: %s", err)
+		}
+	}
 	if cidrRoutingConfig := record.CidrRoutingConfig; cidrRoutingConfig != nil {
 		tfList := []any{map[string]any{
 			"collection_id": aws.ToString(cidrRoutingConfig.CollectionId),
@@ -568,12 +622,26 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta any)
 
 	// If the old record has any of the following, we need to pass that in
 	// here because otherwise the API will give us an error:
+	// - az_affinity_routing_policy
 	// - cidr_routing_policy
 	// - failover_routing_policy
 	// - geolocation_routing_policy
 	// - latency_routing_policy
 	// - multivalue_answer_routing_policy
 	// - weighted_routing_policy
+
+	if v, _ := d.GetChange("az_affinity_routing_policy"); v != nil {
+		if o, ok := v.([]any); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]any); ok {
+					oldRec.AZAffinity = &awstypes.AZAffinity{
+						LocationId:   nilString(v["location_id"].(string)),
+						LocationType: awstypes.AZAffinityLocationType(v["location_type"].(string)),
+					}
+				}
+			}
+		}
+	}
 
 	if v, _ := d.GetChange("cidr_routing_policy"); v != nil {
 		if o, ok := v.([]any); ok {
@@ -971,6 +1039,14 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		}
 	}
 
+	if v, ok := d.GetOk("az_affinity_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+		tfMap := v.([]any)[0].(map[string]any)
+		apiObject.AZAffinity = &awstypes.AZAffinity{
+			LocationId:   aws.String(tfMap["location_id"].(string)),
+			LocationType: awstypes.AZAffinityLocationType(tfMap["location_type"].(string)),
+		}
+	}
+
 	if v, ok := d.GetOk("cidr_routing_policy"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		tfMap := v.([]any)[0].(map[string]any)
 		apiObject.CidrRoutingConfig = &awstypes.CidrRoutingConfig{
@@ -1026,6 +1102,48 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 	}
 
 	return apiObject
+}
+
+func azAffinityRoutingPolicyCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if !d.NewValueKnown("az_affinity_routing_policy.0.location_type") || !d.NewValueKnown("az_affinity_routing_policy.0.location_id") {
+		return nil
+	}
+
+	v, ok := d.Get("az_affinity_routing_policy").([]any)
+	if !ok || len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	tfMap := v[0].(map[string]any)
+
+	return validateAZAffinityLocation(awstypes.AZAffinityLocationType(tfMap["location_type"].(string)), tfMap["location_id"].(string))
+}
+
+// validateAZAffinityLocation checks the format of location_id for its location_type.
+// The patterns are deliberately loose: Route 53 is the authority on which locations exist,
+// this only catches values of the wrong kind (for example an AZ name instead of an AZ ID).
+func validateAZAffinityLocation(locationType awstypes.AZAffinityLocationType, locationID string) error {
+	var pattern, example string
+
+	switch locationType {
+	case awstypes.AZAffinityLocationTypeAvailabilityZone:
+		pattern, example = `^[0-9a-z]+(-[0-9a-z]+)*-az[0-9]+$`, "use1-az1"
+	case awstypes.AZAffinityLocationTypeAvailabilityZoneGroup:
+		pattern, example = `^`+inttypes.CanonicalRegionPatternNoAnchors+`-zg-[0-9]+$`, "us-east-1-zg-1" //lintignore:AWSAT003
+	case awstypes.AZAffinityLocationTypeRegion:
+		pattern, example = inttypes.CanonicalRegionPattern, "us-east-1" //lintignore:AWSAT003
+	case awstypes.AZAffinityLocationTypePartition:
+		pattern, example = `^aws(-[a-z]+)*$`, "aws"
+	case awstypes.AZAffinityLocationTypeGlobal:
+		pattern, example = `^global$`, "global"
+	default:
+		return nil
+	}
+
+	if !regexache.MustCompile(pattern).MatchString(locationID) {
+		return fmt.Errorf("az_affinity_routing_policy: location_id %q is not valid for location_type %q, expected a value like %q", locationID, locationType, example)
+	}
+
+	return nil
 }
 
 // Check if the current record name contains the zone suffix.
