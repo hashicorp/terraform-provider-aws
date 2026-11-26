@@ -9,12 +9,17 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -202,6 +207,65 @@ func TestAccRedshiftIDCApplication_ServiceIntegrations_s3AccessGrants(t *testing
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_integration.0.s3_access_grants.0.read_write_access.0.authorization", "Enabled"),
 				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "redshift_idc_application_arn"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "redshift_idc_application_arn",
+			},
+		},
+	})
+}
+
+func TestAccRedshiftIDCApplication_ServiceIntegrations_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshift_idc_application.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIDCApplicationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdcApplicationConfig_serviceIntegrations_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIDCApplicationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "redshift_idc_application_name", rName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("service_integration"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"lake_formation": knownvalue.ListSizeExact(0),
+							"redshift": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"connect": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"authorization": tfknownvalue.StringExact(awstypes.ServiceAuthorizationEnabled),
+										}),
+									}),
+								}),
+							}),
+							"s3_access_grants": knownvalue.ListSizeExact(0),
+						}),
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"lake_formation": knownvalue.ListSizeExact(0),
+							"redshift":       knownvalue.ListSizeExact(0),
+							"s3_access_grants": knownvalue.ListExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"read_write_access": knownvalue.ListExact([]knownvalue.Check{
+										knownvalue.ObjectExact(map[string]knownvalue.Check{
+											"authorization": tfknownvalue.StringExact(awstypes.ServiceAuthorizationEnabled),
+										}),
+									}),
+								}),
+							}),
+						}),
+					})),
+				},
 			},
 			{
 				ResourceName:                         resourceName,
@@ -452,6 +516,35 @@ resource "aws_redshift_idc_application" "test" {
   service_integration {
     s3_access_grants {
       read_write_access {
+        authorization = "Enabled"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccIdcApplicationConfig_serviceIntegrations_multiple(rName string) string {
+	return acctest.ConfigCompose(testAccIdcApplicationConfig_baseIAMRole(rName), fmt.Sprintf(`
+data "aws_ssoadmin_instances" "test" {}
+
+resource "aws_redshift_idc_application" "test" {
+  iam_role_arn                  = aws_iam_role.test.arn
+  idc_display_name              = %[1]q
+  idc_instance_arn              = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  redshift_idc_application_name = %[1]q
+
+  service_integration {
+    s3_access_grants {
+      read_write_access {
+        authorization = "Enabled"
+      }
+    }
+  }
+
+  service_integration {
+    redshift {
+      connect {
         authorization = "Enabled"
       }
     }

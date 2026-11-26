@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfobjectvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/objectvalidator"
 	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
@@ -123,12 +124,17 @@ func (r *idcApplicationResource) Schema(ctx context.Context, req resource.Schema
 					},
 				},
 			},
-			"service_integration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[serviceIntegrationsModel](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
+			"service_integration": schema.SetNestedBlock{
+				CustomType: fwtypes.NewSetNestedObjectTypeOf[serviceIntegrationsModel](ctx),
 				NestedObject: schema.NestedBlockObject{
+					CustomType: fwtypes.NewObjectTypeOf[serviceIntegrationsModel](ctx),
+					Validators: []validator.Object{
+						tfobjectvalidator.ExactlyOneOfChildren(
+							path.MatchRelative().AtName("lake_formation"),
+							path.MatchRelative().AtName("redshift"),
+							path.MatchRelative().AtName("s3_access_grants"),
+						),
+					},
 					Blocks: map[string]schema.Block{
 						"lake_formation": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[lakeFormationModel](ctx),
@@ -354,7 +360,7 @@ type idcApplicationResourceModel struct {
 	IdentityNamespace          types.String                                                `tfsdk:"identity_namespace"`
 	RedshiftIDCApplicationARN  types.String                                                `tfsdk:"redshift_idc_application_arn"`
 	RedshiftIDCApplicationName types.String                                                `tfsdk:"redshift_idc_application_name"`
-	ServiceIntegrations        fwtypes.ListNestedObjectValueOf[serviceIntegrationsModel]   `tfsdk:"service_integration"`
+	ServiceIntegrations        fwtypes.SetNestedObjectValueOf[serviceIntegrationsModel]    `tfsdk:"service_integration"`
 	Tags                       tftags.Map                                                  `tfsdk:"tags"`
 	TagsAll                    tftags.Map                                                  `tfsdk:"tags_all"`
 }
