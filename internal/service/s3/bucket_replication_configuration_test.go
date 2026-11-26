@@ -980,6 +980,163 @@ func TestAccS3BucketReplicationConfiguration_filter_andOperator(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketReplicationConfiguration_filter_notOperator(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dstBucketResourceName := "aws_s3_bucket.destination"
+	iamRoleResourceName := "aws_iam_role.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfigurationConfig_filterNotOperatorPrefix(rName, "foo"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrID:                         "foobar",
+						"delete_marker_replication.#":        "1",
+						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
+						"filter.#":                           "1",
+						"filter.0.not.#":                     "1",
+						"filter.0.not.0.prefix":              "foo",
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
+						"destination.#":                      "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBucketReplicationConfigurationConfig_filterNotOperatorTag(rName, "testkey", "testvalue"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrID:                         "foobar",
+						"delete_marker_replication.#":        "1",
+						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
+						"filter.#":                           "1",
+						"filter.0.not.#":                     "1",
+						"filter.0.not.0.tag.#":               "1",
+						"filter.0.not.0.tag.0.key":           "testkey",
+						"filter.0.not.0.tag.0.value":         "testvalue",
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
+						"destination.#":                      "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketReplicationConfiguration_filter_andNotOperator(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dstBucketResourceName := "aws_s3_bucket.destination"
+	iamRoleResourceName := "aws_iam_role.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfigurationConfig_filterAndNotOperatorPrefix(rName, "foo", "exclude"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrID:                         "foobar",
+						"delete_marker_replication.#":        "1",
+						"delete_marker_replication.0.status": string(types.DeleteMarkerReplicationStatusDisabled),
+						"filter.#":                           "1",
+						"filter.0.and.#":                     "1",
+						"filter.0.and.0.prefix":              "foo",
+						"filter.0.and.0.not.#":               "1",
+						"filter.0.and.0.not.0.prefix":        "exclude",
+						names.AttrStatus:                     string(types.ReplicationRuleStatusEnabled),
+						"destination.#":                      "1",
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketReplicationConfiguration_encryptionConfigurationUseSourceMultiRegionKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	dstBucketResourceName := "aws_s3_bucket.destination"
+	iamRoleResourceName := "aws_iam_role.test"
+	kmsKeyResourceName := "aws_kms_key.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfigurationConfig_useSourceMultiRegionKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrRole, iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrID:     "foobar",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.#":  "1",
+						"destination.0.encryption_configuration.#":                                      "1",
+						"destination.0.encryption_configuration.0.use_source_multi_region_key.#":        "1",
+						"destination.0.encryption_configuration.0.use_source_multi_region_key.0.status": string(types.UseSourceMultiRegionKeyStatusEnabled),
+						"source_selection_criteria.#":                                                   "1",
+						"source_selection_criteria.0.sse_kms_encrypted_objects.#":                       "1",
+						"source_selection_criteria.0.sse_kms_encrypted_objects.0.status":                string(types.SseKmsEncryptedObjectsStatusEnabled),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.bucket", dstBucketResourceName, names.AttrARN),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "rule.*.destination.0.encryption_configuration.0.replica_kms_key_id", kmsKeyResourceName, names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // TestAccS3BucketReplicationConfiguration_filter_withoutId ensures a configuration with a Computed
 // rule.id does not result in a non-empty plan.
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23690
@@ -2570,4 +2727,163 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     }
   }
 }`, rName, storageClass))
+}
+
+func testAccBucketReplicationConfigurationConfig_filterNotOperatorPrefix(rName, prefix string) string {
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination,
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id = "foobar"
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    filter {
+      not {
+        prefix = %[1]q
+      }
+    }
+
+    status = "Enabled"
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
+}`, prefix))
+}
+
+func testAccBucketReplicationConfigurationConfig_filterNotOperatorTag(rName, key, value string) string {
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination,
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id = "foobar"
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    filter {
+      not {
+        tag {
+          key   = %[1]q
+          value = %[2]q
+        }
+      }
+    }
+
+    status = "Enabled"
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
+}`, key, value))
+}
+
+func testAccBucketReplicationConfigurationConfig_filterAndNotOperatorPrefix(rName, andPrefix, notPrefix string) string {
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination,
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id = "foobar"
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    filter {
+      and {
+        prefix = %[1]q
+
+        not {
+          prefix = %[2]q
+        }
+      }
+    }
+
+    status = "Enabled"
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+    }
+  }
+}`, andPrefix, notPrefix))
+}
+
+func testAccBucketReplicationConfigurationConfig_useSourceMultiRegionKey(rName string) string {
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  region = %[1]q
+
+  description             = "TF Acceptance Test S3 replication multi-region KMS key"
+  deletion_window_in_days = 7
+  enable_key_rotation     = true
+  multi_region            = true
+}
+
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination,
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    filter {
+      prefix = "foo"
+    }
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+
+      encryption_configuration {
+        replica_kms_key_id = aws_kms_key.test.arn
+
+        use_source_multi_region_key {
+          status = "Enabled"
+        }
+      }
+    }
+
+    source_selection_criteria {
+      sse_kms_encrypted_objects {
+        status = "Enabled"
+      }
+    }
+  }
+}`, acctest.AlternateRegion()))
 }
