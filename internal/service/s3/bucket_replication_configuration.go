@@ -651,47 +651,53 @@ func expandAccessControlTranslation(tfList []any) *types.AccessControlTranslatio
 
 func replicationRuleNotOperatorSchema() *schema.Resource {
 	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"or": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"prefixes": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
-						},
-						names.AttrTags: tftags.TagsSchema(),
-					},
-				},
-			},
-			names.AttrPrefix: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-			"tag": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrKey: {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						names.AttrValue: {
-							Type:     schema.TypeString,
-							Required: true,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"or": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						SchemaFunc: func() map[string]*schema.Schema {
+							return map[string]*schema.Schema{
+								"prefixes": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type:         schema.TypeString,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
+									},
+								},
+								names.AttrTags: tftags.TagsSchema(),
+							}
 						},
 					},
 				},
-			},
+				names.AttrPrefix: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"tag": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						SchemaFunc: func() map[string]*schema.Schema {
+							return map[string]*schema.Schema{
+								names.AttrKey: {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								names.AttrValue: {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+							}
+						},
+					},
+				},
+			}
 		},
 	}
 }
