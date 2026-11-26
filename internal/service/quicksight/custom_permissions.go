@@ -294,6 +294,7 @@ type capabilitiesModel struct {
 	CreateAndUpdateThemes                 fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_themes"`
 	CreateAndUpdateThresholdAlerts        fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_and_update_threshold_alerts"`
 	CreateChatAgents                      fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_chat_agents"`
+	CreateDashboardExecutiveSummaryWithQ  fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_dashboard_executive_summary_with_q"`
 	CreateSharedFolders                   fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_shared_folders"`
 	CreateSPICEDataset                    fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"create_spice_dataset"`
 	Dashboard                             fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"dashboard"`
@@ -306,6 +307,7 @@ type capabilitiesModel struct {
 	Flow                                  fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"flow"`
 	IncludeContentInScheduledReportsEmail fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"include_content_in_scheduled_reports_email"`
 	KnowledgeBase                         fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"knowledge_base"`
+	ManageSharedFolders                   fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"manage_shared_folders"`
 	PerformFlowUiTask                     fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"perform_flow_ui_task"`
 	PrintReports                          fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"print_reports"`
 	PublishWithoutApproval                fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"publish_without_approval"`
@@ -317,6 +319,7 @@ type capabilitiesModel struct {
 	ShareDataSources                      fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"share_data_sources"`
 	Space                                 fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"space"`
 	SubscribeDashboardEmailReports        fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"subscribe_dashboard_email_reports"`
+	Topic                                 fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"topic"`
 	UseAgentWebSearch                     fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"use_agent_web_search"`
 	UseBedrockModels                      fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"use_bedrock_models"`
 	ViewAccountSPICECapacity              fwtypes.StringEnum[awstypes.CapabilityState] `tfsdk:"view_account_spice_capacity"`

@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-22T19:22:15.869291062+01:00
+custom:
+    Body: Add `create_dashboard_executive_summary_with_q`, `manage_shared_folders`, and `topic` to `capabilities` configuration block
+    Impact: resource/aws_quicksight_custom_permissions
+    PullRequest: "51234"
