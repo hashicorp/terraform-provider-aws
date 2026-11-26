@@ -7,10 +7,12 @@ package sqs
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"maps"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -581,7 +583,7 @@ func statusQueueAttributeState(conn *sqs.Client, url string, expected map[types.
 						return queueAttributeStateNotEqual
 					}
 				case types.QueueAttributeNameRedriveAllowPolicy, types.QueueAttributeNameRedrivePolicy:
-					if !verify.JSONStringsEqual(g, e) {
+					if !jsonStringsEqualLoose(g, e) {
 						return queueAttributeStateNotEqual
 					}
 				default:
@@ -652,4 +654,80 @@ func parseQueueURL(u string) (result inttypes.BaseIdentity, err error) {
 		AccountID: match[2],
 		Region:    match[1],
 	}, nil
+}
+
+// jsonStringsEqualLoose compares two JSON strings semantically, treating
+// numeric values and their string representations as equivalent. For example,
+// {"maxReceiveCount":5} and {"maxReceiveCount":"5"} are considered equal.
+// This handles the case where AWS SQS may return numeric values as strings
+// in attributes like RedrivePolicy.
+func jsonStringsEqualLoose(s1, s2 string) bool {
+	var o1, o2 any
+
+	if err := json.Unmarshal([]byte(s1), &o1); err != nil {
+		return false
+	}
+
+	if err := json.Unmarshal([]byte(s2), &o2); err != nil {
+		return false
+	}
+
+	return jsonValuesEqualLoose(o1, o2)
+}
+
+// jsonValuesEqualLoose recursively compares two JSON-unmarshaled values,
+// treating numeric values and their string representations as equivalent.
+func jsonValuesEqualLoose(v1, v2 any) bool {
+	if reflect.DeepEqual(v1, v2) {
+		return true
+	}
+
+	switch t1 := v1.(type) {
+	case map[string]any:
+		t2, ok := v2.(map[string]any)
+		if !ok || len(t1) != len(t2) {
+			return false
+		}
+		for k, val1 := range t1 {
+			val2, ok := t2[k]
+			if !ok {
+				return false
+			}
+			if !jsonValuesEqualLoose(val1, val2) {
+				return false
+			}
+		}
+		return true
+	case []any:
+		t2, ok := v2.([]any)
+		if !ok || len(t1) != len(t2) {
+			return false
+		}
+		for i := range t1 {
+			if !jsonValuesEqualLoose(t1[i], t2[i]) {
+				return false
+			}
+		}
+		return true
+	default:
+		// Handle numeric/string type mismatches: compare as float64 if possible.
+		n1, ok1 := jsonValueToFloat64(v1)
+		n2, ok2 := jsonValueToFloat64(v2)
+		if ok1 && ok2 {
+			return n1 == n2
+		}
+		return false
+	}
+}
+
+func jsonValueToFloat64(v any) (float64, bool) {
+	switch t := v.(type) {
+	case float64:
+		return t, true
+	case string:
+		f, err := strconv.ParseFloat(t, 64)
+		return f, err == nil
+	default:
+		return 0, false
+	}
 }
