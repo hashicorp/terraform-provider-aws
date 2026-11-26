@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-23T08:38:21.376375229Z
+custom:
+    Body: Add `web_authn_redirection` argument
+    Impact: resource/aws_appstream_stack
+    PullRequest: "51251"
