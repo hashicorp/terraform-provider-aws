@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecs_task_definition: Support `sharingStrategy` (GPU sharing with NVIDIA MPS) in `resourceRequirements` in `container_definitions`
+```
+
+```release-note:enhancement
+data-source/aws_ecs_task_definition: Include `sharingStrategy` in `resourceRequirements` in `container_definitions`
+```

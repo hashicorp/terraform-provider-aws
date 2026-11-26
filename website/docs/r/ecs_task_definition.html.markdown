@@ -186,6 +186,38 @@ TASK_DEFINITION
 }
 ```
 
+### Example Using GPU Sharing
+
+A GPU resource requirement can use a `sharingStrategy` instead of a GPU count, so that several containers share one NVIDIA GPU through Multi-Process Service (MPS). For more information, see [GPU sharing](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ResourceRequirement.html).
+
+```terraform
+resource "aws_ecs_task_definition" "example" {
+  family                   = "gpu-shared"
+  requires_compatibilities = ["EC2"]
+
+  container_definitions = jsonencode([
+    {
+      name      = "model"
+      image     = "my-inference-image"
+      memory    = 8192
+      essential = true
+
+      resourceRequirements = [
+        {
+          type = "GPU"
+          sharingStrategy = {
+            nvidiaMps = {
+              memory            = 4096
+              maxComputePercent = 50
+            }
+          }
+        }
+      ]
+    }
+  ])
+}
+```
+
 ### Example Using `runtime_platform` and `fargate`
 
 ```terraform

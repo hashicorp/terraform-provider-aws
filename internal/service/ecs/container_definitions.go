@@ -19,8 +19,7 @@ import (
 )
 
 func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, error) {
-	var obj1 containerDefinitions
-	err := tfjson.DecodeFromString(def1, &obj1)
+	obj1, err := decodeContainerDefinitions(def1)
 	if err != nil {
 		return false, err
 	}
@@ -30,8 +29,7 @@ func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 		return false, err
 	}
 
-	var obj2 containerDefinitions
-	err = tfjson.DecodeFromString(def2, &obj2)
+	obj2, err := decodeContainerDefinitions(def2)
 	if err != nil {
 		return false, err
 	}
@@ -45,6 +43,73 @@ func containerDefinitionsAreEquivalent(def1, def2 string, isAWSVPC bool) (bool, 
 }
 
 type containerDefinitions []awstypes.ContainerDefinition
+
+// containerDefinitionJSON is used to decode a container definition from JSON.
+// encoding/json can't decode into the SDK's union interfaces (for example
+// types.SharingStrategy), so the fields that contain them are shadowed here
+// and converted by hand.
+type containerDefinitionJSON struct {
+	awstypes.ContainerDefinition
+	ResourceRequirements []resourceRequirementJSON
+}
+
+type resourceRequirementJSON struct {
+	SharingStrategy *sharingStrategyJSON
+	Type            awstypes.ResourceType
+	Value           *string
+}
+
+type sharingStrategyJSON struct {
+	NvidiaMps *awstypes.NvidiaMpsAllocation
+}
+
+func (v containerDefinitionJSON) toAPIObject() awstypes.ContainerDefinition {
+	apiObject := v.ContainerDefinition
+
+	if v.ResourceRequirements != nil {
+		apiObject.ResourceRequirements = make([]awstypes.ResourceRequirement, 0, len(v.ResourceRequirements))
+		for _, rr := range v.ResourceRequirements {
+			apiObject.ResourceRequirements = append(apiObject.ResourceRequirements, awstypes.ResourceRequirement{
+				SharingStrategy: rr.SharingStrategy.toAPIObject(),
+				Type:            rr.Type,
+				Value:           rr.Value,
+			})
+		}
+	}
+
+	return apiObject
+}
+
+func (v *sharingStrategyJSON) toAPIObject() awstypes.SharingStrategy {
+	if v == nil {
+		return nil
+	}
+
+	if v.NvidiaMps != nil {
+		return &awstypes.SharingStrategyMemberNvidiaMps{Value: *v.NvidiaMps}
+	}
+
+	return nil
+}
+
+func decodeContainerDefinitions(s string) (containerDefinitions, error) {
+	var objs []containerDefinitionJSON
+
+	if err := tfjson.DecodeFromString(s, &objs); err != nil {
+		return nil, err
+	}
+
+	if objs == nil {
+		return nil, nil
+	}
+
+	apiObjects := make(containerDefinitions, 0, len(objs))
+	for _, obj := range objs {
+		apiObjects = append(apiObjects, obj.toAPIObject())
+	}
+
+	return apiObjects, nil
+}
 
 func (cd containerDefinitions) reduce(isAWSVPC bool) {
 	// Deal with fields which may be re-ordered in the API.
@@ -353,6 +418,9 @@ func serializeContainerDefinition(v *awstypes.ContainerDefinition, value smithyj
 		a := o.Key("resourceRequirements").Array()
 		for _, requirement := range v.ResourceRequirements {
 			r := a.Value().Object()
+			if requirement.SharingStrategy != nil {
+				serializeSharingStrategy(requirement.SharingStrategy, r.Key("sharingStrategy"))
+			}
 			if requirement.Type != "" {
 				r.Key(names.AttrType).String(string(requirement.Type))
 			}
@@ -643,6 +711,23 @@ func serializeSecrets(v []awstypes.Secret, value smithyjson.Value) {
 	}
 }
 
+func serializeSharingStrategy(v awstypes.SharingStrategy, value smithyjson.Value) {
+	o := value.Object()
+	defer o.Close()
+
+	switch v := v.(type) {
+	case *awstypes.SharingStrategyMemberNvidiaMps:
+		m := o.Key("nvidiaMps").Object()
+		if v.Value.MaxComputePercent != nil {
+			m.Key("maxComputePercent").Integer(*v.Value.MaxComputePercent)
+		}
+		if v.Value.Memory != nil {
+			m.Key("memory").Integer(*v.Value.Memory)
+		}
+		m.Close()
+	}
+}
+
 func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
 	jsonEncoder := smithyjson.NewEncoder()
 	err := serializeContainerDefinitions(apiObjects, jsonEncoder.Value)
@@ -655,9 +740,8 @@ func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (str
 }
 
 func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
-	var apiObjects []awstypes.ContainerDefinition
-
-	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
+	apiObjects, err := decodeContainerDefinitions(tfString)
+	if err != nil {
 		return nil, err
 	}
 
@@ -670,7 +754,7 @@ func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition
 		}
 	}
 
-	containerDefinitions(apiObjects).compactArrays()
+	apiObjects.compactArrays()
 
 	return apiObjects, nil
 }
