@@ -37,7 +37,12 @@ This resource supports the following arguments:
 * `media_type` - (Optional) Media type of the stream. Consumers of the stream can use this information when processing the stream. For more information about media types, see [Media Types](http://www.iana.org/assignments/media-types/media-types.xhtml). If you choose to specify the MediaType, see [Naming Requirements](https://tools.ietf.org/html/rfc6838#section-4.2) for guidelines.
 * `name` - (Required) Name to identify the stream. Unique to the AWS account and region the stream is created in.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
+* `stream_storage_configuration` - (Optional) Storage configuration for the stream. See [`stream_storage_configuration`](#stream_storage_configuration) below.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `stream_storage_configuration`
+
+* `default_storage_tier` - (Required) Default storage tier for the stream data. Valid values are `HOT` and `WARM`. If the block is omitted on create, AWS uses `HOT`. Removing the block from configuration does not change the current tier.
 
 ## Attribute Reference
 
