@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T14:36:47.071701+05:30
+custom:
+    Body: Reduce `DescribeUsers` polling in waiters to avoid API throttling and return immediately from Read when the user is not found
+    Impact: resource/aws_elasticache_user
+    PullRequest: "50715"
