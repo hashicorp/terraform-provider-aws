@@ -80,6 +80,7 @@ The following arguments are optional:
 
 * `alias_target` - (Optional) Alias target block.
 See [`alias_target`](#alias_target) below.
+* `az_affinity` - (Optional) AZ-affinity block to answer DNS queries based on the Availability Zone, Zone Group, Region or partition that the query comes from. See [`az_affinity`](#az_affinity) below.
 * `cidr_routing_policy` - (Optional) CIDR routing configuration block.
 See [`cidr_routing_config`](#cidr_routing_config) below.
 * `failover` - (Optional) Type of failover resource record.
@@ -96,8 +97,7 @@ Must be a valid AWS region name.
 See the [AWS documentation](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html#routing-policy-latency) on latency based routing for additional details.
 * `resource_records` - (Optional, Required for non-alias records) Information about the resource records to act upon.
 See [`resource_records`](#resource_records) below.
-* `set_identifier` - (Optional) An identifier that differentiates among multiple resource record sets that have the same combination of name and type.
-Required if using `cidr_routing_config`, `failover`, `geolocation`,`geoproximity_location`, `multi_value_answer`, `region`, or `weight`.
+* `set_identifier` - (Optional) An identifier that differentiates among multiple resource record sets that have the same combination of name and type. Required if using `az_affinity`, `cidr_routing_config`, `failover`, `geolocation`,`geoproximity_location`, `multi_value_answer`, `region`, or `weight`.
 * `traffic_policy_instance_id` - (Optional) ID of the traffic policy instance that Route 53 created this resource record set for.
 To delete the resource record set that is associated with a traffic policy instance, use the `DeleteTrafficPolicyInstance` API.
 Route 53 will delete the resource record set automatically.
@@ -110,6 +110,13 @@ If the resource record set is deleted via `ChangeResourceRecordSets` (the API un
 * `dns_name` - (Required) DNS domain name for another resource record set in this hosted zone.
 * `evaluate_target_health` - (Required) Set to `true` if you want Route 53 to determine whether to respond to DNS queries using this resource record set by checking the health of the resource record set. Some resources have special requirements, see [the AWS documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-values.html#rrsets-values-alias-evaluate-target-health) for additional details.
 * `hosted_zone_id` - (Required) Hosted zone ID for a CloudFront distribution, S3 bucket, ELB, AWS Global Accelerator, or Route 53 hosted zone. See [`resource_elb.zone_id`](/docs/providers/aws/r/elb.html#zone_id) for an example.
+
+### `az_affinity`
+
+* `location_id` - (Required) Identifier of the location, in lowercase. An Availability Zone ID such as `use1-az1` (not an Availability Zone name such as `us-east-1a`), a Zone Group of Availability Zones such as `us-east-1-zg-1`, a Region such as `us-east-1`, a partition such as `aws`, or `global`. The [`aws_availability_zones` data source](/docs/providers/aws/d/availability_zones.html) exposes Availability Zone IDs in `zone_ids`.
+* `location_type` - (Required) Scope that the record answers for. Valid values are `AvailabilityZone`, `AvailabilityZoneGroup`, `Region`, `Partition` and `Global`.
+
+See the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-azaffinity.html) for additional details.
 
 ### `cidr_routing_config`
 
