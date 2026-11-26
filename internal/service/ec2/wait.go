@@ -2528,6 +2528,79 @@ func waitTransitGatewayMulticastDomainAssociationDeleted(ctx context.Context, co
 	return nil, err
 }
 
+// waitTransitGatewayNetworkFunctionAttachmentCreated waits for a new attachment to be usable.
+// An attachment passes through pendingAcceptance even when the endpoint service accepts
+// connections automatically, so that state is only final when acceptance is required.
+func waitTransitGatewayNetworkFunctionAttachmentCreated(ctx context.Context, conn *ec2.Client, id string, acceptanceRequired bool, timeout time.Duration) (*awstypes.TransitGatewayNetworkFunctionAttachment, error) {
+	pending := enum.Slice(
+		awstypes.TransitGatewayAttachmentStateInitiating,
+		awstypes.TransitGatewayAttachmentStateInitiatingRequest,
+		awstypes.TransitGatewayAttachmentStatePending,
+	)
+	target := enum.Slice(awstypes.TransitGatewayAttachmentStateAvailable)
+
+	if acceptanceRequired {
+		target = append(target, string(awstypes.TransitGatewayAttachmentStatePendingAcceptance))
+	} else {
+		pending = append(pending, string(awstypes.TransitGatewayAttachmentStatePendingAcceptance))
+	}
+
+	stateConf := &retry.StateChangeConf{
+		Pending: pending,
+		Target:  target,
+		Timeout: timeout,
+		Refresh: statusTransitGatewayNetworkFunctionAttachment(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayNetworkFunctionAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayNetworkFunctionAttachmentUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayNetworkFunctionAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStateModifying, awstypes.TransitGatewayAttachmentStateRollingBack),
+		Target:  enum.Slice(awstypes.TransitGatewayAttachmentStateAvailable),
+		Timeout: timeout,
+		Refresh: statusTransitGatewayNetworkFunctionAttachment(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayNetworkFunctionAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitTransitGatewayNetworkFunctionAttachmentDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.TransitGatewayNetworkFunctionAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.TransitGatewayAttachmentStateAvailable,
+			awstypes.TransitGatewayAttachmentStateDeleting,
+			awstypes.TransitGatewayAttachmentStateModifying,
+			awstypes.TransitGatewayAttachmentStatePending,
+			awstypes.TransitGatewayAttachmentStatePendingAcceptance,
+		),
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusTransitGatewayNetworkFunctionAttachment(conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TransitGatewayNetworkFunctionAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitTransitGatewayPeeringAttachmentAccepted(ctx context.Context, conn *ec2.Client, id string) (*awstypes.TransitGatewayPeeringAttachment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.TransitGatewayAttachmentStatePending, awstypes.TransitGatewayAttachmentStatePendingAcceptance),

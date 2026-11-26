@@ -251,6 +251,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Region:   inttypes.ResourceRegionDefault(),
 		},
 		{
+			Factory:  newTransitGatewayNetworkFunctionAttachmentResource,
+			TypeName: "aws_ec2_transit_gateway_network_function_attachment",
+			Name:     "Transit Gateway Network Function Attachment",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrID),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
+			},
+		},
+		{
 			Factory:  newTransitGatewayPolicyTableEntryResource,
 			TypeName: "aws_ec2_transit_gateway_policy_table_entry",
 			Name:     "Transit Gateway Policy Table Entry",

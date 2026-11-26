@@ -122,6 +122,14 @@ func TestAccTransitGateway_serial(t *testing.T) {
 			"ListIncludeResource":  testAccTransitGatewayMeteringPolicy_List_includeResource,
 			"ListRegionOverride":   testAccTransitGatewayMeteringPolicy_List_regionOverride,
 		},
+		"NetworkFunctionAttachment": {
+			acctest.CtBasic:       testAccTransitGatewayNetworkFunctionAttachment_basic,
+			acctest.CtDisappears:  testAccTransitGatewayNetworkFunctionAttachment_disappears,
+			"tags":                testAccTransitGatewayNetworkFunctionAttachment_tags,
+			"availabilityZoneIDs": testAccTransitGatewayNetworkFunctionAttachment_availabilityZoneIDs,
+			"availabilityZones":   testAccTransitGatewayNetworkFunctionAttachment_availabilityZones,
+			"Identity":            testAccTransitGatewayNetworkFunctionAttachment_identity,
+		},
 		"MeteringPolicyEntry": {
 			acctest.CtBasic:      testAccTransitGatewayMeteringPolicyEntry_basic,
 			acctest.CtDisappears: testAccTransitGatewayMeteringPolicyEntry_disappears,

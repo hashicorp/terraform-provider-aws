@@ -1413,6 +1413,22 @@ func statusTransitGatewayMulticastDomainAssociation(conn *ec2.Client, multicastD
 	}
 }
 
+func statusTransitGatewayNetworkFunctionAttachment(conn *ec2.Client, id string) retry.StateRefreshFunc {
+	return func(ctx context.Context) (any, string, error) {
+		output, err := findTransitGatewayNetworkFunctionAttachmentByID(ctx, conn, id)
+
+		if retry.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
 func statusTransitGatewayPeeringAttachment(conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func(ctx context.Context) (any, string, error) {
 		output, err := findTransitGatewayPeeringAttachment(ctx, conn, &ec2.DescribeTransitGatewayPeeringAttachmentsInput{

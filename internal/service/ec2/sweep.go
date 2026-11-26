@@ -307,11 +307,17 @@ func RegisterSweepers() {
 		F:    sweepTransitGatewayMulticastDomains,
 	})
 
+	resource.AddTestSweepers("aws_ec2_transit_gateway_network_function_attachment", &resource.Sweeper{
+		Name: "aws_ec2_transit_gateway_network_function_attachment",
+		F:    sweepTransitGatewayNetworkFunctionAttachments,
+	})
+
 	resource.AddTestSweepers("aws_ec2_transit_gateway", &resource.Sweeper{
 		Name: "aws_ec2_transit_gateway",
 		F:    sweepTransitGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
+			"aws_ec2_transit_gateway_network_function_attachment",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_ec2_transit_gateway_peering_attachment",
 			"aws_networkmanager_transit_gateway_route_table_attachment",
@@ -2240,6 +2246,46 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Transit Gateway Peering Attachments (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTransitGatewayNetworkFunctionAttachments(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.EC2Client(ctx)
+	input := ec2.DescribeTransitGatewayNetworkFunctionAttachmentsInput{}
+	var sweepResources []sweep.Sweepable
+
+	output, err := findTransitGatewayNetworkFunctionAttachments(ctx, conn, &input)
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Network Function Attachment sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing EC2 Transit Gateway Network Function Attachments (%s): %w", region, err)
+	}
+
+	for _, v := range output {
+		if v.State == awstypes.TransitGatewayAttachmentStateDeleted {
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newTransitGatewayNetworkFunctionAttachmentResource, client,
+			framework.NewAttribute(names.AttrID, aws.ToString(v.TransitGatewayAttachmentId)),
+		))
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 Transit Gateway Network Function Attachments (%s): %w", region, err)
 	}
 
 	return nil

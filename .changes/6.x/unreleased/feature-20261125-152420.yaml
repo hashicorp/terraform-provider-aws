@@ -1,0 +1,5 @@
+kind: feature
+time: 2026-11-25T15:24:20.411297+01:00
+custom:
+  Name: aws_ec2_transit_gateway_network_function_attachment
+  NewType: New Resource

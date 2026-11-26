@@ -99,6 +99,7 @@ var (
 	ResourceTransitGatewayMulticastDomainAssociation      = resourceTransitGatewayMulticastDomainAssociation
 	ResourceTransitGatewayMulticastGroupMember            = resourceTransitGatewayMulticastGroupMember
 	ResourceTransitGatewayMulticastGroupSource            = resourceTransitGatewayMulticastGroupSource
+	ResourceTransitGatewayNetworkFunctionAttachment       = newTransitGatewayNetworkFunctionAttachmentResource
 	ResourceTransitGatewayPeeringAttachment               = resourceTransitGatewayPeeringAttachment
 	ResourceTransitGatewayPeeringAttachmentAccepter       = resourceTransitGatewayPeeringAttachmentAccepter
 	ResourceTransitGatewayMeteringPolicy                  = newTransitGatewayMeteringPolicyResource
@@ -253,6 +254,7 @@ var (
 	FindTransitGatewayMulticastDomainByID                       = findTransitGatewayMulticastDomainByID
 	FindTransitGatewayMulticastGroupMemberByThreePartKey        = findTransitGatewayMulticastGroupMemberByThreePartKey
 	FindTransitGatewayMulticastGroupSourceByThreePartKey        = findTransitGatewayMulticastGroupSourceByThreePartKey
+	FindTransitGatewayNetworkFunctionAttachmentByID             = findTransitGatewayNetworkFunctionAttachmentByID
 	FindTransitGatewayPeeringAttachmentByID                     = findTransitGatewayPeeringAttachmentByID
 	FindTransitGatewayMeteringPolicyByID                        = findTransitGatewayMeteringPolicyByID
 	FindTransitGatewayMeteringPolicyEntryByTwoPartKey           = findTransitGatewayMeteringPolicyEntryByTwoPartKey
