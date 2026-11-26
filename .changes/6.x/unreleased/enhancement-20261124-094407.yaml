@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T09:44:07.25349+01:00
+custom:
+    Body: Add `auto_scaling_specification` argument
+    Impact: resource/aws_keyspaces_table
+    PullRequest: "49030"
