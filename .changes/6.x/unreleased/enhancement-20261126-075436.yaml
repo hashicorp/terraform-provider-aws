@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-26T07:54:36.35639313Z
+custom:
+    Body: Add filter.not and use_source_multi_region_key arguments
+    Impact: resource/aws_s3_bucket_replication_configuration
+    PullRequest: "51387"
