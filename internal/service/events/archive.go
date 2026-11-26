@@ -116,7 +116,9 @@ func resourceArchiveCreate(ctx context.Context, d *schema.ResourceData, meta any
 		input.RetentionDays = aws.Int32(int32(v.(int)))
 	}
 
-	_, err := conn.CreateArchive(ctx, &input)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*eventbridge.CreateArchiveOutput, error) {
+		return conn.CreateArchive(ctx, &input)
+	}, errCodeValidationException, errMessageKMSAccessDenied)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Archive (%s)): %s", name, err)
@@ -183,7 +185,9 @@ func resourceArchiveUpdate(ctx context.Context, d *schema.ResourceData, meta any
 		input.RetentionDays = aws.Int32(int32(v.(int)))
 	}
 
-	_, err := conn.UpdateArchive(ctx, &input)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func(ctx context.Context) (*eventbridge.UpdateArchiveOutput, error) {
+		return conn.UpdateArchive(ctx, &input)
+	}, errCodeValidationException, errMessageKMSAccessDenied)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating EventBridge Archive (%s): %s", d.Id(), err)
