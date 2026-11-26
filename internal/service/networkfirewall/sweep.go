@@ -12,14 +12,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
 	awsv2.Register("aws_networkfirewall_container_association", sweepContainerAssociations)
 	awsv2.Register("aws_networkfirewall_firewall", sweepFirewalls, "aws_networkfirewall_logging_configuration")
 	awsv2.Register("aws_networkfirewall_firewall_policy", sweepFirewallPolicies, "aws_networkfirewall_firewall")
+	awsv2.Register("aws_networkfirewall_firewall_policy_v2", sweepFirewallPoliciesV2, "aws_networkfirewall_firewall")
 	awsv2.Register("aws_networkfirewall_logging_configuration", sweepLoggingConfigurations)
-	awsv2.Register("aws_networkfirewall_rule_group", sweepRuleGroups, "aws_networkfirewall_firewall_policy")
+	awsv2.Register("aws_networkfirewall_rule_group", sweepRuleGroups, "aws_networkfirewall_firewall_policy", "aws_networkfirewall_firewall_policy_v2")
 }
 
 func sweepContainerAssociations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
@@ -85,6 +87,27 @@ func sweepFirewallPolicies(ctx context.Context, client *conns.AWSClient) ([]swee
 			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	return sweepResources, nil
+}
+
+func sweepFirewallPoliciesV2(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input networkfirewall.ListFirewallPoliciesV2Input
+	conn := client.NetworkFirewallClient(ctx)
+	var sweepResources []sweep.Sweepable
+
+	pages := networkfirewall.NewListFirewallPoliciesV2Paginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.FirewallPoliciesV2 {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newFirewallPolicyV2Resource, client,
+				framework.NewAttribute(names.AttrARN, aws.ToString(v.Arn))))
 		}
 	}
 
