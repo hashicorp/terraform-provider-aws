@@ -915,11 +915,11 @@ Using `terraform import`, import Lambda Functions using the `function_name`. For
 
 ### Code deployment after import
 
-~> **NOTE:** `filename` and `source_code_hash` cannot be read back from AWS, so both are empty in state immediately after an import. If either argument is set in your configuration, the first `terraform apply` after the import plans a change to it and calls the Lambda `UpdateFunctionCode` API. This replaces the code currently deployed to `$LATEST` with the package referenced by your configuration, even when the two differ. Changes to `s3_bucket`, `s3_key`, `s3_object_version`, `image_uri`, `code_sha256` and `source_kms_key_arn` also trigger a code update.
+~> **NOTE:** `filename` and `source_code_hash` cannot be read back from AWS, so both are empty in state immediately after an import. A configured `filename` therefore plans as a new value on the first apply, which calls the Lambda `UpdateFunctionCode` API and replaces the code currently deployed to `$LATEST` with the configured package, even when the two differ. A planned change to any of `filename`, `source_code_hash`, `code_sha256`, `s3_bucket`, `s3_key`, `s3_object_version`, `source_kms_key_arn`, `image_uri` or `architectures` triggers a code update.
 
-Before importing a function that already runs code you want to keep, choose one of the following approaches.
+Choose one of the following approaches before importing a function whose deployed code you want to keep.
 
-**Terraform should not manage the function's code.** The schema requires one of `filename`, `image_uri` or `s3_bucket`, so keep a placeholder package and ignore changes to both `filename` and `source_code_hash`. Ignoring only one of them is not enough, because each triggers an update on its own.
+**Terraform should not manage the code.** The schema requires one of `filename`, `image_uri` or `s3_bucket`, so keep a placeholder package and ignore changes to `filename`. If you also set `source_code_hash`, ignore it too, because a change to either one triggers an update on its own.
 
 ```terraform
 resource "aws_lambda_function" "example" {
@@ -928,7 +928,7 @@ resource "aws_lambda_function" "example" {
   handler       = "index.handler"
   runtime       = "nodejs22.x"
 
-  # Never uploaded, because changes to both code arguments are ignored below.
+  # Never uploaded, because changes to the code arguments are ignored below.
   filename = "placeholder.zip"
 
   lifecycle {
@@ -940,7 +940,7 @@ resource "aws_lambda_function" "example" {
 }
 ```
 
-**Terraform should manage the function's code.** Download the package that is currently deployed (the URL returned by `aws lambda get-function --function-name example --query 'Code.Location' --output text` is short-lived), reference that file in `filename`, and set `source_code_hash` to its hash. You can compare the hash with `aws lambda get-function --function-name example --query 'Configuration.CodeSha256'`. The first apply still calls `UpdateFunctionCode` because `filename` is new to state, but it uploads identical code. Expect a new `LastModified` value and a CloudTrail event.
+**Terraform should manage the code.** Download the package that is currently deployed (the URL returned by `aws lambda get-function --function-name example --query 'Code.Location' --output text` is short-lived), reference it in `filename`, and set `source_code_hash` to its hash. You can compare the hash with the `Configuration.CodeSha256` value from `aws lambda get-function`. The first apply still calls `UpdateFunctionCode` because `filename` is new to state, but it uploads identical code, so expect a new `LastModified` value and a CloudTrail event.
 
 ```terraform
 resource "aws_lambda_function" "example" {
