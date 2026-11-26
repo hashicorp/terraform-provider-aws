@@ -1,0 +1,5 @@
+kind: bug
+time: 2026-11-24T12:06:13.712026+01:00
+custom:
+    Body: 'Retry `InvalidArgumentException: The security token included in the request is invalid` errors on create and update while a newly created IAM role propagates'
+    Impact: resource/aws_kinesis_firehose_delivery_stream
