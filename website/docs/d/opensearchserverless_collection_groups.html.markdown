@@ -28,19 +28,19 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `collection_group_summaries` - List of collection group summary objects. See [`collection_group_summaries`](#collection_group_summaries) below for details.
+* `collection_group_summaries` - List of collection group summary objects. See [`collection_group_summaries`](#collection_group_summaries-block) below for details.
 
-### `collection_group_summaries`
+### `collection_group_summaries` Block
 
 * `arn` - ARN of the collection group.
-* `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits) below for details.
+* `capacity_limits` - Capacity limits configured for the collection group. See [`capacity_limits`](#capacity_limits-block) below for details.
 * `created_date` - Epoch time, in milliseconds, when the collection group was created.
 * `id` - Unique identifier for the collection group.
 * `name` - Name of the collection group.
 * `number_of_collections` - Number of collections currently associated with the collection group.
-* `standby_replicas` - Indicates whether standby replicas are used for collections in the group.
+* `standby_replicas` - Whether standby replicas are used for collections in the group.
 
-### `capacity_limits`
+### `capacity_limits` Block
 
 * `max_indexing_capacity_in_ocu` - Maximum indexing capacity, in OpenSearch Compute Units (OCUs), for the collection group.
 * `max_search_capacity_in_ocu` - Maximum search capacity, in OpenSearch Compute Units (OCUs), for the collection group.

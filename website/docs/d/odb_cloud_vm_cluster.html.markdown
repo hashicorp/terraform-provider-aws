@@ -78,3 +78,22 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags assigned to the resource.
 * `timezone` - Time zone of the VM cluster.
 * `vip_ids` - Virtual IP (VIP) addresses that are associated with the VM cluster. Oracle's Cluster Ready Services (CRS) creates and maintains one VIP address for each node in the VM cluster to enable failover. If one node fails, the VIP is reassigned to another active node in the cluster.
+
+### `data_collection_options` Block
+
+* `is_diagnostics_events_enabled` - Whether diagnostic events are enabled for the VM cluster.
+* `is_health_monitoring_enabled` - Whether health monitoring is enabled for the VM cluster.
+* `is_incident_logs_enabled` - Whether incident logs are enabled for the VM cluster.
+
+### `iorm_config_cache` Block
+
+* `db_plans` - List of IORM (I/O Resource Manager) database plans for the VM cluster. See [`db_plans` Block](#db_plans-block) below.
+* `lifecycle_details` - Additional information about the current lifecycle state of the IORM configuration.
+* `lifecycle_state` - Current lifecycle state of the IORM configuration.
+* `objective` - Current value for the IORM objective.
+
+#### `db_plans` Block
+
+* `db_name` - Database name to which the IORM plan applies.
+* `flash_cache_limit` - Flash cache limit for the database plan.
+* `share` - Relative priority of the database in the IORM plan.

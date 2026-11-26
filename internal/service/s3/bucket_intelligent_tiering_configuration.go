@@ -131,7 +131,8 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 		return conn.PutBucketIntelligentTieringConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "IntelligentTieringConfiguration is not valid, expected CreateBucketConfiguration") {
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "IntelligentTieringConfiguration is not valid, expected CreateBucketConfiguration") ||
+		tfawserr.ErrMessageContains(err, errCodeNotImplemented, "The information you provided implies functionality that is not implemented") {
 		err = errDirectoryBucket(err)
 	}
 

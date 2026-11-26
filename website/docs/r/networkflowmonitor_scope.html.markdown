@@ -38,28 +38,28 @@ resource "aws_networkflowmonitor_scope" "example" {
 
 The following arguments are required:
 
-* `target` - (Required) The targets to define the scope to be monitored. A target is an array of target resources, which are currently Region-account pairs.
+* `target` - (Required) Targets to define the scope to be monitored. A target is an array of target resources, which are currently Region-account pairs.
 
 The following arguments are optional:
 
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### targets
+### `target` Block
 
-The `targets` block supports the following:
+The `target` block supports the following:
 
-* `region` - (Required) The AWS Region for the scope.
-* `target_identifier` - (Required) A target identifier is a pair of identifying information for a scope.
+* `region` - (Required) AWS Region for the scope.
+* `target_identifier` - (Required) Pair of identifying information for a scope.
 
-### target_identifier
+### `target_identifier` Block
 
 The `target_identifier` block supports the following:
 
-* `target_id` - (Required) The identifier for a target, which is currently always an account ID.
-* `target_type` - (Required) The type of a target. A target type is currently always `ACCOUNT`.
+* `target_id` - (Required) Identifier for a target, which is currently always an account ID.
+* `target_type` - (Required) Type of a target. A target type is currently always `ACCOUNT`.
 
-### target_id
+### `target_id` Block
 
 The `target_id` block supports the following:
 
@@ -70,8 +70,8 @@ The `target_id` block supports the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `scope_arn` - ARN of the scope.
-* `scope_id` - The identifier for the scope that includes the resources you want to get data results for.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `scope_id` - Identifier for the scope that includes the resources you want to get data results for.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

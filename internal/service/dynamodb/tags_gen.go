@@ -201,6 +201,8 @@ func waitTagsPropagated(ctx context.Context, conn *dynamodb.Client, id string, t
 			return false, smarterr.NewError(err)
 		}
 
+		output = output.IgnoreSystem(names.DynamoDB)
+
 		if inContext, ok := tftags.FromContext(ctx); ok {
 			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)

@@ -64,8 +64,8 @@ resource "aws_notifications_organizational_unit_association" "example" {
 
 The following arguments are required:
 
-* `organizational_unit_id` - (Required) ID of the organizational unit or ID of the root to associate with the notification configuration. Can be a root ID (e.g., `r-1234`), or an organization ID (e.g., `o-1234567890`).
 * `notification_configuration_arn` - (Required) ARN of the notification configuration to associate the organizational unit with.
+* `organizational_unit_id` - (Required) ID of the organizational unit or ID of the root to associate with the notification configuration. Can be a root ID (e.g., `r-1234`), or an organization ID (e.g., `o-1234567890`).
 
 ## Attribute Reference
 

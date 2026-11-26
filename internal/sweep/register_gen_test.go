@@ -58,6 +58,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/continuum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
@@ -90,6 +91,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/eventbridgev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evidently"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/evs"
@@ -264,6 +266,7 @@ func registerSweepers() {
 	cognitoidp.RegisterSweepers()
 	configservice.RegisterSweepers()
 	connect.RegisterSweepers()
+	continuum.RegisterSweepers()
 	cur.RegisterSweepers()
 	customerprofiles.RegisterSweepers()
 	dataexchange.RegisterSweepers()
@@ -296,6 +299,7 @@ func registerSweepers() {
 	emr.RegisterSweepers()
 	emrcontainers.RegisterSweepers()
 	emrserverless.RegisterSweepers()
+	eventbridgev2.RegisterSweepers()
 	events.RegisterSweepers()
 	evidently.RegisterSweepers()
 	evs.RegisterSweepers()

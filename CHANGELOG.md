@@ -1,3 +1,49 @@
+## 6.75.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* resource/aws_ebs_encryption_by_default: Newly created resources now use the AWS Region as the `id` attribute value instead of a generated identifier. The `id` for existing resources is updated to the AWS region when upgrading to `v6.75.0` or higher. ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+
+FEATURES:
+
+* **New List Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New List Resource:** `aws_ebs_encryption_by_default` ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+* **New List Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
+* **New Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
+
+ENHANCEMENTS:
+
+* data-source/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_ebs_encryption_by_default: Add resource identity support ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+* resource/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+
+BUG FIXES:
+
+* data-source/aws_api_gateway_domain_name: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* data-source/aws_cloudfront_distribution: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* data-source/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* provider: Ignore AWS system tags when waiting for tag updates to propagate ([#51238](https://github.com/hashicorp/terraform-provider-aws/issues/51238))
+* resource/aws_api_gateway_domain_name: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_cloudfront_distribution: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_cognito_user_pool_domain: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_s3_bucket: Fall back to S3 list and update tagging APIs if the corresponding S3 Control APIs fail with `AccessDenied` (e.g. Ceph Object Gateway)
+* resource/aws_s3_bucket_accelerate_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_analytics_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_cors_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_intelligent_tiering_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_logging: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_notification: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_ownership_controls: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_public_access_block: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_replication_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_request_payment_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_versioning: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_website_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_object: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration ([#51355](https://github.com/hashicorp/terraform-provider-aws/issues/51355))
+* resource/aws_s3_object_copy: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration ([#51355](https://github.com/hashicorp/terraform-provider-aws/issues/51355))
+
 ## 6.74.0 (November 23, 2026)
 
 NOTES:

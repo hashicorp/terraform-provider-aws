@@ -68,29 +68,24 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
-* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `firewall_arn` - (Required, Forces new resource) ARN of the Network Firewall firewall.
 * `enable_monitoring_dashboard` - (Optional) Whether to enable the detailed firewall monitoring dashboard on the firewall. Defaults to `false`.
-* `logging_configuration` - (Required) A configuration block describing how AWS Network Firewall performs logging for a firewall. See [Logging Configuration](#logging-configuration) below for details.
+* `firewall_arn` - (Required, Forces new resource) ARN of the Network Firewall firewall.
+* `logging_configuration` - (Required) Configuration block describing how AWS Network Firewall performs logging for a firewall. See [`logging_configuration` Block](#logging_configuration-block) below for details.
+* `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 
-### Logging Configuration
+### `logging_configuration` Block
 
 The `logging_configuration` block supports the following arguments:
 
-* `log_destination_config` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only Three blocks can be specified; one for `FLOW` logs and one for `ALERT` logs and one for `TLS` logs.
+* `log_destination_config` - (Required) Set of configuration blocks describing the logging details for a firewall. See [`log_destination_config` Block](#log_destination_config-block) below for details. At most, only Three blocks can be specified; one for `FLOW` logs and one for `ALERT` logs and one for `TLS` logs.
 
-### Log Destination Config
+### `log_destination_config` Block
 
 The `log_destination_config` block supports the following arguments:
 
-* `log_destination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
-    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path (Do not add a leading / in the `prefix` as the configuration will have two // when applied).
-    * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
-    * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
-
-* `log_destination_type` - (Required) The location to send logs to. Valid values: `S3`, `CloudWatchLogs`, `KinesisDataFirehose`.
-
-* `log_type` - (Required) The type of log to send. Valid values: `ALERT` or `FLOW` or `TLS`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
+* `log_destination` - (Required) Map describing the logging destination for the chosen `log_destination_type`. For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path (do not add a leading / in the `prefix` as the configuration will have two // when applied). For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group. For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
+* `log_destination_type` - (Required) Location to send logs to. Valid values: `S3`, `CloudWatchLogs`, `KinesisDataFirehose`.
+* `log_type` - (Required) Type of log to send. Valid values: `ALERT` or `FLOW` or `TLS`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
 
 ## Attribute Reference
 
