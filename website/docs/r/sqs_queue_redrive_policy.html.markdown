@@ -88,3 +88,16 @@ Using `terraform import`, import SQS Queue Redrive Policies using the queue URL.
 ```console
 % terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```
+
+## IAM Permissions
+
+The following permissions are required to manage this resource.
+
+### Read (`plan`)
+
+- `sqs:GetQueueAttributes`
+
+### Write (`apply`)
+
+- `sqs:GetQueueAttributes`
+- `sqs:SetQueueAttributes`

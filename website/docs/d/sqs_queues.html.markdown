@@ -32,3 +32,11 @@ The following arguments are optional:
 This data source exports the following attributes in addition to the arguments above:
 
 * `queue_urls` - A list of queue URLs.
+
+## IAM Permissions
+
+The following permissions are required to read this data source.
+
+### Read (`plan`)
+
+- `sqs:ListQueues`
