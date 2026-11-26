@@ -69,6 +69,10 @@ func resourceCapacityProvider() *schema.Resource {
 				instanceRequirements := diff.Get("managed_instances_provider.0.instance_launch_template.0.instance_requirements").([]any)
 				hasCapacityReservations := len(capacityReservations) > 0
 
+				if diff.Get("managed_instances_provider.0.instance_launch_template.0.nitro_enclaves_enabled").(bool) && diff.Get("managed_instances_provider.0.instance_launch_template.0.local_storage_configuration.0.use_local_storage").(bool) {
+					return errors.New("nitro_enclaves_enabled can't be true when local_storage_configuration.use_local_storage is true")
+				}
+
 				if hasCapacityReservations && capacityOptionType != string(awstypes.CapacityOptionTypeReserved) {
 					return errors.New("capacity_reservations can only be set when capacity_option_type is RESERVED")
 				}
@@ -558,6 +562,11 @@ func resourceCapacityProvider() *schema.Resource {
 											Type:             schema.TypeString,
 											Optional:         true,
 											ValidateDiagFunc: enum.Validate[awstypes.ManagedInstancesMonitoringOptions](),
+										},
+										"nitro_enclaves_enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											ForceNew: true,
 										},
 										names.AttrNetworkConfiguration: {
 											Type:     schema.TypeList,
@@ -1127,6 +1136,10 @@ func expandInstanceLaunchTemplateCreate(tfList []any) *awstypes.InstanceLaunchTe
 		apiObject.NetworkConfiguration = expandManagedInstancesNetworkConfiguration(v)
 	}
 
+	if v, ok := tfMap["nitro_enclaves_enabled"].(bool); ok && v {
+		apiObject.NitroEnclavesEnabled = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["storage_configuration"].([]any); ok && len(v) > 0 {
 		apiObject.StorageConfiguration = expandManagedInstancesStorageConfiguration(v)
 	}
@@ -1569,6 +1582,7 @@ func flattenInstanceLaunchTemplate(apiObject *awstypes.InstanceLaunchTemplate) [
 		"capacity_option_type":     apiObject.CapacityOptionType,
 		"ec2_instance_profile_arn": aws.ToString(apiObject.Ec2InstanceProfileArn),
 		"monitoring":               apiObject.Monitoring,
+		"nitro_enclaves_enabled":   aws.ToBool(apiObject.NitroEnclavesEnabled),
 	}
 
 	if apiObject.CapacityReservations != nil {
