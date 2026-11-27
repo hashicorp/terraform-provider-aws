@@ -32,6 +32,7 @@ resource "aws_gamelift_fleet" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `build_id` - (Optional) ID of the GameLift Build to be deployed on the fleet. Conflicts with `script_id`.
 * `certificate_configuration` - (Optional) Prompts GameLift to generate a TLS/SSL certificate for the fleet. See [certificate_configuration](#certificate_configuration-block).
 * `description` - (Optional) Human-readable description of the fleet.

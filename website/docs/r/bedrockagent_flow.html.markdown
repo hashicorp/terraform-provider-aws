@@ -140,6 +140,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `customer_encryption_key_arn` - (Optional) ARN of the KMS key to encrypt the flow.
 * `definition` - (Optional) Nodes and connections between nodes in the flow. See [`definition` Block](#definition-block) for details.
 * `description` - (Optional) Description for the flow.

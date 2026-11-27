@@ -29,5 +29,6 @@ This list resource supports the following arguments:
 ~> **Note:** One of `access_point_id` or `file_system_id` must be configured.
 
 * `access_point_id` - (Optional) ID of the access point whose mount targets that you want to list.
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `file_system_id` - (Optional) ID of the file system whose mount targets you want to list.
 * `region` - (Optional) Region to query. Defaults to provider region.

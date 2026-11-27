@@ -47,6 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_config_enabled` - (Optional) Whether to automatically configure unmonitored resources in the resource group.
 * `auto_create` - (Optional) Configures all of the resources in the resource group by applying the recommended configurations.
 * `cwe_monitor_enabled` - (Optional) Whether to enable Application Insights to listen to CloudWatch events for the application resources, such as instance terminated, failed deployment, and others.

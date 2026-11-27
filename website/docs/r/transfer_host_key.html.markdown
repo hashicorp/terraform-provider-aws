@@ -27,6 +27,7 @@ EOT
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Text description.
 * `host_key_body` - (Optional) Private key portion of an SSH key pair.
 * `host_key_body_wo` - (Optional) [Write-only](https://developer.hashicorp.com/terraform/language/manage-sensitive-data/ephemeral#write-only-arguments) private key portion of an SSH key pair, guaranteed not to be written to plan or state artifacts. One of `host_key_body` or `host_key_body_wo` must be configured.

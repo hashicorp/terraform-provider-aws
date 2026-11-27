@@ -33,6 +33,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the security configuration.
 * `iam_federation_options` - (Optional) Configuration block for IAM Federation options. Required if `type` is set to `iamfederation`. See [`iam_federation_options` Block](#iam_federation_options-block) below for details.
 * `iam_identity_center_options` - (Optional) Configuration block for IAM Identity Center options. Required if `type` is set to `iamidentitycenter`. See [`iam_identity_center_options` Block](#iam_identity_center_options-block) below for details.

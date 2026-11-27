@@ -25,6 +25,7 @@ resource "aws_bedrock_provisioned_model_throughput" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `commitment_duration` - (Optional) Commitment duration requested for the Provisioned Throughput. For custom models, you can purchase on-demand Provisioned Throughput by omitting this argument. Valid values: `OneMonth`, `SixMonths`.
 * `model_arn` - (Required) ARN of the model to associate with this Provisioned Throughput.
 * `model_units` - (Required) Number of model units to allocate. A model unit delivers a specific throughput level for the specified model.

@@ -35,6 +35,7 @@ data "aws_rds_snapshots" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `db_instance_identifier` - (Optional) Returns the list of snapshots created by the specific db_instance.
 * `db_snapshot_identifier` - (Optional) Returns information on a specific snapshot_id.
 * `filter` - (Optional) Configuration block(s) used to filter snapshots with AWS supported attributes. Detailed below.

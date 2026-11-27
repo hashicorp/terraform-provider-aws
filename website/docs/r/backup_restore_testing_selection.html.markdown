@@ -49,6 +49,7 @@ resource "aws_backup_restore_testing_selection" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `iam_role_arn` - (Required) ARN of the IAM role.
 * `name` - (Required) Name of the backup restore testing selection.
 * `protected_resource_arns` - (Optional) ARNs for the protected resources.

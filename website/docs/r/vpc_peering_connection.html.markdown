@@ -106,6 +106,7 @@ resource "aws_vpc" "bar" {
 This resource supports the following arguments:
 
 * `accepter` - (Optional) Configuration block for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to set for the VPC that accepts the peering connection (a maximum of one). See [`accepter` Block](#accepter-block) below.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_accept` - (Optional) Whether to accept the peering (both VPCs need to be in the same AWS account and region).
 * `peer_owner_id` - (Optional) AWS account ID of the target peer VPC. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to, so must be managed if connecting cross-account.
 * `peer_region` - (Optional) Region of the accepter VPC of the VPC Peering Connection. `auto_accept` must be `false`, and use the `aws_vpc_peering_connection_accepter` to manage the accepter side.

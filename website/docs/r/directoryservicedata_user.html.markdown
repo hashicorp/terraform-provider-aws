@@ -35,6 +35,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `email_address` - (Optional) Email address of the user.
 * `given_name` - (Optional) First name of the user.
 * `region` - (Optional) Region where the user is managed. Defaults to the provider region.

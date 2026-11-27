@@ -23,6 +23,7 @@ data "aws_glue_catalog_table" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `catalog_id` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
 * `database_name` - (Required) Name of the metadata database where the table metadata resides.
 * `name` - (Required) Name of the table.

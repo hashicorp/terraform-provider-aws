@@ -75,6 +75,7 @@ resource "aws_api_gateway_method" "any" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_key_required` - (Optional) Specify if the method requires an API key
 * `authorization` - (Required) Type of authorization used for the method (`NONE`, `CUSTOM`, `AWS_IAM`, `COGNITO_USER_POOLS`)
 * `authorization_scopes` - (Optional) Authorization scopes used when the authorization is `COGNITO_USER_POOLS`

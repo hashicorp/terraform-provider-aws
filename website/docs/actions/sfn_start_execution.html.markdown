@@ -229,6 +229,7 @@ action "aws_sfn_start_execution" "orchestrator" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `input` - (Optional) JSON input data for the execution. Must be valid JSON. Defaults to `{}` if not specified. The input size limit is 256 KB.
 * `name` - (Optional) Name of the execution. Must be unique within the account/region/state machine for 90 days. If not provided, Step Functions automatically generates a UUID. Names must not contain whitespace, brackets, wildcards, or special characters.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

@@ -176,6 +176,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `experiment_options` - (Optional) Experiment options for the experiment template. See [experiment_options](#experiment_options-block) below for more details!
 * `experiment_report_configuration` - (Optional) Configuration for [experiment reporting](https://docs.aws.amazon.com/fis/latest/userguide/experiment-report-configuration.html). See below.
 * `log_configuration` - (Optional) Configuration for experiment logging. See below.

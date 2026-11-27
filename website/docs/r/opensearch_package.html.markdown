@@ -40,6 +40,7 @@ resource "aws_opensearch_package" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `engine_version` - (Optional, Forces new resources) Engine version that the package is compatible with. This argument is required and only valid when `package_type` is `ZIP-PLUGIN`. Format: `OpenSearch_X.Y` or `Elasticsearch_X.Y`, where `X` and `Y` are the major and minor version numbers, respectively.
 * `package_description` - (Optional, Forces new resource) Description of the package.
 * `package_name` - (Required, Forces new resource) Unique name for the package.

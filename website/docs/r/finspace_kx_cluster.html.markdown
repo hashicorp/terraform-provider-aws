@@ -76,6 +76,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_scaling_configuration` - (Optional) Configuration based on which FinSpace will scale in or scale out nodes in your cluster. See [`auto_scaling_configuration` Block](#auto_scaling_configuration-block).
 * `availability_zone_id` - (Optional) Availability zone identifiers for the requested regions. Required when `az_mode` is set to SINGLE.
 * `cache_storage_configurations` - (Optional) Configurations for a read only cache storage associated with a cluster. This cache will be stored as an FSx Lustre that reads from the S3 store. See [`cache_storage_configurations` Block](#cache_storage_configurations-block).

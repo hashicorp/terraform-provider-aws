@@ -39,6 +39,7 @@ resource "aws_waf_rule" "wafrule" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `metric_name` - (Required) Name or description for the Amazon CloudWatch metric of this rule. The name can contain only alphanumeric characters (A-Z, a-z, 0-9); the name can't contain whitespace.
 * `name` - (Required) Name or description of the rule.
 * `predicates` - (Optional) Objects to include in a rule. See [`predicates` Block](#predicates-block) below for details.

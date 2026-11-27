@@ -49,6 +49,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `metadata` - (Optional) JSON document describing the asset. Required metadata fields depend on `asset_type`. Updates replace supplied top-level fields and retain omitted fields in AWS; removing a field from this document does not delete it from AWS. Changes to metadata alone do not re-upload content.
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.
 

@@ -65,6 +65,7 @@ The arguments of this data source act as filters for querying the available
 prefix lists. The given filters must match exactly one prefix list
 whose data will be exported as attributes.
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `name` - (Optional) Name of the prefix list to select.
 * `prefix_list_id` - (Optional) ID of the prefix list to select.

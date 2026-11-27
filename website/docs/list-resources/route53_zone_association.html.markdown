@@ -26,5 +26,6 @@ list "aws_route53_zone_association" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `vpc_id` - (Required) ID of the VPC to list hosted zone associations for.
 * `vpc_region` - (Optional) Region of the VPC. Defaults to the provider region.

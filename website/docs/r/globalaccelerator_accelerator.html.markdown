@@ -31,6 +31,7 @@ resource "aws_globalaccelerator_accelerator" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `attributes` - (Optional) Configuration block with accelerator attributes. See [`attributes`](#attributes-block) below.
 * `enabled` - (Optional) Whether the accelerator is enabled. Defaults to `true`. Valid values: `true`, `false`.
 * `ip_address_type` - (Optional) Value for the address type. Defaults to `IPV4`. Valid values: `IPV4`, `DUAL_STACK`.

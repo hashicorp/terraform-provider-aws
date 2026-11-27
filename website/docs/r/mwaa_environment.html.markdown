@@ -126,6 +126,7 @@ resource "aws_mwaa_environment" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `airflow_configuration_options` - (Optional) Airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflow_version` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports. Changing to a new major version forces a new resource unless the current version is `2.11.0` or later, in which case the environment is upgraded in place. See [Changing the Apache Airflow version](https://docs.aws.amazon.com/mwaa/latest/userguide/upgrading-environment.html).
 * `dag_s3_path` - (Required) Relative path to the DAG folder on your Amazon S3 storage bucket. For example, dags. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).

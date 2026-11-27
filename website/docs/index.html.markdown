@@ -373,6 +373,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
 * `assume_role` - (Optional) List of configuration blocks for assuming an IAM role.
   See the [`assume_role` Configuration Block](#assume_role-configuration-block) section below.
   IAM Role Chaining is supported by specifying the roles to assume in order.
+* `assume_role_in_account` - (Optional) List of configuration blocks for the IAM role to assume for resources whose `account` is not the provider's own account. See the [Per-Resource Account guide](/docs/providers/aws/guides/per-resource-account.html).
 * `assume_role_with_web_identity` - (Optional) Configuration block for assuming an IAM role using a web identity. See the [`assume_role_with_web_identity` Configuration Block](#assume_role_with_web_identity-configuration-block) section below. Only one `assume_role_with_web_identity` block may be in the configuration.
 * `custom_ca_bundle` - (Optional) File containing custom root and intermediate certificates.
   Can also be set using the `AWS_CA_BUNDLE` environment variable.

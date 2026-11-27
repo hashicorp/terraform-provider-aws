@@ -28,6 +28,7 @@ resource "aws_appsync_api_key" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_id` - (Required) ID of the associated AppSync API
 * `description` - (Optional) API key description. Defaults to "Managed by Terraform".
 * `expires` - (Optional) RFC3339 string representation of the expiry date. Rounded down to nearest hour. By default, it is 7 days from the date of creation.

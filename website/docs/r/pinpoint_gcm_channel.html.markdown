@@ -37,6 +37,7 @@ resource "aws_pinpoint_app" "app" {}
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_key` - (Optional) Platform credential API key from Google. Conflicts with `service_json`.
 * `application_id` - (Required) Application ID.
 * `default_authentication_method` - (Optional) Default authentication method used for GCM. Valid values: `KEY`, `TOKEN`. Defaults to `KEY`.

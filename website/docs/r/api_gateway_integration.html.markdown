@@ -399,6 +399,7 @@ resource "aws_api_gateway_integration_response" "client_error" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cache_key_parameters` - (Optional) List of cache key parameters for the integration.
 * `cache_namespace` - (Optional) Integration's cache namespace.
 * `connection_id` - (Optional) ID of the VpcLink used for the integration. **Required** if `connection_type` is `VPC_LINK`

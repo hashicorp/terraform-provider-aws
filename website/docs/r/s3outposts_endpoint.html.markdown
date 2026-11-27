@@ -25,6 +25,7 @@ resource "aws_s3outposts_endpoint" "example" {
 This resource supports the following arguments:
 
 * `access_type` - (Optional) Type of access for the network connectivity. Valid values are `Private` or `CustomerOwnedIp`.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `customer_owned_ipv4_pool` - (Optional) ID of a Customer Owned IP Pool. For more on customer owned IP addresses see the [User Guide](https://docs.aws.amazon.com/outposts/latest/userguide/local-rack.html#local-gateway-subnet).
 * `outpost_id` - (Required) Identifier of the Outpost to contain this endpoint.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

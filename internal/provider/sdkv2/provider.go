@@ -70,6 +70,7 @@ func NewProvider(ctx context.Context) (*schema.Provider, error) {
 					ConflictsWith: []string{"forbidden_account_ids"},
 				},
 				"assume_role":                   assumeRoleSchema(),
+				"assume_role_in_account":        assumeRoleInAccountSchema(),
 				"assume_role_with_web_identity": assumeRoleWithWebIdentitySchema(),
 				"custom_ca_bundle": {
 					Type:     schema.TypeString,
@@ -427,6 +428,15 @@ func (p *sdkProvider) configure(ctx context.Context, d *schema.ResourceData) (an
 		}
 	}
 
+	if v, ok := d.GetOk("assume_role_in_account"); ok {
+		ar, dg := expandAssumeRoleInAccount(ctx, v.([]any))
+		diags = append(diags, dg...)
+		if dg.HasError() {
+			return nil, diags
+		}
+		config.AssumeRoleInAccount = ar
+	}
+
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
 		c, err := expandAssumeRoleWithWebIdentity(ctx, v.([]any)[0].(map[string]any))
 		if err != nil {
@@ -539,6 +549,7 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 
 	var errs []error
 	servicePackageMap := make(map[string]conns.ServicePackage)
+	account := accountSchema(ctx, p.provider)
 
 	for _, sp := range p.servicePackages {
 		servicePackageName := sp.ServicePackageName()
@@ -593,6 +604,15 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				})
 			}
 
+			hasAccount := injectAccountSchema(typeName, r, account)
+			if hasAccount {
+				interceptors = append(interceptors, interceptorInvocation{
+					when:        After,
+					why:         Read,
+					interceptor: setAccountInState(),
+				})
+			}
+
 			if v.Tags.Enabled() {
 				interceptors = append(interceptors, interceptorInvocation{
 					when:        Before | After,
@@ -612,6 +632,12 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					}
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name, v.TypeName, overrideRegion)
+					if hasAccount {
+						var err error
+						if ctx, err = bootstrapAccount(ctx, getAttribute, meta); err != nil {
+							return ctx, err
+						}
+					}
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = c.RequestContext(ctx)
 					}
@@ -765,6 +791,22 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 				}
 			}
 
+			hasAccount := injectAccountSchema(typeName, r, account)
+			if hasAccount {
+				interceptors = append(interceptors,
+					interceptorInvocation{
+						when:        Before,
+						why:         CustomizeDiff,
+						interceptor: defaultAccount(),
+					},
+					interceptorInvocation{
+						when:        After,
+						why:         Read,
+						interceptor: setAccountInState(),
+					},
+				)
+			}
+
 			opts := wrappedResourceOptions{
 				// bootstrapContext is run on all wrapped methods before any interceptors.
 				bootstrapContext: func(ctx context.Context, getAttribute getAttributeFunc, getProviderMeta getProviderMetaFunc, meta any) (context.Context, error) {
@@ -777,6 +819,12 @@ func (p *sdkProvider) initialize(ctx context.Context) (map[string]conns.ServiceP
 					}
 
 					ctx = conns.NewResourceContext(ctx, servicePackageName, resource.Name, resource.TypeName, overrideRegion)
+					if hasAccount {
+						var err error
+						if ctx, err = bootstrapAccount(ctx, getAttribute, meta); err != nil {
+							return ctx, err
+						}
+					}
 					if c, ok := meta.(*conns.AWSClient); ok {
 						ctx = c.RequestContext(ctx)
 					}

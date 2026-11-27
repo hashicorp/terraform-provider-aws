@@ -304,6 +304,7 @@ resource "aws_networkfirewall_rule_group" "s3_rules_example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `capacity` - (Required, Forces new resource) Maximum number of operating resources that this rule group can use. For a stateless rule group, the capacity required is the sum of the capacity requirements of the individual rules. For a stateful rule group, the minimum capacity required is the number of individual rules.
 * `description` - (Optional) Friendly description of the rule group.
 * `encryption_configuration` - (Optional) KMS encryption configuration settings. See [`encryption_configuration`](#encryption_configuration-block) below for details.

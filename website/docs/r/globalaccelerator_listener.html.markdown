@@ -42,6 +42,7 @@ resource "aws_globalaccelerator_listener" "example" {
 This resource supports the following arguments:
 
 * `accelerator_arn` - (Required) ARN of your accelerator.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `client_affinity` - (Optional) Direct all requests from a user to the same endpoint. Valid values are `NONE`, `SOURCE_IP`. Default: `NONE`. If `NONE`, Global Accelerator uses the "five-tuple" properties of source IP address, source port, destination IP address, destination port, and protocol to select the hash value. If `SOURCE_IP`, Global Accelerator uses the "two-tuple" properties of source (client) IP address and destination IP address to select the hash value.
 * `port_range` - (Optional) Port ranges for the connections from clients to the accelerator. See [`port_range`](#port_range-block) below.
 * `protocol` - (Required) Protocol for the connections from clients to the accelerator. Valid values are `TCP`, `UDP`.

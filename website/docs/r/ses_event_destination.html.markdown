@@ -64,6 +64,7 @@ resource "aws_ses_event_destination" "sns" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cloudwatch_destination` - (Optional) CloudWatch destination for the events
 * `configuration_set_name` - (Required) Name of the configuration set
 * `enabled` - (Optional) If true, the event destination will be enabled

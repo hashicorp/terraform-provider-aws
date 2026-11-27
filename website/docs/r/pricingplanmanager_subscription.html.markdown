@@ -59,6 +59,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `approval_mode` - (Optional) Whether the subscription requires explicit approval before billing starts. Valid values: `MANUAL`, `IMMEDIATE`. If not set, AWS defaults to `MANUAL` for paid-tier subscriptions and `IMMEDIATE` for `FREE` tier subscriptions. With `MANUAL`, paid-tier subscriptions remain in `PENDING_APPROVAL` (unbilled, and unmodifiable) until approved with a separate `ApprovePaidSubscription` API call. This value is used only at creation time and is not returned by the AWS API. Changing this argument creates a new resource.
 * `usage_level` - (Optional) Usage level within the plan tier. Specify `DEFAULT` for the base configuration, or a higher level if the plan tier supports it. If omitted on an update, the usage level is reset to the plan tier's default.
 

@@ -23,6 +23,7 @@ data "aws_appmesh_virtual_node" "test" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `mesh_name` - (Required) Name of the service mesh in which the virtual node exists.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner.
 * `name` - (Required) Name of the virtual node.

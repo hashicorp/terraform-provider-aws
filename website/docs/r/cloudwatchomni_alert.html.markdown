@@ -134,6 +134,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the alert. Removing the description replaces the alert, because the service does not support clearing it.
 * `notification_rule` - (Optional) One or more rules that determine when and where notifications are sent. [See below](#notification_rule-block).
 * `notifications_enabled` - (Optional) Whether notifications are enabled for the alert. Defaults to `true`.

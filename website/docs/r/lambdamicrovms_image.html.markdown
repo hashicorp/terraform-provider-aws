@@ -80,6 +80,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `additional_os_capabilities` - (Optional) List of additional OS capabilities granted to the MicroVM runtime environment. Valid values: `ALL`.
 * `base_image_version` - (Optional) Major version number of the base MicroVM image to use (e.g., `1`). If omitted, the service selects a version.
 * `cpu_configuration` - (Optional) CPU configuration for the MicroVM. See [`cpu_configuration` Block](#cpu_configuration-block) below.

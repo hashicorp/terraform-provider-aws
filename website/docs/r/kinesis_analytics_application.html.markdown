@@ -154,6 +154,7 @@ resource "aws_kinesis_analytics_application" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cloudwatch_logging_options` - (Optional) CloudWatch log stream options to monitor application errors. See [`cloudwatch_logging_options` Block](#cloudwatch_logging_options-block) below for details.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
 * `description` - (Optional) Description of the application.

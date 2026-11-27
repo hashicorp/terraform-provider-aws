@@ -54,6 +54,7 @@ resource "aws_kms_grant" "a" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `constraints` - (Optional, Forces new resources) Structure that you can use to allow certain operations in the grant only when the desired encryption context is present. See [`constraints` Block](#constraints-block) for details. For more information about encryption context, see [Encryption Context](https://docs.aws.amazon.com/kms/latest/developerguide/encrypt_context.html).
 * `grant_creation_tokens` - (Optional, Forces new resources) List of grant tokens to be used when creating the grant. See [Grant Tokens](https://docs.aws.amazon.com/kms/latest/developerguide/grants.html#grant_token) for more information about grant tokens.
 * `grantee_principal` - (Required, Forces new resources) Principal that is given permission to perform the operations that the grant permits in ARN format. Note that due to eventual consistency issues around IAM principals, Terraform's state may not always be refreshed to reflect what is true in AWS.

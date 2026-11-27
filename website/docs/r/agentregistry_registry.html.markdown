@@ -98,6 +98,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `approval_configuration` - (Optional) Approval configuration for registry records. [See below](#approval_configuration-block).
 * `auto_detection_configuration` - (Optional) Auto-detection configuration for the registry. When provided, the registry is automatically populated with resources discovered according to the configuration. [See below](#auto_detection_configuration-block).
 * `description` - (Optional) Description of the registry. Maximum length of 4096 characters.

@@ -26,6 +26,7 @@ resource "aws_vpclattice_service_network_vpc_association" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `dns_options` - (Optional) Configuration block for DNS option. See [`dns_options` block](#dns_options-block) below for details.
 * `private_dns_enabled` - (Optional) Boolean to indicate whether to enable private DNS for the VPC association. Defaults to `false`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

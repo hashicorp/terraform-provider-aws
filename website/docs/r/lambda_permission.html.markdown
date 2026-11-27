@@ -220,6 +220,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `event_source_token` - (Optional) Event Source Token for Alexa Skills
 * `function_url_auth_type` - (Optional) Lambda Function URL authentication type. Valid values: `AWS_IAM` or `NONE`. Only valid with `lambda:InvokeFunctionUrl` action
 * `invoked_via_function_url` - (Optional) Lambda Function URL invoke permission. Only valid with `lambda:InvokeFunction` action

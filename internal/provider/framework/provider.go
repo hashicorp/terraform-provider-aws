@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -329,6 +330,7 @@ func (*frameworkProvider) Schema(ctx context.Context, request provider.SchemaReq
 			},
 		},
 	}
+	response.Schema.Blocks["assume_role_in_account"] = assumeRoleInAccountBlock(response.Schema.Blocks["assume_role"].(schema.ListNestedBlock))
 }
 
 func (p *frameworkProvider) MetaSchema(ctx context.Context, req provider.MetaSchemaRequest, resp *provider.MetaSchemaResponse) {
@@ -406,6 +408,23 @@ func (p *frameworkProvider) ListResources(_ context.Context) []func() list.ListR
 	return slices.Clone(p.listResources)
 }
 
+// sdkAccountSchema returns the account argument injected into the SDKv2 resource of the given type.
+func (p *frameworkProvider) sdkAccountSchema(typeName string) *sdkschema.Schema {
+	primary, ok := p.primary.(*sdkschema.Provider)
+	if !ok {
+		return nil
+	}
+	r, ok := primary.ResourcesMap[typeName]
+	if !ok {
+		return nil
+	}
+	// A resource's own attribute of that name is required or computed.
+	if s := r.SchemaMap()[attrAccount]; s != nil && s.Optional {
+		return s
+	}
+	return nil
+}
+
 // initialize is called from `New` to perform any Terraform Framework-style initialization.
 func (p *frameworkProvider) initialize(ctx context.Context) {
 	log.Printf("Initializing Terraform AWS Provider (Framework-style)...")
@@ -437,7 +456,7 @@ func (p *frameworkProvider) initialize(ctx context.Context) {
 		if v, ok := sp.(conns.ServicePackageWithSDKListResources); ok {
 			for listResourceSpec := range v.SDKListResources(ctx) {
 				p.listResources = append(p.listResources, func() list.ListResource { //nolint:contextcheck // must be a func()
-					return newWrappedListResourceSDK(listResourceSpec, servicePackageName)
+					return newWrappedListResourceSDK(listResourceSpec, servicePackageName, p.sdkAccountSchema(listResourceSpec.TypeName))
 				})
 			}
 		}

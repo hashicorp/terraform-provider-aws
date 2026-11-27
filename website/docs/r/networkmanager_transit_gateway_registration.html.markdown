@@ -29,6 +29,7 @@ resource "aws_networkmanager_transit_gateway_registration" "example" {
 
 The following arguments are required:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `global_network_id` - (Required) ID of the Global Network to register to.
 * `transit_gateway_arn` - (Required) ARN of the Transit Gateway to register.
 

@@ -276,6 +276,7 @@ data "aws_region" "current" {}
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `active_directory_config` - (Optional) Configuration for Active Directory integration when `workspace_type` is set to `POOLS`. Defined below.
 * `certificate_based_auth_properties` - (Optional) Configuration of certificate-based authentication (CBA) integration. Requires SAML authentication to be enabled. Defined below.
 * `directory_id` - (Optional) Directory identifier for registration in WorkSpaces service.

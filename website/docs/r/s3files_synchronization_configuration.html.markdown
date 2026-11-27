@@ -37,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `expiration_data_rule` - (Optional) Expiration data rule configuration. See [`expiration_data_rule`](#expiration_data_rule-block) below.
 * `latest_version_number` - (Optional) Version number of the synchronization configuration. If omitted, the service assigns it and the value is exported after apply.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

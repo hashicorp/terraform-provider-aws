@@ -41,6 +41,7 @@ resource "aws_mskconnect_custom_plugin" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `content_type` - (Required, Forces new resource) Type of the plugin file. Allowed values are `ZIP` and `JAR`.
 * `description` - (Optional, Forces new resource) Summary description of the custom plugin.
 * `location` - (Required, Forces new resource) Information about the location of a custom plugin. See [`location` Block](#location-block) for details.

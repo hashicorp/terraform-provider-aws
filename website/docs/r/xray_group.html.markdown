@@ -28,6 +28,7 @@ resource "aws_xray_group" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter_expression` - (Required) Filter expression defining criteria by which to group traces. More info can be found in official [docs](https://docs.aws.amazon.com/xray/latest/devguide/xray-console-filters.html).
 * `group_name` - (Required) Name of the group.
 * `insights_configuration` - (Optional) Configuration options for enabling insights.

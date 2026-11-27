@@ -27,6 +27,7 @@ resource "aws_globalaccelerator_endpoint_group" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `endpoint_configuration` - (Optional) Endpoint objects. See [`endpoint_configuration`](#endpoint_configuration-block) below.
 * `endpoint_group_region` - (Optional) AWS Region where the endpoint group is located.
 * `health_check_interval_seconds` - (Optional) Time—10 seconds or 30 seconds—between each health check for an endpoint. The default value is 30.

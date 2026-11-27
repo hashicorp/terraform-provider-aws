@@ -64,6 +64,7 @@ resource "aws_neptune_cluster_instance" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `allow_major_version_upgrade` - (Optional) Whether upgrades between different major versions are allowed. You must set it to `true` when providing an `engine_version` parameter that uses a different major version than the DB cluster's current version. Default is `false`.
 * `apply_immediately` - (Optional) Whether any cluster modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `availability_zones` - (Optional) List of EC2 Availability Zones that instances in the Neptune cluster can be created in.

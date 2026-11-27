@@ -73,6 +73,7 @@ resource "aws_glue_classifier" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `csv_classifier` - (Optional) Classifier for CSV content. Defined below.
 * `grok_classifier` - (Optional) Classifier that uses grok patterns. Defined below.
 * `json_classifier` - (Optional) Classifier for JSON content. Defined below.

@@ -29,6 +29,7 @@ resource "aws_notifications_managed_notification_additional_channel_association"
 
 The following arguments are required:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `channel_arn` - (Required) ARN of the channel to associate with the managed notification.
 * `managed_notification_arn` - (Required) ARN of the managed notification to associate the channel with.
 

@@ -29,6 +29,7 @@ resource "aws_pinpoint_baidu_channel" "channel" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_key` - (Required) Platform credential API key from Baidu.
 * `application_id` - (Required) Application ID.
 * `enabled` - (Optional) Whether to enable the channel. Defaults to `true`.

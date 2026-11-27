@@ -83,6 +83,7 @@ resource "aws_appflow_connector_profile" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `connection_mode` - (Required) Connection mode and specifies whether it is public or private. Private flows use AWS PrivateLink to route data over AWS infrastructure without exposing it to the public internet. One of: `Public`, `Private`.
 * `connector_label` - (Optional) Label of the connector. The label is unique for each `ConnectorRegistration` in your AWS account. Only needed if calling for the `CustomConnector` connector type.
 * `connector_profile_config` - (Required) Connector-specific configuration and credentials. See [`connector_profile_config` Block](#connector_profile_config-block) for details.

@@ -36,6 +36,7 @@ resource "aws_xray_sampling_rule" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `attributes` - (Optional) Matches attributes derived from the request.
 * `fixed_rate` - (Required) Percentage of matching requests to instrument, after the reservoir is exhausted.
 * `host` - (Required) Matches the hostname from a request URL.

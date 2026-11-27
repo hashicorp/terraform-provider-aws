@@ -27,6 +27,7 @@ resource "aws_ram_resource_share" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `allow_external_principals` - (Optional) Whether principals outside your organization can be associated with a resource share.
 * `name` - (Required) Name of the resource share.
 * `permission_arns` - (Optional) ARNs of the RAM permission to associate with the resource share. If you do not specify an ARN for the permission, RAM automatically attaches the default version of the permission for each resource type. You can associate only one permission with each resource type included in the resource share.

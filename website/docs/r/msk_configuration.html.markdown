@@ -28,6 +28,7 @@ PROPERTIES
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the configuration.
 * `kafka_versions` - (Optional) List of Apache Kafka versions which can use this configuration.
 * `name` - (Required) Name of the configuration.

@@ -93,6 +93,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `browser_signing` - (Optional) Browser signing configuration that enables cryptographic agent identification using HTTP message signatures. See [`browser_signing`](#browser_signing-block) below.
 * `certificate` - (Optional) Certificates to install in the browser. See [`certificate`](#certificate-block) below.
 * `description` - (Optional) Description of the browser.

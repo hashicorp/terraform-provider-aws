@@ -55,6 +55,7 @@ var (
 
 // InContext represents the resource information kept in Context.
 type InContext struct {
+	overrideAccountID  string // Any currently in effect per-resource AWS account.
 	overrideRegion     string // Any currently in effect per-resource Region override.
 	resourceName       string // Friendly resource name, e.g. "Subnet"
 	typeName           string // Resource type name, e.g. "aws_iam_role"

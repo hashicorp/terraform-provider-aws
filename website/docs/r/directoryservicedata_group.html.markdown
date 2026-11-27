@@ -34,6 +34,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `group_scope` - (Optional) Scope of the AD group. Valid values are `DomainLocal`, `Global`, `Universal`, and `BuiltinLocal`. If omitted, the value is read from AWS. See [AD group scopes](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups#group-scope) for scope restrictions.
 * `group_type` - (Optional) Type of the AD group. Valid values are `Distribution` and `Security`. If omitted, the value is read from AWS. See [AD group types](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/manage/understand-security-groups#how-active-directory-security-groups-work).
 * `region` - (Optional) Region where the group is managed. Defaults to the provider region.

@@ -31,6 +31,7 @@ resource "aws_backup_restore_testing_plan" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name of the restore testing plan. Must be between 1 and 50 characters long and contain only alphanumeric characters and underscores.
 * `recovery_point_selection` - (Required) Recovery point selection configuration. See [`recovery_point_selection`](#recovery_point_selection-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

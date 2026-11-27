@@ -30,6 +30,7 @@ data "aws_s3control_access_points" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) AWS account ID for the account that owns the specified access points. If omitted, defaults to the caller's account ID.
 * `bucket` - (Optional) Name of the bucket associated with the access points.
 * `data_source_id` - (Optional) Unique identifier for the access points data source.

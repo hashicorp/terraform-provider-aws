@@ -26,6 +26,7 @@ resource "aws_glue_schema" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `compatibility` - (Required) Compatibility mode of the schema. Values values are: `NONE`, `DISABLED`, `BACKWARD`, `BACKWARD_ALL`, `FORWARD`, `FORWARD_ALL`, `FULL`, and `FULL_ALL`.
 * `data_format` - (Required) Data format of the schema definition. Valid values are `AVRO`, `JSON` and `PROTOBUF`.
 * `description` - (Optional) Description of the schema.

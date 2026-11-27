@@ -46,6 +46,7 @@ resource "aws_s3control_object_lambda_access_point" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) AWS account ID for the owner of the bucket for which you want to create an Object Lambda Access Point. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `configuration` - (Required) Configuration block containing details about the Object Lambda Access Point. See [`configuration` Block](#configuration-block) below for more details.
 * `name` - (Required) Name for this Object Lambda Access Point.

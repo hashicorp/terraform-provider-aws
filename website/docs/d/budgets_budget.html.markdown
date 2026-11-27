@@ -28,6 +28,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) ID of the target account for the budget. Defaults to the current account ID.
 * `name_prefix` - (Optional) Prefix of the budget name. Unique within an account.
 

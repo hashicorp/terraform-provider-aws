@@ -37,6 +37,7 @@ resource "aws_msk_serverless_cluster" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `client_authentication` - (Required) Client authentication information for the serverless cluster. See [`client_authentication` Block](#client_authentication-block) below.
 * `cluster_name` - (Required) Name of the serverless cluster.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

@@ -32,6 +32,7 @@ resource "aws_waf_ipset" "ipset" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `ip_set_descriptors` - (Optional) One or more pairs specifying the IP address type (IPV4 or IPV6) and the IP address range (in CIDR format) from which web requests originate. See [`ip_set_descriptors` Block](#ip_set_descriptors-block) below for details.
 * `name` - (Required) Name or description of the IPSet.
 

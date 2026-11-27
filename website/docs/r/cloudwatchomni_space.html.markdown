@@ -122,6 +122,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `agent_core_evaluation_role_arn` - (Optional) ARN of the IAM role used by AgentCore online evaluation. Changing this forces a new resource.
 * `encryption_configuration` - (Optional) Encryption of the space's data at rest. Omit for AWS owned encryption. [See below](#encryption_configuration-block).
 * `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

@@ -42,6 +42,7 @@ resource "aws_vpc_endpoint_service" "example" {
 This resource supports the following arguments:
 
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `allowed_principals` - (Optional) ARNs of one or more principals allowed to discover the endpoint service.
 * `gateway_load_balancer_arns` - (Optional) ARNs of one or more Gateway Load Balancers for the endpoint service.
 * `network_load_balancer_arns` - (Optional) ARNs of one or more Network Load Balancers for the endpoint service.

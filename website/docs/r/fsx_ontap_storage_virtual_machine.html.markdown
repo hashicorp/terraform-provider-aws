@@ -47,6 +47,7 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `active_directory_configuration` - (Optional) Configuration block that Amazon FSx uses to join the FSx ONTAP Storage Virtual Machine(SVM) to your Microsoft Active Directory (AD) directory. Detailed below.
 * `file_system_id` - (Required) ID of the Amazon FSx ONTAP File System that this SVM will be created on.
 * `name` - (Required) Name of the SVM. You can use a maximum of 47 alphanumeric characters, plus the underscore (_) special character.

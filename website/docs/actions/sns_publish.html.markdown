@@ -133,6 +133,7 @@ resource "terraform_data" "deploy_trigger" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `message` - (Required) Message to publish. For JSON message structure, this should be a JSON object with protocol-specific messages. Maximum size is 256 KB.
 * `message_attributes` - (Optional) Message attributes to include with the message. Each attribute consists of a name, data type, and value. Up to 10 attributes are allowed. See [`message_attributes` Block](#message_attributes-block) below.
 * `message_structure` - (Optional) Set to `json` if you want to send different messages for each protocol. If not specified, the message will be sent as-is to all protocols.

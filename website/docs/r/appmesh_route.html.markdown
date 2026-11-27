@@ -139,6 +139,7 @@ resource "aws_appmesh_route" "serviceb" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `mesh_name` - (Required) Name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
 * `mesh_owner` - (Optional) AWS account ID of the service mesh's owner. Defaults to the account ID the [AWS provider](/docs/providers/aws/index.html) is currently connected to.
 * `name` - (Required) Name to use for the route. Must be between 1 and 255 characters in length.

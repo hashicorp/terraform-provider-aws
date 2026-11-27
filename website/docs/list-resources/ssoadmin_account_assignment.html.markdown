@@ -28,6 +28,7 @@ list "aws_ssoadmin_account_assignment" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Required) AWS account ID to list account assignments for.
 * `instance_arn` - (Required) ARN of the IAM Identity Center instance.
 * `permission_set_arn` - (Required) ARN of the permission set whose assignments should be listed.

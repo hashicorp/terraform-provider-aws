@@ -387,15 +387,9 @@ func dbClusterDBParameterGroupIdentifierReplaceIf(ctx context.Context, req planm
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plan, state dbClusterResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
 	// If the DBParameterGroupIdentifier is being removed, the cluster must be recreated.
-	dbParameterGroupIdentifierRemoved := !state.DBParameterGroupIdentifier.IsNull() && plan.DBParameterGroupIdentifier.IsNull()
+	dbParameterGroupIdentifierRemoved := !req.StateValue.IsNull() && req.PlanValue.IsNull()
 
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }

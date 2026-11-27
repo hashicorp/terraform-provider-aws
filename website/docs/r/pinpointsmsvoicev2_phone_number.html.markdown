@@ -35,6 +35,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When `true`, the phone number cannot be deleted.
 * `force_disassociate` - (Optional) Whether to disassociate the phone number from any pool it is associated with before destroying it.
 * `opt_out_list_name` - (Optional) Name of the opt-out list to associate with the phone number. If omitted, AWS assigns the `Default` opt-out list.

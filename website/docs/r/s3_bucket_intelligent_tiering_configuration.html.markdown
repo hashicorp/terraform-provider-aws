@@ -69,6 +69,7 @@ resource "aws_s3_bucket" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket` - (Required) Name of the bucket this intelligent tiering configuration is associated with.
 * `filter` - (Optional) Bucket filter. The configuration only includes objects that meet the filter's criteria. See [`filter` Block](#filter-block) below.
 * `name` - (Required) Unique name used to identify the S3 Intelligent-Tiering configuration for the bucket.

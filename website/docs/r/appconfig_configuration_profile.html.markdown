@@ -34,6 +34,7 @@ resource "aws_appconfig_configuration_profile" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required, Forces new resource) Application ID. Must be between 4 and 7 characters in length.
 * `description` - (Optional) Description of the configuration profile. Can be at most 1024 characters.
 * `kms_key_identifier` - (Optional) Identifier for a KMS key to encrypt new configuration data versions in the AppConfig hosted configuration store. This attribute is only used for hosted configuration types. The identifier can be an KMS key ID, alias, or the ARN of the key ID or alias.

@@ -44,6 +44,7 @@ resource "aws_lambdaweb_resource_policy" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `policy` - (Required) Resource-based IAM policy document as JSON. Terraform normalizes the document, so equivalent policies that differ only in key order or whitespace do not produce spurious diffs.
 * `region` - (Optional) Region where this resource is managed. Defaults to the provider's configured region.
 * `resource_arn` - (Required) ARN of the Lambda Web function the policy is attached to. Must be a web function ARN (`arn:aws:lambda:<region>:<account>:web-function/<name>`). Changing this forces a new resource.

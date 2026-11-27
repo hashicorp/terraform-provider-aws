@@ -211,6 +211,7 @@ action "aws_lambda_invoke" "complex" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `client_context` - (Optional) Up to 3,583 bytes of base64-encoded data about the invoking client to pass to the function in the context object. This is only used for mobile applications and should contain information about the client application and device.
 * `function_name` - (Required) Name, ARN, or partial ARN of the Lambda function to invoke. You can specify a function name (e.g., `my-function`), a qualified function name (e.g., `my-function:PROD`), or a partial ARN (e.g., `123456789012:function:my-function`).
 * `invocation_type` - (Optional) Invocation type. Valid values are `RequestResponse` (default) for synchronous invocation that waits for the function to complete and returns the response, `Event` for asynchronous invocation that returns immediately after the request is accepted, and `DryRun` to validate parameters and verify permissions without actually executing the function.

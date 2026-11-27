@@ -38,6 +38,7 @@ resource "aws_subnet" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr_block` - (Optional) CIDR block of the desired VPC.
 * `default` - (Optional) Boolean constraint on whether the desired VPC is the default VPC for the region.
 * `dhcp_options_id` - (Optional) DHCP options ID of the desired VPC.

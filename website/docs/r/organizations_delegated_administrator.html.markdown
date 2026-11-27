@@ -23,6 +23,7 @@ resource "aws_organizations_delegated_administrator" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Required) Account ID number of the member account in the organization to register as a delegated administrator.
 * `service_principal` - (Required) Service principal of the AWS service for which you want to make the member account a delegated administrator.
 

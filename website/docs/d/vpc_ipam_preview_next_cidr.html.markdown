@@ -40,6 +40,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `disallowed_cidrs` - (Optional) Exclude a particular CIDR range from being returned by the pool.
 * `ipam_pool_id` - (Required) ID of the pool to which you want to assign a CIDR.
 * `netmask_length` - (Optional) Netmask length of the CIDR you would like to preview from the IPAM pool.

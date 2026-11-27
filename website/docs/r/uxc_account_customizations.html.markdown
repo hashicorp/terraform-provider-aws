@@ -40,6 +40,7 @@ resource "aws_uxc_account_customizations" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_color` - (Optional) Color used to identify the account in the AWS Management Console. Valid values are `none`, `red`, `darkBlue`, `lightBlue`, `green`, `yellow`, `orange`, `pink`, `purple`, and `teal`. Defaults to `none`.
 * `visible_regions` - (Optional) Set of AWS region codes to display in the console. When omitted or empty, all regions are visible.
 * `visible_services` - (Optional) Set of AWS service identifiers to display in the console. When omitted or empty, all services are visible.

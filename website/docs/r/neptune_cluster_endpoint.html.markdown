@@ -24,6 +24,7 @@ resource "aws_neptune_cluster_endpoint" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cluster_endpoint_identifier` - (Required, Forces new resources) Identifier of the endpoint.
 * `cluster_identifier` - (Required, Forces new resources) DB cluster identifier of the DB cluster associated with the endpoint.
 * `endpoint_type` - (Required) Type of the endpoint. One of: `READER`, `WRITER`, `ANY`.

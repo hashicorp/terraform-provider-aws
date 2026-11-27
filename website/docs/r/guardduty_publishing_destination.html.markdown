@@ -128,6 +128,7 @@ resource "aws_guardduty_publishing_destination" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `destination_arn` - (Required) Bucket ARN and prefix under which the findings get exported. Bucket-ARN is required, the prefix is optional and will be `AWSLogs/[Account-ID]/GuardDuty/[Region]/` if not provided
 * `destination_type` - (Optional) Currently there is only "S3" available as destination type which is also the default value
 * `detector_id` - (Required) Detector ID of the GuardDuty.

@@ -196,6 +196,7 @@ resource "aws_msk_replicator" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Summary description of the replicator.
 * `kafka_cluster` - (Required) Source and target Kafka clusters for the replicator. Exactly two blocks are required. See [`kafka_cluster` Block](#kafka_cluster-block) below.
 * `log_delivery` - (Optional) Configuration block for delivering replicator logs to customer destinations. See [`log_delivery` Block](#log_delivery-block) below.

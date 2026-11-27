@@ -30,6 +30,7 @@ resource "aws_waf_sql_injection_match_set" "sql_injection_match_set" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name or description of the SQL Injection Match Set.
 * `sql_injection_match_tuples` - (Optional) Parts of web requests for AWS WAF to inspect for malicious SQL code and, if AWS WAF inspects a header, the name of the header. See [`sql_injection_match_tuples` Block](#sql_injection_match_tuples-block) below for details.
 

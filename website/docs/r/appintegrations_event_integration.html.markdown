@@ -32,6 +32,7 @@ resource "aws_appintegrations_event_integration" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the Event Integration.
 * `event_filter` - (Required) Block that defines the configuration information for the event filter. The Event Filter block is documented below.
 * `eventbridge_bus` - (Required) EventBridge bus.

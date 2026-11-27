@@ -28,6 +28,7 @@ resource "aws_notifications_organizations_access" "example" {
 
 The following arguments are required:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `enabled` - (Required) Whether to enable organizations access for AWS User Notifications in AWS Organizations. When set to `true`, enables organizations access. When set to `false`, disables organizations access.
 
 ## Attribute Reference

@@ -43,6 +43,7 @@ resource "aws_s3_bucket_cors_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `cors_rule` - (Required) Set of origins and methods (cross-origin access that you want to allow). [See below](#cors_rule-block). You can configure up to 100 rules.
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated:**) Account ID of the expected bucket owner.

@@ -354,14 +354,8 @@ func dbInstanceDBParameterGroupIdentifierReplaceIf(ctx context.Context, req plan
 	if req.State.Raw.IsNull() || req.Plan.Raw.IsNull() {
 		return
 	}
-	var plan, state dbInstanceResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
 
-	dbParameterGroupIdentifierRemoved := !state.DBParameterGroupIdentifier.IsNull() && plan.DBParameterGroupIdentifier.IsNull()
+	dbParameterGroupIdentifierRemoved := !req.StateValue.IsNull() && req.PlanValue.IsNull()
 
 	resp.RequiresReplace = dbParameterGroupIdentifierRemoved
 }

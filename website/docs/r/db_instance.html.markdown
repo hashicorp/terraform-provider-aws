@@ -322,6 +322,7 @@ For more detailed documentation about each argument, refer to the [AWS official 
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `allocated_storage` - (Optional) Allocated storage in gibibytes. Required unless a `snapshot_identifier`, `replicate_source_db`, or `replicate_source_db_cluster` is provided. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs. If `replicate_source_db` or `replicate_source_db_cluster` is set, the value is ignored during the creation of the instance.
 * `allow_major_version_upgrade` - (Optional) Whether major version upgrades are allowed. Changing this parameter does not result in an outage and the change is asynchronously applied as soon as possible.
 * `apply_immediately` - (Optional) Whether any database modifications are applied immediately, or during the next maintenance window. Default is `false`. See [Amazon RDS Documentation for more information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)

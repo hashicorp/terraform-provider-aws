@@ -38,6 +38,7 @@ resource "aws_apigatewayv2_model" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_id` - (Required) API identifier.
 * `content_type` - (Required) Content-type for the model, for example, `application/json`. Must be between 1 and 256 characters in length.
 * `description` - (Optional) Description of the model. Must be between 1 and 128 characters in length.

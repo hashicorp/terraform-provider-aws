@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `certificate` - (Optional) Certificates to install in the code interpreter. Between 1 and 200 blocks are supported. See [`certificate`](#certificate-block) below.
 * `description` - (Optional) Description of the code interpreter.
 * `execution_role_arn` - (Optional) ARN of the IAM role that the code interpreter assumes for execution.

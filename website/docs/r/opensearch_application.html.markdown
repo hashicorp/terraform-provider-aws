@@ -180,6 +180,7 @@ resource "aws_opensearch_application" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `app_config` - (Optional) Configuration block(s) for OpenSearch application settings. See [`app_config` Block](#app_config-block) below.
 * `data_source` - (Optional) Configuration block(s) for data sources to link to the OpenSearch application. See [`data_source` Block](#data_source-block) below.
 * `iam_identity_center_options` - (Optional) Configuration block for integrating AWS IAM Identity Center with the OpenSearch application. See [`iam_identity_center_options` Block](#iam_identity_center_options-block) below.

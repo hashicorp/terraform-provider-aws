@@ -163,6 +163,7 @@ action "aws_ses_send_email" "batch_complete" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bcc_addresses` - (Optional) List of email addresses for the BCC: field of the message. Recipients in this list will receive the email but their addresses will not be visible to other recipients.
 * `cc_addresses` - (Optional) List of email addresses for the CC: field of the message. Recipients in this list will receive the email and their addresses will be visible to all recipients.
 * `html_body` - (Optional) Message body in HTML format. Either `text_body` or `html_body` (or both) must be specified. HTML content allows for rich formatting including links, images, and styling.

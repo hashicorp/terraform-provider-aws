@@ -34,6 +34,7 @@ resource "aws_macie2_findings_filter" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `action` - (Required) Action to perform on findings that meet the filter criteria (`finding_criteria`). Valid values are `ARCHIVE`, to suppress (automatically archive) the findings, and `NOOP`, to not perform any action on the findings.
 * `description` - (Optional) Custom description of the filter. Can contain as many as 512 characters.
 * `finding_criteria` - (Required) Criteria to use to filter findings. See [`finding_criteria` Block](#finding_criteria-block) for details.

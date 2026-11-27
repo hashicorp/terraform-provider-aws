@@ -33,6 +33,7 @@ resource "aws_waf_byte_match_set" "byte_set" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `byte_match_tuples` - (Optional) Settings for the bytes (typically a string that corresponds with ASCII characters) to search for in web requests, the location in requests to search, and other settings. See [`byte_match_tuples` Block](#byte_match_tuples-block) below for details.
 * `name` - (Required) Name or description of the Byte Match Set.
 

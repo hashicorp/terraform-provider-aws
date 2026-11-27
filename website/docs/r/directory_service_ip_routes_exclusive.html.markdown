@@ -82,6 +82,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `ip_route` - (Optional) Set of IP routes the directory should have. Omit all `ip_route` blocks to remove every IP route from the directory. See [`ip_route` Block](#ip_route-block) below.
 * `region` - (Optional) Region where this resource is managed. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `update_security_group_for_directory_controllers` - (Optional) Whether to update the inbound and outbound rules of the security group for the directory controllers when adding IP routes. Applies only to IP routes added by this resource. Defaults to `false`.

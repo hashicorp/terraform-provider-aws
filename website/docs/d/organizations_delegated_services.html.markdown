@@ -22,6 +22,7 @@ data "aws_organizations_delegated_services" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Required) Account ID number of a delegated administrator account in the organization.
 
 ## Attribute Reference

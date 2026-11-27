@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr_ip` - (Optional) IPv4 CIDR block, such as `10.0.0.0/24`. For a single address, use a `/32` block, such as `10.0.0.0/32`. Exactly one of `cidr_ip` or `cidr_ipv6` must be set. Changing this forces a new resource to be created.
 * `cidr_ipv6` - (Optional) IPv6 CIDR block, such as `2001:db8::/64`. For a single address, use a `/128` block. Exactly one of `cidr_ip` or `cidr_ipv6` must be set. Changing this forces a new resource to be created.
 * `description` - (Optional) Description of the address block. Changing this forces a new resource to be created.

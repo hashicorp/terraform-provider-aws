@@ -196,6 +196,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `build_id` - (Optional) ID of the started build.
 * `environment_variables_override` - (Optional) Environment variables to override for this build. See [`environment_variables_override` Block](#environment_variables_override-block) below.
 * `host_kernel_override` - (Optional) Overrides the host operating system kernel for this build. This controls the kernel of the underlying build host; it does not change the build environment operating system, which is determined by the project's image. Valid values: `LINUX_KERNEL_4` (Amazon Linux 2 host, kernel 4.x), `LINUX_KERNEL_6` (Amazon Linux 2023 host, kernel 6.x), `LINUX_KERNEL_LATEST`. Applies to the `LINUX_CONTAINER`, `ARM_CONTAINER`, `LINUX_EC2`, and `ARM_EC2` environment types.

@@ -37,6 +37,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `encryption_configuration` - (Optional, Forces new resource) Block for encryption configuration for the vector index. See [`encryption_configuration` Block](#encryption_configuration-block) below.
 * `metadata_configuration` - (Optional, Forces new resource) Block for metadata configuration for the vector index. See [`metadata_configuration` Block](#metadata_configuration-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

@@ -40,6 +40,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `capacity_limits` - (Optional) Configuration block for the collection group's indexing and search capacity limits. See [`capacity_limits`](#capacity_limits-block) below for details.
 * `description` - (Optional) Description of the collection group.
 * `generation` - (Optional, Forces new resource) Generation of Amazon OpenSearch Serverless for the collection group. Valid values are `CLASSIC` and `NEXTGEN`. Default value is `CLASSIC`.

@@ -65,6 +65,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `character_set_name` - (Optional, Forces new resource) Character set of the tenant database. Defaults to `AL32UTF8`.
 * `final_snapshot_identifier` - (Optional) Name of the DB snapshot created when the tenant database is deleted. Required unless `skip_final_snapshot` is `true`.
 * `manage_master_user_password` - (Optional) Whether to manage the master user password with AWS Secrets Manager. When `true`, conflicts with `master_user_password` and `master_user_password_wo`. Turning it off requires one of them.

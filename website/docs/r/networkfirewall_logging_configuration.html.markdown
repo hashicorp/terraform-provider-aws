@@ -68,6 +68,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `enable_monitoring_dashboard` - (Optional) Whether to enable the detailed firewall monitoring dashboard on the firewall. Defaults to `false`.
 * `firewall_arn` - (Required, Forces new resource) ARN of the Network Firewall firewall.
 * `logging_configuration` - (Required) Configuration block describing how AWS Network Firewall performs logging for a firewall. See [`logging_configuration` Block](#logging_configuration-block) below for details.

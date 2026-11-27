@@ -5,6 +5,7 @@ package framework
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/useragent"
 	"github.com/hashicorp/terraform-plugin-framework/action"
@@ -16,7 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	sdkschema "github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -137,6 +140,8 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	response.Schema.Attributes = addAccountAttribute(response.Schema.Attributes, dataSourceAccountAttribute())
 }
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
@@ -145,6 +150,14 @@ func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.State
+	stripAccount(ctx, &response.State, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.State, outer, account, &response.Diagnostics)
 
 	interceptedHandler(w.interceptors.dataSourceRead(), w.inner.Read, dataSourceReadHasError, w.meta)(ctx, request, response)
 }
@@ -182,13 +195,18 @@ func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.C
 }
 
 func (w *wrappedDataSource) ValidateConfig(ctx context.Context, request datasource.ValidateConfigRequest, response *datasource.ValidateConfigResponse) {
-	if v, ok := w.inner.(datasource.DataSourceWithValidateConfig); ok {
-		ctx, diags := w.context(ctx, request.Config.GetAttribute, nil, w.meta)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, nil, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, _ = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+
+	if v, ok := w.inner.(datasource.DataSourceWithValidateConfig); ok {
 		v.ValidateConfig(ctx, request, response)
 	}
 }
@@ -273,6 +291,11 @@ func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral
 	}
 
 	interceptedHandler(w.interceptors.ephemeralResourceSchema(), w.inner.Schema, ephemeralSchemaHasError, w.meta)(ctx, request, response)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Schema.Attributes = addAccountAttribute(response.Schema.Attributes, ephemeralResourceAccountAttribute())
 }
 
 func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
@@ -281,6 +304,14 @@ func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.O
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.Result
+	stripAccount(ctx, &response.Result, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.Result, outer, account, &response.Diagnostics)
 
 	interceptedHandler(w.interceptors.ephemeralResourceOpen(), w.inner.Open, ephemeralOpenHasError, w.meta)(ctx, request, response)
 }
@@ -342,13 +373,18 @@ func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephem
 }
 
 func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
-		ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, _ = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
 		v.ValidateConfig(ctx, request, response)
 	}
 }
@@ -435,12 +471,22 @@ func (w *wrappedAction) Schema(ctx context.Context, request action.SchemaRequest
 		w.inner.Schema(ctx, request, response)
 	}
 	interceptedHandler(w.interceptors.actionSchema(), f, actionSchemaHasError, w.meta)(ctx, request, response)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Schema.Attributes = addAccountAttribute(response.Schema.Attributes, actionAccountAttribute())
 }
 
 func (w *wrappedAction) Invoke(ctx context.Context, request action.InvokeRequest, response *action.InvokeResponse) {
 	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, _ = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
 		return
 	}
 
@@ -483,13 +529,18 @@ func (w *wrappedAction) ConfigValidators(ctx context.Context) []action.ConfigVal
 }
 
 func (w *wrappedAction) ValidateConfig(ctx context.Context, request action.ValidateConfigRequest, response *action.ValidateConfigResponse) {
-	if v, ok := w.inner.(action.ActionWithValidateConfig); ok {
-		ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	ctx, diags := w.context(ctx, request.Config.GetAttribute, w.meta)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, _ = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+
+	if v, ok := w.inner.(action.ActionWithValidateConfig); ok {
 		v.ValidateConfig(ctx, request, response)
 	}
 }
@@ -628,6 +679,11 @@ func (w *wrappedResource) Schema(ctx context.Context, request resource.SchemaReq
 	}
 
 	interceptedHandler(w.interceptors.resourceSchema(), w.inner.Schema, resourceSchemaHasError, w.meta)(ctx, request, response)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Schema.Attributes = addAccountAttribute(response.Schema.Attributes, resourceAccountAttribute())
 }
 
 func (w *wrappedResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
@@ -636,6 +692,15 @@ func (w *wrappedResource) Create(ctx context.Context, request resource.CreateReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	stripAccount(ctx, &request.Config, &response.Diagnostics)
+	account := stripAccount(ctx, &request.Plan, &response.Diagnostics)
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.State
+	stripAccount(ctx, &response.State, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.State, outer, account, &response.Diagnostics)
 
 	interceptedHandler(w.interceptors.resourceCreate(), w.inner.Create, resourceCreateHasError, w.meta)(ctx, request, response)
 }
@@ -647,6 +712,15 @@ func (w *wrappedResource) Read(ctx context.Context, request resource.ReadRequest
 		return
 	}
 
+	// Read and Delete receive only state: the account the resource was created in.
+	account := stripAccount(ctx, &request.State, &response.Diagnostics)
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.State
+	stripAccount(ctx, &response.State, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.State, outer, account, &response.Diagnostics)
+
 	interceptedHandler(w.interceptors.resourceRead(), w.inner.Read, resourceReadHasError, w.meta)(ctx, request, response)
 }
 
@@ -657,7 +731,22 @@ func (w *wrappedResource) Update(ctx context.Context, request resource.UpdateReq
 		return
 	}
 
-	interceptedHandler(w.interceptors.resourceUpdate(), w.inner.Update, resourceUpdateHasError, w.meta)(ctx, request, response)
+	stripAccount(ctx, &request.Config, &response.Diagnostics)
+	stripAccount(ctx, &request.State, &response.Diagnostics)
+	account := stripAccount(ctx, &request.Plan, &response.Diagnostics)
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.State
+	stripAccount(ctx, &response.State, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.State, outer, account, &response.Diagnostics)
+
+	update := w.inner.Update
+	if request.Plan.Raw.Equal(request.State.Raw) {
+		// Only the account is being recorded, in a state from before the argument existed: there is nothing to update.
+		update = func(context.Context, resource.UpdateRequest, *resource.UpdateResponse) {}
+	}
+	interceptedHandler(w.interceptors.resourceUpdate(), update, resourceUpdateHasError, w.meta)(ctx, request, response)
 }
 
 func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -666,6 +755,14 @@ func (w *wrappedResource) Delete(ctx context.Context, request resource.DeleteReq
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	account := stripAccount(ctx, &request.State, &response.Diagnostics)
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.State
+	stripAccount(ctx, &response.State, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.State, outer, account, &response.Diagnostics)
 
 	interceptedHandler(w.interceptors.resourceDelete(), w.inner.Delete, resourceDeleteHasError, w.meta)(ctx, request, response)
 }
@@ -692,6 +789,11 @@ func (w *wrappedResource) ImportState(ctx context.Context, request resource.Impo
 			return
 		}
 
+		// An import carries no configuration, so the resource is imported from the provider's own account.
+		outer := response.State
+		stripAccount(ctx, &response.State, &response.Diagnostics)
+		defer restoreAccount(ctx, &response.State, outer, tftypes.Value{}, &response.Diagnostics)
+
 		ctx = importer.Context(ctx, w.meta)
 		interceptedHandler(w.interceptors.resourceImportState(), v.ImportState, resourceImportStateHasError, w.meta)(ctx, request, response)
 
@@ -711,6 +813,25 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 		return
 	}
 
+	isUpdate := !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull()
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	stripAccount(ctx, &request.Plan, &response.Diagnostics)
+	stateAccount := stripAccount(ctx, &request.State, &response.Diagnostics)
+	if account.Type() == nil || account.IsNull() {
+		account = stateAccount // Without an account in the configuration a resource stays where it is, also to be destroyed.
+		// But it must name another account than the provider's: without one it would move if it were replaced.
+		if v := accountID(account); isUpdate && w.meta != nil && v != w.meta.AccountID(conns.WithOverrideAccount(ctx, "")) && v != "" {
+			response.Diagnostics.AddAttributeError(path.Root(attrAccount), "Missing account Value", fmt.Sprintf("The resource is in AWS account %[1]s, which is not the provider's account: set account = %[1]q to keep it there.", v))
+			return
+		}
+	}
+	if ctx, account = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
+		return
+	}
+	outer := response.Plan
+	stripAccount(ctx, &response.Plan, &response.Diagnostics)
+	defer restoreAccount(ctx, &response.Plan, outer, account, &response.Diagnostics)
+
 	// We run ModifyPlan interceptors even if the resource has not defined a ModifyPlan method.
 	f := func(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	}
@@ -718,6 +839,10 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 		f = v.ModifyPlan
 	}
 	interceptedHandler(w.interceptors.resourceModifyPlan(), f, resourceModifyPlanHasError, w.meta)(ctx, request, response)
+
+	if isUpdate && w.meta != nil {
+		requiresReplaceIfAccountChanges(ctx, w.meta, account, stateAccount, response)
+	}
 }
 
 func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
@@ -732,7 +857,12 @@ func (w *wrappedResource) ConfigValidators(ctx context.Context) []resource.Confi
 			return nil
 		}
 
-		return v.ConfigValidators(ctx)
+		validators := v.ConfigValidators(ctx)
+		for i, validator := range validators {
+			validators[i] = configValidatorWithoutAccount{validator}
+		}
+
+		return validators
 	}
 
 	return nil
@@ -742,6 +872,11 @@ func (w *wrappedResource) ValidateConfig(ctx context.Context, request resource.V
 	ctx, diags := w.context(ctx, request.Config.GetAttribute, nil, w.meta)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	account := stripAccount(ctx, &request.Config, &response.Diagnostics)
+	if ctx, _ = withAccount(ctx, account, w.meta, &response.Diagnostics); response.Diagnostics.HasError() {
 		return
 	}
 
@@ -762,7 +897,20 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 			return nil
 		}
 
-		return v.UpgradeState(ctx)
+		upgraders := v.UpgradeState(ctx)
+		for version, upgrader := range upgraders {
+			f := upgrader.StateUpgrader
+			upgrader.StateUpgrader = func(ctx context.Context, request resource.UpgradeStateRequest, response *resource.UpgradeStateResponse) {
+				outer := response.State
+				stripAccount(ctx, &response.State, &response.Diagnostics)
+				defer restoreAccount(ctx, &response.State, outer, rawStateAccount(request.RawState), &response.Diagnostics)
+
+				f(ctx, request, response)
+			}
+			upgraders[version] = upgrader
+		}
+
+		return upgraders
 	}
 
 	return nil
@@ -780,7 +928,18 @@ func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
 			return nil
 		}
 
-		return v.MoveState(ctx)
+		movers := v.MoveState(ctx)
+		for i, mover := range movers {
+			movers[i].StateMover = func(ctx context.Context, request resource.MoveStateRequest, response *resource.MoveStateResponse) {
+				outer := response.TargetState
+				stripAccount(ctx, &response.TargetState, &response.Diagnostics)
+				defer restoreAccount(ctx, &response.TargetState, outer, rawStateAccount(request.SourceRawState), &response.Diagnostics)
+
+				mover.StateMover(ctx, request, response)
+			}
+		}
+
+		return movers
 	}
 
 	return nil
@@ -911,7 +1070,20 @@ func (w *wrappedListResourceFramework) List(ctx context.Context, request list.Li
 		return
 	}
 
+	account := stripAccount(ctx, &request.Config, &diags)
+	if ctx, account = withAccount(ctx, account, w.meta, &diags); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+	// The inner list resource builds results from its resource model, which has no account attribute.
+	outer := tfsdk.Resource{Schema: request.ResourceSchema}
+	inner := outer
+	stripAccount(ctx, &inner, &diags)
+	request.ResourceSchema = inner.Schema
+
 	interceptedListHandler(w.interceptors.resourceList(), w.inner.List, w.meta)(ctx, request, stream)
+
+	stream.Results = restoreListResults(ctx, stream.Results, outer, account)
 }
 
 // ListResourceConfigSchema implements list.ListResourceWithConfigure.
@@ -923,6 +1095,11 @@ func (w *wrappedListResourceFramework) ListResourceConfigSchema(ctx context.Cont
 	}
 
 	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Schema.Attributes = addAccountAttribute(response.Schema.Attributes, listResourceAccountAttribute())
 }
 
 // Metadata implements list.ListResourceWithConfigure.
@@ -941,7 +1118,7 @@ type wrappedListResourceSDK struct {
 
 var _ inttypes.ListResourceForSDK = &wrappedListResourceSDK{}
 
-func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string) inttypes.ListResourceForSDK {
+func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, servicePackageName string, account *sdkschema.Schema) inttypes.ListResourceForSDK {
 	// Pre-size to the maximum number of interceptors added below to avoid
 	// reallocating the backing array as interceptors are appended.
 	interceptors := make(interceptorInvocations, 0, 1)
@@ -961,6 +1138,9 @@ func newWrappedListResourceSDK(spec *inttypes.ServicePackageSDKListResource, ser
 	// Updates SDKv2 schema
 	if v, ok := inner.(framework.WithRegionSpec); ok {
 		v.SetRegionSpec(spec.Region)
+	}
+	if v, ok := inner.(interface{ SetAccountSchema(*sdkschema.Schema) }); ok && account != nil {
+		v.SetAccountSchema(account)
 	}
 
 	if v, ok := inner.(framework.Identityer); ok {
@@ -1056,6 +1236,12 @@ func (w *wrappedListResourceSDK) List(ctx context.Context, request list.ListRequ
 		return
 	}
 
+	account := stripAccount(ctx, &request.Config, &diags)
+	if ctx, _ = withAccount(ctx, account, w.meta, &diags); diags.HasError() {
+		stream.Results = list.ListResultsStreamDiagnostics(diags)
+		return
+	}
+
 	interceptedListHandler(w.interceptors.resourceList(), w.inner.List, w.meta)(ctx, request, stream)
 }
 
@@ -1068,6 +1254,11 @@ func (w *wrappedListResourceSDK) ListResourceConfigSchema(ctx context.Context, r
 	}
 
 	interceptedHandler(w.interceptors.resourceListResourceConfigSchema(), w.inner.ListResourceConfigSchema, listResourceConfigSchemaHasError, w.meta)(ctx, request, response)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Schema.Attributes = addAccountAttribute(response.Schema.Attributes, listResourceAccountAttribute())
 }
 
 func (w *wrappedListResourceSDK) RawV5Schemas(ctx context.Context, request list.RawV5SchemaRequest, response *list.RawV5SchemaResponse) {

@@ -64,6 +64,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `encryption_type` - (Optional) Encryption type to use. The only acceptable values are `NONE` or `KMS`. The default value is `NONE`.
 * `enforce_consumer_deletion` - (Optional) Whether to deregister all registered consumers from the stream so that the stream can be destroyed without error. The default value is `false`.
 * `kms_key_id` - (Optional) Identifier for the customer-managed KMS key to use for encryption. This can be a Key ID (UUID), a Key ARN, an Alias Name (prefixed with `alias/`), or an Alias ARN. You can also use a master key owned by Kinesis Data Streams by specifying the alias `aws/kinesis`.

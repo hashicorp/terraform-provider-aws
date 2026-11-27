@@ -22,6 +22,7 @@ data "aws_rds_certificate" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `default_for_new_launches` - (Optional) When enabled, returns the default certificate for new RDS instances.
 * `id` - (Optional) Certificate identifier. For example, `rds-ca-2019`.
 * `latest_valid_till` - (Optional) When enabled, returns the certificate with the latest `ValidTill`.

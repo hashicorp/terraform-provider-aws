@@ -35,6 +35,7 @@ resource "aws_appintegrations_data_integration" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the Data Integration.
 * `kms_key` - (Required) KMS key ARN for the Data Integration.
 * `name` - (Required) Name of the Data Integration.

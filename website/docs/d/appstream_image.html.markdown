@@ -25,6 +25,7 @@ data "aws_appstream_image" "test" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `arn` - (Optional) ARN of the image being searched for. Cannot be used with `name_regex` or `name`.
 * `most_recent` - (Optional) Boolean that if it is set to `true` and there are multiple images returned the most recent will be returned. If it is set to `false` and there are multiple images return the datasource will error.
 * `name` - (Optional) Name of the image being searched for. Cannot be used with `name_regex` or `arn`.

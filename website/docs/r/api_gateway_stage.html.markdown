@@ -102,6 +102,7 @@ resource "aws_cloudwatch_log_group" "example" {
 This resource supports the following arguments:
 
 * `access_log_settings` - (Optional) Enables access logs for the API stage. See [`access_log_settings` Block](#access_log_settings-block) below.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cache_cluster_enabled` - (Optional) Whether a cache cluster is enabled for the stage
 * `cache_cluster_size` - (Optional) Size of the cache cluster for the stage, if enabled. Allowed values include `0.5`, `1.6`, `6.1`, `13.5`, `28.4`, `58.2`, `118` and `237`.
 * `canary_settings` - (Optional) Configuration settings of a canary deployment. See [`canary_settings` Block](#canary_settings-block) below.

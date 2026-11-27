@@ -71,6 +71,7 @@ This resource supports the following arguments:
 
 **NOTE:** Either `db_instance_identifier` or `db_cluster_identifier` should be specified and both should not be specified together
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `db_cluster_identifier` - (Optional, Forces new resource) DB cluster identifier.
 * `db_instance_identifier` - (Optional, Forces new resource) DB instance identifier.
 * `db_proxy_name` - (Required, Forces new resource) Name of the DB proxy.

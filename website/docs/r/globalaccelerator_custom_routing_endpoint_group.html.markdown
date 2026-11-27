@@ -32,6 +32,7 @@ resource "aws_globalaccelerator_custom_routing_endpoint_group" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `destination_configuration` - (Required) Port ranges and protocols for all endpoints in a custom routing endpoint group to accept client traffic on. See [`destination_configuration`](#destination_configuration-block) below.
 * `endpoint_configuration` - (Optional) Endpoint objects. See [`endpoint_configuration`](#endpoint_configuration-block) below.
 * `endpoint_group_region` - (Optional) AWS Region where the custom routing endpoint group is located.

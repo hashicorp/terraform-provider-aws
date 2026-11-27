@@ -48,6 +48,7 @@ resource "aws_guardduty_filter" "MyFilter" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `action` - (Required) Action that is to be applied to the findings that match the filter. Can be one of `ARCHIVE` or `NOOP`.
 * `description` - (Optional) Description of the filter.
 * `detector_id` - (Required) ID of a GuardDuty detector, attached to your account.

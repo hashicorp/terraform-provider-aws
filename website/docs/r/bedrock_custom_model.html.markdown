@@ -57,6 +57,7 @@ resource "aws_bedrock_custom_model" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `base_model_identifier` - (Required) ARN of the base model.
 * `custom_model_kms_key_id` - (Optional) Key ARN used to encrypt the custom model at rest.
 * `custom_model_name` - (Required) Name for the custom model.

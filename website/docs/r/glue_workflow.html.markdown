@@ -51,6 +51,7 @@ resource "aws_glue_trigger" "example-inner" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `default_run_properties` - (Optional) Map of default run properties for this workflow. These properties are passed to all jobs associated to the workflow.
 * `description` - (Optional) Description of the workflow.
 * `max_concurrent_runs` - (Optional) Prevents exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.

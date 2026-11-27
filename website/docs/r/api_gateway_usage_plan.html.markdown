@@ -93,6 +93,7 @@ resource "aws_api_gateway_usage_plan" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_stages` - (Optional) Associated API stages of the usage plan. See [`api_stages` Block](#api_stages-block) below.
 * `description` - (Optional) Description of a usage plan.
 * `name` - (Required) Name of the usage plan.

@@ -30,6 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `code_handlers` - (Optional) Event handler functions that run custom business logic to process published events and subscribe requests.
 * `handler_configs` - (Optional) Configuration for the `on_publish` and `on_subscribe` handlers. See [`handler_configs`](#handler_configs-block) below.
 * `publish_auth_mode` - (Optional) Authorization modes to use for publishing messages on the channel namespace. This configuration overrides the default API authorization configuration. See [`publish_auth_mode`](#publish_auth_mode-block) below.

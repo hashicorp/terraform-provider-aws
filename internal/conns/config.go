@@ -32,6 +32,7 @@ type Config struct {
 	AccessKey                      string
 	AllowedAccountIds              []string
 	AssumeRole                     []awsbase.AssumeRole
+	AssumeRoleInAccount            []AccountRole
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
@@ -206,6 +207,11 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
+	accountRoles, err := accountRoles(c.AssumeRoleInAccount)
+	if err != nil {
+		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
+	}
+
 	for _, partition := range endpoints.DefaultPartitions() {
 		if partition.ID() == partitionID {
 			client.partition = partition
@@ -241,6 +247,9 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
+	client.accountConfigs = nil
+	client.accountRoles = accountRoles
+	client.awsbaseConfig = &awsbaseConfig
 	client.clients = make(map[string]map[string]any, 0)
 	client.endpoints = c.Endpoints
 	client.logger = logger

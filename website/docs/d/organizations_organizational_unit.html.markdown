@@ -27,6 +27,7 @@ data "aws_organizations_organizational_unit" "ou" {
 
 The following arguments are required:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name of the organizational unit
 
 * `parent_id` - (Required) Parent ID of the organizational unit.

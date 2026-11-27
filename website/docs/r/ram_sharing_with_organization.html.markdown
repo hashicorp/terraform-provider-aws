@@ -20,7 +20,9 @@ resource "aws_ram_sharing_with_organization" "example" {}
 
 ## Argument Reference
 
-This resource does not support any arguments.
+This resource supports the following arguments:
+
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 
 ## Attribute Reference
 

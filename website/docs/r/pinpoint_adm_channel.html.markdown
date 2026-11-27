@@ -30,6 +30,7 @@ resource "aws_pinpoint_adm_channel" "channel" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required) Application ID.
 * `client_id` - (Required) Client ID (part of OAuth Credentials) obtained via Amazon Developer Account.
 * `client_secret` - (Required) Client Secret (part of OAuth Credentials) obtained via Amazon Developer Account.

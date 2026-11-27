@@ -161,6 +161,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `additional_encryption_context` - (Optional) Map of additional encryption context key-value pairs.
 * `customer_managed_key` - (Optional) ARN of the customer managed KMS key used to encrypt sensitive information.
 * `display_name` - (Optional) Human-readable display name for the session logger resource. Forces replacement if changed.

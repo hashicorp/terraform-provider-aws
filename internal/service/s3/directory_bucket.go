@@ -322,13 +322,13 @@ func (d directoryBucketDataRedundancyPlanModifier) PlanModifyString(ctx context.
 		return
 	}
 
-	var data directoryBucketResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	var location fwtypes.ListNestedObjectValueOf[locationInfoModel]
+	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrLocation), &location)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	locationInfo, diags := data.Location.ToPtr(ctx)
+	locationInfo, diags := location.ToPtr(ctx)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return

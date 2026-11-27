@@ -38,6 +38,7 @@ list "aws_launch_template" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter` - (Optional) One or more filters to apply to the search. If multiple `filter` blocks are provided, they all must be true. See [`filter` Block](#filter-block) below.
 * `launch_template_ids` - (Optional) List of Launch Template IDs to query.
 * `launch_template_names` - (Optional) List of Launch Template names to query.

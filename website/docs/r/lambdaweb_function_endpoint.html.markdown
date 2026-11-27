@@ -139,6 +139,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_deployment_mode` - (Optional) Deployment mode. `LatestRevision` makes the endpoint follow the latest revision automatically; `Disabled` requires explicit `revision_weight`s. `MultiRegion` and `PerRegion` endpoints require `Disabled`. Defaults to `LatestRevision`.
 * `description` - (Optional) Description of the endpoint.
 * `region` - (Optional) Region where this resource will be managed. Defaults to the Region set in the provider configuration.

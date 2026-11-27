@@ -56,6 +56,7 @@ resource "aws_workspacesweb_portal" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `additional_encryption_context` - (Optional) Additional encryption context for the customer managed key. Forces replacement if changed.
 * `authentication_type` - (Optional) Authentication type for the portal. Valid values: `Standard`, `IAM_Identity_Center`.
 * `browser_settings_arn` - (Optional) ARN of the browser settings to use for the portal.

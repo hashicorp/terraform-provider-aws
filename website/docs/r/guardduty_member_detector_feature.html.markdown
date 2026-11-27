@@ -60,6 +60,7 @@ resource "aws_guardduty_detector_feature" "eks_runtime_monitoring" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Required) Member account ID to be updated.
 * `additional_configuration` - (Optional) Additional feature configuration block. If omitted, Terraform does not track changes to additional configurations that AWS manages for the feature. Removing a previously declared `additional_configuration` block leaves the setting unchanged in AWS; to change a setting, update its `status` instead. See [below](#additional_configuration-block).
 * `detector_id` - (Required) Amazon GuardDuty detector ID.

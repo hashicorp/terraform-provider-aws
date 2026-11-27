@@ -104,6 +104,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cluster` - (Optional) Name or ARN of the ECS cluster. Defaults to `default`.
 * `cpu` - (Optional) Number of CPU units used by the task. Valid values are powers of 2 between 256 and 4096. Defaults to `1024`.
 * `cpu_architecture` - (Optional) CPU architecture of the tasks. Valid values are `X86_64` and `ARM64`. Defaults to `X86_64`.

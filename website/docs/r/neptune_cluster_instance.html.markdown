@@ -41,6 +41,7 @@ resource "aws_neptune_cluster_instance" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `apply_immediately` - (Optional) Whether any instance modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `auto_minor_version_upgrade` - (Optional) Whether minor engine upgrades will be applied automatically to the instance during the maintenance window. Default is `true`.
 * `availability_zone` - (Optional) EC2 Availability Zone that the neptune instance is created in.

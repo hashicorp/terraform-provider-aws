@@ -144,6 +144,7 @@ resource "aws_networkfirewall_firewall_transit_gateway_attachment_accepter" "exa
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `availability_zone_change_protection` - (Optional) Whether the firewall is protected against changes to its Availability Zone configuration. When set to `true`, you must first disable this protection before adding or removing Availability Zones.
 * `availability_zone_mapping` - (Optional) Required when creating a transit gateway-attached firewall. Set of configuration blocks describing the Availability Zones where you want to create firewall endpoints for a transit gateway-attached firewall.
 * `delete_protection` - (Optional) Whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.

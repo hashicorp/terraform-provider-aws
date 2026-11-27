@@ -25,6 +25,7 @@ resource "aws_backup_vault_lock_configuration" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `backup_vault_name` - (Required) Name of the backup vault to add a lock configuration for.
 * `changeable_for_days` - (Optional) Number of days before the lock date. If omitted creates a vault lock in `governance` mode, otherwise it will create a vault lock in `compliance` mode.
 * `max_retention_days` - (Optional) Maximum retention period that the vault retains its recovery points.

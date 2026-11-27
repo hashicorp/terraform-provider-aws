@@ -22,6 +22,7 @@ ephemeral "aws_secretsmanager_random_password" "example" {}
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this ephemeral resource will be opened. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `exclude_characters` - (Optional) String of the characters that you don't want in the password.
 * `exclude_lowercase` - (Optional) Whether to exclude lowercase letters from the password.
 * `exclude_numbers` - (Optional) Whether to exclude numbers from the password.

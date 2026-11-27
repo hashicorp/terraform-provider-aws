@@ -91,6 +91,7 @@ resource "aws_budgets_budget" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) ID of the target account for the budget. Uses the current user's account ID by default if omitted.
 * `action_threshold` - (Required) Trigger threshold of the action. See [`action_threshold` Block](#action_threshold-block).
 * `action_type` - (Required) Type of action. This defines the type of tasks that can be carried out by this action. This field also determines the format for definition. Valid values are `APPLY_IAM_POLICY`, `APPLY_SCP_POLICY`, and `RUN_SSM_DOCUMENTS`.

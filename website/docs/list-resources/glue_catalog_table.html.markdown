@@ -26,6 +26,7 @@ list "aws_glue_catalog_table" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `catalog_id` - (Optional) ID of the Glue Catalog to list tables from. Defaults to the AWS account ID.
 * `database_name` - (Required) Name of the Glue Catalog Database to list tables from.
 * `region` - (Optional) Region to query. Defaults to provider region.

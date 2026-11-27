@@ -95,6 +95,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `availability_slo` - (Optional) Availability SLO configuration. See [`availability_slo` Block](#availability_slo-block) below.
 * `data_recovery` - (Optional) Data recovery configuration. See [`data_recovery` Block](#data_recovery-block) below.
 * `description` - (Optional) Description of the policy.

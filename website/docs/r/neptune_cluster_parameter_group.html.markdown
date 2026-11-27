@@ -29,6 +29,7 @@ resource "aws_neptune_cluster_parameter_group" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the neptune cluster parameter group. Defaults to "Managed by Terraform".
 * `family` - (Required) Family of the neptune cluster parameter group.
 * `name` - (Optional, Forces new resource) Name of the neptune cluster parameter group. If omitted, Terraform will assign a random, unique name.

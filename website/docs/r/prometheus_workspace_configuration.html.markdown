@@ -82,6 +82,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `limits_per_label_set` - (Optional) Configuration block for setting limits on metrics with specific label sets. Detailed below.
 * `out_of_order_time_window_in_seconds` - (Optional) Time window in seconds for accepting out-of-order samples. Must be between 0 and 600 seconds.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

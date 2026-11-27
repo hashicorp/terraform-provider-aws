@@ -77,6 +77,7 @@ resource "aws_verifiedpermissions_identity_source" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `configuration` - (Required) Details required to communicate with the identity provider (IdP) associated with this identity source. See [Configuration](#configuration-block) below.
 * `policy_store_id` - (Required) ID of the policy store in which you want to store this identity source.
 * `principal_entity_type` - (Optional) Namespace and data type of the principals generated for identities authenticated by the new identity source.

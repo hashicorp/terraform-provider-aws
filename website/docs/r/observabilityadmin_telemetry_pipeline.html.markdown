@@ -134,6 +134,7 @@ resource "aws_observabilityadmin_telemetry_pipeline" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `configuration` - (Required) Configuration block for the telemetry pipeline. See [`configuration` Block](#configuration-block) below.
 * `name` - (Required, Forces new resource) Name of the telemetry pipeline. Must be between 3 and 28 characters, start with a lowercase letter, and contain only lowercase letters, digits, and hyphens.
 

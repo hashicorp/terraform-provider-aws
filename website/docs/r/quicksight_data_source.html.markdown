@@ -139,6 +139,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `credentials` - (Optional) Credentials Amazon QuickSight uses to connect to your underlying source. See [`credentials` Block](#credentials-block) below for more details.
 * `permission` - (Optional) Set of resource permissions on the data source. Maximum of 64 items. See [`permission` Block](#permission-block) below for more details.
