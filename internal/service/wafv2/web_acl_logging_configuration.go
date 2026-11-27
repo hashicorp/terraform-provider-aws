@@ -589,6 +589,14 @@ func redactedFieldsHash(v any) int {
 }
 
 func suppressRedactedFieldsDiff(k, old, new string, d *schema.ResourceData) bool {
+	// Detect full removal via raw parameters: d.GetChange() can return stale
+	// "new" data for nested TypeList attributes, causing the Set comparison
+	// below to miss the diff.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/41778
+	if k == "redacted_fields.#" && old != "0" && new == "0" {
+		return false
+	}
+
 	o, n := d.GetChange("redacted_fields")
 	oList := o.([]any)
 	nList := n.([]any)
