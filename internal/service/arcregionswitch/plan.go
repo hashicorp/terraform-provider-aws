@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/arcregionswitch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/arcregionswitch/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
@@ -136,6 +137,10 @@ func customActionLambdaConfigBlock(ctx context.Context) fwschema.Block {
 							},
 							names.AttrExternalID: fwschema.StringAttribute{
 								Optional: true,
+							},
+							"payload": fwschema.StringAttribute{
+								CustomType: jsontypes.NormalizedType{},
+								Optional:   true,
 							},
 						},
 					},
@@ -1747,9 +1752,10 @@ type customActionLambdaConfigModel struct {
 }
 
 type lambdaModel struct {
-	ARN              types.String `tfsdk:"arn"`
-	CrossAccountRole types.String `tfsdk:"cross_account_role"`
-	ExternalID       types.String `tfsdk:"external_id"`
+	ARN              types.String         `tfsdk:"arn"`
+	CrossAccountRole types.String         `tfsdk:"cross_account_role"`
+	ExternalID       types.String         `tfsdk:"external_id"`
+	Payload          jsontypes.Normalized `tfsdk:"payload"`
 }
 
 type ungracefulModel struct {
