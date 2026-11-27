@@ -4,7 +4,13 @@
 package eventbridgev2
 
 var (
-	ResourceEventBus = newEventBusResource
+	ResourceEventBus       = newEventBusResource
+	ResourceEventSource    = newEventSourceResource
+	ResourceResourcePolicy = newResourcePolicyResource
+	ResourceSubscriber     = newSubscriberResource
 
-	FindEventBusByARN = findEventBusByARN
+	FindEventBusByARN       = findEventBusByARN
+	FindEventSourceByARN    = findEventSourceByARN
+	FindResourcePolicyByARN = findResourcePolicyByARN
+	FindSubscriberByARN     = findSubscriberByARN
 )
