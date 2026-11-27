@@ -1,0 +1,114 @@
+# Copyright IBM Corp. 2014, 2026
+# "SPDX-License-Identifier: MPL-2.0"
+
+rules:
+  - id: set-nested-block-custom-type
+    languages: [go]
+    message: SetNestedBlock must declare a CustomType.
+    severity: WARNING
+    paths:
+      include:
+        - /internal/service
+    patterns:
+      - pattern: $SCHEMA.SetNestedBlock{...}
+      - pattern-not: '$SCHEMA.SetNestedBlock{..., CustomType: $TYPE, ...}'
+  - id: set-nested-block-nil-custom-type
+    languages: [go]
+    message: SetNestedBlock CustomType must not be nil.
+    severity: WARNING
+    paths:
+      include:
+        - /internal/service
+    pattern: '$SCHEMA.SetNestedBlock{..., CustomType: nil, ...}'
+
+  - id: set-nested-block-object-custom-type
+    languages: [go]
+    message: SetNestedBlock NestedObject must declare a CustomType matching the set element type.
+    severity: WARNING
+    paths:
+      include:
+        - /internal/service
+      exclude:
+        # Existing occurrences to migrate.
+        - /internal/service/agentregistry/registry.go
+        - /internal/service/appconfig/environment.go
+        - /internal/service/arcregionswitch/plan.go
+        - /internal/service/auditmanager/assessment.go
+        - /internal/service/auditmanager/control.go
+        - /internal/service/auditmanager/framework.go
+        - /internal/service/bedrock/guardrail.go
+        - /internal/service/bedrockagent/agent_action_group.go
+        - /internal/service/bedrockagentcore/agent_runtime.go
+        - /internal/service/bedrockagentcore/gateway_target.go
+        - /internal/service/bedrockagentcore/memory.go
+        - /internal/service/bedrockagentcore/online_evaluation_config.go
+        - /internal/service/cloudfront/distribution_tenant.go
+        - /internal/service/cloudfront/multitenant_distribution.go
+        - /internal/service/cloudfrontkeyvaluestore/keys_exclusive.go
+        - /internal/service/cloudwatch/otel_enrichment.go
+        - /internal/service/cognitoidp/managed_login_branding.go
+        - /internal/service/dataexchange/revision_assets.go
+        - /internal/service/datazone/asset_type.go
+        - /internal/service/ds/ip_routes_exclusive.go
+        - /internal/service/ec2/filters.go
+        - /internal/service/ecs/daemon_task_definition.go
+        - /internal/service/eks/capability.go
+        - /internal/service/elbv2/listener_rule_data_source.go
+        - /internal/service/globalaccelerator/cross_account_attachment.go
+        - /internal/service/imagebuilder/lifecycle_policy.go
+        - /internal/service/inspector2/filter.go
+        - /internal/service/kms/secrets_ephemeral.go
+        - /internal/service/lakeformation/lf_tag_expression.go
+        - /internal/service/lexv2models/intent.go
+        - /internal/service/lexv2models/slot.go
+        - /internal/service/networkflowmonitor/monitor.go
+        - /internal/service/networkflowmonitor/scope.go
+        - /internal/service/opensearch/application.go
+        - /internal/service/quicksight/key_registration.go
+        - /internal/service/rds/snapshots_data_source.go
+        - /internal/service/resiliencehubv2/input_source.go
+        - /internal/service/resiliencehubv2/service.go
+        - /internal/service/route53/records_exclusive.go
+        - /internal/service/s3/bucket_lifecycle_configuration.go
+        - /internal/service/s3/bucket_lifecycle_configuration_migrate_v0.go
+        - /internal/service/s3control/multi_region_access_point_routes.go
+        - /internal/service/s3files/synchronization_configuration.go
+        - /internal/service/s3tables/table_bucket_replication.go
+        - /internal/service/s3tables/table_replication.go
+        - /internal/service/securityhub/automation_rule.go
+        - /internal/service/securitylake/data_lake.go
+        - /internal/service/securitylake/subscriber.go
+        - /internal/service/workspacesweb/trust_store.go
+    patterns:
+      - pattern: |
+          $SCHEMA.SetNestedBlock{
+            ...,
+            NestedObject: $OBJECT,
+            ...,
+          }
+      - pattern-not: |
+          $SCHEMA.SetNestedBlock{
+            ...,
+            NestedObject: $SCHEMA.NestedBlockObject{..., CustomType: $TYPE, ...},
+            ...,
+          }
+      - metavariable-pattern:
+          metavariable: $OBJECT
+          pattern: '$SCHEMA.NestedBlockObject{...}'
+      - focus-metavariable: $OBJECT
+  - id: set-nested-block-object-nil-custom-type
+    languages: [go]
+    message: SetNestedBlock NestedObject must declare a non-nil CustomType matching the set element type.
+    severity: WARNING
+    paths:
+      include:
+        - /internal/service
+    patterns:
+      - pattern: '$SCHEMA.NestedBlockObject{..., CustomType: nil, ...}'
+      - pattern-inside: |
+          $SCHEMA.SetNestedBlock{
+            ...,
+            NestedObject: $OBJECT,
+            ...,
+          }
+      - focus-metavariable: $OBJECT

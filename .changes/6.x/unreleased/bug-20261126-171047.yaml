@@ -1,0 +1,5 @@
+kind: bug
+time: 2026-11-26T17:10:47.037559-07:00
+custom:
+    Body: Allow multiple `service_integration` blocks
+    Impact: resource/aws_redshift_idc_application

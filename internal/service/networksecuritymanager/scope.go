@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networksecuritymanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networksecuritymanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/boolvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -167,8 +166,13 @@ func (r *scopeResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 								}, "Changing between global and regional resource types forces replacement.", "Changing between global and regional resource types forces replacement."),
 							},
 							NestedObject: schema.NestedBlockObject{
+								CustomType: fwtypes.NewObjectTypeOf[resourceScopeModel](ctx),
 								Validators: []validator.Object{
-									exactlyOneOfValueAttributesValidator{names: []string{"exclude", "include", "include_all"}},
+									tfobjectvalidator.ExactlyOneOfChildren(
+										path.MatchRelative().AtName("exclude"),
+										path.MatchRelative().AtName("include"),
+										path.MatchRelative().AtName("include_all"),
+									),
 								},
 								Attributes: map[string]schema.Attribute{
 									"include_all": schema.BoolAttribute{
@@ -277,7 +281,12 @@ func resourceSetBlock(ctx context.Context) schema.ListNestedBlock {
 					},
 					NestedObject: schema.NestedBlockObject{
 						Validators: []validator.Object{
-							exactlyOneOfValueAttributesValidator{names: []string{"and", "criteria", "not", "or"}},
+							tfobjectvalidator.ExactlyOneOfChildren(
+								path.MatchRelative().AtName("and"),
+								path.MatchRelative().AtName("criteria"),
+								path.MatchRelative().AtName("not"),
+								path.MatchRelative().AtName("or"),
+							),
 						},
 						Blocks: map[string]schema.Block{
 							// The operands of and, not and or are criteria: the service rejects an operator nested under another operator.
@@ -301,7 +310,10 @@ func criteriaBlock(ctx context.Context, maxItems int) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Validators: []validator.Object{
-				exactlyOneOfValueAttributesValidator{names: []string{"alb_config", names.AttrTags}},
+				tfobjectvalidator.ExactlyOneOfChildren(
+					path.MatchRelative().AtName("alb_config"),
+					path.MatchRelative().AtName(names.AttrTags),
+				),
 			},
 			Attributes: map[string]schema.Attribute{
 				names.AttrTags: schema.MapAttribute{
@@ -537,44 +549,6 @@ func hasGlobalResourceType(resourceScopes []resourceScopeModel) bool {
 	return slices.ContainsFunc(resourceScopes, func(v resourceScopeModel) bool {
 		return v.ResourceType.ValueEnum() == awstypes.ScopeResourceTypeCfd
 	})
-}
-
-// exactlyOneOfValueAttributesValidator reads the named attributes from the object's own value.
-// Path-based validators such as tfobjectvalidator.ExactlyOneOfChildren find no siblings below
-// resource_scope and always fail: the validator path identifies the set element by an
-// fwtypes.ObjectValueOf value, which never equals the basetypes.ObjectValue that path matching
-// builds from the config.
-type exactlyOneOfValueAttributesValidator struct {
-	names []string
-}
-
-func (v exactlyOneOfValueAttributesValidator) Description(context.Context) string {
-	return fmt.Sprintf("exactly one of %s must be set", strings.Join(v.names, ", "))
-}
-
-func (v exactlyOneOfValueAttributesValidator) MarkdownDescription(ctx context.Context) string {
-	return v.Description(ctx)
-}
-
-func (v exactlyOneOfValueAttributesValidator) ValidateObject(ctx context.Context, req validator.ObjectRequest, resp *validator.ObjectResponse) {
-	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
-		return
-	}
-
-	var count int
-	for _, name := range v.names {
-		value := req.ConfigValue.Attributes()[name]
-		if value.IsUnknown() {
-			return
-		}
-		if !value.IsNull() {
-			count++
-		}
-	}
-
-	if count != 1 {
-		resp.Diagnostics.Append(validatordiag.InvalidAttributeCombinationDiagnostic(req.Path, v.Description(ctx)))
-	}
 }
 
 func (r *scopeResource) flatten(ctx context.Context, out *networksecuritymanager.GetScopeOutput, data *scopeResourceModel) diag.Diagnostics {
