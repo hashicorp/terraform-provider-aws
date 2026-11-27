@@ -134,6 +134,47 @@ func TestParseEngineVersion(t *testing.T) {
 	}
 }
 
+func TestDomainErrorRetryable(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		message string
+		want    bool
+	}{
+		{
+			name:    "legacy Amazon ES service-linked role",
+			message: "Before you can proceed, you must enable a service-linked role to give Amazon ES permissions to access your VPC.",
+			want:    true,
+		},
+		{
+			name:    "OpenSearch service-linked role",
+			message: "Before you can proceed, you must enable a service-linked role to give Amazon OpenSearch Service permissions to access your VPC.",
+			want:    true,
+		},
+		{
+			name:    "unrelated validation error",
+			message: "A domain with the specified name already exists.",
+			want:    false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			err := &awstypes.ValidationException{
+				Message: aws.String(testCase.message),
+			}
+
+			got, _ := tfopensearch.DomainErrorRetryable(err)
+			if got != testCase.want {
+				t.Errorf("DomainErrorRetryable() = %v, want %v", got, testCase.want)
+			}
+		})
+	}
+}
+
 func TestExpandServerlessVectorAcceleration(t *testing.T) {
 	t.Parallel()
 
