@@ -581,7 +581,15 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### certificate_authority
 
+* `active` - Certificate authority currently signing certificates for the cluster, if returned by EKS. See [`active` Block](#active-block) below.
 * `data` - Base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
+
+### `active` Block
+
+The `active` block exports:
+
+* `activated_by` - Entity that activated the certificate authority.
+* `id` - ID of the active certificate authority.
 
 ### identity
 
