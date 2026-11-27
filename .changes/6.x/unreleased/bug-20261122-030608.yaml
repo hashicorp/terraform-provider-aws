@@ -1,0 +1,5 @@
+kind: bug
+time: 2026-11-22T03:06:08.592898-08:00
+custom:
+    Body: 'Fix `InvalidParameter: Error during creation of network interface` error when adding or removing subnets on an endpoint that sets `subnet_configuration`'
+    Impact: resource/aws_vpc_endpoint

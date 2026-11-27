@@ -593,6 +593,76 @@ func TestAccVPCEndpoint_interfaceUserDefinedIPv4(t *testing.T) {
 	})
 }
 
+func TestAccVPCEndpoint_interfaceUserDefinedIPv4UpdateSubnets(t *testing.T) {
+	ctx := acctest.Context(t)
+	var endpoint awstypes.VpcEndpoint
+	resourceName := "aws_vpc_endpoint.test"
+	ipv4Address1 := "10.0.0.10"
+	ipv4Address2 := "10.0.1.10"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
+						"ipv4": ipv4Address1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
+						"ipv4": ipv4Address2,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4OneSubnet(rName, ipv4Address1),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
+						"ipv4": ipv4Address1,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
+				),
+			},
+			{
+				Config: testAccVPCEndpointConfig_interfaceUserDefinedIPv4(rName, ipv4Address1, ipv4Address2),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCEndpointExists(ctx, t, resourceName, &endpoint),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_configuration.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
+						"ipv4": ipv4Address1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "subnet_configuration.*", map[string]string{
+						"ipv4": ipv4Address2,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCEndpoint_interfaceUserDefinedIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
 	var endpoint awstypes.VpcEndpoint
@@ -2317,6 +2387,29 @@ resource "aws_vpc_endpoint" "test" {
   }
 }
 `, rName, ipv4Address1, ipv4Address2))
+}
+
+func testAccVPCEndpointConfig_interfaceUserDefinedIPv4OneSubnet(rName, ipv4Address string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id            = aws_vpc.test.id
+  service_name      = "com.amazonaws.${data.aws_region.current.region}.ec2"
+  vpc_endpoint_type = "Interface"
+
+  subnet_configuration {
+    ipv4      = %[2]q
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  subnet_ids = [aws_subnet.test[0].id]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipv4Address))
 }
 
 func testAccVPCEndpointConfig_interfaceUserDefinedIPv6(rName string, ipv6HostNum int) string {
