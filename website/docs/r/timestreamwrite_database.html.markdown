@@ -48,7 +48,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN that uniquely identifies this database.
 * `id` - Name of the Timestream database.
-* `kms_key_id` - ARN of the KMS key used to encrypt the data stored in the database.
 * `table_count` - Total number of tables found within the Timestream database.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

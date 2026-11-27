@@ -102,7 +102,7 @@ func resourceCACertificate() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"validity": {
 					Type:     schema.TypeList,
 					Computed: true,

@@ -91,6 +91,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the scope.
 * `is_published` - (Optional) Whether to publish the scope. When `true`, the scope is saved in the published (`ACTIVE`) state. When `false`, it is saved as a draft (`DRAFT`); for a published scope, the draft is saved on top of the published version. Defaults to `true`.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#region).
+* `specialized_scope_type` - (Optional, Forces new resource) Specialized type of the scope. Omit to create a standard scope that can be associated with a deployment. A specialized scope can only be used for the purpose its type defines and can't be associated with a deployment. Valid values: `IGW_FIREWALL_SUBNET_CONNECTIVITY_OVERRIDE`, for a scope that selects the subnets of an Internet Gateway Firewall policy's `subnet_connectivity_override`.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `scope_configuration` Block
@@ -123,7 +124,7 @@ Exactly one of `exclude`, `include` and `include_all` must be set.
 * `exclude` - (Optional) Resources to exclude. All other resources of the type are in scope. See [`scope_configuration.resource_scope.exclude` Block](#scope_configurationresource_scopeexclude-block) below.
 * `include` - (Optional) Resources to include. See [`scope_configuration.resource_scope.include` Block](#scope_configurationresource_scopeinclude-block) below.
 * `include_all` - (Optional) Set to `true` to include all resources of the type.
-* `resource_type` - (Required) Resource type. Valid values: `AWS::ApiGateway::Stage`, `AWS::CloudFront::Distribution`, `AWS::EC2::EIP`, `AWS::ElasticLoadBalancing::LoadBalancer`, `AWS::ElasticLoadBalancingV2::LoadBalancer::application`.
+* `resource_type` - (Required) Resource type. Valid values: `AWS::ApiGateway::Stage`, `AWS::CloudFront::Distribution`, `AWS::EC2::EIP`, `AWS::EC2::Subnet`, `AWS::EC2::VPC`, `AWS::ElasticLoadBalancing::LoadBalancer`, `AWS::ElasticLoadBalancingV2::LoadBalancer::application`.
 
 ### `scope_configuration.resource_scope.exclude` Block
 

@@ -104,7 +104,7 @@ func resourcePhoneNumber() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.PhoneNumberType](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 			}
 		},
 	}

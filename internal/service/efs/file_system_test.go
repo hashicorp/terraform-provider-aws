@@ -12,8 +12,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/efs/types"
 	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfknownvalue "github.com/hashicorp/terraform-provider-aws/internal/acctest/knownvalue"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
@@ -195,7 +198,7 @@ func TestAccEFSFileSystem_availabilityZoneName(t *testing.T) {
 	})
 }
 
-func TestAccEFSFileSystem_tags(t *testing.T) {
+func TestAccEFSFileSystem_Tags_paged(t *testing.T) {
 	ctx := acctest.Context(t)
 	var desc awstypes.FileSystemDescription
 	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
@@ -208,51 +211,49 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				ConfigDirectory: config.StaticDirectory("testdata/FileSystem/tagsPaged/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(10)),
+				},
 			},
+		},
+	})
+}
+
+func TestAccEFSFileSystem_Tags_max(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc awstypes.FileSystemDescription
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_efs_file_system.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx, t),
+		Steps: []resource.TestStep{
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				ConfigDirectory: config.StaticDirectory("testdata/FileSystem/tagsMax/"),
+				ConfigVariables: config.Variables{
+					acctest.CtRName: config.StringVariable(rName),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
-			},
-			{
-				Config: testAccFileSystemConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccFileSystemConfig_pagedTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "10"),
-				),
-			},
-			{
-				Config: testAccFileSystemConfig_maxTags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFileSystemExists(ctx, t, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "50"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Another", "tag"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Tag45", "TestTagValue"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapSizeExact(50)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapPartial(map[string]knownvalue.Check{
+						"Name":    knownvalue.StringExact(rName),
+						"Another": knownvalue.StringExact("tag"),
+						"Tag45":   knownvalue.StringExact("TestTagValue"),
+					})),
+				},
 			},
 		},
 	})
@@ -722,109 +723,6 @@ resource "aws_efs_file_system" "test" {
   availability_zone_name = data.aws_availability_zones.available.names[0]
 }
 `, rName))
-}
-
-func testAccFileSystemConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccFileSystemConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccFileSystemConfig_pagedTags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  tags = {
-    Name           = %[1]q
-    Another        = "tag"
-    Test           = "yes"
-    User           = "root"
-    Page           = "1"
-    Environment    = "prod"
-    CostCenter     = "terraform"
-    AcceptanceTest = "PagedTags"
-    CreationToken  = "radek"
-    PerfMode       = "max"
-  }
-}
-`, rName)
-}
-
-func testAccFileSystemConfig_maxTags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  tags = {
-    Name    = %[1]q
-    Another = "tag"
-    Tag00   = "TestTagValue"
-    Tag01   = "TestTagValue"
-    Tag02   = "TestTagValue"
-    Tag03   = "TestTagValue"
-    Tag04   = "TestTagValue"
-    Tag05   = "TestTagValue"
-    Tag06   = "TestTagValue"
-    Tag07   = "TestTagValue"
-    Tag08   = "TestTagValue"
-    Tag09   = "TestTagValue"
-    Tag10   = "TestTagValue"
-    Tag11   = "TestTagValue"
-    Tag12   = "TestTagValue"
-    Tag13   = "TestTagValue"
-    Tag14   = "TestTagValue"
-    Tag15   = "TestTagValue"
-    Tag16   = "TestTagValue"
-    Tag17   = "TestTagValue"
-    Tag18   = "TestTagValue"
-    Tag19   = "TestTagValue"
-    Tag20   = "TestTagValue"
-    Tag21   = "TestTagValue"
-    Tag22   = "TestTagValue"
-    Tag23   = "TestTagValue"
-    Tag24   = "TestTagValue"
-    Tag25   = "TestTagValue"
-    Tag26   = "TestTagValue"
-    Tag27   = "TestTagValue"
-    Tag28   = "TestTagValue"
-    Tag29   = "TestTagValue"
-    Tag30   = "TestTagValue"
-    Tag31   = "TestTagValue"
-    Tag32   = "TestTagValue"
-    Tag33   = "TestTagValue"
-    Tag34   = "TestTagValue"
-    Tag35   = "TestTagValue"
-    Tag36   = "TestTagValue"
-    Tag37   = "TestTagValue"
-    Tag38   = "TestTagValue"
-    Tag39   = "TestTagValue"
-    Tag40   = "TestTagValue"
-    Tag41   = "TestTagValue"
-    Tag42   = "TestTagValue"
-    Tag43   = "TestTagValue"
-    Tag44   = "TestTagValue"
-    Tag45   = "TestTagValue"
-    Tag46   = "TestTagValue"
-    Tag47   = "TestTagValue"
-  }
-}
-`, rName)
 }
 
 func testAccFileSystemConfig_kmsKey(rName string, enable bool) string {

@@ -117,6 +117,43 @@ func (r *policyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 						},
 					},
 					Blocks: map[string]schema.Block{
+						"igw_firewall_config": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[igwFirewallConfigModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"default_subnet_connectivity": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.DefaultSubnetConnectivity](),
+										Required:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"subnet_connectivity_override": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[subnetConnectivityOverrideModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(4),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"connectivity_type": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.SubnetConnectivity](),
+													Required:   true,
+												},
+												"scope_arn": schema.ListAttribute{
+													CustomType: fwtypes.ListOfARNType,
+													Required:   true,
+													Validators: []validator.List{
+														listvalidator.SizeBetween(1, 1),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"waf_config": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[wafConfigModel](ctx),
 							Validators: []validator.List{
@@ -391,9 +428,20 @@ type policyResourceModel struct {
 }
 
 type policyConfigurationModel struct {
-	RemediationEnabled types.Bool                                      `tfsdk:"remediation_enabled"`
-	ResourcesCleanUp   types.Bool                                      `tfsdk:"resources_clean_up"`
-	WafConfig          fwtypes.ListNestedObjectValueOf[wafConfigModel] `tfsdk:"waf_config"`
+	IgwFirewallConfig  fwtypes.ListNestedObjectValueOf[igwFirewallConfigModel] `tfsdk:"igw_firewall_config"`
+	RemediationEnabled types.Bool                                              `tfsdk:"remediation_enabled"`
+	ResourcesCleanUp   types.Bool                                              `tfsdk:"resources_clean_up"`
+	WafConfig          fwtypes.ListNestedObjectValueOf[wafConfigModel]         `tfsdk:"waf_config"`
+}
+
+type igwFirewallConfigModel struct {
+	DefaultSubnetConnectivity   fwtypes.StringEnum[awstypes.DefaultSubnetConnectivity]           `tfsdk:"default_subnet_connectivity"`
+	SubnetConnectivityOverrides fwtypes.ListNestedObjectValueOf[subnetConnectivityOverrideModel] `tfsdk:"subnet_connectivity_override"`
+}
+
+type subnetConnectivityOverrideModel struct {
+	ConnectivityType fwtypes.StringEnum[awstypes.SubnetConnectivity] `tfsdk:"connectivity_type"`
+	Scopes           fwtypes.ListOfARN                               `tfsdk:"scope_arn"`
 }
 
 type wafConfigModel struct {

@@ -1,0 +1,7 @@
+kind: enhancement
+time: 2026-11-24T15:15:56.182269-06:00
+custom:
+    Body: Add resource identity support
+    Impact: |
+        resource/aws_ebs_encryption_by_default
+    PullRequest: "50866"

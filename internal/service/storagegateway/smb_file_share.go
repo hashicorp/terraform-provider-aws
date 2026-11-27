@@ -196,7 +196,7 @@ func resourceSMBFileShare() *schema.Resource {
 					Optional: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"valid_user_list": {
 					Type:     schema.TypeSet,
 					Optional: true,

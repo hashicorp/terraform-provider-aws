@@ -218,7 +218,7 @@ func resourceImagePipeline() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.PipelineStatus](),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"workflow": {
 					Type:     schema.TypeList,
 					Optional: true,

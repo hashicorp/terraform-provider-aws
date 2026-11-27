@@ -143,7 +143,7 @@ func resourceFileCache() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							names.AttrTags: tftags.TagsSchemaComputed(),
+							names.AttrTags: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 						},
 					},
 				},
@@ -286,7 +286,7 @@ func resourceFileCache() *schema.Resource {
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				names.AttrVPCID: {
 					Type:     schema.TypeString,
 					Computed: true,

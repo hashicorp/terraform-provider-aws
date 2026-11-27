@@ -37,29 +37,34 @@ resource "aws_wafregional_rule_group" "example" {
 
 This resource supports the following arguments:
 
+* `activated_rule` - (Optional) List of activated rules. See [`activated_rule` Block](#activated_rule-block) below for details.
+* `metric_name` - (Required) Friendly name for the metrics from the rule group.
+* `name` - (Required) Friendly name of the rule group.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `name` - (Required) A friendly name of the rule group
-* `metric_name` - (Required) A friendly name for the metrics from the rule group
-* `activated_rule` - (Optional) A list of activated rules, see below
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### `activated_rule`
+### `activated_rule` Block
 
-#### Arguments
+The `activated_rule` block supports the following arguments:
 
-* `action` - (Required) Specifies the action that CloudFront or AWS WAF takes when a web request matches the conditions in the rule.
-    * `type` - (Required) e.g., `BLOCK`, `ALLOW`, or `COUNT`
-* `priority` - (Required) Specifies the order in which the rules are evaluated. Rules with a lower value are evaluated before rules with a higher value.
-* `rule_id` - (Required) The ID of a [rule](/docs/providers/aws/r/wafregional_rule.html)
-* `type` - (Optional) The rule type, either [`REGULAR`](/docs/providers/aws/r/wafregional_rule.html), [`RATE_BASED`](/docs/providers/aws/r/wafregional_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
+* `action` - (Required) Action that CloudFront or AWS WAF takes when a web request matches the conditions in the rule. See [`action` Block](#action-block) below for details.
+* `priority` - (Required) Order in which the rules are evaluated. Rules with a lower value are evaluated before rules with a higher value.
+* `rule_id` - (Required) ID of a [rule](/docs/providers/aws/r/wafregional_rule.html).
+* `type` - (Optional) Rule type, either [`REGULAR`](/docs/providers/aws/r/wafregional_rule.html), [`RATE_BASED`](/docs/providers/aws/r/wafregional_rate_based_rule.html), or `GROUP`. Defaults to `REGULAR`.
+
+### `action` Block
+
+The `action` block supports the following argument:
+
+* `type` - (Required) Action, for example, `BLOCK`, `ALLOW`, or `COUNT`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the WAF Regional Rule Group.
-* `arn` - The ARN of the WAF Regional Rule Group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `arn` - ARN of the WAF Regional Rule Group.
+* `id` - ID of the WAF Regional Rule Group.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 

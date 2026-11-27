@@ -155,7 +155,8 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 			return conn.PutBucketVersioning(ctx, &input)
 		}, errCodeNoSuchBucket)
 
-		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
+		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") ||
+			tfawserr.ErrMessageContains(err, errCodeNotImplemented, "The information you provided implies functionality that is not implemented") {
 			err = errDirectoryBucket(err)
 		}
 

@@ -46,7 +46,6 @@ The following arguments are required:
 The following arguments are optional:
 
 * `event_pattern` - (Optional) JSON string defining the event pattern to match. Maximum length is 4096 characters.
-* `timeouts` - (Optional) Configuration block specifying how long to wait for the event rule to be created, updated, or deleted.
 
 ## Attribute Reference
 

@@ -126,7 +126,7 @@ func resourceConnectAttachment() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"transport_attachment_id": {
 					Type:     schema.TypeString,
 					Required: true,

@@ -1,8 +1,6 @@
 // Copyright IBM Corp. 2014, 2026
 // SPDX-License-Identifier: MPL-2.0
 
-// DONOTCOPY: Copying old resources spreads bad habits. Use skaff instead.
-
 package ec2
 
 import (
@@ -12,11 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SingletonIdentity
+// @Testing(preIdentityVersion="v6.74.0", generator=false)
 // @SDKResource("aws_ebs_encryption_by_default", name="EBS Encryption By Default")
 func resourceEBSEncryptionByDefault() *schema.Resource {
 	return &schema.Resource{
@@ -25,8 +24,13 @@ func resourceEBSEncryptionByDefault() *schema.Resource {
 		UpdateWithoutTimeout: resourceEBSEncryptionByDefaultUpdate,
 		DeleteWithoutTimeout: resourceEBSEncryptionByDefaultDelete,
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceEBSEncryptionByDefaultV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: ebsEncryptionByDefaultStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		SchemaFunc: func() map[string]*schema.Schema {
@@ -50,8 +54,7 @@ func resourceEBSEncryptionByDefaultCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating EBS encryption by default (%t): %s", enabled, err)
 	}
 
-	//lintignore:R015 // Allow legacy unstable ID usage in managed resource
-	d.SetId(create.UniqueId(ctx))
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return append(diags, resourceEBSEncryptionByDefaultRead(ctx, d, meta)...)
 }
@@ -66,7 +69,9 @@ func resourceEBSEncryptionByDefaultRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading EBS encryption by default: %s", err)
 	}
 
-	d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault)
+	if err := d.Set(names.AttrEnabled, resp.EbsEncryptionByDefault); err != nil {
+		return sdkdiag.AppendErrorf(diags, "flattening EBS encryption by default: %s", err)
+	}
 
 	return diags
 }
@@ -87,7 +92,6 @@ func resourceEBSEncryptionByDefaultDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	// Removing the resource disables default encryption.
 	if err := setEBSEncryptionByDefault(ctx, conn, false); err != nil {
 		return sdkdiag.AppendErrorf(diags, "disabling EBS encryption by default: %s", err)
 	}

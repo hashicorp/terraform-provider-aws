@@ -39,7 +39,6 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN of the Kinesis Stream.
 * `kms_key_id` - Identifier for the customer-managed KMS key to use for encryption. This can be a Key ID (UUID), a Key ARN, an Alias Name (prefixed with `alias/`), or an Alias ARN.
 * `max_record_size_in_kib` - Maximum size for a single data record in KiB.
-* `name` - Name of the Kinesis Stream.
 * `open_shards` - List of shard IDs in the OPEN state. See [Shard State](https://docs.aws.amazon.com/streams/latest/dev/kinesis-using-sdk-java-after-resharding.html#kinesis-using-sdk-java-resharding-data-routing) for more.
 * `retention_period` - Length of time (in hours) data records are accessible after they are added to the stream.
 * `shard_level_metrics` - List of shard-level CloudWatch metrics which are enabled for the stream. See [Monitoring with CloudWatch](https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html) for more.

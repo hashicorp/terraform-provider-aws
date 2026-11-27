@@ -200,6 +200,7 @@ func resourceInstance() *schema.Resource {
 					ForceNew: true,
 					ConflictsWith: []string{
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 						"s3_import",
 						"restore_to_point_in_time",
 						"snapshot_identifier",
@@ -233,6 +234,7 @@ func resourceInstance() *schema.Resource {
 					ForceNew: true,
 					ConflictsWith: []string{
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 					},
 				},
 				"db_subnet_group_name": {
@@ -569,6 +571,14 @@ func resourceInstance() *schema.Resource {
 					Optional:              true,
 					DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
 					DiffSuppressOnRefresh: true,
+					ConflictsWith:         []string{"replicate_source_db_cluster"},
+				},
+				"replicate_source_db_cluster": {
+					Type:     schema.TypeString,
+					Optional: true,
+					// An empty string promotes the replica, as with replicate_source_db.
+					ValidateFunc:  validation.Any(validation.StringIsEmpty, validIdentifier), // nosemgrep:ci.avoid-string-is-empty-validation
+					ConflictsWith: []string{"replicate_source_db", "snapshot_identifier"},
 				},
 				names.AttrResourceID: {
 					Type:     schema.TypeString,
@@ -583,6 +593,7 @@ func resourceInstance() *schema.Resource {
 						"s3_import",
 						"snapshot_identifier",
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -619,6 +630,7 @@ func resourceInstance() *schema.Resource {
 					ConflictsWith: []string{
 						"snapshot_identifier",
 						"replicate_source_db",
+						"replicate_source_db_cluster",
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
@@ -681,7 +693,7 @@ func resourceInstance() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"timezone": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -709,7 +721,7 @@ func resourceInstance() *schema.Resource {
 					Optional:      true,
 					Computed:      true,
 					ForceNew:      true,
-					ConflictsWith: []string{"replicate_source_db"},
+					ConflictsWith: []string{"replicate_source_db", "replicate_source_db_cluster"},
 				},
 				names.AttrVPCSecurityGroupIDs: {
 					Type:     schema.TypeSet,
@@ -740,6 +752,10 @@ func resourceInstance() *schema.Resource {
 				source := d.Get("replicate_source_db").(string)
 				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
+				}
+
+				if d.Get("replicate_source_db_cluster").(string) != "" {
+					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db_cluster" is set.`)
 				}
 				return nil
 			},
@@ -804,17 +820,25 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta an
 		return diags
 	}
 
-	if v, ok := d.GetOk("replicate_source_db"); ok {
-		sourceDBInstanceID := v.(string)
+	sourceDBInstanceID := d.Get("replicate_source_db").(string)
+	sourceDBClusterID := d.Get("replicate_source_db_cluster").(string)
+
+	if sourceDBInstanceID != "" || sourceDBClusterID != "" {
 		input := &rds.CreateDBInstanceReadReplicaInput{
-			AutoMinorVersionUpgrade:    aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
-			CopyTagsToSnapshot:         aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
-			DBInstanceClass:            aws.String(d.Get("instance_class").(string)),
-			DBInstanceIdentifier:       aws.String(identifier),
-			DeletionProtection:         aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
-			PubliclyAccessible:         aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
-			SourceDBInstanceIdentifier: aws.String(sourceDBInstanceID),
-			Tags:                       getTagsIn(ctx),
+			AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+			CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
+			DBInstanceClass:         aws.String(d.Get("instance_class").(string)),
+			DBInstanceIdentifier:    aws.String(identifier),
+			DeletionProtection:      aws.Bool(d.Get(names.AttrDeletionProtection).(bool)),
+			PubliclyAccessible:      aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
+			Tags:                    getTagsIn(ctx),
+		}
+
+		// A Multi-AZ DB cluster source must be in the same Region and is always passed by identifier.
+		if sourceDBClusterID != "" {
+			input.SourceDBClusterIdentifier = aws.String(sourceDBClusterID)
+		} else {
+			input.SourceDBInstanceIdentifier = aws.String(sourceDBInstanceID)
 		}
 
 		if _, ok := d.GetOk(names.AttrAllocatedStorage); ok {
@@ -2130,6 +2154,11 @@ func resourceInstanceFlatten(ctx context.Context, awsClient *conns.AWSClient, v 
 		}
 	}
 	d.Set("replicate_source_db", sourceDBIdentifier)
+	// Only refresh a cluster source that is already in state (set on create or import). Populating it
+	// for replicas imported before this argument existed would plan its removal, which promotes the replica.
+	if d.Get("replicate_source_db_cluster").(string) != "" {
+		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	}
 
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
@@ -2182,8 +2211,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 	}
 
 	// Separate request to promote a database.
-	if d.HasChange("replicate_source_db") {
-		if d.Get("replicate_source_db").(string) == "" {
+	if d.HasChanges("replicate_source_db", "replicate_source_db_cluster") {
+		if d.Get("replicate_source_db").(string) == "" && d.Get("replicate_source_db_cluster").(string) == "" {
 			input := &rds.PromoteReadReplicaInput{
 				BackupRetentionPeriod: aws.Int32(int32(d.Get("backup_retention_period").(int))),
 				DBInstanceIdentifier:  aws.String(d.Get(names.AttrIdentifier).(string)),
@@ -2216,6 +2245,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 		names.AttrFinalSnapshotIdentifier,
 		"multi_tenant",
 		"replicate_source_db",
+		"replicate_source_db_cluster",
 		"skip_final_snapshot",
 		names.AttrTags, names.AttrTagsAll,
 	) {
@@ -2226,6 +2256,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta an
 			names.AttrFinalSnapshotIdentifier,
 			"multi_tenant",
 			"replicate_source_db",
+			"replicate_source_db_cluster",
 			"skip_final_snapshot",
 			names.AttrTags, names.AttrTagsAll,
 			names.AttrDeletionProtection,
@@ -2540,6 +2571,12 @@ func resourceInstanceImport(ctx context.Context, d *schema.ResourceData, meta an
 	// that final_snapshot_identifier is not required.
 	d.Set("skip_final_snapshot", true)
 	d.Set("delete_automated_backups", true)
+
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+	if v, err := findDBInstanceByID(ctx, conn, d.Id()); err == nil && v.ReadReplicaSourceDBClusterIdentifier != nil {
+		d.Set("replicate_source_db_cluster", v.ReadReplicaSourceDBClusterIdentifier)
+	}
+
 	return []*schema.ResourceData{d}, nil
 }
 

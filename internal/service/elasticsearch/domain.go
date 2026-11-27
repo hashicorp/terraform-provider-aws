@@ -503,7 +503,7 @@ func resourceDomain() *schema.Resource {
 					},
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"vpc_options": {
 					Type:     schema.TypeList,
 					Optional: true,

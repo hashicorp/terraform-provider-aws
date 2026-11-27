@@ -33,8 +33,8 @@ resource "aws_workspacesweb_trust_store_association" "example" {
 
 The following arguments are required:
 
-* `trust_store_arn` - (Required) ARN of the trust store to associate with the portal. Forces replacement if changed.
 * `portal_arn` - (Required) ARN of the portal to associate with the trust store. Forces replacement if changed.
+* `trust_store_arn` - (Required) ARN of the trust store to associate with the portal. Forces replacement if changed.
 
 The following arguments are optional:
 

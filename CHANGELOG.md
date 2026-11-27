@@ -1,7 +1,59 @@
-## 6.74.0 (Unreleased)
+## 6.75.0 (Unreleased)
+
+BREAKING CHANGES:
+
+* resource/aws_ebs_encryption_by_default: Newly created resources now use the AWS Region as the `id` attribute value instead of a generated identifier. The `id` for existing resources is updated to the AWS region when upgrading to `v6.75.0` or higher. ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+
+FEATURES:
+
+* **New List Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New List Resource:** `aws_ebs_encryption_by_default` ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+* **New List Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
+* **New Resource:** `aws_continuum_integration` ([#50950](https://github.com/hashicorp/terraform-provider-aws/issues/50950))
+* **New Resource:** `aws_eventbridgev2_event_bus` ([#50438](https://github.com/hashicorp/terraform-provider-aws/issues/50438))
+
+ENHANCEMENTS:
+
+* data-source/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_ebs_encryption_by_default: Add resource identity support ([#50866](https://github.com/hashicorp/terraform-provider-aws/issues/50866))
+* resource/aws_efs_file_system: List tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+
+BUG FIXES:
+
+* data-source/aws_api_gateway_domain_name: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* data-source/aws_cloudfront_distribution: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* data-source/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* provider: Ignore AWS system tags when waiting for tag updates to propagate ([#51238](https://github.com/hashicorp/terraform-provider-aws/issues/51238))
+* resource/aws_api_gateway_domain_name: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_cloudfront_distribution: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_cognito_user_pool_domain: Fix `hosted_zone_id` in the AWS European Sovereign Cloud (aws-eusc) partition ([#51288](https://github.com/hashicorp/terraform-provider-aws/issues/51288))
+* resource/aws_efs_access_point: Fix `DescribeTags ... ValidationException: 1 validation error detected: Value '...' at 'fileSystemId' failed to satisfy constraint: Member must satisfy regular expression pattern: ...` errors by listing tags with `ListTagsForResource` instead of the deprecated `DescribeTags` API. Requires the `elasticfilesystem:ListTagsForResource` IAM permission ([#49938](https://github.com/hashicorp/terraform-provider-aws/issues/49938))
+* resource/aws_s3_bucket: Fall back to S3 list and update tagging APIs if the corresponding S3 Control APIs fail with `AccessDenied` (e.g. Ceph Object Gateway)
+* resource/aws_s3_bucket_accelerate_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_analytics_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_cors_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_intelligent_tiering_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_logging: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_notification: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_ownership_controls: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_public_access_block: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_replication_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_request_payment_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_versioning: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_bucket_website_configuration: Map `NotImplemented: The information you provided implies functionality that is not implemented` errors to `directory buckets are not supported: ...` ([#51377](https://github.com/hashicorp/terraform-provider-aws/issues/51377))
+* resource/aws_s3_object: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration ([#51355](https://github.com/hashicorp/terraform-provider-aws/issues/51355))
+* resource/aws_s3_object_copy: Fix event hold duration validation and expansion errors when `lifecycle { ignore_changes = all }` forwards zeroed state attributes in configuration ([#51355](https://github.com/hashicorp/terraform-provider-aws/issues/51355))
+
+## 6.74.0 (November 23, 2026)
 
 NOTES:
 
+* data-source/aws_location_geofence_collection: Warn when `kms_key_id` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* provider: Warn when `tags_all` is set in Plugin SDK V2 resource configurations. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* provider: Warn when `tags` is set in data source configurations that don't filter by tags. The value was never used. A future version of the provider will reject it. ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* resource/aws_kinesis_firehose_delivery_stream: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* resource/aws_kinesis_stream: Warn when `arn` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
+* resource/aws_rds_cluster: Warn when `cluster_members` is configured. The value has no effect, and a future version of the provider will reject it. ([#51170](https://github.com/hashicorp/terraform-provider-aws/issues/51170))
 * resource/aws_s3_object: `object_lock_retain_until_date` is now `Computed` because Amazon S3 assigns and advances the value for objects under an event hold. Removing the argument from configuration no longer plans a change. ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 
 FEATURES:
@@ -9,6 +61,7 @@ FEATURES:
 * **New List Resource:** `aws_cloudwatchomni_alert` ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
 * **New List Resource:** `aws_cloudwatchomni_organization_access_grant` ([#50660](https://github.com/hashicorp/terraform-provider-aws/issues/50660))
 * **New List Resource:** `aws_devopsagent_asset_file` ([#50903](https://github.com/hashicorp/terraform-provider-aws/issues/50903))
+* **New List Resource:** `aws_identitystore_group_membership` ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
 * **New List Resource:** `aws_pinpointsmsvoicev2_protect_configuration_association` ([#50915](https://github.com/hashicorp/terraform-provider-aws/issues/50915))
 * **New List Resource:** `aws_ssoadmin_managed_policy_attachment` ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
 * **New Resource:** `aws_cloudwatchomni_alert` ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
@@ -19,17 +72,41 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_db_instance: Add `replicate_source_db_cluster` attribute ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
+* data-source/aws_lambda_function: Add `accelerator_config` attribute ([#51048](https://github.com/hashicorp/terraform-provider-aws/issues/51048))
+* data-source/aws_networkfirewall_firewall: Add `firewall_type` argument and `igw_firewall_configuration` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* data-source/aws_route: Add `igw_firewall` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
 * data-source/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` attributes ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
+* data-source/aws_subnet: Add `network_firewall_connectivity_type` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* data-source/aws_vpc: Add `network_firewall_association` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_db_instance: Add `replicate_source_db_cluster` argument to create a read replica from a Multi-AZ DB cluster ([#46542](https://github.com/hashicorp/terraform-provider-aws/issues/46542))
+* resource/aws_default_subnet: Add `network_firewall_connectivity_type` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_default_vpc: Add `network_firewall_association` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
 * resource/aws_fsx_s3_access_point_attachment: Add `ontap_configuration` argument to support Amazon FSx for NetApp ONTAP volumes ([#50917](https://github.com/hashicorp/terraform-provider-aws/issues/50917))
+* resource/aws_identitystore_group_membership: Add resource identity support ([#51082](https://github.com/hashicorp/terraform-provider-aws/issues/51082))
+* resource/aws_lambda_function: Add `accelerator_config` argument ([#51048](https://github.com/hashicorp/terraform-provider-aws/issues/51048))
+* resource/aws_networksecuritymanager_policy: Add `IGW_FIREWALL` `firewall_type` value and `configuration.igw_firewall_config` block ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_networksecuritymanager_rule: Add `IGW_FIREWALL` `firewall_type` value ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_networksecuritymanager_scope: Add `specialized_scope_type` argument and `AWS::EC2::Subnet` and `AWS::EC2::VPC` `resource_type` values ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_networksecuritymanager_template: Add `IGW_FIREWALL` `firewall_type` value ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_opensearch_inbound_connection_accepter: Increase default `timeouts` values to `15m` ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
+* resource/aws_opensearch_outbound_connection: Increase default `timeouts` values to `15m` ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_pinpointsmsvoicev2_protect_configuration: Add `mms_default_status`, `rcs_default_status`, `sms_default_status`, and `voice_default_status` arguments ([#50923](https://github.com/hashicorp/terraform-provider-aws/issues/50923))
+* resource/aws_route: Add `igw_firewall` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
 * resource/aws_s3_bucket_object_lock_configuration: Add `rule.default_retention.default_event_hold` configuration block ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_s3_object: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` arguments ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_s3_object_copy: Add `object_lock_event_hold`, `object_lock_event_hold_duration_days`, and `object_lock_event_hold_duration_years` arguments ([#50220](https://github.com/hashicorp/terraform-provider-aws/issues/50220))
 * resource/aws_ssoadmin_managed_policy_attachment: Add resource identity support ([#50965](https://github.com/hashicorp/terraform-provider-aws/issues/50965))
+* resource/aws_subnet: Add `network_firewall_connectivity_type` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_vpc: Add `network_firewall_association` attribute ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
 
 BUG FIXES:
 
 * data-source/aws_acm_certificate: Fixes evenutal consistency error when filtering by `tags`. ([#51101](https://github.com/hashicorp/terraform-provider-aws/issues/51101))
+* data-source/aws_vpc_ipam_pools: Return every pool instead of collapsing pools with identical tags into one ([#50497](https://github.com/hashicorp/terraform-provider-aws/issues/50497))
+* list-resource/aws_iam_group_policy_attachment: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
+* list-resource/aws_iam_instance_profile: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
+* list-resource/aws_iam_user: Fixes error when resource disappears during listing ([#51103](https://github.com/hashicorp/terraform-provider-aws/issues/51103))
 * resource/aws_cloudwatchomni_access_profile: Fix deletion failing with `AccessDeniedException` when the parent space no longer exists ([#50679](https://github.com/hashicorp/terraform-provider-aws/issues/50679))
 * resource/aws_dx_hosted_private_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
 * resource/aws_dx_hosted_transit_virtual_interface_accepter: Remove hard-coded upper limit of 1000 from `prefix_pool_allocated_count_ipv4` and `prefix_pool_allocated_count_ipv6` arguments ([#51072](https://github.com/hashicorp/terraform-provider-aws/issues/51072))
@@ -39,8 +116,13 @@ BUG FIXES:
 * resource/aws_kms_grant: Accepts `<service>.amazonaws.com.cn` as service principal. ([#50946](https://github.com/hashicorp/terraform-provider-aws/issues/50946))
 * resource/aws_msk_replicator: Fix import of a replicator with a `kafka_cluster.apache_kafka_cluster` block proposing to replace the replicator, caused by reading a `vpc_config` onto the `apache_kafka_cluster` entry ([#50071](https://github.com/hashicorp/terraform-provider-aws/issues/50071))
 * resource/aws_msk_replicator: Fix update failures for replications that identify a cluster by `replication_info_list.source_kafka_cluster_id` or `replication_info_list.target_kafka_cluster_id`, where an empty cluster ARN was sent instead of the cluster ID ([#50071](https://github.com/hashicorp/terraform-provider-aws/issues/50071))
-* resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_networksecuritymanager_scope: Retry creation while the account is being onboarded to Network Security Manager ([#51209](https://github.com/hashicorp/terraform-provider-aws/issues/51209))
+* resource/aws_opensearch_inbound_connection_accepter: Fix `UnknownError` when deleting a connection that is still provisioning ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
+* resource/aws_opensearch_outbound_connection: Fix `UnknownError` when deleting a connection that is still validating or provisioning ([#51130](https://github.com/hashicorp/terraform-provider-aws/issues/51130))
 * resource/aws_route53domains_delegation_signer_record: Fix resources created before v6.70.0 being removed from state on refresh ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_route53domains_delegation_signer_record: Fix `Invalid DNSSEC ID` error on delete when the record no longer exists ([#50944](https://github.com/hashicorp/terraform-provider-aws/issues/50944))
+* resource/aws_s3_bucket: Send the configured `region` as the S3 `CreateBucket` `LocationConstraint` when using a custom S3 endpoint with a non-standard region string (e.g. Ceph, MinIO), fixing bucket creation failures against S3-compatible storage ([#49890](https://github.com/hashicorp/terraform-provider-aws/issues/49890))
+* resource/aws_s3_bucket_lifecycle_configuration: Prevent "inconsistent result after apply" errors and non-terminating stabilization with S3-compatible backends (e.g. Ceph RADOS Gateway) that omit the `x-amz-transition-default-minimum-object-size` field ([#44902](https://github.com/hashicorp/terraform-provider-aws/issues/44902))
 * resource/aws_sagemaker_endpoint: Prevent orphaned endpoints when the create waiter returns an error ([#50959](https://github.com/hashicorp/terraform-provider-aws/issues/50959))
 
 ## 6.73.0 (November 11, 2026)
@@ -1893,7 +1975,6 @@ BUG FIXES:
 * resource/aws_s3_bucket_lifecycle_configuration: Fix "Missing Resource Identity After Read" error when resource created with provider version < 6.34.0 is deleted outside Terraform ([#46674](https://github.com/hashicorp/terraform-provider-aws/issues/46674))
 * resource/aws_savingsplan_savingsplan: Properly set `savings_plan_offering_id` during read to prevent forced replacement following import ([#46959](https://github.com/hashicorp/terraform-provider-aws/issues/46959))
 * resource/aws_wafv2_web_acl: Fix `enable_machine_learning` in `aws_managed_rules_bot_control_rule_set` incorrectly defaulting to `false` instead of reflecting the AWS default of `true` ([#46682](https://github.com/hashicorp/terraform-provider-aws/issues/46682))
-
 ## 6.36.0 (March 11, 2026)
 
 NOTES:

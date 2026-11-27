@@ -49,11 +49,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `options` - (Optional) Options for the VPC attachment. [See below](#options).
-* `routing_policy_label` - (Optional) The routing policy label to apply to the VPC attachment for traffic routing decisions. Maximum length of 256 characters.
+* `options` - (Optional) Options for the VPC attachment. [See below](#options-block).
+* `routing_policy_label` - (Optional) Routing policy label to apply to the VPC attachment for traffic routing decisions. Maximum length of 256 characters.
 * `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### options
+### `options` Block
 
 * `appliance_mode_support` - (Optional) Whether to enable appliance mode support. If enabled, traffic flow between a source and destination use the same Availability Zone for the VPC attachment for the lifetime of that flow. If the VPC attachment is pending acceptance, changing this value will recreate the resource.
 * `dns_support` - (Optional) Whether to enable DNS support. If the VPC attachment is pending acceptance, changing this value will recreate the resource.

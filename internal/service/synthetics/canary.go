@@ -243,7 +243,7 @@ func ResourceCanary() *schema.Resource {
 					ValidateFunc: validation.IntBetween(1, 455),
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"timeline": {
 					Type:     schema.TypeList,
 					Computed: true,

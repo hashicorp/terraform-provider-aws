@@ -174,7 +174,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	if customS3Endpoint := c.Endpoints[names.S3]; customS3Endpoint != "" {
 		if !inttypes.IsAWSRegion(cfg.Region) {
 			c.S3OriginalRegion = cfg.Region
-			cfg.Region = "us-east-1" // Use compliant dummy region for SDK initialization
+			cfg.Region = endpoints.UsEast1RegionID // Use compliant dummy region for SDK initialization
 			tflog.Info(ctx, "Substituting non-standard region for S3-compatible endpoint", map[string]any{
 				"original_region":    c.S3OriginalRegion,
 				"substitute_region":  cfg.Region,

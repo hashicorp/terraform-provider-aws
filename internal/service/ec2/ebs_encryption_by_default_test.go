@@ -21,10 +21,17 @@ func TestAccEC2EBSEncryptionByDefault_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"Resource": {
-			acctest.CtBasic: testAccEBSEncryptionByDefault_basic,
+			acctest.CtBasic:   testAccEBSEncryptionByDefault_basic,
+			"identity":        testAccEC2EBSEBSEncryptionByDefault_identitySerial,
+			"v6_74_0_upgrade": testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade,
 		},
 		"DataSource": {
 			acctest.CtBasic: testAccEBSEncryptionByDefaultDataSource_basic,
+		},
+		"List": {
+			acctest.CtBasic:   testAccEC2EBSEncryptionByDefault_List_basic,
+			"includeResource": testAccEC2EBSEncryptionByDefault_List_includeResource,
+			"regionOverride":  testAccEC2EBSEncryptionByDefault_List_regionOverride,
 		},
 	}
 
@@ -39,7 +46,7 @@ func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEncryptionByDefaultDestroy(ctx, t),
+		CheckDestroy:             testAccCheckEBSEncryptionByDefaultDestroy(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSEncryptionByDefaultConfig_basic(false),
@@ -64,7 +71,7 @@ func testAccEBSEncryptionByDefault_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckEncryptionByDefaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
+func testAccCheckEBSEncryptionByDefaultDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).EC2Client(ctx)
 
@@ -107,6 +114,45 @@ func testAccCheckEBSEncryptionByDefault(ctx context.Context, t *testing.T, n str
 
 		return nil
 	}
+}
+
+func testAccEC2EBSEncryptionByDefault_v6_74_0_upgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ebs_encryption_by_default.test"
+
+	acctest.Test(ctx, t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
+		CheckDestroy: testAccCheckEBSEncryptionByDefaultDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "6.74.0",
+					},
+				},
+				Config: testAccEBSEncryptionByDefaultConfig_basic(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccEBSEncryptionByDefaultConfig_basic(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.Region()),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckEBSEncryptionByDefaultExists(ctx context.Context, t *testing.T, resourceName string) resource.TestCheckFunc {
+	return testAccCheckEBSEncryptionByDefault(ctx, t, resourceName, true)
 }
 
 func testAccEBSEncryptionByDefaultConfig_basic(enabled bool) string {

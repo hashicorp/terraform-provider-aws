@@ -131,7 +131,7 @@ func resourceSnapshotCopy() *schema.Resource {
 					Computed: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				names.AttrTagsAll: tftags.TagsSchemaOptionalComputedWarnShouldBeComputedOnly(),
 				"target_custom_availability_zone": {
 					Type:     schema.TypeString,
 					Optional: true,
