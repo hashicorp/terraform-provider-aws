@@ -492,11 +492,11 @@ The `not` configuration block supports the following arguments:
 The `or` configuration block (within `not`) supports the following arguments:
 
 * `prefixes` - (Optional) List of object key name prefixes that identify objects to be excluded from replication. Each prefix must be less than or equal to 1024 characters in length.
-* `tags` - (Optional) List of tag blocks identifying objects to be excluded from replication. An object is excluded if it matches any of the specified tags. [See below](#or-tag-block).
+* `tags` - (Optional) List of tag blocks identifying objects to be excluded from replication. An object is excluded if it matches any of the specified tags. [See below](#tags-block).
 
-### `or` `tag` Block
+### `tags` Block
 
-The `tag` configuration block (within `or`) supports the following arguments:
+The `tags` configuration block (within `or`) supports the following arguments:
 
 * `key` - (Required) Name of the tag key.
 * `value` - (Required) Value of the tag.
