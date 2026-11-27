@@ -1110,6 +1110,120 @@ func TestAccWAFV2WebACLRule_invalidScopeDownLogicalStatementNesting(t *testing.T
 	}
 }
 
+func TestAccWAFV2WebACLRule_captchaConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_immunityTime(rName, "captcha", testAccWebACLRuleImmunityTimeConfig("captcha_config", 1800)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "action.0.captcha.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+			{
+				Config: testAccWebACLRuleConfig_immunityTime(rName, "captcha", testAccWebACLRuleImmunityTimeConfig("captcha_config", 600)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "600"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleConfig_immunityTime(rName, "captcha", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACLRule_challengeConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl_rule.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLRuleDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLRuleConfig_immunityTime(rName, "challenge", testAccWebACLRuleImmunityTimeConfig("challenge_config", 1800)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "action.0.challenge.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.0.immunity_time_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.0.immunity_time_property.0.immunity_time", "1800"),
+					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrsImportStateIdFunc(resourceName, flex.ResourceIdSeparator, "web_acl_arn", names.AttrName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "web_acl_arn",
+			},
+			{
+				Config: testAccWebACLRuleConfig_immunityTime(rName, "challenge", testAccWebACLRuleImmunityTimeConfig("challenge_config", 600)),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.0.immunity_time_property.0.immunity_time", "600"),
+				),
+			},
+			{
+				Config: testAccWebACLRuleConfig_immunityTime(rName, "challenge", ""),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLRuleExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestWebACLRuleUpgradeResourceState_logicalStatementNesting(t *testing.T) {
 	t.Parallel()
 
@@ -3127,6 +3241,61 @@ resource "aws_wafv2_web_acl_rule" "test" {
   }
 }
 `, rName, statement))
+}
+
+func testAccWebACLRuleConfig_immunityTime(rName, action, immunityTimeConfig string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl_rule" "test" {
+  name        = %[1]q
+  priority    = 1
+  web_acl_arn = aws_wafv2_web_acl.test.arn
+
+  action {
+    %[2]s {}
+  }
+
+  %[3]s
+
+  statement {
+    geo_match_statement {
+      country_codes = ["US"]
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name  = %[1]q
+  scope = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = %[1]q
+    sampled_requests_enabled   = false
+  }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
+}
+`, rName, action, immunityTimeConfig)
+}
+
+func testAccWebACLRuleImmunityTimeConfig(blockName string, immunityTime int) string {
+	return fmt.Sprintf(`%[1]s {
+    immunity_time_property {
+      immunity_time = %[2]d
+    }
+  }`, blockName, immunityTime)
 }
 
 const (
