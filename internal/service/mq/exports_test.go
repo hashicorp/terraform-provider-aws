@@ -12,6 +12,7 @@ var (
 	DiffBrokerUsers          = diffBrokerUsers
 	FindBrokerByID           = findBrokerByID
 	FindConfigurationByID    = findConfigurationByID
+	FindUsersByBrokerID      = findUsersByBrokerID
 	FlattenResourceShareARNs = flattenResourceShareARNs
 	NormalizeEngineVersion   = normalizeEngineVersion
 

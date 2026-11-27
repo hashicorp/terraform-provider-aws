@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-26T13:39:56.434269-07:00
+custom:
+    Body: Fix pagination when a broker has more than 100 users
+    Impact: resource/aws_mq_broker
+    PullRequest: "51295"

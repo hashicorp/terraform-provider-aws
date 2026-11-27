@@ -599,7 +599,13 @@ func resourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta any) d
 	// AWS does not return user information for RabbitMQ brokers after creation.
 	// Skip setting user state to prevent non-idempotent behavior.
 	if !strings.EqualFold(string(output.EngineType), string(types.EngineTypeRabbitmq)) || d.IsNewResource() {
-		rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), output.Users)
+		userSummaries, err := findUsersByBrokerID(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing MQ Broker (%s) users: %s", d.Id(), err)
+		}
+
+		rawUsers, err := expandUsersForBroker(ctx, conn, d.Id(), userSummaries)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading MQ Broker (%s) users: %s", d.Id(), err)
@@ -844,6 +850,36 @@ func findSharedResources(ctx context.Context, conn *mq.Client, input *mq.Describ
 	}
 
 	return output, nil
+}
+
+// listUsersAPIClient is implemented by *mq.Client and by test doubles.
+type listUsersAPIClient interface {
+	ListUsers(context.Context, *mq.ListUsersInput, ...func(*mq.Options)) (*mq.ListUsersOutput, error)
+}
+
+// findUsersByBrokerID returns all users for the given broker using the paginated
+// ListUsers API. DescribeBroker truncates its Users field at 100 with no
+// continuation token, so brokers with more than 100 users require this call.
+func findUsersByBrokerID(ctx context.Context, conn listUsersAPIClient, brokerID string) ([]types.UserSummary, error) {
+	input := &mq.ListUsersInput{
+		BrokerId:   aws.String(brokerID),
+		MaxResults: aws.Int32(100),
+	}
+	var users []types.UserSummary
+
+	for {
+		output, err := conn.ListUsers(ctx, input)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, output.Users...)
+		if aws.ToString(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return users, nil
 }
 
 // updateBrokerResourceShares sets the broker's resource shares and waits for them
