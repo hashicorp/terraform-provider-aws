@@ -1133,6 +1133,65 @@ func TestAccS3BucketReplicationConfiguration_encryptionConfigurationUseSourceMul
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			// Verify that replica_kms_key_id can be omitted when use_source_multi_region_key is Enabled.
+			{
+				Config: testAccBucketReplicationConfigurationConfig_useSourceMultiRegionKeyNoKeyID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"destination.0.encryption_configuration.#":                                      "1",
+						"destination.0.encryption_configuration.0.replica_kms_key_id":                   "",
+						"destination.0.encryption_configuration.0.use_source_multi_region_key.#":        "1",
+						"destination.0.encryption_configuration.0.use_source_multi_region_key.0.status": string(types.UseSourceMultiRegionKeyStatusEnabled),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccS3BucketReplicationConfiguration_encryptionConfigurationUseSourceMultiRegionKeyNoKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket_replication_configuration.test"
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckWithRegions(testAccCheckBucketReplicationConfigurationDestroyWithRegion(ctx, t), acctest.Region(), acctest.AlternateRegion()),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketReplicationConfigurationConfig_useSourceMultiRegionKeyNoKeyID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketReplicationConfigurationExists(ctx, t, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrID:     "foobar",
+						names.AttrStatus: string(types.ReplicationRuleStatusEnabled),
+						"destination.0.encryption_configuration.#":                                      "1",
+						"destination.0.encryption_configuration.0.replica_kms_key_id":                   "",
+						"destination.0.encryption_configuration.0.use_source_multi_region_key.#":        "1",
+						"destination.0.encryption_configuration.0.use_source_multi_region_key.0.status": string(types.UseSourceMultiRegionKeyStatusEnabled),
+						"source_selection_criteria.#":                                                   "1",
+						"source_selection_criteria.0.sse_kms_encrypted_objects.#":                       "1",
+						"source_selection_criteria.0.sse_kms_encrypted_objects.0.status":                string(types.SseKmsEncryptedObjectsStatusEnabled),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -2833,6 +2892,49 @@ resource "aws_s3_bucket_replication_configuration" "test" {
     }
   }
 }`, andPrefix, notPrefix))
+}
+
+func testAccBucketReplicationConfigurationConfig_useSourceMultiRegionKeyNoKeyID(rName string) string {
+	return acctest.ConfigCompose(testAccBucketReplicationConfigurationConfig_base(rName), `
+resource "aws_s3_bucket_replication_configuration" "test" {
+  depends_on = [
+    aws_s3_bucket_versioning.source,
+    aws_s3_bucket_versioning.destination,
+  ]
+
+  bucket = aws_s3_bucket.source.id
+  role   = aws_iam_role.test.arn
+
+  rule {
+    id     = "foobar"
+    status = "Enabled"
+
+    delete_marker_replication {
+      status = "Disabled"
+    }
+
+    filter {
+      prefix = "foo"
+    }
+
+    destination {
+      bucket = aws_s3_bucket.destination.arn
+
+      encryption_configuration {
+        use_source_multi_region_key {
+          status = "Enabled"
+        }
+      }
+    }
+
+    source_selection_criteria {
+      sse_kms_encrypted_objects {
+        status = "Enabled"
+      }
+    }
+  }
+}
+`)
 }
 
 func testAccBucketReplicationConfigurationConfig_useSourceMultiRegionKey(rName string) string {
