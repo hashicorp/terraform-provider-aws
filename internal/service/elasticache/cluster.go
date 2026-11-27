@@ -541,11 +541,6 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta any) 
 
 	d.Set("replication_group_id", c.ReplicationGroupId)
 
-	if c.NotificationConfiguration != nil {
-		if aws.ToString(c.NotificationConfiguration.TopicStatus) == "active" {
-			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
-		}
-	}
 	d.Set(names.AttrAvailabilityZone, c.PreferredAvailabilityZone)
 	if aws.ToString(c.PreferredAvailabilityZone) == "Multiple" {
 		d.Set("az_mode", "cross-az")
@@ -992,6 +987,12 @@ func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error
 	}
 
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
+
+	if c.NotificationConfiguration != nil {
+		if aws.ToString(c.NotificationConfiguration.TopicStatus) == "active" {
+			d.Set("notification_topic_arn", c.NotificationConfiguration.TopicArn)
+		}
+	}
 
 	return nil
 }

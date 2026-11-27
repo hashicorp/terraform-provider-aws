@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T14:44:13.23792+05:30
+custom:
+    Body: Fix `notification_topic_arn` not being read into state, causing a diff after import
+    Impact: resource/aws_elasticache_replication_group
+    PullRequest: "51289"
