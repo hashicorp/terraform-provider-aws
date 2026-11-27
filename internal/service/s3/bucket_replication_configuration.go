@@ -668,7 +668,7 @@ func replicationRuleNotOperatorSchema() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 								},
-								"tags": {
+								names.AttrTags: {
 									Type:     schema.TypeList,
 									Optional: true,
 									Elem: &schema.Resource{
@@ -988,7 +988,7 @@ func expandReplicationRuleNotOperator(ctx context.Context, tfList []any) *types.
 	apiObject := &types.ReplicationRuleNotOperator{}
 
 	if v, ok := tfMap["or"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Or = expandReplicationRuleOrOperator(ctx, v)
+		apiObject.Or = expandReplicationRuleOrOperator(v)
 	}
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
@@ -1002,7 +1002,7 @@ func expandReplicationRuleNotOperator(ctx context.Context, tfList []any) *types.
 	return apiObject
 }
 
-func expandReplicationRuleOrOperator(ctx context.Context, tfList []any) *types.ReplicationRuleOrOperator {
+func expandReplicationRuleOrOperator(tfList []any) *types.ReplicationRuleOrOperator {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1022,7 +1022,7 @@ func expandReplicationRuleOrOperator(ctx context.Context, tfList []any) *types.R
 		}
 	}
 
-	if v, ok := tfMap["tags"].([]any); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrTags].([]any); ok && len(v) > 0 {
 		for _, raw := range v {
 			tagMap, ok := raw.(map[string]any)
 			if !ok {
@@ -1312,7 +1312,7 @@ func flattenReplicationRuleNotOperator(ctx context.Context, apiObject *types.Rep
 	tfMap := make(map[string]any)
 
 	if v := apiObject.Or; v != nil {
-		tfMap["or"] = flattenReplicationRuleOrOperator(ctx, v)
+		tfMap["or"] = flattenReplicationRuleOrOperator(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
@@ -1326,7 +1326,7 @@ func flattenReplicationRuleNotOperator(ctx context.Context, apiObject *types.Rep
 	return []any{tfMap}
 }
 
-func flattenReplicationRuleOrOperator(ctx context.Context, apiObject *types.ReplicationRuleOrOperator) []any {
+func flattenReplicationRuleOrOperator(apiObject *types.ReplicationRuleOrOperator) []any {
 	if apiObject == nil {
 		return []any{}
 	}
@@ -1345,7 +1345,7 @@ func flattenReplicationRuleOrOperator(ctx context.Context, apiObject *types.Repl
 				names.AttrValue: aws.ToString(tag.Value),
 			})
 		}
-		tfMap["tags"] = tagList
+		tfMap[names.AttrTags] = tagList
 	}
 
 	return []any{tfMap}
