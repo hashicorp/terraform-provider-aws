@@ -8,6 +8,7 @@ package fsx
 import (
 	"context"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -72,10 +73,9 @@ func resourceONTAPFileSystem() *schema.Resource {
 					),
 				},
 				"deployment_type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ForceNew:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.OntapDeploymentType](),
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
 				},
 				"disk_iops_configuration": {
 					Type:     schema.TypeList,
@@ -88,7 +88,7 @@ func resourceONTAPFileSystem() *schema.Resource {
 								Type:         schema.TypeInt,
 								Optional:     true,
 								Computed:     true,
-								ValidateFunc: validation.IntBetween(0, 2400000),
+								ValidateFunc: validation.IntAtLeast(0),
 							},
 							names.AttrMode: {
 								Type:             schema.TypeString,
@@ -234,14 +234,12 @@ func resourceONTAPFileSystem() *schema.Resource {
 					Type:         schema.TypeInt,
 					Computed:     true,
 					Optional:     true,
-					ValidateFunc: validation.IntInSlice([]int{128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144}),
 					ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 				},
 				"throughput_capacity_per_ha_pair": {
 					Type:         schema.TypeInt,
 					Computed:     true,
 					Optional:     true,
-					ValidateFunc: validation.IntInSlice([]int{128, 256, 384, 512, 768, 1024, 1536, 2048, 3072, 4096, 6144}),
 					ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 				},
 				names.AttrVPCID: {
@@ -421,7 +419,7 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
-	if ontapConfig.DeploymentType == awstypes.OntapDeploymentTypeSingleAz2 {
+	if deploymentType := ontapConfig.DeploymentType; strings.HasPrefix(string(deploymentType), "SINGLE_AZ_") && deploymentType != awstypes.OntapDeploymentTypeSingleAz1 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
