@@ -109,8 +109,22 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 												Schema: map[string]*schema.Schema{
 													"replica_kms_key_id": {
 														Type:         schema.TypeString,
-														Required:     true,
+														Optional:     true,
 														ValidateFunc: verify.ValidARN,
+													},
+													"use_source_multi_region_key": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																names.AttrStatus: {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[types.UseSourceMultiRegionKeyStatus](),
+																},
+															},
+														},
 													},
 												},
 											},
@@ -211,6 +225,12 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
+													"not": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem:     replicationRuleNotOperatorSchema(),
+													},
 													names.AttrPrefix: {
 														Type:         schema.TypeString,
 														Optional:     true,
@@ -219,6 +239,12 @@ func resourceBucketReplicationConfiguration() *schema.Resource {
 													names.AttrTags: tftags.TagsSchema(),
 												},
 											},
+										},
+										"not": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem:     replicationRuleNotOperatorSchema(),
 										},
 										names.AttrPrefix: {
 											Type:         schema.TypeString,
@@ -623,6 +649,76 @@ func expandAccessControlTranslation(tfList []any) *types.AccessControlTranslatio
 	return apiObject
 }
 
+func replicationRuleNotOperatorSchema() *schema.Resource {
+	return &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"or": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						SchemaFunc: func() map[string]*schema.Schema {
+							return map[string]*schema.Schema{
+								"prefixes": {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Schema{
+										Type:         schema.TypeString,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
+									},
+								},
+								names.AttrTags: {
+									Type:     schema.TypeList,
+									Optional: true,
+									Elem: &schema.Resource{
+										SchemaFunc: func() map[string]*schema.Schema {
+											return map[string]*schema.Schema{
+												names.AttrKey: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												names.AttrValue: {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											}
+										},
+									},
+								},
+							}
+						},
+					},
+				},
+				names.AttrPrefix: {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(0, 1024),
+				},
+				"tag": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						SchemaFunc: func() map[string]*schema.Schema {
+							return map[string]*schema.Schema{
+								names.AttrKey: {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+								names.AttrValue: {
+									Type:     schema.TypeString,
+									Required: true,
+								},
+							}
+						},
+					},
+				},
+			}
+		},
+	}
+}
+
 func expandEncryptionConfiguration(tfList []any) *types.EncryptionConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -637,6 +733,29 @@ func expandEncryptionConfiguration(tfList []any) *types.EncryptionConfiguration 
 
 	if v, ok := tfMap["replica_kms_key_id"].(string); ok && v != "" {
 		apiObject.ReplicaKmsKeyID = aws.String(v)
+	}
+
+	if v, ok := tfMap["use_source_multi_region_key"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.UseSourceMultiRegionKey = expandUseSourceMultiRegionKey(v)
+	}
+
+	return apiObject
+}
+
+func expandUseSourceMultiRegionKey(tfList []any) *types.UseSourceMultiRegionKey {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.UseSourceMultiRegionKey{}
+
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
+		apiObject.Status = types.UseSourceMultiRegionKeyStatus(v)
 	}
 
 	return apiObject
@@ -801,13 +920,19 @@ func expandReplicationRuleFilter(ctx context.Context, tfList []any) *types.Repli
 		}
 	}
 
+	if v, ok := tfMap["not"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject = &types.ReplicationRuleFilter{
+			Not: expandReplicationRuleNotOperator(v),
+		}
+	}
+
 	if v, ok := tfMap["tag"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject = &types.ReplicationRuleFilter{
 			Tag: expandTag(v[0].(map[string]any)),
 		}
 	}
 
-	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, or And specified";
+	// Per AWS S3 API, "A Filter must have exactly one of Prefix, Tag, And, or Not specified";
 	// Specifying more than one of the listed parameters results in a MalformedXML error.
 	// If a filter is specified as filter { prefix = "" } in Terraform, we should send the prefix value
 	// in the API request even if it is an empty value, else Terraform will report non-empty plans.
@@ -833,6 +958,10 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []any) *types.
 
 	apiObject := &types.ReplicationRuleAndOperator{}
 
+	if v, ok := tfMap["not"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Not = expandReplicationRuleNotOperator(v)
+	}
+
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
 	}
@@ -840,6 +969,73 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []any) *types.
 	if v, ok := tfMap[names.AttrTags].(map[string]any); ok && len(v) > 0 {
 		if tags := svcTags(tftags.New(ctx, v).IgnoreAWS()); len(tags) > 0 {
 			apiObject.Tags = tags
+		}
+	}
+
+	return apiObject
+}
+
+func expandReplicationRuleNotOperator(tfList []any) *types.ReplicationRuleNotOperator {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicationRuleNotOperator{}
+
+	if v, ok := tfMap["or"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Or = expandReplicationRuleOrOperator(v)
+	}
+
+	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
+		apiObject.Prefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["tag"].([]any); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Tag = expandTag(v[0].(map[string]any))
+	}
+
+	return apiObject
+}
+
+func expandReplicationRuleOrOperator(tfList []any) *types.ReplicationRuleOrOperator {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ReplicationRuleOrOperator{}
+
+	if v, ok := tfMap["prefixes"].([]any); ok && len(v) > 0 {
+		for _, p := range v {
+			if s, ok := p.(string); ok {
+				apiObject.Prefixes = append(apiObject.Prefixes, s)
+			}
+		}
+	}
+
+	if v, ok := tfMap[names.AttrTags].([]any); ok && len(v) > 0 {
+		for _, raw := range v {
+			tagMap, ok := raw.(map[string]any)
+			if !ok {
+				continue
+			}
+			tag := types.Tag{}
+			if k, ok := tagMap[names.AttrKey].(string); ok {
+				tag.Key = aws.String(k)
+			}
+			if val, ok := tagMap[names.AttrValue].(string); ok {
+				tag.Value = aws.String(val)
+			}
+			apiObject.Tags = append(apiObject.Tags, tag)
 		}
 	}
 
@@ -985,6 +1181,22 @@ func flattenEncryptionConfiguration(apiObject *types.EncryptionConfiguration) []
 		tfMap["replica_kms_key_id"] = aws.ToString(apiObject.ReplicaKmsKeyID)
 	}
 
+	if apiObject.UseSourceMultiRegionKey != nil {
+		tfMap["use_source_multi_region_key"] = flattenUseSourceMultiRegionKey(apiObject.UseSourceMultiRegionKey)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenUseSourceMultiRegionKey(apiObject *types.UseSourceMultiRegionKey) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := map[string]any{
+		names.AttrStatus: apiObject.Status,
+	}
+
 	return []any{tfMap}
 }
 
@@ -1055,6 +1267,10 @@ func flattenReplicationRuleFilter(ctx context.Context, apiObject *types.Replicat
 		tfMap["and"] = flattenReplicationRuleAndOperator(ctx, v)
 	}
 
+	if v := apiObject.Not; v != nil {
+		tfMap["not"] = flattenReplicationRuleNotOperator(v)
+	}
+
 	if v := apiObject.Prefix; v != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
@@ -1073,12 +1289,63 @@ func flattenReplicationRuleAndOperator(ctx context.Context, apiObject *types.Rep
 
 	tfMap := make(map[string]any)
 
+	if v := apiObject.Not; v != nil {
+		tfMap["not"] = flattenReplicationRuleNotOperator(v)
+	}
+
 	if v := apiObject.Prefix; v != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(v)
 	}
 
 	if v := apiObject.Tags; v != nil {
 		tfMap[names.AttrTags] = keyValueTags(ctx, v).IgnoreAWS().Map()
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicationRuleNotOperator(apiObject *types.ReplicationRuleNotOperator) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Or; v != nil {
+		tfMap["or"] = flattenReplicationRuleOrOperator(v)
+	}
+
+	if v := apiObject.Prefix; v != nil {
+		tfMap[names.AttrPrefix] = aws.ToString(v)
+	}
+
+	if v := apiObject.Tag; v != nil {
+		tfMap["tag"] = flattenTag(v)
+	}
+
+	return []any{tfMap}
+}
+
+func flattenReplicationRuleOrOperator(apiObject *types.ReplicationRuleOrOperator) []any {
+	if apiObject == nil {
+		return []any{}
+	}
+
+	tfMap := make(map[string]any)
+
+	if v := apiObject.Prefixes; v != nil {
+		tfMap["prefixes"] = v
+	}
+
+	if v := apiObject.Tags; len(v) > 0 {
+		var tagList []any
+		for _, tag := range v {
+			tagList = append(tagList, map[string]any{
+				names.AttrKey:   aws.ToString(tag.Key),
+				names.AttrValue: aws.ToString(tag.Value),
+			})
+		}
+		tfMap[names.AttrTags] = tagList
 	}
 
 	return []any{tfMap}

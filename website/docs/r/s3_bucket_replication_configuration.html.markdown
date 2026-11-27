@@ -422,7 +422,8 @@ The `access_control_translation` configuration block supports the following argu
 
 The `encryption_configuration` configuration block supports the following arguments:
 
-* `replica_kms_key_id` - (Required) ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in KMS for the destination bucket.
+* `replica_kms_key_id` - (Optional) ID (Key ARN or Alias ARN) of the customer managed AWS KMS key stored in KMS for the destination bucket.
+* `use_source_multi_region_key` - (Optional) Configuration block for using a multi-region KMS key for the destination bucket. [See below](#use_source_multi_region_key-block).
 
 ### `metrics` Block
 
@@ -460,12 +461,13 @@ The `existing_object_replication` configuration block supports the following arg
 
 ### `filter` Block
 
-~> **NOTE:** The `filter` argument must be specified as either an empty configuration block (`filter {}`) to imply the rule requires no filter or with exactly one of `prefix`, `tag`, or `and`.
+~> **NOTE:** The `filter` argument must be specified as either an empty configuration block (`filter {}`) to imply the rule requires no filter or with exactly one of `prefix`, `tag`, `and`, or `not`.
 Replication configuration V1 supports filtering based on only the `prefix` attribute. For backwards compatibility, Amazon S3 continues to support the V1 configuration.
 
 The `filter` configuration block supports the following arguments:
 
 * `and` - (Optional) Configuration block for specifying rule filters. This element is required only if you specify more than one filter. See [and](#and-block) below for more details.
+* `not` - (Optional) Configuration block for specifying objects that should be excluded from replication. [See below](#not-block).
 * `prefix` - (Optional) Object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
 * `tag` - (Optional) Configuration block for specifying a tag key and value. [See below](#tag-block).
 
@@ -473,8 +475,31 @@ The `filter` configuration block supports the following arguments:
 
 The `and` configuration block supports the following arguments:
 
+* `not` - (Optional) Configuration block for specifying objects that should be excluded from replication. [See below](#not-block).
 * `prefix` - (Optional) Object key name prefix that identifies subset of objects to which the rule applies. Must be less than or equal to 1024 characters in length.
-* `tags` - (Optional, Required if `prefix` is configured) Map of tags (key and value pairs) that identifies a subset of objects to which the rule applies. The rule applies only to objects having all the tags in its tagset.
+* `tags` - (Optional, Required if `prefix` is configured and `not` is not configured) Map of tags (key and value pairs) that identifies a subset of objects to which the rule applies. The rule applies only to objects having all the tags in its tagset.
+
+### `not` Block
+
+The `not` configuration block supports the following arguments:
+
+* `or` - (Optional) Configuration block for specifying that the replication rule should not apply to objects that match any of the specified prefixes or tags. [See below](#or-block).
+* `prefix` - (Optional) Object key name prefix that identifies objects that should be excluded from replication. Must be less than or equal to 1024 characters in length.
+* `tag` - (Optional) Configuration block for specifying a tag key and value to exclude from replication. [See below](#tag-block).
+
+### `or` Block
+
+The `or` configuration block (within `not`) supports the following arguments:
+
+* `prefixes` - (Optional) List of object key name prefixes that identify objects to be excluded from replication. Each prefix must be less than or equal to 1024 characters in length.
+* `tags` - (Optional) List of tag blocks identifying objects to be excluded from replication. An object is excluded if it matches any of the specified tags. [See below](#tags-block).
+
+### `tags` Block
+
+The `tags` configuration block (within `or`) supports the following arguments:
+
+* `key` - (Required) Name of the tag key.
+* `value` - (Required) Value of the tag.
 
 ### `tag` Block
 
@@ -482,6 +507,12 @@ The `tag` configuration block supports the following arguments:
 
 * `key` - (Required) Name of the object key.
 * `value` - (Required) Value of the tag.
+
+### `use_source_multi_region_key` Block
+
+The `use_source_multi_region_key` configuration block supports the following arguments:
+
+* `status` - (Required) Whether to use the source multi-region KMS key for replica encryption. Valid values: `"Enabled"`, `"Disabled"`.
 
 ### `source_selection_criteria` Block
 
