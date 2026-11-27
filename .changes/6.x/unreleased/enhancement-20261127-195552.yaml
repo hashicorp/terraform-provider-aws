@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-27T19:55:52.883252+01:00
+custom:
+    Body: Allow in-place update of `private_dns_enabled` and `dns_options`
+    Impact: resource/aws_vpclattice_service_network_vpc_association
