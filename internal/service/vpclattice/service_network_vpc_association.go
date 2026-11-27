@@ -63,13 +63,11 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
-					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"private_dns_preference": {
 								Type:             schema.TypeString,
 								Optional:         true,
-								ForceNew:         true,
 								ValidateDiagFunc: enum.Validate[types.PrivateDnsPreference](),
 							},
 							"private_dns_specified_domains": {
@@ -77,7 +75,6 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 								MaxItems: 10,
 								Optional: true,
 								Computed: true,
-								ForceNew: true,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
 									ValidateFunc: validation.StringLenBetween(1, 255),
@@ -90,7 +87,6 @@ func resourceServiceNetworkVPCAssociation() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Computed: true,
-					ForceNew: true,
 				},
 				names.AttrSecurityGroupIDs: {
 					Type:     schema.TypeList,
@@ -204,12 +200,29 @@ func resourceServiceNetworkVPCAssociationUpdate(ctx context.Context, d *schema.R
 			input.SecurityGroupIds = flex.ExpandStringValueList(d.Get(names.AttrSecurityGroupIDs).([]any))
 		}
 
+		if d.HasChanges("dns_options", "private_dns_enabled") {
+			privateDNSEnabled := d.Get("private_dns_enabled").(bool)
+			input.PrivateDnsEnabled = aws.Bool(privateDNSEnabled)
+
+			// The API resets any DNS option omitted from DnsOptions to its default,
+			// so send the whole configured block, not only the changed attributes.
+			if privateDNSEnabled {
+				if v, ok := d.GetOk("dns_options"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+					input.DnsOptions = expandDNSOptions(v.([]any)[0].(map[string]any))
+				}
+			}
+		}
+
 		log.Printf("[INFO] Updating VPCLattice Service Network VPC Association: %s", d.Id())
 
 		_, err := conn.UpdateServiceNetworkVpcAssociation(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating VPCLattice Service Network VPC Association (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitServiceNetworkVPCAssociationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for VPCLattice Service Network VPC Association (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -298,6 +311,28 @@ func waitServiceNetworkVPCAssociationCreated(ctx context.Context, conn *vpclatti
 
 	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkVpcAssociationOutput); ok {
 		if output.Status == types.ServiceNetworkVpcAssociationStatusCreateFailed {
+			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitServiceNetworkVPCAssociationUpdated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.GetServiceNetworkVpcAssociationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.ServiceNetworkVpcAssociationStatusUpdateInProgress),
+		Target:                    enum.Slice(types.ServiceNetworkVpcAssociationStatusActive),
+		Refresh:                   statusServiceNetworkVPCAssociation(conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*vpclattice.GetServiceNetworkVpcAssociationOutput); ok {
+		if output.Status == types.ServiceNetworkVpcAssociationStatusUpdateFailed {
 			retry.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(output.FailureCode), aws.ToString(output.FailureMessage)))
 		}
 

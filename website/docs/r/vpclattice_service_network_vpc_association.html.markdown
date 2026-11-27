@@ -34,6 +34,8 @@ This resource supports the following arguments:
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_identifier` - (Required) ID of the VPC.
 
+~> **NOTE:** Since November 17, 2026, VPC Lattice supports updating `private_dns_enabled` and `dns_options` in place. The new settings apply only to [service network resource associations](/docs/providers/aws/r/vpclattice_service_network_resource_association.html) created after this date. Existing resource associations created before this date keep their previous DNS records regardless of the in-place update. To apply the new settings, the resource association must be re-created, which briefly interrupts access to that resource configuration from every VPC connected to the service network.
+
 ### `dns_options` Block
 
 The `dns_options` configuration block supports the following arguments:

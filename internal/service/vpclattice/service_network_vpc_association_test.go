@@ -200,6 +200,11 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					string(awstypes.PrivateDnsPreferenceVerifiedDomainsAndSpecifiedDomains),
 					[]string{"db.example.com", "cache.example.com"},
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
@@ -215,6 +220,11 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					rName,
 					string(awstypes.PrivateDnsPreferenceAllDomains),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
@@ -228,12 +238,83 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNS(t *testing.T) {
 					rName,
 					string(awstypes.PrivateDnsPreferenceVerifiedDomainsOnly),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", string(awstypes.PrivateDnsPreferenceVerifiedDomainsOnly)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCLatticeServiceNetworkVPCAssociation_privateDNSToggle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var servicenetworkvpcasc vpclattice.GetServiceNetworkVpcAssociationOutput
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_vpclattice_service_network_vpc_association.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceNetworkVPCAssociationConfig_privateDNSDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
+				),
+			},
+			{
+				Config: testAccServiceNetworkVPCAssociationConfig_privateDNSWithSpecifiedDomains(
+					rName,
+					string(awstypes.PrivateDnsPreferenceSpecifiedDomainsOnly),
+					[]string{"*.example.internal"},
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_preference", string(awstypes.PrivateDnsPreferenceSpecifiedDomainsOnly)),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.0.private_dns_specified_domains.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "dns_options.0.private_dns_specified_domains.*", "*.example.internal"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServiceNetworkVPCAssociationConfig_privateDNSDisabled(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceNetworkVPCAssociationExists(ctx, t, resourceName, &servicenetworkvpcasc),
+					resource.TestCheckResourceAttr(resourceName, "private_dns_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "dns_options.#", "0"),
 				),
 			},
 		},
@@ -394,6 +475,17 @@ resource "aws_vpclattice_service_network_vpc_association" "test" {
   }
 }
 `, privateDNSPreference))
+}
+
+func testAccServiceNetworkVPCAssociationConfig_privateDNSDisabled(rName string) string {
+	return acctest.ConfigCompose(testAccServiceNetworkVPCAssociationConfig_base(rName), `
+resource "aws_vpclattice_service_network_vpc_association" "test" {
+  vpc_identifier             = aws_vpc.test.id
+  service_network_identifier = aws_vpclattice_service_network.test.id
+
+  private_dns_enabled = false
+}
+`)
 }
 
 func testAccServiceNetworkVPCAssociationConfig_privateDNSWithSpecifiedDomains(rName, privateDNSPreference string, privateDNSSpecifiedDomains []string) string {
