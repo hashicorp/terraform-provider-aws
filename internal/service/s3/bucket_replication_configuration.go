@@ -922,7 +922,7 @@ func expandReplicationRuleFilter(ctx context.Context, tfList []any) *types.Repli
 
 	if v, ok := tfMap["not"].([]any); ok && len(v) > 0 && v[0] != nil {
 		apiObject = &types.ReplicationRuleFilter{
-			Not: expandReplicationRuleNotOperator(ctx, v),
+			Not: expandReplicationRuleNotOperator(v),
 		}
 	}
 
@@ -959,7 +959,7 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []any) *types.
 	apiObject := &types.ReplicationRuleAndOperator{}
 
 	if v, ok := tfMap["not"].([]any); ok && len(v) > 0 && v[0] != nil {
-		apiObject.Not = expandReplicationRuleNotOperator(ctx, v)
+		apiObject.Not = expandReplicationRuleNotOperator(v)
 	}
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok && v != "" {
@@ -975,7 +975,7 @@ func expandReplicationRuleAndOperator(ctx context.Context, tfList []any) *types.
 	return apiObject
 }
 
-func expandReplicationRuleNotOperator(ctx context.Context, tfList []any) *types.ReplicationRuleNotOperator {
+func expandReplicationRuleNotOperator(tfList []any) *types.ReplicationRuleNotOperator {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1268,7 +1268,7 @@ func flattenReplicationRuleFilter(ctx context.Context, apiObject *types.Replicat
 	}
 
 	if v := apiObject.Not; v != nil {
-		tfMap["not"] = flattenReplicationRuleNotOperator(ctx, v)
+		tfMap["not"] = flattenReplicationRuleNotOperator(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
@@ -1290,7 +1290,7 @@ func flattenReplicationRuleAndOperator(ctx context.Context, apiObject *types.Rep
 	tfMap := make(map[string]any)
 
 	if v := apiObject.Not; v != nil {
-		tfMap["not"] = flattenReplicationRuleNotOperator(ctx, v)
+		tfMap["not"] = flattenReplicationRuleNotOperator(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
@@ -1304,7 +1304,7 @@ func flattenReplicationRuleAndOperator(ctx context.Context, apiObject *types.Rep
 	return []any{tfMap}
 }
 
-func flattenReplicationRuleNotOperator(ctx context.Context, apiObject *types.ReplicationRuleNotOperator) []any {
+func flattenReplicationRuleNotOperator(apiObject *types.ReplicationRuleNotOperator) []any {
 	if apiObject == nil {
 		return []any{}
 	}
