@@ -508,7 +508,7 @@ func waitReplicationTaskReady(ctx context.Context, conn *dms.Client, id string, 
 	return nil, err
 }
 
-func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) {
+func waitReplicationTaskRunning(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationTask, error) { //nolint:unparam
 	const (
 		timeout = 5 * time.Minute
 	)
