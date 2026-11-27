@@ -1988,6 +1988,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_sessionS
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2012,6 +2013,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_sessionS
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2308,6 +2310,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_s3FilesA
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs_access_point": knownvalue.ListSizeExact(0),
+							"s3_bucket_mount":  knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
 									"access_point_arn": knownvalue.NotNull(),
@@ -2369,6 +2372,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_efsAcces
 									"mount_path":       knownvalue.StringExact("/mnt/efsdata"),
 								}),
 							}),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage":       knownvalue.ListSizeExact(0),
 						}),
@@ -2420,6 +2424,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_multiple
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2434,6 +2439,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_multiple
 									"mount_path":       knownvalue.StringExact("/mnt/efsdata"),
 								}),
 							}),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage":       knownvalue.ListSizeExact(0),
 						}),
@@ -2502,6 +2508,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_addFiles
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
@@ -2556,6 +2563,7 @@ func TestAccBedrockAgentCoreHarness_Environment_FilesystemConfiguration_removeFi
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrEnvironment).AtSliceIndex(0).AtMapKey("agentcore_runtime_environment").AtSliceIndex(0).AtMapKey("filesystem_configuration"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"efs_access_point":      knownvalue.ListSizeExact(0),
+							"s3_bucket_mount":       knownvalue.ListSizeExact(0),
 							"s3_files_access_point": knownvalue.ListSizeExact(0),
 							"session_storage": knownvalue.ListExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{

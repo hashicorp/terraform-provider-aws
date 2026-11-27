@@ -575,6 +575,7 @@ func filesystemConfigurationBlock(ctx context.Context, extraValidators ...valida
 			Validators: []validator.Object{
 				tfobjectvalidator.ExactlyOneOfChildren(
 					path.MatchRelative().AtName("efs_access_point"),
+					path.MatchRelative().AtName("s3_bucket_mount"),
 					path.MatchRelative().AtName("s3_files_access_point"),
 					path.MatchRelative().AtName("session_storage"),
 				),
@@ -596,6 +597,44 @@ func filesystemConfigurationBlock(ctx context.Context, extraValidators ...valida
 								Validators: []validator.String{
 									stringvalidator.LengthBetween(6, 200),
 									lazystringvalidator.RegexMatches(`^/mnt/[a-zA-Z0-9._-]+/?$`, "must be under /mnt with exactly one subdirectory level"),
+								},
+							},
+						},
+					},
+				},
+				"s3_bucket_mount": schema.ListNestedBlock{
+					CustomType: fwtypes.NewListNestedObjectTypeOf[s3BucketMountConfigurationModel](ctx),
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					NestedObject: schema.NestedBlockObject{
+						Attributes: map[string]schema.Attribute{
+							names.AttrBucket: schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(3, 63),
+								},
+							},
+							"mount_path": schema.StringAttribute{
+								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(6, 200),
+									lazystringvalidator.RegexMatches(`^/mnt/[a-zA-Z0-9._-]+/?$`, "must be under /mnt with exactly one subdirectory level"),
+								},
+							},
+							names.AttrPrefix: schema.StringAttribute{
+								Optional: true,
+							},
+							"s3_bucket_owner": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									fwvalidators.AWSAccountID(),
+								},
+							},
+							"s3_bucket_region": schema.StringAttribute{
+								Optional: true,
+								Validators: []validator.String{
+									fwvalidators.AWSRegion(),
 								},
 							},
 						},
@@ -1064,8 +1103,17 @@ func (m agentRuntimeArtifactModel) Expand(ctx context.Context) (any, diag.Diagno
 
 type filesystemConfigurationModel struct {
 	EFSAccessPoint     fwtypes.ListNestedObjectValueOf[efsAccessPointConfigurationModel]     `tfsdk:"efs_access_point"`
+	S3BucketMount      fwtypes.ListNestedObjectValueOf[s3BucketMountConfigurationModel]      `tfsdk:"s3_bucket_mount"`
 	S3FilesAccessPoint fwtypes.ListNestedObjectValueOf[s3FilesAccessPointConfigurationModel] `tfsdk:"s3_files_access_point"`
 	SessionStorage     fwtypes.ListNestedObjectValueOf[sessionStorageConfigurationModel]     `tfsdk:"session_storage"`
+}
+
+type s3BucketMountConfigurationModel struct {
+	Bucket         types.String `tfsdk:"bucket"`
+	MountPath      types.String `tfsdk:"mount_path"`
+	Prefix         types.String `tfsdk:"prefix"`
+	S3BucketOwner  types.String `tfsdk:"s3_bucket_owner"`
+	S3BucketRegion types.String `tfsdk:"s3_bucket_region"`
 }
 
 type sessionStorageConfigurationModel struct {
@@ -1097,6 +1145,13 @@ func (m *filesystemConfigurationModel) Flatten(ctx context.Context, v any) diag.
 			return diags
 		}
 		m.SessionStorage = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
+	case awstypes.FilesystemConfigurationMemberS3BucketMount:
+		var data s3BucketMountConfigurationModel
+		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
+		if diags.HasError() {
+			return diags
+		}
+		m.S3BucketMount = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &data)
 	case awstypes.FilesystemConfigurationMemberS3FilesAccessPoint:
 		var data s3FilesAccessPointConfigurationModel
 		smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, t.Value, &data))
@@ -1131,6 +1186,18 @@ func (m filesystemConfigurationModel) Expand(ctx context.Context) (any, diag.Dia
 			return nil, diags
 		}
 		var r awstypes.FilesystemConfigurationMemberSessionStorage
+		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &r, diags
+	case !m.S3BucketMount.IsNull():
+		data, d := m.S3BucketMount.ToPtr(ctx)
+		smerr.AddEnrich(ctx, &diags, d)
+		if diags.HasError() {
+			return nil, diags
+		}
+		var r awstypes.FilesystemConfigurationMemberS3BucketMount
 		smerr.AddEnrich(ctx, &diags, fwflex.Expand(ctx, data, &r.Value))
 		if diags.HasError() {
 			return nil, diags

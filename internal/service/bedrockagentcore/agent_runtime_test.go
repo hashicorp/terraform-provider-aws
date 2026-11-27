@@ -16,6 +16,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -862,6 +863,70 @@ func TestAccBedrockAgentCoreAgentRuntime_filesystemSessionStorage(t *testing.T) 
 					statecheck.ExpectKnownValue(resourceName,
 						tfjsonpath.New("filesystem_configuration").AtSliceIndex(0).AtMapKey("session_storage").AtSliceIndex(0).AtMapKey("mount_path"),
 						knownvalue.StringExact("/mnt/data2")),
+				},
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentCoreAgentRuntime_filesystemS3BucketMount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var agentRuntime bedrockagentcorecontrol.GetAgentRuntimeOutput
+	rName := testAccRandomAgentRuntimeName(t)
+	rBucketName := strings.ReplaceAll(rName, "_", "-")
+	resourceName := "aws_bedrockagentcore_agent_runtime.test"
+	fsPath := tfjsonpath.New("filesystem_configuration").AtSliceIndex(0).AtMapKey("s3_bucket_mount").AtSliceIndex(0)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
+			testAccPreCheckAgentRuntimes(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentCoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentRuntimeDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentRuntimeConfig_filesystemS3BucketMount(rName, rBucketName, "/mnt/data", "sessions/{runtimeSessionId}/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey(names.AttrBucket), knownvalue.StringExact(rBucketName)),
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey("mount_path"), knownvalue.StringExact("/mnt/data")),
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey(names.AttrPrefix), knownvalue.StringExact("sessions/{runtimeSessionId}/")),
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey("s3_bucket_owner"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey("s3_bucket_region"), knownvalue.Null()),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "agent_runtime_id"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "agent_runtime_id",
+			},
+			{
+				Config: testAccAgentRuntimeConfig_filesystemS3BucketMountFull(rName, rBucketName, "/mnt/data2", "other/{runtimeSessionId}/"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentRuntimeExists(ctx, t, resourceName, &agentRuntime),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey("mount_path"), knownvalue.StringExact("/mnt/data2")),
+					statecheck.ExpectKnownValue(resourceName, fsPath.AtMapKey(names.AttrPrefix), knownvalue.StringExact("other/{runtimeSessionId}/")),
+					statecheck.CompareValuePairs(resourceName, fsPath.AtMapKey("s3_bucket_owner"), "data.aws_caller_identity.current", tfjsonpath.New(names.AttrAccountID), compare.ValuesSame()),
+					statecheck.CompareValuePairs(resourceName, fsPath.AtMapKey("s3_bucket_region"), "data.aws_region.current", tfjsonpath.New(names.AttrRegion), compare.ValuesSame()),
 				},
 			},
 		},
@@ -2102,6 +2167,92 @@ resource "aws_bedrockagentcore_agent_runtime" "test" {
   }
 }
 `, rName, mountPath))
+}
+
+func testAccAgentRuntimeConfig_filesystemS3BucketMount(rName, rBucketName, mountPath, prefix string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  platform_version   = "V2"
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  filesystem_configuration {
+    s3_bucket_mount {
+      bucket     = aws_s3_bucket.test.bucket
+      mount_path = %[2]q
+      prefix     = %[3]q
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.bucket]
+}
+`, rName, mountPath, prefix))
+}
+
+func testAccAgentRuntimeConfig_filesystemS3BucketMountFull(rName, rBucketName, mountPath, prefix string) string {
+	return acctest.ConfigCompose(
+		testAccAgentRuntimeConfig_baseIAMRole(rName),
+		testAccAgentRuntimeConfig_baseS3Bucket(rBucketName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_bedrockagentcore_agent_runtime" "test" {
+  agent_runtime_name = %[1]q
+  role_arn           = aws_iam_role.test.arn
+  platform_version   = "V2"
+
+  agent_runtime_artifact {
+    code_configuration {
+      entry_point = ["main.py"]
+      runtime     = "PYTHON_3_13"
+      code {
+        s3 {
+          bucket = aws_s3_bucket.test.bucket
+          prefix = aws_s3_object.test.key
+        }
+      }
+    }
+  }
+
+  network_configuration {
+    network_mode = "PUBLIC"
+  }
+
+  filesystem_configuration {
+    s3_bucket_mount {
+      bucket           = aws_s3_bucket.test.bucket
+      mount_path       = %[2]q
+      prefix           = %[3]q
+      s3_bucket_owner  = data.aws_caller_identity.current.account_id
+      s3_bucket_region = data.aws_region.current.region
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.bucket]
+}
+`, rName, mountPath, prefix))
 }
 
 func testAccAgentRuntimeConfig_authorizerPrivateEndpointOverrides(rName, rBucketName string) string {
