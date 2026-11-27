@@ -7,6 +7,7 @@ package fsx
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fsx/types"
@@ -216,7 +217,7 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set(names.AttrStorageType, filesystem.StorageType)
 	d.Set(names.AttrSubnetIDs, filesystem.SubnetIds)
-	if ontapConfig.DeploymentType == awstypes.OntapDeploymentTypeSingleAz2 {
+	if deploymentType := ontapConfig.DeploymentType; strings.HasPrefix(string(deploymentType), "SINGLE_AZ_") && deploymentType != awstypes.OntapDeploymentTypeSingleAz1 {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
