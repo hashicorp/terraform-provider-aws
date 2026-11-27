@@ -1,0 +1,5 @@
+kind: enhancement
+time: 2026-11-27T13:26:28.677406+01:00
+custom:
+    Body: Expose the active certificate authority under `certificate_authority`
+    Impact: resource/aws_eks_cluster

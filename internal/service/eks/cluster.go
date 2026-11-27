@@ -125,6 +125,22 @@ func resourceCluster() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"active": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"activated_by": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										names.AttrID: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 							"data": {
 								Type:     schema.TypeString,
 								Computed: true,
@@ -1161,7 +1177,7 @@ func resourceClusterFlatten(ctx context.Context, cluster *types.Cluster, d *sche
 	}
 	d.Set(names.AttrARN, cluster.Arn)
 	d.Set("bootstrap_self_managed_addons", d.Get("bootstrap_self_managed_addons"))
-	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
+	if err := d.Set("certificate_authority", flattenClusterCertificate(cluster.CertificateAuthority)); err != nil {
 		return fmt.Errorf("setting certificate_authority: %w", err)
 	}
 	// cluster_id is only relevant for clusters on Outposts.
@@ -2118,6 +2134,24 @@ func flattenCertificate(apiObject *types.Certificate) []map[string]any {
 	}
 
 	return []map[string]any{tfMap}
+}
+
+func flattenClusterCertificate(apiObject *types.Certificate) []map[string]any {
+	certificate := flattenCertificate(apiObject)
+	if apiObject == nil {
+		return certificate
+	}
+
+	var active []map[string]any
+	if a := apiObject.Active; a != nil {
+		active = []map[string]any{{
+			"activated_by": string(a.ActivatedBy),
+			names.AttrID:   aws.ToString(a.Id),
+		}}
+	}
+	certificate[0]["active"] = active
+
+	return certificate
 }
 
 func flattenComputeConfigResponse(apiObject *types.ComputeConfigResponse) []map[string]any {
