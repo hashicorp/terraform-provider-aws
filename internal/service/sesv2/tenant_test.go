@@ -6,9 +6,11 @@ package sesv2_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -92,6 +94,76 @@ func TestAccSESV2Tenant_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSESV2Tenant_reputationEntityPolicyDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_sesv2_tenant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// No reputation_entity_policy configured: AWS applies a default
+				// policy. Creation must succeed (not call UpdateReputationEntityPolicy
+				// with an unknown value) and the attribute must compute to that default.
+				Config: testAccTenantConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantExists(ctx, t, resourceName),
+					testAccCheckTenantReputationEntityPolicy(ctx, t, resourceName, "reputation-policy/standard"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reputation_entity_policy"), knownvalue.StringRegexp(regexache.MustCompile(`:ses:[a-z0-9-]+:aws:reputation-policy/standard$`))),
+				},
+			},
+		},
+	})
+}
+
+func TestAccSESV2Tenant_reputationEntityPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, "tf-acc-test")
+	resourceName := "aws_sesv2_tenant.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTenantDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTenantConfig_reputationEntityPolicy(rName, "standard"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantExists(ctx, t, resourceName),
+					testAccCheckTenantReputationEntityPolicy(ctx, t, resourceName, "reputation-policy/standard"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reputation_entity_policy"), knownvalue.StringRegexp(regexache.MustCompile(`:ses:[a-z0-9-]+:aws:reputation-policy/standard$`))),
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "tenant_name"),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "tenant_name",
+			},
+			{
+				Config: testAccTenantConfig_reputationEntityPolicy(rName, "strict"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTenantExists(ctx, t, resourceName),
+					testAccCheckTenantReputationEntityPolicy(ctx, t, resourceName, "reputation-policy/strict"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("reputation_entity_policy"), knownvalue.StringRegexp(regexache.MustCompile(`:ses:[a-z0-9-]+:aws:reputation-policy/strict$`))),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckTenantDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
@@ -133,10 +205,49 @@ func testAccCheckTenantExists(ctx context.Context, t *testing.T, n string) resou
 	}
 }
 
+// testAccCheckTenantReputationEntityPolicy verifies that the reputation entity
+// policy applied to the tenant (read via the reputation entity API) ends with
+// the expected managed policy suffix, e.g. "reputation-policy/standard".
+func testAccCheckTenantReputationEntityPolicy(ctx context.Context, t *testing.T, n, wantSuffix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.ProviderMeta(ctx, t).SESV2Client(ctx)
+
+		policy, err := tfsesv2.FindReputationEntityPolicyByReference(ctx, conn, rs.Primary.Attributes["tenant_arn"])
+		if err != nil {
+			return err
+		}
+
+		if got := aws.ToString(policy); !strings.HasSuffix(got, wantSuffix) {
+			return fmt.Errorf("reputation entity policy = %q, want suffix %q", got, wantSuffix)
+		}
+
+		return nil
+	}
+}
+
 func testAccTenantConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sesv2_tenant" "test" {
   tenant_name = %[1]q
 }
 `, rName)
+}
+
+func testAccTenantConfig_reputationEntityPolicy(rName, policy string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_sesv2_tenant" "test" {
+  tenant_name = %[1]q
+
+  reputation_entity_policy = "arn:${data.aws_partition.current.partition}:ses:${data.aws_region.current.region}:aws:reputation-policy/%[2]s"
+}
+`, rName, policy)
 }
