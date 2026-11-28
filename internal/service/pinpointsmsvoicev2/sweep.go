@@ -23,10 +23,7 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_pinpointsmsvoicev2_notify_configuration", &resource.Sweeper{
-		Name: "aws_pinpointsmsvoicev2_notify_configuration",
-		F:    sweepNotifyConfigurations,
-	})
+	awsv2.Register("aws_pinpointsmsvoicev2_notify_configuration", sweepNotifyConfigurations)
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_phone_number", &resource.Sweeper{
 		Name:         "aws_pinpointsmsvoicev2_phone_number",
 		F:            sweepPhoneNumbers,
@@ -294,47 +291,25 @@ func (s protectConfigurationSweeper) Delete(ctx context.Context, optFns ...tfres
 	return s.sweepable.Delete(ctx, optFns...)
 }
 
-func sweepNotifyConfigurations(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %w", err)
-	}
-	input := &pinpointsmsvoicev2.DescribeNotifyConfigurationsInput{}
+func sweepNotifyConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input pinpointsmsvoicev2.DescribeNotifyConfigurationsInput
 	conn := client.PinpointSMSVoiceV2Client(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
+	var sweepResources []sweep.Sweepable
 
-	pages := pinpointsmsvoicev2.NewDescribeNotifyConfigurationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping End User Messaging SMS Notify Configuration sweep for %s: %s", region, err)
-			return nil
-		}
-
+	for v, err := range listNotifyConfigurations(ctx, conn, &input) {
 		if err != nil {
-			return fmt.Errorf("error listing End User Messaging SMS Notify Configurations (%s): %w", region, err)
+			return nil, err
 		}
 
-		for _, v := range page.NotifyConfigurations {
-			id := aws.ToString(v.NotifyConfigurationId)
-
-			if v.DeletionProtectionEnabled {
-				log.Printf("[INFO] Skipping End User Messaging SMS Notify Configuration %s: DeletionProtectionEnabled=true", id)
-				continue
-			}
-
-			sweepResources = append(sweepResources, framework.NewSweepResource(newNotifyConfigurationResource, client,
-				framework.NewAttribute(names.AttrID, id)))
+		id := aws.ToString(v.NotifyConfigurationId)
+		if v.DeletionProtectionEnabled {
+			log.Printf("[INFO] Skipping End User Messaging SMS Notify Configuration %s: DeletionProtectionEnabled=true", id)
+			continue
 		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newNotifyConfigurationResource, client,
+			framework.NewAttribute(names.AttrID, id)))
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping End User Messaging SMS Notify Configurations (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }

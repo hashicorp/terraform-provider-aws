@@ -46,7 +46,7 @@ The following arguments are required:
 
 * `display_name` - (Required, Forces new resource) Display name representing your brand (1–15 characters).
 * `enabled_channels` - (Required) Communication channels enabled for this config. Valid values: `SMS`, `VOICE`, `MMS`, `RCS`.
-* `use_case` - (Required, Forces new resource) Use case for the notify configuration (e.g., `CODE_VERIFICATION`).
+* `use_case` - (Required, Forces new resource) Use case for the notify configuration. Valid values: `CODE_VERIFICATION`.
 
 The following arguments are optional:
 
@@ -55,7 +55,7 @@ The following arguments are optional:
 * `enabled_countries` - (Optional) Set of two-letter ISO 3166-1 alpha-2 country codes where messaging is enabled (e.g. `["US", "AU"]`). If not specified, defaults to the AWS default country list.
 * `pool_id` - (Optional) ID or ARN of phone number pool to associate.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
-* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags assigned to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 

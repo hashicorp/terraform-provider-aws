@@ -166,12 +166,13 @@ func TestAccPinpointSMSVoiceV2NotifyConfiguration_disappears(t *testing.T) {
 
 func testAccCheckNotifyConfigurationDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_pinpointsmsvoicev2_notify_configuration" {
 				continue
 			}
+
+			ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
+			conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 			_, err := tfpinpointsmsvoicev2.FindNotifyConfigurationByID(ctx, conn, rs.Primary.ID)
 			if retry.NotFound(err) {
@@ -199,6 +200,7 @@ func testAccCheckNotifyConfigurationExists(ctx context.Context, t *testing.T, n 
 			return fmt.Errorf("No End User Messaging SMS Notify Configuration ID is set")
 		}
 
+		ctx := acctest.NewTestResourceContext(ctx, rs.Type, rs.Primary.Attributes[names.AttrRegion])
 		conn := acctest.ProviderMeta(ctx, t).PinpointSMSVoiceV2Client(ctx)
 
 		output, err := tfpinpointsmsvoicev2.FindNotifyConfigurationByID(ctx, conn, rs.Primary.ID)

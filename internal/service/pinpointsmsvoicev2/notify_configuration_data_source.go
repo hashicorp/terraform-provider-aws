@@ -6,13 +6,12 @@ package pinpointsmsvoicev2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -90,7 +89,7 @@ func (d *notifyConfigurationDataSource) Read(ctx context.Context, req datasource
 	}
 
 	conn := d.Meta().PinpointSMSVoiceV2Client(ctx)
-	id := data.ID.ValueString()
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
 
 	out, err := findNotifyConfigurationByID(ctx, conn, id)
 	if err != nil {
@@ -98,7 +97,10 @@ func (d *notifyConfigurationDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	data.flatten(ctx, out)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, data.flatten(ctx, out), smerr.ID, id)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tags, err := listTags(ctx, conn, data.ARN.ValueString())
 	if err != nil {
@@ -125,24 +127,14 @@ type notifyConfigurationDataSourceModel struct {
 	UseCase                   types.String        `tfsdk:"use_case"`
 }
 
-func (m *notifyConfigurationDataSourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) {
+func (m *notifyConfigurationDataSourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if info == nil {
-		return
+		return diags
 	}
 
-	m.ID = types.StringValue(aws.ToString(info.NotifyConfigurationId))
-	m.ARN = types.StringValue(aws.ToString(info.NotifyConfigurationArn))
-	m.DisplayName = types.StringValue(aws.ToString(info.DisplayName))
-	m.UseCase = types.StringValue(string(info.UseCase))
-	m.EnabledChannels = fwtypes.SetValueOf[basetypes.StringValue]{SetValue: fwflex.FlattenFrameworkStringValueSet(ctx, info.EnabledChannels)}
-	m.EnabledCountries = fwflex.FlattenFrameworkStringValueSetOfString(ctx, info.EnabledCountries)
-	m.DefaultTemplateID = fwflex.StringToFramework(ctx, info.DefaultTemplateId)
-	m.PoolID = fwflex.StringToFramework(ctx, info.PoolId)
-	m.DeletionProtectionEnabled = types.BoolValue(info.DeletionProtectionEnabled)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, info, m, fwflex.WithFieldNamePrefix("NotifyConfiguration")))
 
-	if info.CreatedTimestamp != nil {
-		m.CreatedTimestamp = timetypes.NewRFC3339TimeValue(*info.CreatedTimestamp)
-	} else {
-		m.CreatedTimestamp = timetypes.NewRFC3339Null()
-	}
+	return diags
 }

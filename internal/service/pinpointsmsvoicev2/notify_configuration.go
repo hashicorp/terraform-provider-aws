@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -24,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -97,8 +98,9 @@ func (r *notifyConfigurationResource) Schema(ctx context.Context, req resource.S
 				Required:    true,
 				Validators: []validator.Set{
 					setvalidator.SizeBetween(1, 4),
+					setvalidator.NoNullValues(),
 					setvalidator.ValueStringsAre(
-						stringvalidator.OneOf("SMS", "VOICE", "MMS", "RCS"),
+						enum.FrameworkValidate[awstypes.NumberCapability](),
 					),
 				},
 			},
@@ -112,6 +114,7 @@ func (r *notifyConfigurationResource) Schema(ctx context.Context, req resource.S
 					setplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.Set{
+					setvalidator.NoNullValues(),
 					setvalidator.ValueStringsAre(
 						lazystringvalidator.RegexMatches(`^[A-Z]{2}$`, "must be in ISO 3166-1 alpha-2 format"),
 					),
@@ -130,6 +133,9 @@ func (r *notifyConfigurationResource) Schema(ctx context.Context, req resource.S
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.NotifyConfigurationUseCase](),
+				},
 			},
 		},
 	}
@@ -144,50 +150,25 @@ func (r *notifyConfigurationResource) Create(ctx context.Context, req resource.C
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	input := pinpointsmsvoicev2.CreateNotifyConfigurationInput{
-		ClientToken:     aws.String(create.UniqueId(ctx)),
-		DisplayName:     plan.DisplayName.ValueStringPointer(),
-		UseCase:         awstypes.NotifyConfigurationUseCase(plan.UseCase.ValueString()),
-		EnabledChannels: fwflex.ExpandFrameworkStringyValueSet[awstypes.NumberCapability](ctx, plan.EnabledChannels),
-		Tags:            getTagsIn(ctx),
+	var input pinpointsmsvoicev2.CreateNotifyConfigurationInput
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Expand(ctx, plan, &input))
+	if resp.Diagnostics.HasError() {
+		return
 	}
-
-	if !plan.EnabledCountries.IsNull() && !plan.EnabledCountries.IsUnknown() {
-		input.EnabledCountries = fwflex.ExpandFrameworkStringValueSet(ctx, plan.EnabledCountries)
-	}
-
-	if !plan.DefaultTemplateID.IsNull() && !plan.DefaultTemplateID.IsUnknown() {
-		input.DefaultTemplateId = plan.DefaultTemplateID.ValueStringPointer()
-	}
-
-	if !plan.PoolID.IsNull() && !plan.PoolID.IsUnknown() {
-		input.PoolId = plan.PoolID.ValueStringPointer()
-	}
-
-	if !plan.DeletionProtectionEnabled.IsNull() && !plan.DeletionProtectionEnabled.IsUnknown() {
-		input.DeletionProtectionEnabled = plan.DeletionProtectionEnabled.ValueBoolPointer()
-	}
+	input.ClientToken = aws.String(create.UniqueId(ctx))
+	input.Tags = getTagsIn(ctx)
 
 	out, err := conn.CreateNotifyConfiguration(ctx, &input)
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DisplayName.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, plan.DisplayName.String())
 		return
 	}
 
 	id := aws.ToString(out.NotifyConfigurationId)
-	plan.ID = types.StringValue(id)
-	plan.ARN = types.StringValue(aws.ToString(out.NotifyConfigurationArn))
-	if out.CreatedTimestamp != nil {
-		plan.CreatedTimestamp = timetypes.NewRFC3339TimeValue(*out.CreatedTimestamp)
-	}
-
-	info, err := findNotifyConfigurationByID(ctx, conn, id)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("NotifyConfiguration")), smerr.ID, id)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	plan.flatten(ctx, info)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -201,19 +182,22 @@ func (r *notifyConfigurationResource) Read(ctx context.Context, req resource.Rea
 
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
-	out, err := findNotifyConfigurationByID(ctx, conn, data.ID.ValueString())
+	id := fwflex.StringValueFromFramework(ctx, data.ID)
+	out, err := findNotifyConfigurationByID(ctx, conn, id)
 	if retry.NotFound(err) {
-		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		smerr.AddOne(ctx, &resp.Diagnostics, fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
-
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, data.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 
-	data.flatten(ctx, out)
+	smerr.AddEnrich(ctx, &resp.Diagnostics, data.flatten(ctx, out), smerr.ID, id)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &data))
 }
@@ -228,7 +212,7 @@ func (r *notifyConfigurationResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	id := state.ID.ValueString()
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
 	var hasChange bool
 	input := &pinpointsmsvoicev2.UpdateNotifyConfigurationInput{
 		NotifyConfigurationId: aws.String(id),
@@ -246,7 +230,7 @@ func (r *notifyConfigurationResource) Update(ctx context.Context, req resource.U
 
 	if !plan.DeletionProtectionEnabled.Equal(state.DeletionProtectionEnabled) {
 		hasChange = true
-		input.DeletionProtectionEnabled = plan.DeletionProtectionEnabled.ValueBoolPointer()
+		input.DeletionProtectionEnabled = fwflex.BoolFromFramework(ctx, plan.DeletionProtectionEnabled)
 	}
 
 	if !plan.DefaultTemplateID.Equal(state.DefaultTemplateID) {
@@ -254,7 +238,7 @@ func (r *notifyConfigurationResource) Update(ctx context.Context, req resource.U
 		if plan.DefaultTemplateID.IsNull() {
 			input.DefaultTemplateId = aws.String("UNSET_DEFAULT_TEMPLATE")
 		} else {
-			input.DefaultTemplateId = plan.DefaultTemplateID.ValueStringPointer()
+			input.DefaultTemplateId = fwflex.StringFromFramework(ctx, plan.DefaultTemplateID)
 		}
 	}
 
@@ -263,25 +247,22 @@ func (r *notifyConfigurationResource) Update(ctx context.Context, req resource.U
 		if plan.PoolID.IsNull() {
 			input.PoolId = aws.String("UNSET_DEFAULT_POOL_FOR_NOTIFY")
 		} else {
-			input.PoolId = plan.PoolID.ValueStringPointer()
+			input.PoolId = fwflex.StringFromFramework(ctx, plan.PoolID)
 		}
 	}
 
 	if hasChange {
-		_, err := conn.UpdateNotifyConfiguration(ctx, input)
+		out, err := conn.UpdateNotifyConfiguration(ctx, input)
 		if err != nil {
 			smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 			return
 		}
-	}
 
-	out, err := findNotifyConfigurationByID(ctx, conn, id)
-	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
-		return
+		smerr.AddEnrich(ctx, &resp.Diagnostics, fwflex.Flatten(ctx, out, &plan, fwflex.WithFieldNamePrefix("NotifyConfiguration")), smerr.ID, id)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
-
-	plan.flatten(ctx, out)
 
 	smerr.AddEnrich(ctx, &resp.Diagnostics, resp.State.Set(ctx, &plan))
 }
@@ -293,10 +274,11 @@ func (r *notifyConfigurationResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
+	id := fwflex.StringValueFromFramework(ctx, state.ID)
 	if state.DeletionProtectionEnabled.ValueBool() {
 		resp.Diagnostics.AddError(
 			"cannot delete End User Messaging SMS Notify Configuration with deletion_protection_enabled = true",
-			fmt.Sprintf("To delete Notify Configuration (%s), deletion_protection_enabled must first be set to false and applied.", state.ID.ValueString()),
+			fmt.Sprintf("To delete Notify Configuration (%s), deletion_protection_enabled must first be set to false and applied.", id),
 		)
 		return
 	}
@@ -304,13 +286,13 @@ func (r *notifyConfigurationResource) Delete(ctx context.Context, req resource.D
 	conn := r.Meta().PinpointSMSVoiceV2Client(ctx)
 
 	_, err := conn.DeleteNotifyConfiguration(ctx, &pinpointsmsvoicev2.DeleteNotifyConfigurationInput{
-		NotifyConfigurationId: state.ID.ValueStringPointer(),
+		NotifyConfigurationId: aws.String(id),
 	})
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 	if err != nil {
-		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, state.ID.ValueString())
+		smerr.AddError(ctx, &resp.Diagnostics, err, smerr.ID, id)
 		return
 	}
 }
@@ -331,26 +313,16 @@ type notifyConfigurationResourceModel struct {
 	UseCase                   types.String        `tfsdk:"use_case"`
 }
 
-func (m *notifyConfigurationResourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) {
+func (m *notifyConfigurationResourceModel) flatten(ctx context.Context, info *awstypes.NotifyConfigurationInformation) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	if info == nil {
-		return
+		return diags
 	}
 
-	m.ID = types.StringValue(aws.ToString(info.NotifyConfigurationId))
-	m.ARN = types.StringValue(aws.ToString(info.NotifyConfigurationArn))
-	m.DisplayName = types.StringValue(aws.ToString(info.DisplayName))
-	m.UseCase = types.StringValue(string(info.UseCase))
-	m.EnabledChannels = fwtypes.SetValueOf[basetypes.StringValue]{SetValue: fwflex.FlattenFrameworkStringValueSet(ctx, info.EnabledChannels)}
-	m.EnabledCountries = fwflex.FlattenFrameworkStringValueSetOfString(ctx, info.EnabledCountries)
-	m.DefaultTemplateID = fwflex.StringToFramework(ctx, info.DefaultTemplateId)
-	m.PoolID = fwflex.StringToFramework(ctx, info.PoolId)
-	m.DeletionProtectionEnabled = types.BoolValue(info.DeletionProtectionEnabled)
+	smerr.AddEnrich(ctx, &diags, fwflex.Flatten(ctx, info, m, fwflex.WithFieldNamePrefix("NotifyConfiguration")))
 
-	if info.CreatedTimestamp != nil {
-		m.CreatedTimestamp = timetypes.NewRFC3339TimeValue(*info.CreatedTimestamp)
-	} else {
-		m.CreatedTimestamp = timetypes.NewRFC3339Null()
-	}
+	return diags
 }
 
 func findNotifyConfigurationByID(ctx context.Context, conn *pinpointsmsvoicev2.Client, id string) (*awstypes.NotifyConfigurationInformation, error) {
@@ -361,40 +333,27 @@ func findNotifyConfigurationByID(ctx context.Context, conn *pinpointsmsvoicev2.C
 		}
 	}
 
-	input := &pinpointsmsvoicev2.DescribeNotifyConfigurationsInput{
+	input := pinpointsmsvoicev2.DescribeNotifyConfigurationsInput{
 		NotifyConfigurationIds: []string{id},
 	}
 
-	return findNotifyConfiguration(ctx, conn, input)
+	return findNotifyConfiguration(ctx, conn, &input)
 }
 
 func findNotifyConfiguration(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeNotifyConfigurationsInput) (*awstypes.NotifyConfigurationInformation, error) {
-	output, err := findNotifyConfigurations(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
-}
-
-func findNotifyConfigurations(ctx context.Context, conn *pinpointsmsvoicev2.Client, input *pinpointsmsvoicev2.DescribeNotifyConfigurationsInput) ([]awstypes.NotifyConfigurationInformation, error) {
 	var output []awstypes.NotifyConfigurationInformation
-
-	pages := pinpointsmsvoicev2.NewDescribeNotifyConfigurationsPaginator(conn, input)
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+	for v, err := range listNotifyConfigurations(ctx, conn, input) {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
+			return nil, smarterr.NewError(&retry.NotFoundError{
 				LastError: err,
-			}
+			})
 		}
-
 		if err != nil {
 			return nil, smarterr.NewError(err)
 		}
 
-		output = append(output, page.NotifyConfigurations...)
+		output = append(output, v)
 	}
 
-	return output, nil
+	return smarterr.Assert(tfresource.AssertSingleValueResult(output))
 }
