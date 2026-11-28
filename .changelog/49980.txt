@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudtrail_event_data_store: Setting `kms_key_id` no longer forces a replacement
+```
