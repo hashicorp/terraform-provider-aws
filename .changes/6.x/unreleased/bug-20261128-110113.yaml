@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-28T11:01:13.186031+07:00
+custom:
+    Body: Update staging area tags when changed
+    Impact: resource/aws_drs_replication_configuration_template
+    PullRequest: "51403"

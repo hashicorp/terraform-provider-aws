@@ -6,6 +6,7 @@ package drs_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -91,6 +92,19 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: strings.Replace(
+					testAccReplicationConfigurationTemplateConfig_basic(rName),
+					"Name = "+fmt.Sprintf("%q", rName),
+					"Name = "+fmt.Sprintf("%q", rName)+"\n    Test2 = \"2\"",
+					1,
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigurationTemplateExists(ctx, t, resourceName, &rct),
+					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "staging_area_tags.Test2", "2"),
+				),
 			},
 		},
 	})

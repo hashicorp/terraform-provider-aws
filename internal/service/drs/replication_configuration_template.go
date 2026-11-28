@@ -448,5 +448,6 @@ func replicationConfigurationTemplateHasChanges(_ context.Context, plan, state r
 		!plan.ReplicationServerInstanceType.Equal(state.ReplicationServerInstanceType) ||
 		!plan.ReplicationServersSecurityGroupsIDs.Equal(state.ReplicationServersSecurityGroupsIDs) ||
 		!plan.StagingAreaSubnetID.Equal(state.StagingAreaSubnetID) ||
+		!plan.StagingAreaTags.Equal(state.StagingAreaTags) ||
 		!plan.UseDedicatedReplicationServer.Equal(state.UseDedicatedReplicationServer)
 }
