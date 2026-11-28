@@ -1,0 +1,6 @@
+kind: bug
+time: 2026-11-24T09:55:15.236017-07:00
+custom:
+  Body: Fix `snapshot_delivery_properties` drift not being detected when removed outside of Terraform
+  Impact: resource/aws_config_delivery_channel
+  PullRequest: "50717"
