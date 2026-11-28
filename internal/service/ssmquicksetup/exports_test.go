@@ -7,5 +7,6 @@ package ssmquicksetup
 var (
 	ResourceConfigurationManager = newConfigurationManagerResource
 
-	FindConfigurationManagerByID = findConfigurationManagerByID
+	FindConfigurationManagerByID    = findConfigurationManagerByID
+	WaitConfigurationManagerCreated = waitConfigurationManagerCreated
 )

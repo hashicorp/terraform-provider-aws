@@ -155,6 +155,10 @@ func (r *configurationManagerResource) Create(ctx context.Context, request resou
 	arn := aws.ToString(outputCCM.ManagerArn)
 	data.ManagerARN = fwflex.StringValueToFramework(ctx, arn)
 
+	// Set 'manager_arn' and 'region' so as to taint the resource if the wait fails.
+	response.State.SetAttribute(ctx, path.Root("manager_arn"), data.ManagerARN)
+	response.State.SetAttribute(ctx, path.Root(names.AttrRegion), data.Region)
+
 	outputGCM, err := waitConfigurationManagerCreated(ctx, conn, arn, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
