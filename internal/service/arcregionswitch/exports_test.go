@@ -16,4 +16,8 @@ type (
 
 	RDSSwitchoverReadReplicaConfigModel = rdsSwitchoverReadReplicaConfigModel
 	RDSSwitchoverUngracefulModel        = rdsSwitchoverUngracefulModel
+	SSMRegionDocumentModel              = ssmRegionDocumentModel
+	SSMSendCommandConfigModel           = ssmSendCommandConfigModel
+	SSMSendCommandUngracefulModel       = ssmSendCommandUngracefulModel
+	SSMTargetModel                      = ssmTargetModel
 )

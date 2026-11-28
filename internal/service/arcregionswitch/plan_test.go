@@ -195,6 +195,259 @@ func TestStepModelsFlattenRDSSwitchoverReadReplicaConfig(t *testing.T) {
 	}
 }
 
+func TestStepModelsExpandSSMSendCommandConfig(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	config := tfarcregionswitch.SSMSendCommandConfigModel{
+		RegionDocuments: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []tfarcregionswitch.SSMRegionDocumentModel{
+			{
+				CrossAccountRole: types.StringValue("arn:aws:iam::123456789012:role/test"),
+				DocumentARN:      types.StringValue("arn:aws:ssm:us-east-1:123456789012:document/runbook"),
+				DocumentVersion:  types.StringValue("2"),
+				ExternalID:       types.StringValue("external-id"),
+				Parameters: fwtypes.NewMapValueOfMust[fwtypes.ListValueOf[types.String]](ctx, map[string]attr.Value{
+					"commands": fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("echo hello")}),
+				}),
+				Region: types.StringValue("us-east-1"),
+				Targets: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfarcregionswitch.SSMTargetModel{
+					{
+						Key:    types.StringValue("InstanceIds"),
+						Values: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("i-1234567890abcdef0")}),
+					},
+				}),
+			},
+			{
+				CrossAccountRole: types.StringNull(),
+				DocumentARN:      types.StringValue("arn:aws:ssm:us-west-2:123456789012:document/runbook"),
+				DocumentVersion:  types.StringNull(),
+				ExternalID:       types.StringNull(),
+				Parameters:       fwtypes.NewMapValueOfNull[fwtypes.ListValueOf[types.String]](ctx),
+				Region:           types.StringValue("us-west-2"),
+				Targets: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tfarcregionswitch.SSMTargetModel{
+					{
+						Key:    types.StringValue("tag:Environment"),
+						Values: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("production")}),
+					},
+				}),
+			},
+		}),
+		RetryIntervalMinutes: types.Float32Value(5),
+		TimeoutMinutes:       types.Int32Value(30),
+		Ungraceful: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tfarcregionswitch.SSMSendCommandUngracefulModel{
+			Behavior: fwtypes.StringEnumValue(awstypes.SsmSendCommandUngracefulBehaviorSkip),
+		}),
+	}
+
+	want := awstypes.SsmSendCommandConfiguration{
+		RegionDocuments: map[string]awstypes.SsmDocumentConfig{
+			"us-east-1": {
+				CrossAccountRole: aws.String("arn:aws:iam::123456789012:role/test"),
+				DocumentArn:      aws.String("arn:aws:ssm:us-east-1:123456789012:document/runbook"),
+				DocumentVersion:  aws.String("2"),
+				ExternalId:       aws.String("external-id"),
+				Parameters: map[string][]string{
+					"commands": {"echo hello"},
+				},
+				Targets: []awstypes.SsmTarget{
+					{
+						Key:    aws.String("InstanceIds"),
+						Values: []string{"i-1234567890abcdef0"},
+					},
+				},
+			},
+			"us-west-2": {
+				DocumentArn: aws.String("arn:aws:ssm:us-west-2:123456789012:document/runbook"),
+				Targets: []awstypes.SsmTarget{
+					{
+						Key:    aws.String("tag:Environment"),
+						Values: []string{"production"},
+					},
+				},
+			},
+		},
+		RetryIntervalMinutes: aws.Float32(5),
+		TimeoutMinutes:       aws.Int32(30),
+		Ungraceful: &awstypes.SsmSendCommandUngraceful{
+			Behavior: awstypes.SsmSendCommandUngracefulBehaviorSkip,
+		},
+	}
+
+	configValue := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &config)
+
+	testCases := map[string]flex.Expander{
+		"parallel step": tfarcregionswitch.ParallelStepModel{
+			Name:                 types.StringValue("test"),
+			ExecutionBlockType:   fwtypes.StringEnumValue(awstypes.ExecutionBlockTypeSsmSendCommand),
+			SsmSendCommandConfig: configValue,
+		},
+		"step": tfarcregionswitch.StepModel{
+			Name:                 types.StringValue("test"),
+			ExecutionBlockType:   fwtypes.StringEnumValue(awstypes.ExecutionBlockTypeSsmSendCommand),
+			SsmSendCommandConfig: configValue,
+		},
+	}
+
+	for name, expander := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			output, diags := expander.Expand(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+
+			step, ok := output.(*awstypes.Step)
+			if !ok {
+				t.Fatalf("Expand returned %T, want *awstypes.Step", output)
+			}
+
+			member, ok := step.ExecutionBlockConfiguration.(*awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig)
+			if !ok {
+				t.Fatalf("ExecutionBlockConfiguration is %T, want %T", step.ExecutionBlockConfiguration,
+					&awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig{})
+			}
+
+			if diff := cmp.Diff(member.Value, want, cmpopts.IgnoreUnexported(
+				awstypes.SsmSendCommandConfiguration{},
+				awstypes.SsmDocumentConfig{},
+				awstypes.SsmTarget{},
+				awstypes.SsmSendCommandUngraceful{},
+			)); diff != "" {
+				t.Errorf("unexpected diff (-got, +want): %s", diff)
+			}
+		})
+	}
+}
+
+func TestStepModelsFlattenSSMSendCommandConfig(t *testing.T) {
+	t.Parallel()
+
+	ctx := t.Context()
+
+	step := awstypes.Step{
+		Name:               aws.String("test"),
+		ExecutionBlockType: awstypes.ExecutionBlockTypeSsmSendCommand,
+		ExecutionBlockConfiguration: &awstypes.ExecutionBlockConfigurationMemberSsmSendCommandConfig{
+			Value: awstypes.SsmSendCommandConfiguration{
+				RegionDocuments: map[string]awstypes.SsmDocumentConfig{
+					"us-east-1": {
+						DocumentArn: aws.String("arn:aws:ssm:us-east-1:123456789012:document/runbook"),
+						Parameters: map[string][]string{
+							"commands": {"echo hello"},
+						},
+						Targets: []awstypes.SsmTarget{
+							{
+								Key:    aws.String("InstanceIds"),
+								Values: []string{"i-1234567890abcdef0"},
+							},
+						},
+					},
+				},
+				RetryIntervalMinutes: aws.Float32(5),
+				TimeoutMinutes:       aws.Int32(30),
+				Ungraceful: &awstypes.SsmSendCommandUngraceful{
+					Behavior: awstypes.SsmSendCommandUngracefulBehaviorSkip,
+				},
+			},
+		},
+	}
+
+	type flattenTarget struct {
+		flattener flex.Flattener
+		config    func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.SSMSendCommandConfigModel]
+	}
+
+	testCases := map[string]func() flattenTarget{
+		"parallel step": func() flattenTarget {
+			var model tfarcregionswitch.ParallelStepModel
+			return flattenTarget{
+				flattener: &model,
+				config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.SSMSendCommandConfigModel] {
+					return model.SsmSendCommandConfig
+				},
+			}
+		},
+		"step": func() flattenTarget {
+			var model tfarcregionswitch.StepModel
+			return flattenTarget{
+				flattener: &model,
+				config: func() fwtypes.ListNestedObjectValueOf[tfarcregionswitch.SSMSendCommandConfigModel] {
+					return model.SsmSendCommandConfig
+				},
+			}
+		},
+	}
+
+	for name, newTarget := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			target := newTarget()
+
+			if diags := target.flattener.Flatten(ctx, step); diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+
+			config, diags := target.config().ToPtr(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+			if config == nil {
+				t.Fatal("ssm_send_command_config is null after Flatten")
+			}
+
+			if got, want := config.RetryIntervalMinutes, types.Float32Value(5); !got.Equal(want) {
+				t.Errorf("retry_interval_minutes = %s, want %s", got, want)
+			}
+			if got, want := config.TimeoutMinutes, types.Int32Value(30); !got.Equal(want) {
+				t.Errorf("timeout_minutes = %s, want %s", got, want)
+			}
+
+			documents, diags := config.RegionDocuments.ToSlice(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+			if got, want := len(documents), 1; got != want {
+				t.Fatalf("region_document count = %d, want %d", got, want)
+			}
+			document := documents[0]
+			if got, want := document.Region, types.StringValue("us-east-1"); !got.Equal(want) {
+				t.Errorf("region_document.region = %s, want %s", got, want)
+			}
+			if got, want := document.DocumentARN, types.StringValue("arn:aws:ssm:us-east-1:123456789012:document/runbook"); !got.Equal(want) {
+				t.Errorf("region_document.document_arn = %s, want %s", got, want)
+			}
+			if document.Parameters.IsNull() {
+				t.Error("region_document.parameters is null after Flatten")
+			}
+
+			targets, diags := document.Targets.ToSlice(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+			if got, want := len(targets), 1; got != want {
+				t.Fatalf("region_document.target count = %d, want %d", got, want)
+			}
+			if got, want := targets[0].Key, types.StringValue("InstanceIds"); !got.Equal(want) {
+				t.Errorf("region_document.target.key = %s, want %s", got, want)
+			}
+
+			ungraceful, diags := config.Ungraceful.ToPtr(ctx)
+			if diags.HasError() {
+				t.Fatalf("unexpected diagnostics: %s", diags)
+			}
+			if ungraceful == nil {
+				t.Fatal("ungraceful is null after Flatten")
+			}
+			if got, want := ungraceful.Behavior.ValueEnum(), awstypes.SsmSendCommandUngracefulBehaviorSkip; got != want {
+				t.Errorf("ungraceful.behavior = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
 func TestAccARCRegionSwitchPlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
@@ -1250,6 +1503,84 @@ func TestAccARCRegionSwitchPlan_lambdaEventSourceMapping(t *testing.T) {
 	})
 }
 
+func TestAccARCRegionSwitchPlan_ssmSendCommand(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan awstypes.Plan
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_arcregionswitch_plan.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ARCRegionSwitch),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPlanDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				// Only the required arguments: Region switch sets timeout_minutes when it is omitted.
+				Config: testAccPlanConfig_ssmSendCommandMinimal(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.execution_block_type", "SSMSendCommand"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.0.retry_interval_minutes", "5"),
+					resource.TestCheckResourceAttrSet(resourceName, "workflow.0.step.0.ssm_send_command_config.0.timeout_minutes"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.0.region_document.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.0.step.0.ssm_send_command_config.0.ungraceful.#", "0"),
+				),
+			},
+			{
+				Config: testAccPlanConfig_ssmSendCommand(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, t, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "recovery_approach", "activePassive"),
+					resource.TestCheckResourceAttr(resourceName, "regions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "workflow.#", "1"),
+
+					// Verify SSMSendCommand execution block
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*", map[string]string{
+						"execution_block_type": "SSMSendCommand",
+						names.AttrName:         "ssm-send-command-step",
+					}),
+
+					// Verify config values (custom Expand/Flatten)
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*", map[string]string{
+						"retry_interval_minutes": "5",
+						"timeout_minutes":        "30",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*.region_document.*", map[string]string{
+						names.AttrRegion:        acctest.Region(),
+						"document_arn":          fmt.Sprintf("arn:aws:ssm:%s:123456789012:document/MyRunbook", acctest.Region()),
+						"parameters.commands.0": "echo hello",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*.region_document.*", map[string]string{
+						names.AttrRegion: acctest.AlternateRegion(),
+						"document_arn":   fmt.Sprintf("arn:aws:ssm:%s:123456789012:document/MyRunbook", acctest.AlternateRegion()),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "workflow.*.step.*.ssm_send_command_config.*.ungraceful.*", map[string]string{
+						"behavior": "skip",
+					}),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+			},
+		},
+	})
+}
+
 func TestAccARCRegionSwitchPlan_reportConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan awstypes.Plan
@@ -1584,6 +1915,46 @@ resource "aws_arcregionswitch_plan" "test" {
 
         ungraceful {
           ungraceful = "failover"
+        }
+      }
+    }
+
+    # SSMSendCommand step
+    step {
+      name                 = "ssm-send-command-step"
+      execution_block_type = "SSMSendCommand"
+      description          = "SSM Send Command step"
+
+      ssm_send_command_config {
+        retry_interval_minutes = 5
+        timeout_minutes        = 30
+
+        region_document {
+          region       = %[2]q
+          document_arn = "arn:aws:ssm:%[2]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-1234567890abcdef0"]
+          }
+
+          parameters = {
+            commands = ["echo hello"]
+          }
+        }
+
+        region_document {
+          region       = %[3]q
+          document_arn = "arn:aws:ssm:%[3]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-0987654321fedcba0"]
+          }
+        }
+
+        ungraceful {
+          behavior = "skip"
         }
       }
     }
@@ -3123,6 +3494,141 @@ resource "aws_arcregionswitch_plan" "test" {
         region_event_source_mapping {
           region = %[3]q
           arn    = "arn:aws:lambda:%[3]s:123456789012:event-source-mapping:bbbbbbbb-5555-6666-7777-888888888888"
+        }
+
+        ungraceful {
+          behavior = "skip"
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.Region(), acctest.AlternateRegion())
+}
+
+func testAccPlanConfig_ssmSendCommandMinimal(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "ssm-send-command-step"
+      execution_block_type = "SSMSendCommand"
+      description          = "SSM Send Command step"
+
+      ssm_send_command_config {
+        retry_interval_minutes = 5
+
+        region_document {
+          region       = %[2]q
+          document_arn = "arn:aws:ssm:%[2]s::document/AWS-RunShellScript"
+
+          target {
+            key    = "tag:Environment"
+            values = ["production"]
+          }
+        }
+
+        region_document {
+          region       = %[3]q
+          document_arn = "arn:aws:ssm:%[3]s::document/AWS-RunShellScript"
+
+          target {
+            key    = "tag:Environment"
+            values = ["production"]
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, acctest.Region(), acctest.AlternateRegion())
+}
+
+func testAccPlanConfig_ssmSendCommand(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "arc-region-switch.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_arcregionswitch_plan" "test" {
+  name              = %[1]q
+  execution_role    = aws_iam_role.test.arn
+  recovery_approach = "activePassive"
+  regions           = [%[2]q, %[3]q]
+  primary_region    = %[2]q
+
+  workflow {
+    workflow_target_action = "activate"
+
+    step {
+      name                 = "ssm-send-command-step"
+      execution_block_type = "SSMSendCommand"
+      description          = "SSM Send Command step"
+
+      ssm_send_command_config {
+        retry_interval_minutes = 5
+        timeout_minutes        = 30
+
+        region_document {
+          region       = %[2]q
+          document_arn = "arn:aws:ssm:%[2]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-1234567890abcdef0"]
+          }
+
+          parameters = {
+            commands = ["echo hello"]
+          }
+        }
+
+        region_document {
+          region       = %[3]q
+          document_arn = "arn:aws:ssm:%[3]s:123456789012:document/MyRunbook"
+
+          target {
+            key    = "InstanceIds"
+            values = ["i-0987654321fedcba0"]
+          }
         }
 
         ungraceful {
