@@ -261,6 +261,34 @@ resource "aws_cloudwatch_metric_alarm" "example" {
 }
 ```
 
+### With Alarm Tags in Notifications
+
+```terraform
+resource "aws_cloudwatch_metric_alarm" "example" {
+  alarm_name          = "example-service-errors"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "Errors"
+  namespace           = "ExampleApp"
+  period              = 60
+  statistic           = "Sum"
+  threshold           = 0
+  alarm_actions       = [aws_sns_topic.example.arn]
+
+  action_configuration {
+    alarm_tags_propagation {
+      enabled           = true
+      included_tag_keys = ["Team", "Severity"]
+    }
+  }
+
+  tags = {
+    Team     = "platform"
+    Severity = "high"
+  }
+}
+```
+
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
 You must choose one or the other.
 
@@ -285,6 +313,7 @@ This resource supports the following arguments:
    Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
 * `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
 * `threshold_metric_id` - (Optional) If this is an alarm based on an anomaly detection model, make this value match the ID of the ANOMALY_DETECTION_BAND function.
+* `action_configuration` - (Optional) Settings that change the content of the notifications and events that the alarm sends when its state changes. See [`action_configuration`](#action_configuration) below.
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
 * `alarm_actions` - (Optional) List of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an ARN.
 * `alarm_description` - (Optional) The description for the alarm.
@@ -355,6 +384,18 @@ for details about valid values.
 * `stat` - (Required) The statistic to apply to this metric.
    See docs for [supported statistics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Statistics-definitions.html).
 * `unit` - (Optional) The unit for this metric.
+
+#### `action_configuration`
+
+* `alarm_tags_propagation` - (Required) Settings for including the alarm's tags in its action notifications and state change events. See [`alarm_tags_propagation`](#alarm_tags_propagation) below.
+
+#### `alarm_tags_propagation`
+
+* `enabled` - (Required) Whether to include the alarm's tags. Enabling this requires the `cloudwatch:ListTagsForResource` permission on the alarm.
+* `excluded_tag_keys` - (Optional) Tag keys to exclude. All of the alarm's other tags are included. Specify 1 to 50 keys, each 1 to 128 characters long. Conflicts with `included_tag_keys`.
+* `included_tag_keys` - (Optional) Tag keys to include. Only the alarm's tags with these keys are included. Specify 1 to 50 keys, each 1 to 128 characters long. Conflicts with `excluded_tag_keys`.
+
+If neither `excluded_tag_keys` nor `included_tag_keys` is set, all of the alarm's tags are included. Tags with keys that begin with `aws:` are never included. If `action_configuration` is omitted, Terraform keeps the alarm's existing tag propagation setting, including one made outside Terraform. Removing the block doesn't turn off tag propagation; to turn it off, set `enabled` to `false`. See [Include alarm tags in notifications](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-tags-in-notifications.html) in the Amazon CloudWatch User Guide.
 
 #### `warm_up_configuration`
 
