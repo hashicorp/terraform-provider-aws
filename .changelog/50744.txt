@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_capability: Retry `CreateCapability` and `UpdateCapability` on `InvalidParameterException: The trust policy for the provided role is invalid` errors caused by IAM eventual consistency when `role_arn` references a newly created role
+```
