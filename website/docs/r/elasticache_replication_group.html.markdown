@@ -317,7 +317,7 @@ The `node_group_configuration` block supports the following arguments:
 * `primary_availability_zone` - (Optional) Availability zone for the primary node.
 * `primary_outpost_arn` - (Optional) ARN of the Outpost for the primary node.
 * `replica_availability_zones` - (Optional) List of availability zones for the replica nodes.
-* `replica_count` - (Optional) Number of replica nodes in this node group. Default AWS limit is 5. Higher values may be available with a quota increase.
+* `replica_count` - (Optional) Number of replica nodes in this node group. Cannot be combined with `replicas_per_node_group`. Omit it to apply `replicas_per_node_group` to every node group. Default AWS limit is 5. Higher values may be available with a quota increase.
 * `replica_outpost_arns` - (Optional) List of ARNs of the Outposts for the replica nodes.
 * `slots` - (Optional) Keyspace for this node group. Format is `start-end` (e.g., `0-5460`). For Redis (cluster mode disabled) replication groups, this value is ignored.
 
