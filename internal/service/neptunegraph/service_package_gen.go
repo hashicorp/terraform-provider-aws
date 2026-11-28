@@ -22,7 +22,14 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newGraphSnapshotsDataSource,
+			TypeName: "aws_neptunegraph_graph_snapshots",
+			Name:     "Graph Snapshots",
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
@@ -31,6 +38,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Factory:  newGraphResource,
 			TypeName: "aws_neptunegraph_graph",
 			Name:     "Graph",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+		{
+			Factory:  newGraphSnapshotResource,
+			TypeName: "aws_neptunegraph_graph_snapshot",
+			Name:     "Graph Snapshot",
 			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
 			Region:   inttypes.ResourceRegionDefault(),
 		},
