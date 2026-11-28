@@ -165,6 +165,7 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `semgrep`<sup>M</sup> | Run all CI Semgrep checks | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-all`<sup>D</sup> | Run semgrep on all files |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-code-quality`<sup>D</sup> | Semgrep Checks / Code Quality Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
+| `semgrep-code-security`<sup>D</sup> | Semgrep Code Security Scan | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-constants`<sup>D</sup> | Semgrep Checks / Constants Check | ✔️ |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |
 | `semgrep-docker`<sup>D</sup> | Run Semgrep |  | ✔️ |  |
 | `semgrep-fix`<sup>D</sup> | Fix Semgrep issues that have fixes |  |  | `K`, `PKG`, `PKG_NAME`, `SEMGREP_ARGS` |

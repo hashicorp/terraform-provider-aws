@@ -611,6 +611,22 @@ You can limit the scan to a service package by using the `PKG` environment varia
 PKG=rds make semgrep-code-quality
 ```
 
+#### Code Security Scan
+
+This scan runs [Semgrep curated Go](https://semgrep.dev/p/golang) and [`gosec`](https://semgrep.dev/p/gosec) checks.
+
+Use the `semgrep-code-security` target to run the same check CI runs:
+
+```console
+make semgrep-code-security
+```
+
+You can limit the scan to a service package by using the `PKG` environment variable:
+
+```console
+PKG=rds make semgrep-code-security
+```
+
 #### Constants Check
 
 This scan flags string literals in service code that should use a constant from the `names` package (for example, `"arn"` should be `names.AttrARN`). The rules are generated from `names/data/names_data.hcl` and similar sources, so they grow as the codebase evolves.

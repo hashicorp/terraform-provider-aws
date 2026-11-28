@@ -815,6 +815,15 @@ semgrep-code-quality: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Cod
 		--config 'r/dgryski.semgrep-go.writestring' \
 		--config 'r/dgryski.semgrep-go.wrongerrcall'
 
+semgrep-code-security: ## [CI] Semgrep Code Security Check
+	@echo "make: Semgrep Code Security Check..."
+	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
+	@semgrep $(SEMGREP_ARGS) \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config 'p/golang' \
+		--config 'p/gosec' \
+		--exclude-rule go.lang.security.audit.unsafe-reflect-by-name.unsafe-reflect-by-name
+
 semgrep-constants: semgrep-test semgrep-validate ## [CI] Semgrep Checks / Constants Check
 	@echo "make: Semgrep Checks / Constants Check..."
 	@echo "make: Running Semgrep checks locally (must have semgrep installed)"
@@ -1411,6 +1420,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	semgrep \
 	semgrep-all \
 	semgrep-code-quality \
+	semgrep-code-security \
 	semgrep-constants \
 	semgrep-docker \
 	semgrep-fix \
