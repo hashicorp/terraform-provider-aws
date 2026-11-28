@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_bedrock_guardrail_version: Fix `inconsistent result after apply` error caused by reading guardrail description instead of version description
+```
