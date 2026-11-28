@@ -9,6 +9,7 @@ var (
 	ResourceConfigurationSet                   = newConfigurationSetResource
 	ResourceEventDestination                   = newEventDestinationResource
 	ResourceKeyword                            = newKeywordResource
+	ResourceNotifyConfiguration                = newNotifyConfigurationResource
 	ResourceOptOutList                         = newOptOutListResource
 	ResourcePhoneNumber                        = newPhoneNumberResource
 	ResourcePool                               = newPoolResource
@@ -21,6 +22,7 @@ var (
 	FindConfigurationSetByID                                  = findConfigurationSetByID
 	FindEventDestinationByTwoPartKey                          = findEventDestinationByTwoPartKey
 	FindKeywordByTwoPartKey                                   = findKeywordByTwoPartKey
+	FindNotifyConfigurationByID                               = findNotifyConfigurationByID
 	FindOptOutListByID                                        = findOptOutListByID
 	FindPhoneNumberByID                                       = findPhoneNumberByID
 	FindPoolByID                                              = findPoolByID

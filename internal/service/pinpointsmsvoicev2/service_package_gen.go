@@ -22,7 +22,15 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*inttypes.ServicePackageFrameworkDataSource {
-	return []*inttypes.ServicePackageFrameworkDataSource{}
+	return []*inttypes.ServicePackageFrameworkDataSource{
+		{
+			Factory:  newNotifyConfigurationDataSource,
+			TypeName: "aws_pinpointsmsvoicev2_notify_configuration",
+			Name:     "Notify Configuration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.ServicePackageFrameworkResource {
@@ -70,6 +78,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*inttypes.Ser
 			Import: inttypes.FrameworkImport{
 				WrappedImport: true,
 				ImportID:      keywordImportID{},
+			},
+		},
+		{
+			Factory:  newNotifyConfigurationResource,
+			TypeName: "aws_pinpointsmsvoicev2_notify_configuration",
+			Name:     "Notify Configuration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
+			Import: inttypes.FrameworkImport{
+				WrappedImport: true,
 			},
 		},
 		{
@@ -167,6 +186,14 @@ func (p *servicePackage) FrameworkListResources(ctx context.Context) iter.Seq[*i
 				inttypes.StringIdentityAttribute("origination_identity_arn", true),
 				inttypes.StringIdentityAttribute("keyword", true),
 			}),
+		},
+		{
+			Factory:  newNotifyConfigurationResourceAsListResource,
+			TypeName: "aws_pinpointsmsvoicev2_notify_configuration",
+			Name:     "Notify Configuration",
+			Tags:     inttypes.ResourceTagsAttribute(names.AttrARN),
+			Region:   inttypes.ResourceRegionDefault(),
+			Identity: inttypes.RegionalSingleParameterIdentity(inttypes.StringIdentityAttribute(names.AttrID, true)),
 		},
 		{
 			Factory:  newPoolResourceAsListResource,

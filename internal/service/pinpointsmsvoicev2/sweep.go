@@ -23,6 +23,7 @@ import (
 )
 
 func RegisterSweepers() {
+	awsv2.Register("aws_pinpointsmsvoicev2_notify_configuration", sweepNotifyConfigurations)
 	resource.AddTestSweepers("aws_pinpointsmsvoicev2_phone_number", &resource.Sweeper{
 		Name:         "aws_pinpointsmsvoicev2_phone_number",
 		F:            sweepPhoneNumbers,
@@ -288,4 +289,27 @@ func (s protectConfigurationSweeper) Delete(ctx context.Context, optFns ...tfres
 	}
 
 	return s.sweepable.Delete(ctx, optFns...)
+}
+
+func sweepNotifyConfigurations(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	var input pinpointsmsvoicev2.DescribeNotifyConfigurationsInput
+	conn := client.PinpointSMSVoiceV2Client(ctx)
+	var sweepResources []sweep.Sweepable
+
+	for v, err := range listNotifyConfigurations(ctx, conn, &input) {
+		if err != nil {
+			return nil, err
+		}
+
+		id := aws.ToString(v.NotifyConfigurationId)
+		if v.DeletionProtectionEnabled {
+			log.Printf("[INFO] Skipping End User Messaging SMS Notify Configuration %s: DeletionProtectionEnabled=true", id)
+			continue
+		}
+
+		sweepResources = append(sweepResources, framework.NewSweepResource(newNotifyConfigurationResource, client,
+			framework.NewAttribute(names.AttrID, id)))
+	}
+
+	return sweepResources, nil
 }

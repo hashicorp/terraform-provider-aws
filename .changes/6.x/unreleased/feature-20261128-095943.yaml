@@ -1,0 +1,6 @@
+kind: feature
+time: 2026-11-28T09:59:43.96983457Z
+custom:
+    Name: aws_pinpointsmsvoicev2_notify_configuration
+    NewType: New Resource
+    PullRequest: "50825"
