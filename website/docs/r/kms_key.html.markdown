@@ -322,6 +322,7 @@ This resource supports the following arguments:
 * `policy` - (Optional) Valid policy JSON document. Although this is a key policy, not an IAM policy, an [`aws_iam_policy_document`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document), in the form that designates a principal, can be used. For more information about building policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rotation_period_in_days` - (Optional) Custom period of time between each rotation date. Must be a number between 90 and 2560 (inclusive).
+* `skip_destroy` - (Optional) Whether to remove the key from state instead of scheduling its deletion on destroy or replacement. Defaults to `false`.
 * `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xks_key_id` - (Optional) External key that serves as key material for the KMS key in an external key store.
 
