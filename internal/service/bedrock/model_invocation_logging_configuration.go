@@ -186,9 +186,37 @@ func (r *modelInvocationLoggingConfigurationResource) Read(ctx context.Context, 
 		return
 	}
 
+	// Save the prior state value for video_data_delivery_enabled before flattening.
+	// In regions that do not support video modality (e.g., ca-west-1), the API does
+	// not return videoDataDeliveryEnabled, and the flattener would set it to null,
+	// causing a perpetual diff against the configured or default value.
+	var priorVideoDataDeliveryEnabled types.Bool
+	if priorLoggingConfig, diags := data.LoggingConfig.ToPtr(ctx); !diags.HasError() && priorLoggingConfig != nil {
+		priorVideoDataDeliveryEnabled = priorLoggingConfig.VideoDataDeliveryEnabled
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// If the API did not return videoDataDeliveryEnabled (unsupported region),
+	// preserve the prior state value to avoid a perpetual diff.
+	if output.LoggingConfig != nil && output.LoggingConfig.VideoDataDeliveryEnabled == nil {
+		loggingConfig, diags := data.LoggingConfig.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if loggingConfig != nil {
+			loggingConfig.VideoDataDeliveryEnabled = priorVideoDataDeliveryEnabled
+			data.LoggingConfig, diags = fwtypes.NewListNestedObjectValueOfPtr(ctx, loggingConfig)
+			response.Diagnostics.Append(diags...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
