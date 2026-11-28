@@ -23,6 +23,7 @@ func TestAccNetworkFlowMonitor_serial(t *testing.T) {
 			acctest.CtBasic:      testAccScope_basic,
 			acctest.CtDisappears: testAccScope_disappears,
 			"tags":               testAccScope_tags,
+			"updateTargets":      testAccScope_updateTargets,
 		},
 	}
 
