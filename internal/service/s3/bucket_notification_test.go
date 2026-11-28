@@ -4,12 +4,19 @@
 package s3_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -789,4 +796,94 @@ resource "aws_s3_bucket_notification" "test" {
   eventbridge = true
 }
 `)
+}
+
+// sequenceHTTPClient returns the given GetBucketNotificationConfiguration response bodies in order,
+// and then repeats the last one.
+type sequenceHTTPClient struct {
+	bodies []string
+	calls  atomic.Int32
+}
+
+func (c *sequenceHTTPClient) Do(r *http.Request) (*http.Response, error) {
+	i := min(int(c.calls.Add(1))-1, len(c.bodies)-1)
+
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     http.Header{"Content-Type": []string{"application/xml"}, "X-Amz-Request-Id": []string{"test"}},
+		Body:       io.NopCloser(bytes.NewBufferString(c.bodies[i])),
+		Request:    r,
+	}, nil
+}
+
+func TestWaitBucketNotificationConfigurationWritten(t *testing.T) {
+	t.Parallel()
+
+	const (
+		empty       = `<NotificationConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"></NotificationConfiguration>`
+		eventBridge = `<NotificationConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><EventBridgeConfiguration></EventBridgeConfiguration></NotificationConfiguration>`
+	)
+
+	testCases := map[string]struct {
+		written   *awstypes.NotificationConfiguration
+		responses []string
+		wantCalls int32
+		wantErr   bool
+	}{
+		"EventBridge visible after stale empty reads": {
+			written:   &awstypes.NotificationConfiguration{EventBridgeConfiguration: &awstypes.EventBridgeConfiguration{}},
+			responses: []string{empty, empty, eventBridge},
+			wantCalls: 3,
+		},
+		"EventBridge visible immediately": {
+			written:   &awstypes.NotificationConfiguration{EventBridgeConfiguration: &awstypes.EventBridgeConfiguration{}},
+			responses: []string{eventBridge},
+			wantCalls: 1,
+		},
+		"empty configuration written": {
+			written:   &awstypes.NotificationConfiguration{},
+			responses: []string{empty},
+			wantCalls: 1,
+		},
+		"EventBridge removed after stale read": {
+			written:   &awstypes.NotificationConfiguration{},
+			responses: []string{eventBridge, empty},
+			wantCalls: 2,
+		},
+		"EventBridge never visible": {
+			written:   &awstypes.NotificationConfiguration{EventBridgeConfiguration: &awstypes.EventBridgeConfiguration{}},
+			responses: []string{empty},
+			wantErr:   true,
+		},
+	}
+
+	for name, testCase := range testCases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			httpClient := &sequenceHTTPClient{bodies: testCase.responses}
+			conn := s3.New(s3.Options{
+				Region:      "us-east-1",
+				Credentials: aws.AnonymousCredentials{},
+				HTTPClient:  httpClient,
+			})
+
+			err := tfs3.WaitBucketNotificationConfigurationWritten(t.Context(), conn, "test-bucket", testCase.written, 2*time.Second)
+
+			if testCase.wantErr {
+				if err == nil {
+					t.Fatal("expected an error, got none")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if got := httpClient.calls.Load(); got != testCase.wantCalls {
+				t.Errorf("GetBucketNotificationConfiguration calls = %d, want %d", got, testCase.wantCalls)
+			}
+		})
+	}
 }
