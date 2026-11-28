@@ -44,9 +44,9 @@ resource "aws_pinpointsmsvoicev2_notify_configuration" "example" {
 
 The following arguments are required:
 
-* `display_name` - (Required) Display name representing your brand (1–15 characters). Forces new resource.
+* `display_name` - (Required, Forces new resource) Display name representing your brand (1–15 characters).
 * `enabled_channels` - (Required) Communication channels enabled for this config. Valid values: `SMS`, `VOICE`, `MMS`, `RCS`.
-* `use_case` - (Required) Use case for the notify configuration (e.g., `CODE_VERIFICATION`). Forces new resource.
+* `use_case` - (Required, Forces new resource) Use case for the notify configuration (e.g., `CODE_VERIFICATION`).
 
 The following arguments are optional:
 

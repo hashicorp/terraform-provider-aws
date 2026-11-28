@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/YakDriver/smarterr"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -32,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	lazystringvalidator "github.com/hashicorp/terraform-provider-aws/internal/framework/validators/stringvalidator/lazy"
 	"github.com/hashicorp/terraform-provider-aws/internal/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/smerr"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -87,7 +87,7 @@ func (r *notifyConfigurationResource) Schema(ctx context.Context, req resource.S
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 15),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9_ -]+$`), "must contain only alphanumeric characters, underscores, hyphens, and spaces"),
+					lazystringvalidator.RegexMatches(`^[A-Za-z0-9_ -]+$`, "must contain only alphanumeric characters, underscores, hyphens, and spaces"),
 				},
 			},
 			"enabled_channels": schema.SetAttribute{
@@ -113,7 +113,7 @@ func (r *notifyConfigurationResource) Schema(ctx context.Context, req resource.S
 				},
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Z]{2}$`), "must be in ISO 3166-1 alpha-2 format"),
+						lazystringvalidator.RegexMatches(`^[A-Z]{2}$`, "must be in ISO 3166-1 alpha-2 format"),
 					),
 				},
 			},
