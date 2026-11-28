@@ -45,7 +45,7 @@ func testAccountContext(accountID string) context.Context {
 	return WithOverrideAccount(NewResourceContext(context.Background(), "S3", "Bucket", "aws_s3_bucket", ""), accountID)
 }
 
-func TestAccountRoles(t *testing.T) {
+func TestIndexAccountRoles(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {

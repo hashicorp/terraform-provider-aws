@@ -103,7 +103,7 @@ func TestStripAccount_ownAttribute(t *testing.T) {
 	}
 }
 
-func TestAccountID(t *testing.T) {
+func TestResourceAccountID(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
