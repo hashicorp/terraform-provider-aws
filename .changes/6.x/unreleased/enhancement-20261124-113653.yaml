@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-24T11:36:53.859391-05:00
+custom:
+  Body: Add `use_client_certificate_ocsp_endpoint` argument
+  Impact: resource/aws_cloudfront_trust_store
+  PullRequest: "47931"
