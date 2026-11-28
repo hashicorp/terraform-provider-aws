@@ -430,6 +430,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 `service_connect_configuration` supports the following:
 
 * `access_log_configuration` - (Optional) Configuration for Service Connect access logs. [See below](#access_log_configuration-block).
+* `container_configuration` - (Optional) Settings for the Service Connect proxy container that Amazon ECS adds to each task in this service. [See below](#container_configuration-block).
 * `enabled` - (Required) Whether to use Service Connect with this service.
 * `log_configuration` - (Optional) Log configuration for the container. [See below](#log_configuration-block).
 * `namespace` - (Optional) Namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
@@ -445,6 +446,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 ~> **NOTE:** Access logs are delivered to the destination log group specified in the `log_configuration` block. You must configure `log_configuration` to enable access logs.
 
 ~> **SECURITY WARNING:** When `include_query_parameters` is set to `ENABLED`, query parameters (which may contain sensitive data such as request IDs, tokens, or session identifiers) will be included in access logs.
+
+### `container_configuration` Block
+
+`container_configuration` supports the following:
+
+* `log_level` - (Optional) Log level of the Service Connect proxy container. Valid values: `debug`, `info`. Defaults to `info`. Set it to `debug` to collect more detailed proxy logs while troubleshooting connectivity between services.
+
+~> **NOTE:** Changes apply only to tasks that Amazon ECS launches after the service is updated. Running tasks keep their existing settings until they are replaced. Removing `container_configuration` or `log_level` from the configuration keeps the current value. To go back to the default, set `log_level` to `info` explicitly.
 
 ### `log_configuration` Block
 
