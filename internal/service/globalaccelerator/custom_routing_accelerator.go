@@ -107,6 +107,22 @@ func resourceCustomRoutingAccelerator() *schema.Resource {
 					Computed: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
+							"ip_address_details": {
+								Type:     schema.TypeList,
+								Computed: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										names.AttrIPAddress: {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+										"network_zone": {
+											Type:     schema.TypeString,
+											Computed: true,
+										},
+									},
+								},
+							},
 							names.AttrIPAddresses: {
 								Type:     schema.TypeList,
 								Computed: true,
