@@ -40,6 +40,7 @@ list "aws_ecs_service" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cluster` - (Required) Name or ARN of the ECS cluster to list services in.
 * `launch_type` - (Optional) Launch type to filter results by. Valid values: `EC2`, `FARGATE`, `EXTERNAL`.
 * `region` - (Optional) Region to query. Defaults to provider region.

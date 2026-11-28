@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cloud_hsm_cluster_id` - (Optional) Cluster ID of CloudHSM. Applies when `custom_key_store_type` is `AWS_CLOUDHSM`.
 * `custom_key_store_type` - (Optional, ForceNew) Type of key store to create. Valid values are `AWS_CLOUDHSM` and `EXTERNAL_KEY_STORE`. If omitted, AWS will default the value to `AWS_CLOUDHSM`.
 * `key_store_password` - (Optional) Password for the `kmsuser` of an AWS CloudHSM key store. Applies when `custom_key_store_type` is `AWS_CLOUDHSM`.

@@ -28,6 +28,7 @@ ephemeral "aws_ssm_parameter" "example" {
 
 This ephemeral resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this ephemeral resource will be opened. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `arn` - (Required) ARN of the parameter that you want to query
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `with_decryption` - (Optional) Return decrypted values for a secure string parameter (Defaults to `true`).

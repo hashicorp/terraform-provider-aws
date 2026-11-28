@@ -33,6 +33,7 @@ resource "aws_cloudfrontkeyvaluestore_key" "example" {
 
 The following arguments are required:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `key` - (Required) Key to put.
 * `key_value_store_arn` - (Required) ARN of the Key Value Store.
 * `value` - (Required) Value to put.

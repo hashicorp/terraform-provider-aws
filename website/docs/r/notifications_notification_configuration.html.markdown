@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `aggregation_duration` - (Optional) Aggregation preference of the NotificationConfiguration. Valid values: `LONG` (aggregate notifications for 12 hours), `SHORT` (aggregate notifications for 5 minutes), `NONE` (don't aggregate notifications). Default: `NONE`.
 * `tags` - (Optional) Map of tags to assign to the resource. A tag is a string-to-string map of key-value pairs. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 

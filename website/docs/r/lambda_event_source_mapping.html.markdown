@@ -204,6 +204,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `amazon_managed_kafka_event_source_config` - (Optional) Additional configuration block for Amazon Managed Kafka sources. Incompatible with `self_managed_event_source` and `self_managed_kafka_event_source_config`. [See below](#amazon_managed_kafka_event_source_config-block).
 * `batch_size` - (Optional) Largest number of records that Lambda will retrieve from your event source at the time of invocation. Defaults to `100` for DynamoDB, Kinesis, MQ and MSK, `10` for SQS.
 * `bisect_batch_on_function_error` - (Optional) Whether to split the batch in two and retry if the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Defaults to `false`.

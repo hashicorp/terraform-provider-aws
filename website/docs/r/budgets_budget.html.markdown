@@ -336,6 +336,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) ID of the target account for budget. Uses the current user's account ID by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData](#auto_adjust_data-block) which determines the budget amount for an auto-adjusting budget.
 * `billing_view_arn` - (Optional) ARN of the billing view.

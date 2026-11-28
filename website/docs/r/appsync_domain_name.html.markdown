@@ -23,6 +23,7 @@ resource "aws_appsync_domain_name" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `certificate_arn` - (Required) ARN of the certificate. This can be an Certificate Manager (ACM) certificate or an Identity and Access Management (IAM) server certificate. The certifiacte must reside in us-east-1.
 * `description` - (Optional) Description of the Domain Name.
 * `domain_name` - (Required) Domain name.

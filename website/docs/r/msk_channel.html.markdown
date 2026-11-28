@@ -120,6 +120,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `encryption_configuration` - (Optional) AWS KMS encryption configuration applied to data at rest. Changing this forces a new resource to be created. See [`encryption_configuration` Block](#encryption_configuration-block) below.
 * `iceberg_destination` - (Optional) Apache Iceberg destination for the channel. Exactly one of `iceberg_destination` or `s3_destination` is required. With the exception of `data_freshness_in_seconds`, changing an argument in this block forces a new resource to be created. See [`iceberg_destination` Block](#iceberg_destination-block) below.
 * `logging_info` - (Optional) Destinations to which the channel publishes operational logs. Changing this forces a new resource to be created. See [`logging_info` Block](#logging_info-block) below.

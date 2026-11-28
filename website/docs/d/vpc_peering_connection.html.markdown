@@ -39,6 +39,7 @@ resource "aws_route" "r" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr_block` - (Optional) Primary CIDR block of the requester VPC of the specific VPC Peering Connection to retrieve.
 * `filter` - (Optional) Custom filter block as described below.
 * `id` - (Optional) ID of the specific VPC Peering Connection to retrieve.

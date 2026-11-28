@@ -27,6 +27,7 @@ data "aws_sagemaker_prebuilt_ecr_image" "test" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `dns_suffix` - (Optional) DNS suffix to use in the registry path. If not specified, the AWS provider sets it to the DNS suffix for the current region.
 * `image_tag` - (Optional) Image tag for the Docker image. If not specified, the AWS provider sets the value to `1`, which for many repositories indicates the latest version. Some repositories, such as XGBoost, do not support `1` or `latest` and specific version must be used.
 * `region` - (Optional) Region to use in the registry path. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

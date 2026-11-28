@@ -67,6 +67,7 @@ resource "aws_transfer_connector" "example" {
 This resource supports the following arguments:
 
 * `access_role` - (Required) IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `as2_config` - (Optional) Either SFTP or AS2 is configured. Parameters to configure for the connector object. See [`as2_config` Block](#as2_config-block) below.
 * `egress_config` - (Optional) Egress configuration for the connector. When set, enables routing through customer VPCs using VPC Lattice for private connectivity. See [`egress_config` Block](#egress_config-block) below.
 * `logging_role` - (Optional) IAM Role which is required for allowing the connector to turn on CloudWatch logging for Amazon S3 events.

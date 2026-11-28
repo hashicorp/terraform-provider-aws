@@ -24,6 +24,7 @@ resource "aws_pinpointsmsvoicev2_configuration_set" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `default_message_type` - (Optional) Default message type. Must either be "TRANSACTIONAL" or "PROMOTIONAL".
 * `default_sender_id` - (Optional) Default sender ID to use for this configuration set.
 * `name` - (Required) Name of the configuration set.

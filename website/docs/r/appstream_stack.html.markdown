@@ -77,6 +77,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `access_endpoints` - (Optional) Set of configuration blocks defining the interface VPC endpoints. Users of the stack can connect to AppStream 2.0 only through the specified endpoints. See [`access_endpoints`](#access_endpoints-block) below.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_settings` - (Optional) Settings for application settings persistence. See [`application_settings`](#application_settings-block) below.
 * `description` - (Optional) Description for the AppStream stack.
 * `display_name` - (Optional) Stack name to display.

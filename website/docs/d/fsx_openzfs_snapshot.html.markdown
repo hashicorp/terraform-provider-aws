@@ -29,6 +29,7 @@ data "aws_fsx_openzfs_snapshot" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter` - (Optional) Configuration block. Detailed below.
 * `most_recent` - (Optional) If more than one result is returned, use the most recent snapshot.
 * `name` - (Optional) Name of the snapshot.

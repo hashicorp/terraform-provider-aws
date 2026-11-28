@@ -107,6 +107,7 @@ resource "aws_glue_trigger" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `actions` - (Required) List of actions initiated by this trigger when it fires. See [`actions`](#actions-block) below.
 * `description` - (Optional) Description of the new trigger.
 * `enabled` - (Optional) Start the trigger. Defaults to `true`.

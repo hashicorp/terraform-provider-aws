@@ -30,6 +30,7 @@ resource "aws_pinpoint_app" "app" {}
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required) Application ID.
 * `bundle_id` - (Optional) ID assigned to your iOS app. To find this value, choose Certificates, IDs & Profiles, choose App IDs in the Identifiers section, and choose your app. Required if using Key credentials.
 * `certificate` - (Optional) Pem encoded TLS Certificate from Apple. Required if using Certificate credentials.

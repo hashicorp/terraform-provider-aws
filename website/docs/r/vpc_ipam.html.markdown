@@ -59,6 +59,7 @@ locals {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cascade` - (Optional) Whether to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) Description for the IPAM.
 * `enable_private_gua` - (Optional) Whether to use your own GUA ranges as private IPv6 addresses. Default: `false`.

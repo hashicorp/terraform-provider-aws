@@ -203,6 +203,7 @@ resource "aws_msk_cluster" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `broker_node_group_info` - (Required) Configuration block for the broker nodes of the Kafka cluster. See [`broker_node_group_info` Block](#broker_node_group_info-block) below.
 * `client_authentication` - (Optional) Configuration block for specifying a client authentication. See [`client_authentication` Block](#client_authentication-block) below.
 * `cluster_name` - (Required) Name of the MSK cluster.

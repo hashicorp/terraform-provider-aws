@@ -58,6 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `definition` - (Optional) Application definition for this application. You can specify either inline JSON or an S3 bucket location.
 * `description` - (Optional) Description of the application.
 * `kms_key_id` - (Optional) KMS Key to use for the Application.

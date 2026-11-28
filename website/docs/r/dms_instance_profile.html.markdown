@@ -42,6 +42,7 @@ resource "aws_dms_instance_profile" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `availability_zone` - (Optional) Availability Zone where the instance profile runs. Default is a random, system-chosen Availability Zone.
 * `description` - (Optional) Description for the instance profile.
 * `kms_key_arn` - (Optional) ARN of the KMS key used to encrypt the connection parameters for the instance profile. If you don't specify a value, DMS uses your default encryption key.

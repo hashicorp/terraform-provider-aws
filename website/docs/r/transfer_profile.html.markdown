@@ -26,6 +26,7 @@ resource "aws_transfer_profile" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `as2_id` - (Required) AS2 name as defined in RFC 4130. For inbound transfers this is the AS2 From Header for the AS2 messages sent from the partner. For outbound messages this is the AS2 To Header for the AS2 messages sent to the partner. This ID cannot include spaces.
 * `certificate_ids` - (Optional) List of certificate IDs from the imported certificate operation.
 * `profile_type` - (Required) Profile type. Valid values are `LOCAL` or `PARTNER`.

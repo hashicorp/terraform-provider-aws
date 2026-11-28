@@ -41,6 +41,7 @@ resource "aws_network_acl_rule" "bar" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr_block` - (Optional) Network range to allow or deny, in CIDR notation (for example 172.16.0.0/24 ).
 * `egress` - (Optional, bool) Whether this is an egress rule (rule is applied to traffic leaving the subnet). Default `false`.
 * `from_port` - (Optional) From port to match.

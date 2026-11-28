@@ -43,6 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `add_header_action` - (Optional) Configuration block for adding a header to received emails. Detailed below.
 * `after` - (Optional) Name of the rule to place this rule after.
 * `bounce_action` - (Optional) Configuration block for rejecting received emails. Detailed below.

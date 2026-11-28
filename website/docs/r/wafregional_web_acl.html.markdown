@@ -107,6 +107,7 @@ resource "aws_wafregional_web_acl" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `default_action` - (Required) Action that you want AWS WAF Regional to take when a request doesn't match the criteria in any of the rules that are associated with the web ACL. See [`default_action` Block](#default_action-block) below for details.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. See [`logging_configuration` Block](#logging_configuration-block) below for details.
 * `metric_name` - (Required) Name or description for the Amazon CloudWatch metric of this web ACL.

@@ -24,6 +24,7 @@ resource "aws_ec2_local_gateway_route" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `destination_cidr_block` - (Required) IPv4 CIDR range used for destination matches. Routing decisions are based on the most specific match.
 * `local_gateway_route_table_id` - (Required) Identifier of EC2 Local Gateway Route Table.
 * `local_gateway_virtual_interface_group_id` - (Required) Identifier of EC2 Local Gateway Virtual Interface Group.

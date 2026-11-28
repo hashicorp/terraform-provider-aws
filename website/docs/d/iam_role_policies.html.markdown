@@ -22,6 +22,7 @@ data "aws_iam_role_policies" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `role_name` - (Required) Name of the IAM role.
 
 ## Attribute Reference

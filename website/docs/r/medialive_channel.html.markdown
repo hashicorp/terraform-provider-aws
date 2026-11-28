@@ -102,6 +102,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cdi_input_specification` - (Optional) Specification of CDI inputs for this channel. See [`cdi_input_specification` Block](#cdi_input_specification-block) for details.
 * `input_attachments` - (Optional) Input attachments for the channel. See [`input_attachments` Block](#input_attachments-block) for details.
 * `log_level` - (Optional) Level of verbosity for the logs written to CloudWatch Logs.

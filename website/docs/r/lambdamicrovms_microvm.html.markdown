@@ -55,6 +55,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `egress_network_connectors` - (Optional) List of egress network connector ARNs for outbound connectivity. Changing this value creates a new resource.
 * `execution_role_arn` - (Optional) ARN of the IAM role assumed by the MicroVM during execution. Changing this value creates a new resource.
 * `idle_policy` - (Optional) Configuration controlling automatic suspend and resume behavior. [See below](#idle_policy-block). Changing this value creates a new resource.

@@ -83,6 +83,7 @@ resource "aws_vpc_ipam" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr` - (Optional, Forces new resource) CIDR you want to assign to the pool.
 * `description` - (Optional, Forces new resource) Description for the allocation.
 * `disallowed_cidrs` - (Optional, Forces new resource) Exclude a particular CIDR range from being returned by the pool.

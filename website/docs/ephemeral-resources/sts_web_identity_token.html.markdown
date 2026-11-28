@@ -60,6 +60,7 @@ ephemeral "aws_sts_web_identity_token" "example" {
 
 This ephemeral resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this ephemeral resource will be opened. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `audience` - (Required) Intended recipients of the token. This value populates the `aud` claim in the JWT and should identify the service or application that will validate and use the token. Must contain between 1 and 10 items, each with a maximum length of 1000 characters.
 * `duration_seconds` - (Optional) Duration, in seconds, for which the JWT will remain valid. Value can range from 60 seconds (1 minute) to 3600 seconds (1 hour). If not specified, the default duration is 300 seconds (5 minutes).
 * `signing_algorithm` - (Required) Cryptographic algorithm to use for signing the JWT. Valid values are `RS256` (RSA with SHA-256) and `ES384` (ECDSA using P-384 curve with SHA-384).

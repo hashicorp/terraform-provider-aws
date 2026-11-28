@@ -137,6 +137,7 @@ resource "aws_iam_role_policy" "manage_connections" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_id` - (Required) API identifier.
 * `api_key_required` - (Optional) Whether an API key is required for the route. Defaults to `false`. Supported only for WebSocket APIs.
 * `authorization_scopes` - (Optional) Authorization scopes supported by this route. The scopes are used with a JWT authorizer to authorize the method invocation.

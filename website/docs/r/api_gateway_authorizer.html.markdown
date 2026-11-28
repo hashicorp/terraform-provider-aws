@@ -88,6 +88,7 @@ resource "aws_lambda_function" "authorizer" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `authorizer_credentials` - (Optional) Credentials required for the authorizer. To specify an IAM Role for API Gateway to assume, use the IAM Role ARN.
 * `authorizer_result_ttl_in_seconds` - (Optional) TTL of cached authorizer results in seconds. Defaults to `300`.
 * `authorizer_uri` - (Optional, required for type `TOKEN`/`REQUEST`) Authorizer's URI. This must be a well-formed Lambda function URI in the form of `arn:aws:apigateway:{region}:lambda:path/{service_api}`, e.g., `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`

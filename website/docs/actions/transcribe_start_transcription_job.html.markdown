@@ -109,6 +109,7 @@ action "aws_transcribe_start_transcription_job" "batch_process" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `identify_language` - (Optional) Enable automatic language identification for single-language media files. Cannot be used with `identify_multiple_languages`. Default: `false`.
 * `identify_multiple_languages` - (Optional) Enable automatic language identification for multi-language media files. Cannot be used with `identify_language`. Default: `false`.
 * `language_code` - (Optional) Language code for the language used in the input media file. Required if `identify_language` and `identify_multiple_languages` are both false. Valid values can be found in the [Amazon Transcribe supported languages documentation](https://docs.aws.amazon.com/transcribe/latest/dg/supported-languages.html).

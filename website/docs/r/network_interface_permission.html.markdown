@@ -35,6 +35,7 @@ resource "aws_network_interface_permission" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `aws_account_id` - (Required) Amazon Web Services account ID.
 * `network_interface_id` - (Required) ID of the network interface.
 * `permission` - (Required) Type of permission to grant. Valid values are `INSTANCE-ATTACH` or `EIP-ASSOCIATE`.

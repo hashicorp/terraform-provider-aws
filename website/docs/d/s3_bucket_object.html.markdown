@@ -72,6 +72,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket` - (Required, **Deprecated**) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified. Use the `aws_s3_object` data source instead.
 * `key` - (Required) Full path to the object inside the bucket
 * `range` - (Optional) Range of bytes to read from the object, formatted as an [HTTP `Range` header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Range).

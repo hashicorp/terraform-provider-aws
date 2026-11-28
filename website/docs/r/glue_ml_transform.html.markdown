@@ -123,6 +123,7 @@ resource "aws_glue_catalog_table" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Description of the ML Transform.
 * `glue_version` - (Optional) Version of glue to use, for example "1.0". For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
 * `input_record_tables` - (Required) List of AWS Glue table definitions used by the transform. See [`input_record_tables`](#input_record_tables-block).

@@ -42,6 +42,7 @@ resource "aws_vpc_security_group_ingress_rule" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr_ipv4` - (Optional) Source IPv4 CIDR range.
 * `cidr_ipv6` - (Optional) Source IPv6 CIDR range.
 * `description` - (Optional) Security group rule description.

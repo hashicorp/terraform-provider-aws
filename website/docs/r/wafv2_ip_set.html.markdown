@@ -31,6 +31,7 @@ resource "aws_wafv2_ip_set" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `addresses` - (Optional) Array of strings that specifies zero or more IP addresses or blocks of IP addresses. All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation. WAF supports all IPv4 and IPv6 CIDR ranges except for `/0`.
 * `description` - (Optional) Friendly description of the IP set.
 * `ip_address_version` - (Required, Forces new resource) Specify IPV4 or IPV6. Valid values are `IPV4` or `IPV6`.

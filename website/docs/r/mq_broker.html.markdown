@@ -132,6 +132,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `apply_immediately` - (Optional) Whether to apply broker modifications immediately. Default is `false`.
 * `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.

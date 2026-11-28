@@ -48,6 +48,7 @@ resource "aws_fsx_file_cache" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `copy_tags_to_data_repository_associations` - (Optional) Whether to copy tags for the cache to data repository associations. Defaults to `false`.
 * `data_repository_association` - (Optional) Configurations for up to 8 data repository associations (DRAs) to create during cache creation. All configurations must be of the same data repository type, either all S3 or all NFS. Maximum of 8. See [`data_repository_association` Block](#data_repository_association-block) below.
 * `file_cache_type` - (Required) Type of cache to create. The only supported value is `LUSTRE`.

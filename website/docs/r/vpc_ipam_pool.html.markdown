@@ -113,6 +113,7 @@ resource "aws_vpc_ipam_pool" "vpc" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `address_family` - (Required) IP protocol assigned to this pool. You must choose either IPv4 or IPv6 protocol for a pool.
 * `allocation_default_netmask_length` - (Optional) Default netmask length for allocations added to this pool. If, for example, the CIDR assigned to this pool is 10.0.0.0/8 and you enter 16 here, new allocations will default to 10.0.0.0/16 (unless you provide a different netmask value when you create the new allocation).
 * `allocation_max_netmask_length` - (Optional) Maximum netmask length that will be required for CIDR allocations in this pool.

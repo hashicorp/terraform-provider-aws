@@ -116,6 +116,7 @@ resource "aws_sagemaker_inference_component" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deployment_config` - (Optional) Deployment configuration for the inference component, which controls the rollout strategy and rollback behavior. This directive applies only when the inference component is **updated** — the `CreateInferenceComponent` API does not accept it, so it has no effect on initial creation. It is not returned by the API and is therefore not refreshed into state or verified on import. See [`deployment_config` Block](#deployment_config-block).
 * `endpoint_name` - (Required) Name of an existing endpoint where you host the inference component.
 * `name` - (Required) Unique name to assign to the inference component.

@@ -37,6 +37,7 @@ resource "aws_wafv2_regex_pattern_set" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Friendly description of the regular expression pattern set.
 * `name` - (Optional, Forces new resource) Friendly name of the regular expression pattern set. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 * `name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `name`.

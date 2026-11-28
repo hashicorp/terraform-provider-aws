@@ -34,6 +34,7 @@ resource "aws_networkmonitor_probe" "example" {
 
 This resource supports the following arguments:
 
+- `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 - `destination` - (Required) Destination IP address. This must be either IPV4 or IPV6.
 - `destination_port` - (Optional) Port associated with the destination. This is required only if the protocol is TCP and must be a number between 1 and 65536.
 - `monitor_name` - (Required) Name of the monitor.

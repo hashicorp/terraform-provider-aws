@@ -125,6 +125,7 @@ For more examples, including specific organizational units and multi-Region clus
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bypass_policy_lockout_safety_check` - (Optional) Whether to bypass the policy lockout safety check. Setting this value to `true` increases the risk that the cluster becomes unmanageable. Defaults to `false`.
 * `identifier` - (Required) Identifier of the Aurora DSQL Cluster.
 * `policy` - (Required) Resource-based policy document as JSON.

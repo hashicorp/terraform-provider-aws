@@ -130,6 +130,7 @@ resource "aws_backup_selection" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `condition` - (Optional) Condition-based filters used to specify sets of resources for a backup plan. See [below](#condition-block) for details.
 * `iam_role_arn` - (Required) ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `name` - (Required) Display name of a resource selection document.

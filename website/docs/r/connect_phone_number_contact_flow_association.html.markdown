@@ -24,6 +24,7 @@ resource "aws_connect_phone_number_contact_flow_association" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `contact_flow_id` - (Required) Contact flow ID.
 * `instance_id` - (Required) Amazon Connect instance ID.
 * `phone_number_id` - (Required) Phone number ID.

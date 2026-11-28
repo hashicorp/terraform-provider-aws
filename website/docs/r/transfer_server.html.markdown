@@ -125,6 +125,7 @@ resource "aws_transfer_server" "transfer" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `certificate` - (Optional) ARN of the AWS Certificate Manager (ACM) certificate. Required when `protocols` is set to `FTPS`.
 * `directory_id` - (Optional) Directory service ID of the directory service you want to connect to with an `identity_provider_type` of `AWS_DIRECTORY_SERVICE`.
 * `domain` - (Optional) Domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.

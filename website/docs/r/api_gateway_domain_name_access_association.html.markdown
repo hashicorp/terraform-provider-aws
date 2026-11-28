@@ -26,6 +26,7 @@ This resource supports the following arguments:
 
 * `access_association_source` - (Required) Identifier of the domain name access association source. For a `VPCE`, the value is the VPC endpoint ID.
 * `access_association_source_type` - (Required) Type of the domain name access association source. Valid values are `VPCE`.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `domain_name_arn` - (Required) ARN of the domain name.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

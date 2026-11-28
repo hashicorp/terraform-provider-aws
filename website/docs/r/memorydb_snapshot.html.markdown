@@ -25,6 +25,7 @@ resource "aws_memorydb_snapshot" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cluster_name` - (Required, Forces new resource) Name of the MemoryDB cluster to take a snapshot of.
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the snapshot at rest.
 * `name` - (Optional, Forces new resource) Name of the snapshot. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.

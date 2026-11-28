@@ -81,6 +81,7 @@ This resource supports the following arguments:
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster-endpoint.html).
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cluster_endpoint_identifier` - (Required, Forces new resources) Identifier to use for the new endpoint. This parameter is stored as a lowercase string.
 * `cluster_identifier` - (Required, Forces new resources) Cluster identifier.
 * `custom_endpoint_type` - (Required) Type of the endpoint. One of: READER , ANY .

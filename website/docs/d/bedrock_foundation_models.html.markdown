@@ -30,6 +30,7 @@ data "aws_bedrock_foundation_models" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `by_customization_type` - (Optional) Customization type to filter on. Valid values are `FINE_TUNING`, `CONTINUED_PRE_TRAINING`, and `DISTILLATION`.
 * `by_inference_type` - (Optional) Inference type to filter on. Valid values are `ON_DEMAND` and `PROVISIONED`.
 * `by_output_modality` - (Optional) Output modality to filter on. Valid values are `TEXT`, `IMAGE`, and `EMBEDDING`.

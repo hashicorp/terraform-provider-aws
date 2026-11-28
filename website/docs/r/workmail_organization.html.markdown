@@ -28,6 +28,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `delete_directory` - (Optional) Whether to delete the AWS Directory Service directory associated with the organization on destroy. To update this value after creation, run `terraform apply` before running `terraform destroy`. Defaults to `false`.
 * `delete_identity_center_application` - (Optional) Whether to delete the IAM Identity Center application associated with the organization on destroy. To update this value after creation, run `terraform apply` before running `terraform destroy`. Defaults to `false`.
 * `directory_id` - (Optional) ID of an existing directory to associate with the organization. Changing this creates a new resource.

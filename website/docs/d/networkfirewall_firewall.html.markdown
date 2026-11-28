@@ -52,6 +52,7 @@ data "aws_networkfirewall_firewall" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `arn` - (Optional) ARN of the firewall. One or more of `arn` and `name` is required.
 * `firewall_type` - (Optional) Type of the firewall. Valid values: `FIREWALL`, `IGW_FIREWALL`. Set to `IGW_FIREWALL` to look up an internet gateway firewall by `name` or `arn`. When `arn` is supplied, the type must match its resource type. Defaults to `FIREWALL`.
 * `name` - (Optional) Descriptive name of the firewall. One or more of `arn` and `name` is required.

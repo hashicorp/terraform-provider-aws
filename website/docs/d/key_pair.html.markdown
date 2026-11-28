@@ -44,6 +44,7 @@ This data source supports the following arguments:
 
 The arguments of this data source act as filters for querying the available Key Pairs. The given filters must match exactly one Key Pair whose data will be exported as attributes.
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter` - (Optional) Custom filter block as described below.
 * `include_public_key` - (Optional) Whether to include the public key material in the response.
 * `key_name` - (Optional) Key Pair name.

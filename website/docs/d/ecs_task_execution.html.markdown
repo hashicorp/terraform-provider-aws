@@ -40,6 +40,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `capacity_provider_strategy` - (Optional) Set of capacity provider strategies to use for the cluster. See below.
 * `client_token` - (Optional) Identifier that you provide to ensure the idempotency of the request. It must be unique and is case sensitive. Up to 64 characters are allowed. The valid characters are characters in the range of 33-126, inclusive. For more information, see [Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html).
 * `desired_count` - (Optional) Number of instantiations of the specified task to place on your cluster. You can specify up to 10 tasks for each call.

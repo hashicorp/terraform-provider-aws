@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this ephemeral resource will be opened. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `region` - (Optional) Region where this resource is evaluated. Defaults to the provider Region.
 
 ### `content` Block

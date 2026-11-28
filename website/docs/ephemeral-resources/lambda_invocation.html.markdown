@@ -212,6 +212,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this ephemeral resource will be opened. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `client_context` - (Optional) Up to 3583 bytes of base64-encoded data about the invoking client to pass to the function in the context object.
 * `log_type` - (Optional) Set to `Tail` to include the execution log in the response. Valid values: `None` and `Tail`.
 * `qualifier` - (Optional) Version or alias to invoke a published version of the function. Defaults to `$LATEST`.

@@ -30,6 +30,7 @@ data "aws_polly_voices" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `engine` - (Optional) Engine used by Amazon Polly when processing input text for speech synthesis. Valid values are `standard`, `neural`, and `long-form`.
 * `include_additional_language_codes` - (Optional) Whether to return any bilingual voices that use the specified language as an additional language.
 * `language_code` - (Optional) Language identification tag for filtering the list of voices returned. If not specified, all available voices are returned.

@@ -35,6 +35,7 @@ resource "aws_guardduty_organization_configuration_feature" "eks_runtime_monitor
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `additional_configuration` - (Optional) Additional feature configuration block for features `EKS_RUNTIME_MONITORING` or `RUNTIME_MONITORING`, or `RDS_LOGIN_EVENTS`. If omitted, Terraform does not track changes to additional configurations that AWS manages for the feature. Removing a previously declared `additional_configuration` block leaves the setting unchanged in AWS; to change a setting, update its `auto_enable` instead.  See [below](#additional_configuration-block).
 * `auto_enable` - (Required) Status of the feature that is configured for the member accounts within the organization. Valid values: `NEW`, `ALL`, `NONE`.
 * `detector_id` - (Required) ID of the detector that configures the delegated administrator.

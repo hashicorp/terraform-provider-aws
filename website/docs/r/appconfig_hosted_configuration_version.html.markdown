@@ -119,6 +119,7 @@ resource "aws_appconfig_hosted_configuration_version" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required, Forces new resource) Application ID.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID.
 * `content` - (Required, Forces new resource) Content of the configuration or the configuration data.

@@ -116,6 +116,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `model_enforcement` - (Optional) Model-specific information for the enforced guardrail configuration. If not present, the configuration is enforced on all models. See [`model_enforcement` Block](#model_enforcement-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `selective_content_guarding` - (Optional) Selective content guarding controls for enforced guardrails. See [`selective_content_guarding` Block](#selective_content_guarding-block) below.

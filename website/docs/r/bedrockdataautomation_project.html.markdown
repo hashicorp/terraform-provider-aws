@@ -86,6 +86,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `custom_output_configuration` - (Optional) Blueprints used for custom output. See [`custom_output_configuration` Block](#custom_output_configuration-block) below.
 * `data_automation_library_configuration` - (Optional) Data automation libraries used by the project. See [`data_automation_library_configuration` Block](#data_automation_library_configuration-block) below.
 * `description` - (Optional) Description of the project.

@@ -184,6 +184,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `associated_alarms` - (Optional) CloudWatch alarms associated with the plan. See [`associated_alarms` Block](#associated_alarms-block) for details.
 * `description` - (Optional) Description of the plan.
 * `primary_region` - (Optional) Primary region for the plan.

@@ -48,6 +48,7 @@ resource "aws_guardduty_organization_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_enable_organization_members` - (Required) Auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.
 * `datasources` - (Optional) Configuration for the collected datasources. See [`datasources`](#datasources-block) below. [Deprecated](https://docs.aws.amazon.com/guardduty/latest/ug/guardduty-feature-object-api-changes-march2023.html) in favor of [`aws_guardduty_organization_configuration_feature` resources](guardduty_organization_configuration_feature.html).
 * `detector_id` - (Required) Detector ID of the GuardDuty account.

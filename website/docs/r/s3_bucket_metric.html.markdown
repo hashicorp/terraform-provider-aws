@@ -108,6 +108,7 @@ resource "aws_s3_bucket_metric" "example-bucket-metric" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket` - (Required) Name of the bucket to put metric configuration.
 * `filter` - (Optional) [Object filtering](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html#metrics-configurations-filter) that accepts a prefix, tags, or a logical AND of prefix and tags. [See below](#filter-block).
 * `name` - (Required) Unique identifier of the metrics configuration for the bucket. Must be less than or equal to 64 characters in length.

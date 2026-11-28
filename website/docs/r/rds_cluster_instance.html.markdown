@@ -53,6 +53,7 @@ This resource supports the following arguments:
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-instance.html).
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `apply_immediately` - (Optional) Whether any database modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `auto_minor_version_upgrade` - (Optional) Whether minor engine upgrades will be applied automatically to the DB instance during the maintenance window. Default `true`.
 * `availability_zone` - (Optional, Computed, Forces new resource) EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html) about the details.

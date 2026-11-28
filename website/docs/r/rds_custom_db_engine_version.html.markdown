@@ -93,6 +93,7 @@ resource "aws_rds_custom_db_engine_version" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `database_installation_files_s3_bucket_name` - (Optional) Name of the Amazon S3 bucket that contains the database installation files.
 * `database_installation_files_s3_prefix` - (Optional) Prefix for the Amazon S3 bucket that contains the database installation files.
 * `description` - (Optional) Description of the CEV.

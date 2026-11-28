@@ -116,6 +116,7 @@ resource "aws_apprunner_observability_configuration" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_scaling_configuration_arn` - (Optional) ARN of an App Runner automatic scaling configuration resource that you want to associate with your service. If not provided, App Runner associates the latest revision of a default auto scaling configuration.
 * `encryption_configuration` - (Optional, Forces new resource) Custom encryption key that App Runner uses to encrypt the copy of your source repository that it maintains and your service logs. By default, App Runner uses an AWS managed CMK. See [`encryption_configuration`](#encryption_configuration-block) below.
 * `health_check_configuration` - (Optional) Settings of the health check that AWS App Runner performs to monitor the health of your service. See [`health_check_configuration`](#health_check_configuration-block) below.

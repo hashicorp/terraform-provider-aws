@@ -33,6 +33,7 @@ resource "aws_appstream_directory_config" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `certificate_based_auth_properties` - (Optional) Configuration block for the certificate-based authentication properties used to authenticate SAML 2.0 Identity Provider (IdP) user identities to Active Directory domain-joined streaming instances. See [`certificate_based_auth_properties`](#certificate_based_auth_properties-block) below.
 * `directory_name` - (Required) Fully qualified name of the directory.
 * `organizational_unit_distinguished_names` - (Required) Distinguished names of the organizational units for computer accounts.

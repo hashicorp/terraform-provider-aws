@@ -249,6 +249,9 @@ func validateResourceSchemas(ctx context.Context, t *testing.T, p *frameworkProv
 func validateSchemaModelForDataSource(ctx context.Context, t *testing.T, typeName string, outer datasource.DataSourceWithConfigure, schema datasourceschema.Schema) {
 	t.Helper()
 
+	// The wrapper strips the injected attribute before the model sees any data.
+	schema.Attributes, _ = withoutInjectedAccount(schema.Attributes)
+
 	v, ok := outer.(*wrappedDataSource)
 	if !ok {
 		t.Errorf("data source %q is not a wrappedDataSource", typeName)
@@ -266,6 +269,9 @@ func validateSchemaModelForDataSource(ctx context.Context, t *testing.T, typeNam
 
 func validateSchemaModelForEphemeralResource(ctx context.Context, t *testing.T, typeName string, outer ephemeral.EphemeralResourceWithConfigure, schema ephemeralschema.Schema) {
 	t.Helper()
+
+	// The wrapper strips the injected attribute before the model sees any data.
+	schema.Attributes, _ = withoutInjectedAccount(schema.Attributes)
 
 	v, ok := outer.(*wrappedEphemeralResource)
 	if !ok {
@@ -286,6 +292,9 @@ func validateSchemaModelForEphemeralResource(ctx context.Context, t *testing.T, 
 func validateSchemaModelForAction(ctx context.Context, t *testing.T, typeName string, outer action.ActionWithConfigure, schema actionschema.Schema) {
 	t.Helper()
 
+	// The wrapper strips the injected attribute before the model sees any data.
+	schema.Attributes, _ = withoutInjectedAccount(schema.Attributes)
+
 	v, ok := outer.(*wrappedAction)
 	if !ok {
 		t.Errorf("action %q is not a wrappedAction", typeName)
@@ -304,6 +313,9 @@ func validateSchemaModelForAction(ctx context.Context, t *testing.T, typeName st
 
 func validateSchemaModelForResource(ctx context.Context, t *testing.T, typeName string, outer resource.ResourceWithConfigure, schema resourceschema.Schema) {
 	t.Helper()
+
+	// The wrapper strips the injected attribute before the model sees any data.
+	schema.Attributes, _ = withoutInjectedAccount(schema.Attributes)
 
 	var v *wrappedResource
 	switch x := outer.(type) {

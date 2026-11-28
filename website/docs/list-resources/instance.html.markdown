@@ -45,6 +45,7 @@ list "aws_instance" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter` - (Optional) One or more filters to apply to the search. If multiple `filter` blocks are provided, they all must be true. For a full reference of filter names, see [describe-instances in the AWS CLI reference](http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-instances.html). See [`filter` Block](#filter-block) below.
 * `include_auto_scaled` - (Optional) Whether to include EC2 instances that are managed by an Auto Scaling group. Default value is `false`.
 * `region` - (Optional) [Region](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints) to query. Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

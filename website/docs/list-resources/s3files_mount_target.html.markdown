@@ -22,5 +22,6 @@ list "aws_s3files_mount_target" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `file_system_id` - (Required) File system ID to filter by.
 * `region` - (Optional) Region to query. Defaults to provider region.

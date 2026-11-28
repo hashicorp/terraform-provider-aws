@@ -134,6 +134,7 @@ data "aws_lambda_layer_version" "latest_shared" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `compatible_architecture` - (Optional) Specific architecture the layer version must support. Only valid with `layer_name`. Conflicts with `version` and `layer_version_arn`. If specified, the latest available layer version supporting the provided architecture will be used.
 * `compatible_runtime` - (Optional) Specific runtime the layer version must support. Only valid with `layer_name`. Conflicts with `version` and `layer_version_arn`. If specified, the latest available layer version supporting the provided runtime will be used.
 * `layer_name` - (Optional) Name of the Lambda layer. One of `layer_name` or `layer_version_arn` is required.

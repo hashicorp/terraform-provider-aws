@@ -39,6 +39,7 @@ data "aws_rds_events" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `duration` - (Optional) Number of minutes to look back from now. Conflicts with `start_time` and `end_time`.
 * `end_time` - (Optional) End of the time interval, in RFC3339 format. Conflicts with `duration`.
 * `event_categories` - (Optional) Set of event categories to filter on, e.g. `failure`, `maintenance`, `configuration change`. Defaults to all categories.

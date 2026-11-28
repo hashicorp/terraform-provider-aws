@@ -30,6 +30,7 @@ resource "aws_appfabric_ingestion" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `app` - (Required) Name of the application. Refer to the AWS Documentation for the [list of valid values](https://docs.aws.amazon.com/appfabric/latest/api/API_CreateIngestion.html#appfabric-CreateIngestion-request-app).
 * `app_bundle_arn` - (Required) ARN of the app bundle to use for the request.
 * `ingestion_type` - (Required) Ingestion type. Valid values are `auditLog`.

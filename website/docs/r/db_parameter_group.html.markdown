@@ -155,6 +155,7 @@ resource "aws_db_parameter_group" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional, Forces new resource) Description of the DB parameter group. Defaults to "Managed by Terraform".
 * `family` - (Required, Forces new resource) Family of the DB parameter group.
 * `name` - (Optional, Forces new resource) Name of the DB parameter group. If omitted, Terraform will assign a random, unique name.

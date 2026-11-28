@@ -30,6 +30,7 @@ resource "aws_s3control_access_grants_location" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `iam_role_arn` - (Required) ARN of the IAM role that S3 Access Grants should use when fulfilling runtime access requests to the location.
 * `location_scope` - (Required) Default S3 URI `s3://` or the URI to a custom location, a specific bucket or prefix.

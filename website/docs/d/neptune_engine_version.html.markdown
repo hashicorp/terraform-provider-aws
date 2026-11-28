@@ -24,6 +24,7 @@ data "aws_neptune_engine_version" "test" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `default_only` - (Optional) Whether to return only default engine versions that match all other criteria. AWS may define multiple default versions for a given engine, so using `default_only` alone does not guarantee that only one version will be returned. To ensure a single version is selected, consider combining this with `latest`. Note that default versions are defined by AWS and may not reflect the most recent engine version available.
 * `engine` - (Optional) DB engine. Must be `neptune`. Default is `neptune`.
 * `has_major_target` - (Optional) Whether to filter for engine versions that have a major target.

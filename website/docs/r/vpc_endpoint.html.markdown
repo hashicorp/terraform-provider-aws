@@ -186,6 +186,7 @@ resource "aws_route53_record" "ptfe_service" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_accept` - (Optional) Whether to accept the VPC endpoint (the VPC endpoint and service need to be in the same AWS account).
 * `dns_options` - (Optional) DNS options for the endpoint. See [`dns_options`](#dns_options-block) below.
 * `ip_address_type` - (Optional) IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.

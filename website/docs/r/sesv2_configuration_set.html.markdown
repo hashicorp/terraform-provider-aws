@@ -46,6 +46,7 @@ resource "aws_sesv2_configuration_set" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `configuration_set_name` - (Required) Name of the configuration set.
 * `delivery_options` - (Optional) Object that defines the dedicated IP pool that is used to send emails that you send using the configuration set. See [`delivery_options` Block](#delivery_options-block) for details.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

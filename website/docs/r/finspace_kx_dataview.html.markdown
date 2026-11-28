@@ -51,6 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `availability_zone_id` - (Optional) Identifier of the availability zones. If attaching a volume, the volume must be in the same availability zone as the dataview that you are attaching to.
 * `changeset_id` - (Optional) Unique identifier of the changeset of the database that you want to use to ingest data.
 * `description` - (Optional) Description for the dataview.

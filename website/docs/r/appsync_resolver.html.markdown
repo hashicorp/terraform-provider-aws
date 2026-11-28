@@ -128,6 +128,7 @@ resource "aws_appsync_resolver" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_id` - (Required) API ID for the GraphQL API.
 * `caching_config` - (Optional) Caching Config. See [Caching Config](#caching_config-block).
 * `code` - (Optional) Function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.

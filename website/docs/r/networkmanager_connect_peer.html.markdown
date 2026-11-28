@@ -123,6 +123,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bgp_options` - (Optional) Connect peer BGP options. See [bgp_options](#bgp_options-block) for more information.
 * `core_network_address` - (Optional) Connect peer core network address.
 * `inside_cidr_blocks` - (Optional) Inside IP addresses used for BGP peering. Required when the Connect attachment protocol is `GRE`. See [`aws_networkmanager_connect_attachment`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkmanager_connect_attachment) for details.

@@ -53,6 +53,7 @@ resource "aws_networkfirewall_container_association" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `container_association_name` - (Required) Name of the container association. You can't change the name after creation. Must be between 1 and 128 characters and contain only alphanumeric characters and hyphens.
 * `container_monitoring_configuration` - (Required) One or more monitoring configurations, up to 5. See [`container_monitoring_configuration` Block](#container_monitoring_configuration-block) below.
 * `description` - (Optional) Description of the container association.

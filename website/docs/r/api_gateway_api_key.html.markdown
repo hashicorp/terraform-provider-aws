@@ -24,6 +24,7 @@ resource "aws_api_gateway_api_key" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `customer_id` - (Optional) Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `description` - (Optional) API key description. Defaults to "Managed by Terraform".
 * `enabled` - (Optional) Whether the API key can be used by callers. Defaults to `true`.

@@ -33,6 +33,7 @@ data "aws_workspaces_bundle" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bundle_id` - (Optional) ID of the bundle.
 * `name` - (Optional) Name of the bundle. You cannot combine this parameter with `bundle_id`.
 * `owner` - (Optional) Owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.

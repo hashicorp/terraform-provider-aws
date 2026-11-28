@@ -33,6 +33,7 @@ data "aws_s3_buckets" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket_region` - (Optional) Limits the response to buckets that are located in the specified AWS Region. The AWS Region must be expressed according to the AWS Region code.
 * `max_buckets` - (Optional) Maximum number of buckets returned. Unlike the AWS API parameter, this is a provider-level total cap.
 * `prefix` - (Optional) Limits the response to bucket names that begin with the specified bucket name prefix.

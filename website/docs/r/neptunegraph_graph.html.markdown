@@ -45,6 +45,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deletion_protection` - (Optional) Value that indicates whether the Graph has deletion protection enabled. The graph can't be deleted when deletion protection is enabled. Default: `true`.
 * `graph_name` - (Optional, Forces new resource) User-supplied name for the Graph. If omitted, Terraform will assign a random, unique identifier. Conflicts with `graph_name_prefix`.
 * `graph_name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `graph_name`.

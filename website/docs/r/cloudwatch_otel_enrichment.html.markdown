@@ -60,6 +60,7 @@ resource "aws_cloudwatch_otel_enrichment" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `exclude_filter` - (Optional) Namespaces and metric names to leave unenriched. [See below](#exclude_filter-block).
 * `include_filter` - (Optional) Namespaces and metric names to enrich. [See below](#include_filter-block).
 * `region` - (Optional) AWS region where this resource is managed.

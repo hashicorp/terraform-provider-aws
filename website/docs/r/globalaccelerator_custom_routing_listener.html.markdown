@@ -40,6 +40,7 @@ resource "aws_globalaccelerator_custom_routing_listener" "example" {
 This resource supports the following arguments:
 
 * `accelerator_arn` - (Required) ARN of a custom routing accelerator.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `port_range` - (Optional) Port ranges for the connections from clients to the accelerator. See [`port_range`](#port_range-block) below.
 
 ### `port_range` Block

@@ -1,0 +1,6 @@
+kind: enhancement
+time: 2026-11-28T00:34:14.000000+01:00
+custom:
+    Body: Add the top-level `account` argument to resources, data sources, ephemeral resources, list resources and actions, and the `assume_role_in_account` provider configuration block, to manage resources in multiple AWS accounts from one provider configuration
+    Impact: provider
+    PullRequest: "51402"

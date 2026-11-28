@@ -32,6 +32,7 @@ resource "aws_waf_geo_match_set" "geo_match_set" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `geo_match_constraint` - (Optional) GeoMatchConstraint objects that contain the country for AWS WAF to search for. See [`geo_match_constraint` Block](#geo_match_constraint-block) below for details.
 * `name` - (Required) Name or description of the GeoMatchSet.
 

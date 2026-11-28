@@ -30,6 +30,7 @@ resource "aws_transfer_agreement" "example" {
 This resource supports the following arguments:
 
 * `access_role` - (Required) IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `base_directory` - (Required) Landing directory for the files transferred by using the AS2 protocol.
 * `description` - (Optional) Optional description of the transdfer.
 * `local_profile_id` - (Required) Unique identifier for the AS2 local profile.

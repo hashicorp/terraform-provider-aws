@@ -50,6 +50,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [`attachment` Block](#attachment-block) below for more details!
 * `connection_tracking_specification` - (Optional) Configures the [connection tracking timeouts](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-connection-tracking.html#connection-tracking-timeouts) for the network interface. See [`connection_tracking_specification` Block](#connection_tracking_specification-block) below for more details.
 * `description` - (Optional) Description for the network interface.

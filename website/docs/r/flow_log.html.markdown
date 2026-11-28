@@ -315,6 +315,7 @@ resource "aws_kinesis_firehose_delivery_stream" "dst" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deliver_cross_account_role` - (Optional) ARN of the IAM role in the destination account used for cross-account delivery of flow logs.
 * `destination_options` - (Optional) Destination options for a flow log. More details below.
 * `eni_id` - (Optional) Elastic Network Interface ID to attach to.

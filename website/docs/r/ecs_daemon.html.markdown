@@ -64,6 +64,7 @@ resource "aws_ecs_daemon" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `capacity_provider_arns` - (Required) Set of capacity provider ARNs to use for the daemon.
 * `cluster_arn` - (Optional, Forces new resource) ARN of the ECS cluster where the daemon will run.
 * `daemon_task_definition_arn` - (Required) ARN of the daemon task definition to use for the daemon. Drift is not detected on this attribute because the API may report a stale revision while a deployment is in progress.

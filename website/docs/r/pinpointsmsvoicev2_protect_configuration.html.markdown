@@ -59,6 +59,7 @@ resource "aws_pinpointsmsvoicev2_protect_configuration" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deletion_protection_enabled` - (Optional) Whether deletion protection is enabled. When `true`, the protect configuration can't be deleted.
 * `mms_country_rules` - (Optional) Map of two-character ISO 3166-1 alpha-2 country codes to protect status for MMS messages. Overrides `mms_default_status` for the listed countries. Valid values are `ALLOW` and `BLOCK`.
 * `mms_default_status` - (Optional) Protect status for every country not listed in `mms_country_rules`. Valid values are `ALLOW` and `BLOCK`. Defaults to `ALLOW`.

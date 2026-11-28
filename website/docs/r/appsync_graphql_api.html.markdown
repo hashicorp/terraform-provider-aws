@@ -221,6 +221,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphQL API. See [`additional_authentication_provider` Block](#additional_authentication_provider-block) for details.
 * `api_type` - (Optional) API type. Valid values are `GRAPHQL` or `MERGED`. A `MERGED` type requires `merged_api_execution_role_arn` to be set.
 * `enhanced_metrics_config` - (Optional) Enables and controls the enhanced metrics feature. See [`enhanced_metrics_config` Block](#enhanced_metrics_config-block) for details.

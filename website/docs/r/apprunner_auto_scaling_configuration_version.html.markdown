@@ -30,6 +30,7 @@ resource "aws_apprunner_auto_scaling_configuration_version" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auto_scaling_configuration_name` - (Required, Forces new resource) Name of the auto scaling configuration.
 * `max_concurrency` - (Optional, Forces new resource) Maximal number of concurrent requests that you want an instance to process. When the number of concurrent requests goes over this limit, App Runner scales up your service.
 * `max_size` - (Optional, Forces new resource) Maximal number of instances that App Runner provisions for your service.

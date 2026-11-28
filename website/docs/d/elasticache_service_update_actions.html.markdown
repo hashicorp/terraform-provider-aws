@@ -30,6 +30,7 @@ data "aws_elasticache_service_update_actions" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cache_cluster_id` - (Optional) ID of Cache Cluster to list updates for. If neither `cache_cluster_id` nor `replication_group_id` are specified, all service update actions will be listed.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_group_id` - (Optional) ID of Replication Group to list updates for. If neither `replication_group_id` nor `cache_cluster_id` are specified, all service update actions will be listed.

@@ -120,6 +120,7 @@ data "aws_caller_identity" "current" {}
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `log_destination_configs` - (Required) Configuration block that allows you to associate Amazon Kinesis Data Firehose, CloudWatch Log log group, or S3 bucket ARNs with the web ACL. **Note:** data firehose, log group, or bucket name **must** be prefixed with `aws-waf-logs-`, e.g. `aws-waf-logs-example-firehose`, `aws-waf-logs-example-log-group`, or `aws-waf-logs-example-bucket`.
 * `logging_filter` - (Optional) Configuration block that specifies which web requests are kept in the logs and which are dropped. It allows filtering based on the rule action and the web request labels applied by matching rules during web ACL evaluation. For more details, refer to the [`logging_filter` Block](#logging_filter-block) section below.
 * `redacted_fields` - (Optional) Configuration for parts of the request that you want to keep out of the logs. Up to 100 `redacted_fields` blocks are supported. See [`redacted_fields` Block](#redacted_fields-block) below for more details.

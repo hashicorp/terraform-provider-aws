@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the Exadata infrastructure is located. Changing this will force terraform to create new resource.
 * `compute_count` - (Optional) Number of compute instances that the Exadata infrastructure is located. Changing this will force terraform to create new resource.
 * `customer_contacts_to_send_to_oci` - (Optional) Email addresses of contacts to receive notification from Oracle about maintenance updates for the Exadata infrastructure. Changing this will force terraform to create new resource. See [`customer_contacts_to_send_to_oci` Block](#customer_contacts_to_send_to_oci-block) below.

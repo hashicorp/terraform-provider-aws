@@ -166,6 +166,7 @@ resource "aws_networkfirewall_firewall_policy" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `description` - (Optional) Friendly description of the firewall policy.
 * `encryption_configuration` - (Optional) KMS encryption configuration settings. See [`encryption_configuration` Block](#encryption_configuration-block) below for details.
 * `firewall_policy` - (Required) Configuration block describing the rule groups and policy actions to use in the firewall policy. See [`firewall_policy` Block](#firewall_policy-block) below for details.

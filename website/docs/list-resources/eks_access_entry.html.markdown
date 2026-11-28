@@ -26,6 +26,7 @@ list "aws_eks_access_entry" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `associated_policy_arn` - (Optional) Only access entries associated to this access policy are returned.
 * `cluster_name` - (Required) Name of the cluster to list access entries from.
 * `region` - (Optional) Region to query. Defaults to provider region.

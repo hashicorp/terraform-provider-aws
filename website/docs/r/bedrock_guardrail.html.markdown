@@ -87,6 +87,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `content_policy_config` - (Optional) Content policy config for a guardrail. See [`content_policy_config` Block](#content_policy_config-block) for more information.
 * `contextual_grounding_policy_config` - (Optional) Contextual grounding policy config for a guardrail. See [`contextual_grounding_policy_config` Block](#contextual_grounding_policy_config-block) for more information.
 * `cross_region_config` - (Optional) Configuration block to enable cross-region routing for bedrock guardrails. See [`cross_region_config` Block](#cross_region_config-block) for more information. See [available Regions](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-cross-region-support.html).

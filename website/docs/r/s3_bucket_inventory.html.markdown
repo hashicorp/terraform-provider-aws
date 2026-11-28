@@ -89,6 +89,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `enabled` - (Optional, Default: `true`) Whether to enable the inventory.
 * `filter` - (Optional) Inventory filter. The inventory only includes objects that meet the filter's criteria. See [`filter` Block](#filter-block) below.
 * `optional_fields` - (Optional) List of optional fields that are included in the inventory results. Please refer to the S3 [documentation](https://docs.aws.amazon.com/AmazonS3/latest/API/API_InventoryConfiguration.html#AmazonS3-Type-InventoryConfiguration-OptionalFields) for more details.

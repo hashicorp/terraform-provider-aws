@@ -131,6 +131,7 @@ resource "aws_sesv2_configuration_set_event_destination" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `configuration_set_name` - (Required) Name of the configuration set.
 * `event_destination` - (Required) Object that defines the event destination. See [`event_destination` Block](#event_destination-block) for details.
 * `event_destination_name` - (Required) Name that identifies the event destination within the configuration set.

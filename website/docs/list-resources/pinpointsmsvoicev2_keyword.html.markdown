@@ -26,5 +26,6 @@ list "aws_pinpointsmsvoicev2_keyword" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `origination_identity_arn` - (Required) ARN of the origination identity (phone number or pool) to list keywords for.
 * `region` - (Optional) Region to query. Defaults to provider region.

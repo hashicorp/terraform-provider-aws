@@ -23,6 +23,7 @@ resource "aws_quicksight_group_membership" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `aws_account_id` - (Optional, Forces new resource) AWS account ID. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `group_name` - (Required) Name of the group in which the member will be added.
 * `member_name` - (Required) Name of the member to add to the group.

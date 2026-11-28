@@ -38,6 +38,7 @@ resource "aws_ecs_cluster_capacity_providers" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `capacity_providers` - (Optional) Set of names of one or more capacity providers to associate with the cluster. Valid values also include `FARGATE` and `FARGATE_SPOT`.
 * `cluster_name` - (Required, Forces new resource) Name of the ECS cluster to manage capacity providers for.
 * `default_capacity_provider_strategy` - (Optional) Set of capacity provider strategies to use by default for the cluster. Detailed below.

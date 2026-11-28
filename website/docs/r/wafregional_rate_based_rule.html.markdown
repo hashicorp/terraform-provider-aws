@@ -42,6 +42,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `metric_name` - (Required) Name or description for the Amazon CloudWatch metric of this rule.
 * `name` - (Required) Name or description of the rule.
 * `predicate` - (Optional) Objects to include in a rule. See [`predicate` Block](#predicate-block) below for details.

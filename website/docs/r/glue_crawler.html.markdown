@@ -130,6 +130,7 @@ resource "aws_glue_crawler" "events_crawler" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `catalog_target` - (Optional) List of nested AWS Glue Data Catalog target arguments. See [`catalog_target`](#catalog_target-block) below.
 * `classifiers` - (Optional) List of custom classifiers. By default, all AWS classifiers are included in a crawl, but these custom classifiers always override the default classifiers for a given classification.
 * `configuration` - (Optional) JSON string of configuration information. For more details see [Setting Crawler Configuration Options](https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).

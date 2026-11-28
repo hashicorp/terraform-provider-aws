@@ -37,6 +37,7 @@ resource "aws_waf_rule_group" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `activated_rule` - (Optional) Set of activated rules. See [`activated_rule` Block](#activated_rule-block) below for details.
 * `metric_name` - (Required) Friendly name for the metrics from the rule group.
 * `name` - (Required) Name of the rule group.

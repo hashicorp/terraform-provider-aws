@@ -26,6 +26,7 @@ data "aws_rds_reserved_instance_offering" "test" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `db_instance_class` - (Required) DB instance class for the reserved DB instance.
 * `duration` - (Required) Duration of the reservation in years or seconds. Valid values are `1`, `3`, `31536000`, `94608000`
 * `multi_az` - (Required) Whether the reservation applies to Multi-AZ deployments.

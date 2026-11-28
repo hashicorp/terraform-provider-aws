@@ -28,6 +28,7 @@ resource "aws_transfer_certificate" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `certificate` - (Required) Valid certificate file required for the transfer.
 * `certificate_chain` - (Optional) Optional list of certificate that make up the chain for the certificate that is being imported.
 * `description` - (Optional) Short description that helps identify the certificate.

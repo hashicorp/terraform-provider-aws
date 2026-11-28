@@ -42,6 +42,7 @@ resource "aws_ebs_volume" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `device_name` - (Required) Device name to expose to the instance (for example, `/dev/sdh` or `xvdh`). See [Device Naming on Linux Instances](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names) and [Device Naming on Windows Instances](https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/device_naming.html#available-ec2-device-names) for more information.
 * `force_detach` - (Optional) Whether to force the volume to detach. Useful if previous attempts failed, but use this option only as a last resort, as this can result in **data loss**. See [Detaching an Amazon EBS Volume from an Instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-detaching-volume.html) for more information.
 * `instance_id` - (Required) ID of the Instance to attach to.

@@ -32,6 +32,7 @@ data "aws_s3_object" "object_info" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket` - (Required) Lists object keys in this S3 bucket. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `delimiter` - (Optional) Character used to group keys (Default: none)
 * `encoding_type` - (Optional) Encodes keys using this method (Default: none; besides none, only "url" can be used)

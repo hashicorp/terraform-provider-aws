@@ -40,6 +40,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `context` - (Optional) Mapping that makes up the encryption context.
 * `key_id` - (Required) Globally unique key ID for the customer master key.
 * `plaintext` - (Optional, Exactly one of `plaintext` or `plaintext_wo` must be set) Data to be encrypted. Note that this may show up in logs, and it will be stored in the state file.

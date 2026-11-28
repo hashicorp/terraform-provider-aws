@@ -23,6 +23,7 @@ data "aws_networkmanager_device" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `device_id` - (Required) ID of the device.
 * `global_network_id` - (Required) ID of the global network.
 

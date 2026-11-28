@@ -261,6 +261,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_configuration` - (Optional) Application configuration. See [`application_configuration` Block](#application_configuration-block) below.
 * `application_mode` - (Optional) Application's mode. Valid values are `STREAMING`, `INTERACTIVE`.
 * `cloudwatch_logging_options` - (Optional) CloudWatch log stream to monitor application configuration errors. See [`cloudwatch_logging_options` Block](#cloudwatch_logging_options-block) below.

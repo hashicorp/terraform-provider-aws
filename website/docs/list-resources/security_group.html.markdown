@@ -75,6 +75,7 @@ list "aws_security_group" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `group_ids` - (Optional) List of security group IDs to filter results. If specified, only security groups with the provided IDs will be returned.
 * `region` - (Optional) Region to query. Defaults to provider region.
 

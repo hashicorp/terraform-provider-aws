@@ -738,6 +738,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `destination` - (Required) Destination where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `destination_id` - (Optional) Identifier of the destination for the delivery stream.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.

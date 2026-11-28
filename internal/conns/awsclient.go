@@ -19,6 +19,7 @@ import (
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	s3_types "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -36,8 +37,12 @@ import (
 type AWSClient struct {
 	accountID                 string
 	awsConfig                 *aws.Config
+	accountConfigs            map[string]*aws.Config // Per-resource AWS account ID -> AWS configuration. Guarded by accountLock.
+	accountLock               sync.Mutex
+	accountRoles              map[string]*AccountRole   // From provider configuration. AWS account ID -> assume_role_in_account block.
+	awsbaseConfig             *awsbase.Config           // As resolved at configuration. Used to verify per-resource AWS accounts.
 	callRecorder              *apicall.Recorder         // For acceptance tests asserting which AWS API operations are made.
-	clients                   map[string]map[string]any // Region -> service package name -> API client.
+	clients                   map[string]map[string]any // Region (plus any per-resource AWS account ID) -> service package name -> API client.
 	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
@@ -78,11 +83,11 @@ func (c *AWSClient) TerraformVersion(_ context.Context) string {
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
-func (c *AWSClient) CredentialsProvider(context.Context) aws.CredentialsProvider {
+func (c *AWSClient) CredentialsProvider(ctx context.Context) aws.CredentialsProvider {
 	if c.awsConfig == nil {
 		return nil
 	}
-	return c.awsConfig.Credentials
+	return c.AwsConfig(ctx).Credentials
 }
 
 func (c *AWSClient) DefaultTagsConfig(context.Context) *tftags.DefaultConfig {
@@ -97,12 +102,29 @@ func (c *AWSClient) TagPolicyConfig(context.Context) *tftags.TagPolicyConfig {
 	return c.tagPolicyConfig
 }
 
-func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
-	return c.awsConfig.Copy()
+// AwsConfig returns a copy of the effective AWS SDK for Go v2 configuration.
+// If the currently in-process operation is in another AWS account than the provider's,
+// the returned configuration's credentials are those of the role assumed in that account.
+func (c *AWSClient) AwsConfig(ctx context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
+	cfg, _, err := c.effectiveConfig(ctx)
+	if err != nil {
+		// Never fall back to the provider's credentials: that would silently target another account.
+		failed := c.awsConfig.Copy()
+		failed.Credentials = aws.CredentialsProviderFunc(func(context.Context) (aws.Credentials, error) {
+			return aws.Credentials{}, err
+		})
+		return failed
+	}
+	return cfg.Copy()
 }
 
-// AccountID returns the configured AWS account ID.
-func (c *AWSClient) AccountID(context.Context) string {
+// AccountID returns the effective AWS account ID.
+// If the currently in-process operation has defined a per-resource AWS account,
+// that account ID is returned, otherwise the configured account ID is returned.
+func (c *AWSClient) AccountID(ctx context.Context) string {
+	if v := c.overrideAccountID(ctx); v != "" {
+		return v
+	}
 	return c.accountID
 }
 
@@ -300,6 +322,16 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 	c.lock.Lock() // OK since a non-default client is created.
 	defer c.lock.Unlock()
 
+	// The cached client carries the provider's credentials.
+	if c.overrideAccountID(ctx) != "" {
+		if s3Client.Options().Region != endpoints.AwsGlobalRegionID {
+			return s3Client
+		}
+		return errs.Must(c.client[*s3.Client](ctx, names.S3, map[string]any{
+			"s3_us_east_1_regional_endpoint": "regional",
+		}))
+	}
+
 	if c.s3ExpressClient == nil {
 		if s3Client.Options().Region == endpoints.AwsGlobalRegionID {
 			// No global endpoint for S3 Express.
@@ -458,9 +490,9 @@ func convertIPToDashIP(ip string) string {
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
-func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
+func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string, cfg *aws.Config) map[string]any {
 	m := map[string]any{
-		"aws_sdkv2_config": c.awsConfig,
+		"aws_sdkv2_config": cfg,
 		"endpoint":         c.endpoints[servicePackageName],
 		"partition":        c.Partition(ctx),
 		"region":           c.Region(ctx),
@@ -488,7 +520,15 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 func (c *AWSClient) client[T any](ctx context.Context, servicePackageName string, extra map[string]any) (T, error) {
 	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
+	cfg, accountKey, err := c.effectiveConfig(ctx)
+	if err != nil {
+		return inttypes.Zero[T](), err
+	}
+	// Clients are cached per Region and per account: a client's credentials are fixed at construction.
 	region := c.Region(ctx)
+	if accountKey != "" {
+		region += "|" + accountKey
+	}
 
 	isDefault := len(extra) == 0
 	// Default service client is cached.
@@ -520,7 +560,7 @@ func (c *AWSClient) client[T any](ctx context.Context, servicePackageName string
 		return inttypes.Zero[T](), fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
-	config := c.apiClientConfig(ctx, servicePackageName)
+	config := c.apiClientConfig(ctx, servicePackageName, cfg)
 	maps.Copy(config, extra) // Extras overwrite per-service defaults.
 	client, err := v.NewClient(ctx, config)
 	if err != nil {

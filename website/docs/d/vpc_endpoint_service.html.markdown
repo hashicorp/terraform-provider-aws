@@ -57,6 +57,7 @@ data "aws_vpc_endpoint_service" "test" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `service` - (Optional) Common name of an AWS service (e.g., `s3`).
 * `service_name` - (Optional) Service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker AI Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).

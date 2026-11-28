@@ -62,6 +62,7 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `engine_name` - (Required) Name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Major version of the engine that this option group should be associated with.
 * `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.

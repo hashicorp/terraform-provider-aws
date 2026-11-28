@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `ingress_point_configuration` - (Optional) Configuration used to authenticate with the ingress point. See [`ingress_point_configuration` Block](#ingress_point_configuration-block) for details.
 * `network_configuration` - (Optional) Network configuration for the ingress point. See [`network_configuration` Block](#network_configuration-block) for details. Changing this value forces a new resource.
 * `region` - (Optional) Region where this resource is managed.

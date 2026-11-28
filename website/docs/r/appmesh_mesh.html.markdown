@@ -38,6 +38,7 @@ resource "aws_appmesh_mesh" "simple" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name to use for the service mesh. Must be between 1 and 255 characters in length.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `spec` - (Optional) Service mesh specification to apply. See [`spec` Block](#spec-block) for details.

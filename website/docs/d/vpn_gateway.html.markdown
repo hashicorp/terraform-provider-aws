@@ -32,6 +32,7 @@ output "vpn_gateway_id" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `amazon_side_asn` - (Optional) Autonomous System Number (ASN) for the Amazon side of the specific VPN Gateway to retrieve.
 * `attached_vpc_id` - (Optional) ID of a VPC attached to the specific VPN Gateway to retrieve.
 * `availability_zone` - (Optional) Availability Zone of the specific VPN Gateway to retrieve.

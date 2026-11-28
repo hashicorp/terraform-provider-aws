@@ -74,6 +74,7 @@ data "aws_odb_autonomous_database" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `admin_password` - (Optional) Sensitive password for the `ADMIN` user. Must be between 12 and 30 characters. This value is stored in Terraform state. Conflicts with `admin_password_source` and `admin_password_wo`.
 * `admin_password_source` - (Optional) Source of the `ADMIN` password. Conflicts with `admin_password` and `admin_password_wo`. See [`admin_password_source` Block](#admin_password_source-block) below.
 * `admin_password_wo` - (Optional) Sensitive write-only password for the `ADMIN` user. Must be between 12 and 30 characters. The value is sent to AWS but is never stored in Terraform plan or state. Requires Terraform 1.11 or later. Set `admin_password_wo_version` with this argument. Conflicts with `admin_password` and `admin_password_source`.

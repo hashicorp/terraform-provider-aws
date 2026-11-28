@@ -42,6 +42,7 @@ resource "aws_proxy_protocol_policy" "smtp" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `instance_ports` - (Required) List of instance ports to which the policy should be applied. This can be specified if the protocol is SSL or TCP.
 * `load_balancer` - (Required) Load balancer to which the policy should be attached.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

@@ -40,6 +40,7 @@ resource "aws_opensearch_outbound_connection" "foo" {
 This resource supports the following arguments:
 
 * `accept_connection` - (Optional, Forces new resource) Accepts the connection.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `connection_alias` - (Required, Forces new resource) Connection alias that will be used by the customer for this connection.
 * `connection_mode` - (Optional, Forces new resource) Connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
 * `connection_properties` - (Optional, Forces new resource) Configuration block for the outbound connection.

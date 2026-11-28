@@ -72,6 +72,7 @@ resource "aws_vpc_ipam_pool_cidr" "ipv6_test_public" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr` - (Optional) CIDR you want to assign to the pool. Conflicts with `netmask_length`.
 * `cidr_authorization_context` - (Optional) Signed document that proves that you are authorized to bring the specified IP address range to Amazon using BYOIP. This is not stored in the state file. See [cidr_authorization_context](#cidr_authorization_context-block) for more information.
 * `ipam_pool_id` - (Required) ID of the pool to which you want to assign a CIDR.

@@ -41,6 +41,7 @@ resource "aws_api_gateway_base_path_mapping" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_id` - (Required) ID of the API to connect.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
 * `domain_name` - (Required) Already-registered domain name to connect the API to.

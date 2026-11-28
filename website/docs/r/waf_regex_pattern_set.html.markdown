@@ -23,6 +23,7 @@ resource "aws_waf_regex_pattern_set" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name or description of the Regex Pattern Set.
 * `regex_pattern_strings` - (Optional) List of regular expression (regex) patterns for AWS WAF to search for, such as `B[a@]dB[o0]t`.
 

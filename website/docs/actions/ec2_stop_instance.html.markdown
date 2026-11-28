@@ -88,6 +88,7 @@ resource "terraform_data" "maintenance_trigger" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `force` - (Optional) Forces the instance to stop. The instance does not have an opportunity to flush file system caches or file system metadata. If you use this option, you must perform file system check and repair procedures. This option is not recommended for Windows instances. Default: `false`.
 * `instance_id` - (Required) ID of the EC2 instance to stop. Must be a valid EC2 instance ID (e.g., i-1234567890abcdef0).
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

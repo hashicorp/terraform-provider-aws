@@ -38,6 +38,7 @@ data "aws_iam_session_context" "example" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `arn` - (Required) ARN for an assumed role.
 
 ~> If `arn` is a non-role ARN, Terraform gives no error and `issuer_arn` will be equal to the `arn` value. For STS assumed-role ARNs, Terraform gives an error if the identified IAM role does not exist.

@@ -371,6 +371,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `eventbridge` - (Optional) Whether to enable Amazon EventBridge notifications. Defaults to `false`.
 * `lambda_function` - (Optional, Multiple) Notification configuration to a Lambda Function. See below.
 * `queue` - (Optional) Notification configuration to SQS Queue. See below.

@@ -97,6 +97,7 @@ resource "aws_glue_catalog" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `allow_full_table_external_data_access` - (Optional) Whether third-party engines can access data in Amazon S3 locations that are registered with Lake Formation. Valid values are `True` and `False`.
 * `catalog_properties` - (Optional) Configuration block of properties for the catalog. See [`catalog_properties` Block](#catalog_properties-block) below.
 * `create_database_default_permissions` - (Optional) List of default permissions on databases for principals. See [`create_database_default_permissions` Block](#create_database_default_permissions-block) below.

@@ -42,6 +42,7 @@ resource "aws_sagemaker_hub_content_reference" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `hub_content_name` - (Required) Name of the hub content reference.
 * `hub_name` - (Required) Name of the private SageMaker Hub to add the content reference to.
 * `min_version` - (Optional) Minimum version of the hub content to reference. Use `"1.0.0"` to support all versions. Changing this value to an empty string forces replacement of the resource.

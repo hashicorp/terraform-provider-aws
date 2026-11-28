@@ -68,6 +68,7 @@ resource "aws_iam_role_policy" "role_policy" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required, **Deprecated**) Application ID.
 * `configuration_set` - (Optional, **Deprecated**) ARN of the Amazon SES configuration set that you want to apply to messages that you send through the channel.
 * `enabled` - (Optional, **Deprecated**) Whether the channel is enabled or disabled. Defaults to `true`.

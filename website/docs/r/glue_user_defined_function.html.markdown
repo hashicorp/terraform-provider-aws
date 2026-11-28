@@ -36,6 +36,7 @@ resource "aws_glue_user_defined_function" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the function in. If omitted, this defaults to the AWS Account ID.
 * `class_name` - (Required) Java class that contains the function code.
 * `database_name` - (Required) Name of the Database to create the Function.

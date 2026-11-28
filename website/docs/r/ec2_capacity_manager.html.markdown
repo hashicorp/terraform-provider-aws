@@ -61,6 +61,7 @@ resource "aws_ec2_capacity_manager" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `enabled` - (Required) Whether to enable EC2 Capacity Manager for the account in the configured Region.
 * `organizations_access` - (Optional) Whether to enable cross-account data aggregation for AWS Organizations. Requires `enabled` to be `true`. Can only be enabled from the Organizations management account or a delegated administrator account. If not specified, AWS defaults this to `false` when Capacity Manager is enabled. Removing this argument does not disable Organizations access; set it to `false` explicitly.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

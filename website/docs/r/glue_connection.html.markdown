@@ -316,6 +316,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `athena_properties` - (Optional) Map of key-value pairs used as connection properties specific to the Athena compute environment.
 * `authentication_configuration` - (Optional) Configuration block for authentication options. See [`authentication_configuration`](#authentication_configuration-block) below.
 * `catalog_id` - (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.

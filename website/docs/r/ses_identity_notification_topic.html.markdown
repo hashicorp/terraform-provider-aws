@@ -25,6 +25,7 @@ resource "aws_ses_identity_notification_topic" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `identity` - (Required) Identity for which the Amazon SNS topic will be set. You can specify an identity by using its name or by using its ARN.
 * `include_original_headers` - (Optional) Whether SES should include original email headers in SNS notifications of this type. `false` by default.
 * `notification_type` - (Required) Type of notifications that will be published to the specified Amazon SNS topic. Valid Values: `Bounce`, `Complaint` or `Delivery`.

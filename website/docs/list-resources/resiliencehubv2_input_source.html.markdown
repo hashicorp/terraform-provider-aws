@@ -28,6 +28,7 @@ list "aws_resiliencehubv2_input_source" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `region` - (Optional) Region to list resources in. Defaults to the provider's configured region.
 * `service_arn` - (Required) ARN of the service whose input sources are listed.
 * `type` - (Optional) Filter input sources by type. Valid values: `CFN_STACK`, `TAGS`, `EKS`, `TERRAFORM`, `DESIGN_FILE`, `MONITORING`.

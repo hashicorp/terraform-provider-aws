@@ -32,6 +32,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `automatic_backup_retention_days` - (Optional) Number of days to retain automatic backups. Setting this to 0 disables automatic backups. You can retain automatic backups for a maximum of 90 days.
 * `backup_id` - (Optional) ID of the source backup to create the filesystem from.
 * `copy_tags_to_backups` - (Optional) Whether tags for the file system should be copied to backups. Default value is false.

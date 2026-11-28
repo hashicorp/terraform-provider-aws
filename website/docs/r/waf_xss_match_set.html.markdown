@@ -38,6 +38,7 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name or description of the XssMatchSet.
 * `xss_match_tuples` - (Optional) Parts of web requests to inspect for cross-site scripting attacks. See [`xss_match_tuples` Block](#xss_match_tuples-block) below for details.
 

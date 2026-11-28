@@ -145,6 +145,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `allow_association_to_shareable_service_network` - (Optional) Allow or Deny the association of this resource to a shareable service network.
 * `custom_domain_name` - (Optional) Custom domain name for your resource configuration. Additionally, provide a `domain_verification_id` to prove your ownership of a domain.
 * `domain_verification_id` - (Optional) Domain verification ID of your verified custom domain name. If you don't provide an ID, you must configure the DNS settings yourself.

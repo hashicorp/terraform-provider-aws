@@ -48,6 +48,7 @@ resource "aws_dynamodb_table" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `hash_key` - (Required) Hash key to use for lookups and identification of the item
 * `item` - (Required) JSON representation of a map of attribute name/value pairs, one for each attribute. Only the primary key attributes are required; you can optionally provide other attribute name-value pairs for the item.
 * `range_key` - (Optional) Range key to use for lookups and identification of the item. Required if there is range key defined in the table.

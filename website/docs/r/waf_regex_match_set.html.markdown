@@ -37,6 +37,7 @@ resource "aws_waf_regex_pattern_set" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name or description of the Regex Match Set.
 * `regex_match_tuple` - (Required) Regular expression pattern to search for in web requests, the location in requests to search, and other settings. See [`regex_match_tuple` Block](#regex_match_tuple-block) below for details.
 

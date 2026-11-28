@@ -26,6 +26,7 @@ resource "aws_m2_deployment" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required) Application to deploy.
 * `application_version` - (Required) Version to application to deploy
 * `environment_id` - (Required) Environment to deploy application to.

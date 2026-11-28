@@ -69,6 +69,7 @@ resource "aws_outposts_capacity_task" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `asset_id` - (Optional) ID of a specific Outposts asset (hardware server) to target for the capacity task. If omitted, AWS selects an appropriate asset automatically. Discover valid asset IDs with the [`aws_outposts_assets`](../d/outposts_assets.html.markdown) data source. Changing this value forces a new resource.
 * `instance_pool` - (Required) One or more `instance_pool` blocks defining the desired instance-type layout for the Outpost. See [below](#instance_pool-block). At least one block is required. Changing any value forces a new resource.
 * `instances_to_exclude` - (Optional) Single `instances_to_exclude` block specifying user-owned running instances that must not be stopped to free up capacity. See [below](#instances_to_exclude-block). Note: AWS does not return this value via the Get/Describe API; after import, you must add the block back to your configuration manually — see [Import](#import).

@@ -35,6 +35,7 @@ type ListResourceWithSDKv2Resource struct {
 	identitySchema *schema.ResourceIdentity
 	regionSpec     unique.Handle[inttypes.ServicePackageResourceRegion]
 	interceptors   []listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]
+	hasAccount     bool
 }
 
 func (l *ListResourceWithSDKv2Resource) AppendResultInterceptor(interceptor listresource.ListResultInterceptor[listresource.InterceptorParamsSDK]) {
@@ -65,6 +66,23 @@ func (l *ListResourceWithSDKv2Resource) SetRegionSpec(regionSpec unique.Handle[i
 			}
 		}
 	}
+}
+
+// SetAccountSchema injects the per-resource account argument, so that listed resources
+// have the same shape as the managed resource's schema.
+func (l *ListResourceWithSDKv2Resource) SetAccountSchema(account *schema.Schema) {
+	const name = "account"
+
+	if f := l.resourceSchema.SchemaFunc; f != nil {
+		l.resourceSchema.SchemaFunc = func() map[string]*schema.Schema {
+			s := f()
+			s[name] = account
+			return s
+		}
+	} else {
+		l.resourceSchema.Schema[name] = account
+	}
+	l.hasAccount = true
 }
 
 func identityAttributeSchemaType(it inttypes.IdentityType) schema.ValueType {
@@ -150,6 +168,13 @@ func (l *ListResourceWithSDKv2Resource) ResourceData() *schema.ResourceData {
 // TODO modify to accept func() as parameter
 // will allow to use before interceptors as well
 func (l *ListResourceWithSDKv2Resource) SetResult(ctx context.Context, awsClient *conns.AWSClient, includeResource bool, rd *schema.ResourceData, result *list.ListResult) {
+	// A listed resource is in the account that was listed.
+	if l.hasAccount {
+		if err := rd.Set("account", awsClient.AccountID(ctx)); err != nil {
+			result.Diagnostics.AddError("Setting account", err.Error())
+			return
+		}
+	}
 	if err := l.runResultInterceptors(ctx, listresource.After, awsClient, includeResource, rd, result); err.HasError() {
 		result.Diagnostics.Append(err...)
 		return

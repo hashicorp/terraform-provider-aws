@@ -45,6 +45,7 @@ This resource supports the following arguments:
 
 * `access_grants_location_configuration` - (Optional) See [`access_grants_location_configuration` Block](#access_grants_location_configuration-block) below for more details.
 * `access_grants_location_id` - (Required) ID of the S3 Access Grants location to with the access grant is giving access.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `account_id` - (Optional) AWS account ID for the S3 Access Grants location. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `grantee` - (Optional) See [`grantee` Block](#grantee-block) below for more details.
 * `permission` - (Required) Access grant's level of access. Valid values: `READ`, `WRITE`, `READWRITE`.

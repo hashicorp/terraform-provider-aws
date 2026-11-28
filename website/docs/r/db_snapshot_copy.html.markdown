@@ -42,6 +42,7 @@ resource "aws_db_snapshot_copy" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `copy_tags` - (Optional) Whether to copy existing tags. Defaults to `false`.
 * `destination_region` - (Optional) Destination Region to place snapshot copy.
 * `kms_key_id` - (Optional) KMS key ID.

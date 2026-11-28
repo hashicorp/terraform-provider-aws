@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `availability_zone` - (Optional) Name of the Availability Zone (AZ) where the odb network is located. Changing this will force terraform to create new resource. Make sure `availability_zone` maps correctly with `availability_zone_id`.
 * `cross_region_s3_restore_sources_access` - (Optional) List of regions enabled for cross-region restore in the ODB network.
 * `custom_domain_name` - (Optional) Name of the custom domain that the network is located. `custom_domain_name` and `default_dns_prefix` both can't be given. Changing this will force terraform to create new resource.

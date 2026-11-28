@@ -92,6 +92,7 @@ resource "aws_appsync_function" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_id` - (Required) ID of the associated AppSync API.
 * `code` - (Optional) Function code that contains the request and response functions. When code is used, the runtime is required. The runtime value must be APPSYNC_JS.
 * `data_source` - (Required) Function data source name.

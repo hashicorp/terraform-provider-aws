@@ -41,6 +41,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `access_endpoint` - (Optional) Set of interface VPC endpoint (interface endpoint) objects. Maximum of 4. See below.
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `appstream_agent_version` - (Optional) Version of the AppStream 2.0 agent to use for this image builder.
 * `description` - (Optional) Description to display.
 * `display_name` - (Optional) Human-readable friendly name for the AppStream image builder.

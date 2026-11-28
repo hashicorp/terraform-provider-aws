@@ -28,6 +28,7 @@ data "aws_api_gateway_resource" "my_resource" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `path` - (Required) Full path of the resource.  If no path is found, an error will be returned.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `rest_api_id` - (Required) REST API ID that owns the resource. If no REST API is found, an error will be returned.

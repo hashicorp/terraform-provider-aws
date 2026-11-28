@@ -64,6 +64,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `configuration_set_name` - (Optional) Configuration set to use by default when sending from this identity. Any configuration set defined in the email sending request takes precedence.
 * `dkim_signing_attributes` - (Optional) Configuration block for the DKIM authentication settings for an email domain identity. See [`dkim_signing_attributes` Block](#dkim_signing_attributes-block) below.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).

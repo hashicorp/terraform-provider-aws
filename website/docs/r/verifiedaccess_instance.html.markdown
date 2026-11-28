@@ -44,6 +44,7 @@ resource "aws_verifiedaccess_instance" "example" {
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cidr_endpoints_custom_subdomain` - (Optional) Custom subdomain for the CIDR endpoints.
 * `description` - (Optional) Description for the AWS Verified Access Instance.
 * `fips_enabled` - (Optional, Forces new resource) Whether to enable support for Federal Information Processing Standards (FIPS) on the AWS Verified Access Instance.

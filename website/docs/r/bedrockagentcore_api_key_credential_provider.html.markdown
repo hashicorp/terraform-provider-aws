@@ -57,6 +57,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `api_key` - (Optional) API key value. Exactly one of `api_key`, `api_key_secret_config`, or `api_key_wo` must be set. This value is stored in plain text in the Terraform state; use `api_key_wo` to avoid this.
 * `api_key_secret_config` - (Optional) Reference to a customer-managed AWS Secrets Manager secret that stores the API key. Requires `api_key_secret_source = "EXTERNAL"`. [See below](#api_key_secret_config-block).
 * `api_key_secret_source` - (Optional) Source of the secret backing the credential provider. Valid values are `MANAGED` (AgentCore creates and manages the secret from the supplied `api_key`) and `EXTERNAL` (the provider references a customer-managed AWS Secrets Manager secret via `api_key_secret_config`). Changing between `MANAGED` and `EXTERNAL` forces replacement of the resource.

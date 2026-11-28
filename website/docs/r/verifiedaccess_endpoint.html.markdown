@@ -85,6 +85,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_domain` - (Optional) DNS name for users to reach your application. This parameter is required if the endpoint type is `load-balancer` or `network-interface`.
 * `cidr_options` - (Optional) CIDR block details. This parameter is required if the endpoint type is `cidr`. [See below](#cidr_options-block).
 * `description` - (Optional) Description for the Verified Access endpoint.

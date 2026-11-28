@@ -32,6 +32,7 @@ resource "aws_appconfig_deployment" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_id` - (Required, Forces new resource) Application ID. Must be between 4 and 7 characters in length.
 * `configuration_profile_id` - (Required, Forces new resource) Configuration profile ID. Must be between 4 and 7 characters in length.
 * `configuration_version` - (Required, Forces new resource) Configuration version to deploy. Can be at most 1024 characters.

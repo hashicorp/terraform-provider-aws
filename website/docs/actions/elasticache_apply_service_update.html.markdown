@@ -44,6 +44,7 @@ resource "terraform_data" "example" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cache_cluster_id` - (Optional) ID of Cache Cluster to apply update to. One of `cache_cluster_id` or `replication_group_id` is required.
 * `region` - (Optional) Region where this action will be [invoked](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `replication_group_id` - (Optional) ID of Replication Group to apply update to. One of `replication_group_id` or `cache_cluster_id` is required.

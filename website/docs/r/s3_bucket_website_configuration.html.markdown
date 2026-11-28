@@ -70,6 +70,7 @@ EOF
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `bucket` - (Required, Forces new resource) Name of the bucket.
 * `error_document` - (Optional, Conflicts with `redirect_all_requests_to`) Name of the error document for the website. [See below](#error_document-block).
 * `expected_bucket_owner` - (Optional, Forces new resource, **Deprecated**) Account ID of the expected bucket owner.

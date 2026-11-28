@@ -95,6 +95,7 @@ resource "terraform_data" "example" {
 
 This action supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `assessment_run_name` - (Required) Unique name for the DMS premigration assessment run.
 * `exclude` - (Optional) List of individual assessment names to exclude from the run. Cannot be set with `include_only`.
 * `include_only` - (Optional) List of individual assessment names to include in the run. Cannot be set with `exclude`.

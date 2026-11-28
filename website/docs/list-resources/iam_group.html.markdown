@@ -38,4 +38,5 @@ list "aws_iam_group" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `path_prefix` - (Optional) Limits the returned IAM Groups to those within this path. If `path_prefix` is not specified, or is `"/"`, returns all IAM Groups. Must begin and end with a slash (`/`) and contain uppercase or lowercase alphanumeric characters or any of the following: `/`, `,`, `.`, `+`, `@`, `=`, `_`, or `-`.

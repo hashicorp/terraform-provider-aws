@@ -24,6 +24,7 @@ resource "aws_fsx_openzfs_volume" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `copy_tags_to_snapshots` - (Optional) Whether tags for the file system should be copied to snapshots. Default is false.
 * `data_compression_type` - (Optional) Method used to compress the data on the volume. Valid values are `NONE`, `ZSTD`, or `LZ4`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
 * `delete_volume_options` - (Optional) Whether to delete all child volumes and snapshots. Valid values: `DELETE_CHILD_VOLUMES_AND_SNAPSHOTS`. This configuration must be applied separately before attempting to delete the resource to have the desired behavior..

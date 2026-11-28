@@ -46,6 +46,7 @@ resource "aws_lightsail_disk_attachment" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `disk_name` - (Required) Name of the Lightsail disk.
 * `disk_path` - (Required) Disk path to expose to the instance.
 * `instance_name` - (Required) Name of the Lightsail instance to attach to.

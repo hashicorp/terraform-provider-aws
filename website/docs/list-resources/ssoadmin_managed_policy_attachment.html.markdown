@@ -27,6 +27,7 @@ list "aws_ssoadmin_managed_policy_attachment" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `instance_arn` - (Required) ARN of the IAM Identity Center instance.
 * `permission_set_arn` - (Required) ARN of the permission set whose managed policy attachments should be listed.
 * `region` - (Optional) Region to query. Defaults to provider region.

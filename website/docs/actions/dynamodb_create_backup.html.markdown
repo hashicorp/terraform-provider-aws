@@ -67,6 +67,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this action should be run. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `backup_name` - (Optional) Name for the backup. If not provided, a unique name will be generated automatically using the table name and a unique identifier. Must be between 3 and 255 characters and contain only alphanumeric characters, underscores, periods, and hyphens.
 * `region` - (Optional) Region where this action should be [run](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `timeout` - (Optional) Timeout in minutes for the backup operation. Defaults to 10 minutes.

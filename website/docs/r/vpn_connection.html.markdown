@@ -123,6 +123,7 @@ resource "aws_vpn_connection" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `customer_gateway_id` - (Required) ID of the customer gateway.
 * `enable_acceleration` - (Optional, Default `false`) Whether to enable acceleration for the VPN connection. Supports only EC2 Transit Gateway.
 * `local_ipv4_network_cidr` - (Optional, Default `0.0.0.0/0`) IPv4 CIDR on the customer gateway (on-premises) side of the VPN connection.

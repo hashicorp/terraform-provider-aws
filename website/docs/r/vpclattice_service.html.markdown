@@ -30,6 +30,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `auth_type` - (Optional) Type of IAM policy. Either `NONE` or `AWS_IAM`.
 * `certificate_arn` - (Optional) ARN of the certificate.
 * `custom_domain_name` - (Optional) Custom domain name of the service.

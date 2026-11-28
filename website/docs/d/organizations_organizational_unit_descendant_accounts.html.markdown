@@ -24,6 +24,7 @@ data "aws_organizations_organizational_unit_descendant_accounts" "accounts" {
 
 This data source supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this data source will be read. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `parent_id` - (Required) Parent ID of the accounts.
 
 ## Attribute Reference

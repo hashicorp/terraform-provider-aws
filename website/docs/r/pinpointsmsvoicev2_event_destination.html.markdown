@@ -80,6 +80,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `cloudwatch_logs_destination` - (Optional) Send events to Amazon CloudWatch Logs. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`cloudwatch_logs_destination` Block](#cloudwatch_logs_destination-block) for details.
 * `enabled` - (Optional) Whether the event destination is enabled. Defaults to `true`.
 * `kinesis_firehose_destination` - (Optional) Send events to Amazon Data Firehose. Exactly one of `cloudwatch_logs_destination`, `kinesis_firehose_destination`, or `sns_destination` must be configured. See [`kinesis_firehose_destination` Block](#kinesis_firehose_destination-block) for details.

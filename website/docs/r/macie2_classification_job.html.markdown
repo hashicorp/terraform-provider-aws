@@ -32,6 +32,7 @@ resource "aws_macie2_classification_job" "test" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `custom_data_identifier_ids` - (Optional) Custom data identifiers to use for data analysis and classification.
 * `description` - (Optional) Custom description of the job. Can contain as many as 200 characters.
 * `initial_run` - (Optional) Whether to analyze all existing, eligible objects immediately after the job is created.

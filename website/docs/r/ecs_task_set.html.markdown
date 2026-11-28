@@ -58,6 +58,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `capacity_provider_strategy` - (Optional) Capacity provider strategy to use for the service. Can be one or more. [Defined below](#capacity_provider_strategy-block).
 * `external_id` - (Optional) External ID associated with the task set.
 * `force_delete` - (Optional) Whether to allow deleting the task set without waiting for scaling down to 0. You can force a task set to delete even if it's in the process of scaling a resource. Normally, Terraform drains all the tasks before deleting the task set. This bypasses that behavior and potentially leaves resources dangling.

@@ -32,6 +32,7 @@ resource "aws_appconfig_deployment_strategy" "example" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deployment_duration_in_minutes` - (Required) Total amount of time for a deployment to last. Minimum value of 0, maximum value of 1440.
 * `description` - (Optional) Description of the deployment strategy. Can be at most 1024 characters.
 * `final_bake_time_in_minutes` - (Optional) Amount of time AWS AppConfig monitors for alarms before considering the deployment to be complete and no longer eligible for automatic roll back. Minimum value of 0, maximum value of 1440.

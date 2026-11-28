@@ -33,6 +33,7 @@ list "aws_accountaccess_entitlement" "example" {
 
 This list resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID to query. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `application_arn` - (Required) ARN of the application to list entitlements for.
 * `filter` - (Required) Filter criteria to narrow the entitlements returned. You can filter by principal, IAM role, or account. See [`filter` Block](#filter-block) below.
 * `region` - (Optional) Region to query. Defaults to provider region.

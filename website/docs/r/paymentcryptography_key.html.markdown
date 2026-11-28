@@ -39,6 +39,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `deletion_window_in_days` - (Optional) Number of days between 3 and 180 to wait after the resource is deleted before the key is deleted.
 * `enabled` - (Optional) Whether to enable the key.
 * `key_check_value_algorithm` - (Optional) Algorithm that AWS Payment Cryptography uses to calculate the key check value (KCV).

@@ -34,6 +34,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `active_directory_name` - (Optional) Name of your Active Directory. This field is required if `ACTIVE_DIRECTORY` is the selected authentication method of the new Amazon QuickSight account.
 * `admin_group` - (Optional) Admin group associated with your Active Directory or IAM Identity Center account. Either this field or `admin_pro_group` is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.
 * `admin_pro_group` - (Optional) Admin PRO group associated with your Active Directory or IAM Identity Center account. Either this field or `admin_group` is required if `ACTIVE_DIRECTORY` or `IAM_IDENTITY_CENTER` is the selected authentication method of the new Amazon QuickSight account.

@@ -32,6 +32,7 @@ resource "aws_wafregional_size_constraint_set" "size_constraint_set" {
 
 This resource supports the following arguments:
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `name` - (Required) Name or description of the Size Constraint Set.
 * `region` - (Optional) Region where this resource will be [managed](https://docs.aws.amazon.com/general/latest/gr/rande.html#regional-endpoints). Defaults to the Region set in the [provider configuration](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#aws-configuration-reference).
 * `size_constraints` - (Optional) Parts of web requests that you want to inspect the size of. See [`size_constraints` Block](#size_constraints-block) below for details.

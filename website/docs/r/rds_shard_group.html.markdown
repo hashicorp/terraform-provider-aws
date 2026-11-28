@@ -44,6 +44,7 @@ This resource supports the following arguments:
 
 For more detailed documentation about each argument, refer to the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/rds/create-shard-group.html).
 
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `compute_redundancy` - (Optional) Whether to create standby DB shard groups for the DB shard group. Valid values are `0` (no standby DB shard group, the default), `1` (one standby DB shard group in a different Availability Zone), and `2` (two standby DB shard groups in two different Availability Zones).
 * `db_cluster_identifier` - (Required) Name of the primary DB cluster for the DB shard group.
 * `db_shard_group_identifier` - (Required) Name of the DB shard group.

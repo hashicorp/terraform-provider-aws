@@ -728,6 +728,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `accelerator_config` - (Optional) Configuration block for accelerator (GPU) resource requirements. Requires a `capacity_provider_config` that points to an accelerator (GPU) Capacity Provider. Adding or removing `accelerator_config` forces a new function; modifying `accelerator_memory_size` on an existing function is updated in place. [See below](#accelerator_config-block).
+* `account` - (Optional) AWS account ID where this resource will be managed. Defaults to the account of the provider's credentials. See the [Per-Resource Account guide](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/guides/per-resource-account).
 * `architectures` - (Optional) Instruction set architecture for your Lambda function. Valid values are `["x86_64"]` and `["arm64"]`. Default is `["x86_64"]`. Removing this attribute, function's architecture stays the same.
 * `capacity_provider_config` - (Optional) Configuration block for Lambda Capacity Provider. [See below](#capacity_provider_config-block).
 * `code_sha256` - (Optional) Base64-encoded representation the source code package file. Use this argument to trigger updates when the function source code changes. For OCI, this value is relayed directly from the image digest. For zip files, this value is the Base64 encoded SHA-256 hash of the `.zip` file. Layers are not included in the calculation. To trigger updates using a non-standard hashing algorithm, use the `source_code_hash` argument instead.
