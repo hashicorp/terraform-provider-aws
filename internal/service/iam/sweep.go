@@ -71,6 +71,7 @@ func RegisterSweepers() {
 			"aws_dax_cluster",
 			"aws_db_instance",
 			"aws_db_option_group",
+			"aws_ecs_gateway",
 			"aws_eks_cluster",
 			"aws_elastic_beanstalk_application",
 			"aws_elastic_beanstalk_environment",
