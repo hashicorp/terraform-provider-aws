@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssm_parameter: Add `aws:account:id`, `aws:region`, `binary`, `boolean`, `email`, `float`, `hostname`, `integer`, `ipv4-address`, `ipv6-address`, `json`, `jsonc` and `url` as valid values for `data_type`
+```
+
+```release-note:enhancement
+resource/aws_ssm_parameter: Update `data_type` in place instead of replacing the resource, unless the change is to or from `aws:ec2:image` or `aws:ssm:integration`
+```

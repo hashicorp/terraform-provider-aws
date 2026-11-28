@@ -1281,6 +1281,199 @@ func TestAccSSMParameter_DataType_update(t *testing.T) {
 					testAccCheckParameterExists(ctx, t, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, "data_type", "aws:ec2:image"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_DataType_updateInPlace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_dataType(rName, "String", "text", "443"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
+				),
+			},
+			{
+				Config: testAccParameterConfig_dataType(rName, "String", "integer", "443"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "integer"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "443"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccParameterConfig_dataType(rName, "String", "float", "443"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "float"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_DataType_updateInPlaceWriteOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.11.0"))),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_dataTypeWriteOnly(rName, "text", "443", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					testAccCheckParameterWriteOnlyValueEqual(t, &param, "443"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "text"),
+				),
+			},
+			{
+				Config: testAccParameterConfig_dataTypeWriteOnly(rName, "integer", "443", 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					testAccCheckParameterWriteOnlyValueEqual(t, &param, "443"),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "integer"),
+					resource.TestCheckResourceAttr(resourceName, "has_value_wo", acctest.CtTrue),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_DataType_invalidValue(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccParameterConfig_dataType(rName, "String", "integer", "not-an-integer"),
+				ExpectError: regexache.MustCompile(`creating SSM Parameter`),
+			},
+		},
+	})
+}
+
+func TestAccSSMParameter_DataType_stringList(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_dataType(rName, "StringList", "ipv4-address", "192.0.2.1,192.0.2.2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "ipv4-address"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "StringList"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "192.0.2.1,192.0.2.2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Creates an advanced-tier parameter, which is charged.
+func TestAccSSMParameter_DataType_advancedTier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_ssm_parameter.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_dataTypeAdvancedTier(rName, names.AttrJSON),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", names.AttrJSON),
+					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccParameterConfig_dataTypeAdvancedTier(rName, "jsonc"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckParameterExists(ctx, t, resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "data_type", "jsonc"),
+					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierAdvanced)),
+				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 		},
 	})
@@ -1684,6 +1877,41 @@ resource "aws_ssm_parameter" "test" {
 `, rName, datatype))
 }
 
+func testAccParameterConfig_dataType(rName, pType, dataType, value string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name      = %[1]q
+  type      = %[2]q
+  data_type = %[3]q
+  value     = %[4]q
+}
+`, rName, pType, dataType, value)
+}
+
+func testAccParameterConfig_dataTypeWriteOnly(rName, dataType, value string, valueVersion int) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name             = %[1]q
+  type             = "String"
+  data_type        = %[2]q
+  value_wo         = %[3]q
+  value_wo_version = %[4]d
+}
+`, rName, dataType, value, valueVersion)
+}
+
+func testAccParameterConfig_dataTypeAdvancedTier(rName, dataType string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_parameter" "test" {
+  name      = %[1]q
+  type      = "String"
+  tier      = "Advanced"
+  data_type = %[2]q
+  value     = jsonencode({ retries = 3 })
+}
+`, rName, dataType)
+}
+
 func testAccParameterConfig_dataTypeSSMIntegration(rName string) string { // nosemgrep:ci.ssm-in-func-name
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
@@ -1873,4 +2101,38 @@ resource "aws_ssm_parameter" "test" {
   value_wo_version = data.aws_ssm_parameter.prereq.version
 }
 `, rName, typ, value)
+}
+
+func TestParameterDataTypeChangeRequiresReplace(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		oldDataType string
+		newDataType string
+		expected    bool
+	}{
+		{"text", "text", false},
+		{"text", "integer", false},
+		{"integer", "float", false},
+		{names.AttrJSON, "jsonc", false},
+		{names.AttrEmail, "text", false},
+		{"", "text", false},
+		{"text", "aws:ec2:image", true},
+		{"aws:ec2:image", "text", true},
+		{"integer", "aws:ssm:integration", true},
+		{"aws:ssm:integration", names.AttrJSON, true},
+		{"aws:ec2:image", "aws:ssm:integration", true},
+		{"aws:ec2:image", "aws:ec2:image", false},
+		{"aws:ssm:integration", "aws:ssm:integration", false},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(fmt.Sprintf("%s_to_%s", testCase.oldDataType, testCase.newDataType), func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := tfssm.ParameterDataTypeChangeRequiresReplace(testCase.oldDataType, testCase.newDataType), testCase.expected; got != want {
+				t.Errorf("ParameterDataTypeChangeRequiresReplace(%q, %q) = %t, want %t", testCase.oldDataType, testCase.newDataType, got, want)
+			}
+		})
+	}
 }
