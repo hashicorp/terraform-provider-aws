@@ -1,7 +1,2 @@
-```release-note:enhancement
-resource/aws_bedrockagentcore_oauth2_credential_provider: Add Resource Identity support
-```
-
-```release-note:enhancement
-resource/aws_bedrockagentcore_oauth2_credential_provider: Add configurable resource timeouts
-```
+```release-note:bug
+resource/aws_ec2_managed_prefix_list: Fix `InvalidParameterValue: The number of entries per request cannot exceeds limit (100)` errors when more than 100 `entry` blocks are added or removed
