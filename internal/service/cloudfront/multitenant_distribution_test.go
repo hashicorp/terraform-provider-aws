@@ -2204,3 +2204,76 @@ resource "aws_iam_role" "lambda" {
 data "aws_partition" "current" {}
 `, rName, comment)
 }
+
+func TestAccCloudFrontMultiTenantDistribution_vpcOriginConfigOwnerAccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var distribution awstypes.Distribution
+	rName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_multitenant_distribution.test"
+
+	acctest.ParallelTest(ctx, t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiTenantDistributionDestroy(ctx, t),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiTenantDistributionConfig_vpcOriginConfigOwnerAccountID(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiTenantDistributionExists(ctx, t, resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "origin.0.vpc_origin_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.vpc_origin_config.0.vpc_origin_id", "aws_cloudfront_vpc_origin.test", names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "origin.0.vpc_origin_config.0.owner_account_id", "data.aws_caller_identity.current", names.AttrAccountID),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccMultiTenantDistributionConfig_vpcOriginConfigOwnerAccountID(rName string) string {
+	return acctest.ConfigCompose(testAccVPCOriginConfig_basic(rName), `
+data "aws_caller_identity" "current" {}
+
+resource "aws_cloudfront_multitenant_distribution" "test" {
+  enabled = false
+  comment = "Test multi-tenant distribution with cross-account VPC origin"
+
+  origin {
+    domain_name = "example.com"
+    id          = "example"
+
+    vpc_origin_config {
+      vpc_origin_id    = aws_cloudfront_vpc_origin.test.id
+      owner_account_id = data.aws_caller_identity.current.account_id
+    }
+  }
+
+  default_cache_behavior {
+    target_origin_id       = "example"
+    viewer_protocol_policy = "redirect-to-https"
+    cache_policy_id        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # AWS Managed CachingDisabled policy
+
+    allowed_methods {
+      items          = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+      cached_methods = ["GET", "HEAD", "OPTIONS"]
+    }
+  }
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+}
+`)
+}
